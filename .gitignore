@@ -1,3 +1,21 @@
-# Godot 4+ specific ignores
+# Godot 4
 .godot/
-/android/
+.import/
+.export/
+.export.cfg
+export_presets.cfg
+
+# Import files
+*.import
+
+# Mono (если вдруг подключишь)
+.mono/
+data_*/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
