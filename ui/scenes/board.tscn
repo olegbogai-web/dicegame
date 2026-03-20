@@ -30,12 +30,12 @@ material_override = SubResource("StandardMaterial3D_b47iq")
 mesh = SubResource("BoxMesh_w7xue")
 
 [node name="back_wall" type="MeshInstance3D" parent="." unique_id=242861752]
-transform = Transform3D(-4.371139e-09, 0, 4.1, 0, 0.5, 0, -0.1, 0, -1.7921668e-07, 0, 0.25, -1.037)
+transform = Transform3D(-4.371139e-09, 0, 4.1, 0, 0.5, 0, -0.1, 0, -1.7921668e-07, 0, 0.25, -1)
 material_override = SubResource("StandardMaterial3D_b47iq")
 mesh = SubResource("BoxMesh_w7xue")
 
 [node name="front_wall" type="MeshInstance3D" parent="." unique_id=958519929]
-transform = Transform3D(-4.371139e-09, 0, 4.1, 0, 0.5, 0, -0.1, 0, -1.7921668e-07, 0, 0.25, 1.005)
+transform = Transform3D(-4.371139e-09, 0, 4.1, 0, 0.5, 0, -0.1, 0, -1.7921668e-07, 0, 0.25, 1)
 material_override = SubResource("StandardMaterial3D_b47iq")
 mesh = SubResource("BoxMesh_w7xue")
 
