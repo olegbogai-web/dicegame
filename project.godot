@@ -10,6 +10,7 @@ config_version=5
 
 [application]
 
+run/main_scene="res://ui/scenes/board.tscn"
 config/name="dicegame"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
