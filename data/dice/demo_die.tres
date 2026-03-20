@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="DiceDefinition" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://content/resources/dice_definition.gd" id="1_def"]
+[ext_resource type="Script" path="res://content/resources/dice_face_data.gd" id="2_face"]
+[ext_resource type="Texture2D" path="res://assets/material/дерево.png" id="3_tex"]
+
+[sub_resource type="Resource" id="Resource_face_1"]
+script = ExtResource("2_face")
+content_type = 0
+number_value = 1
+overlay_color = Color(0.15, 0.11, 0.06, 1)
+
+[sub_resource type="Resource" id="Resource_face_2"]
+script = ExtResource("2_face")
+content_type = 0
+number_value = 2
+overlay_color = Color(0.15, 0.11, 0.06, 1)
+
+[sub_resource type="Resource" id="Resource_face_3"]
+script = ExtResource("2_face")
+content_type = 1
+icon_id = &"shield"
+overlay_color = Color(0.92, 0.97, 1, 1)
+
+[sub_resource type="Resource" id="Resource_face_4"]
+script = ExtResource("2_face")
+content_type = 1
+icon_id = &"sword"
+overlay_color = Color(0.86, 0.25, 0.2, 1)
+
+[sub_resource type="Resource" id="Resource_face_5"]
+script = ExtResource("2_face")
+content_type = 1
+icon_id = &"star"
+overlay_color = Color(1, 0.87, 0.34, 1)
+
+[sub_resource type="Resource" id="Resource_face_6"]
+script = ExtResource("2_face")
+content_type = 1
+icon_id = &"diamond"
+overlay_color = Color(0.38, 0.95, 0.92, 1)
+
+[resource]
+script = ExtResource("1_def")
+cube_size = 0.85
+base_texture = ExtResource("3_tex")
+faces = Array[Resource]([SubResource("Resource_face_1"), SubResource("Resource_face_2"), SubResource("Resource_face_3"), SubResource("Resource_face_4"), SubResource("Resource_face_5"), SubResource("Resource_face_6")])
+mass_value = 1.2
+bounce = 0.25
+friction = 0.85
