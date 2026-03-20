@@ -167,6 +167,9 @@ func _build_body_material() -> StandardMaterial3D:
 	material.albedo_color = definition.base_color
 	material.roughness = definition.roughness
 	material.metallic = definition.metallic
+	material.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
+	material.cull_mode = BaseMaterial3D.CULL_BACK
+	material.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_OPAQUE_ONLY
 	if definition.texture != null:
 		material.albedo_texture = definition.texture
 	return material
