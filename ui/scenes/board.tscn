@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://dn66rechaasvk" path="res://assets/material/дерево.png" id="1_vhfsq"]
 [ext_resource type="Script" uid="uid://dg8vg8qhsqsb4" path="res://ui/scripts/board_controller.gd" id="2_x7kp1"]
-[ext_resource type="PackedScene" path="res://content/resources/base_cube.tscn" id="3_j2v5c"]
+[ext_resource type="PackedScene" uid="uid://boqsu0xoab2wo" path="res://content/resources/base_cube.tscn" id="3_j2v5c"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
 size = Vector3(8, 0.2, 4)
@@ -83,7 +83,7 @@ material_override = SubResource("StandardMaterial3D_b47iq")
 mesh = SubResource("BoxMesh_wall_front_back")
 
 [node name="test_camera" type="Camera3D" parent="." unique_id=1142329002]
-transform = Transform3D(1, 0, 0, 0, 0.57357645, 0.81915206, 0, -0.81915206, 0.57357645, 0.15366018, 1.3355997, 1.380459)
+transform = Transform3D(1, 0, 0, 0, 0.57357645, 0.81915206, 0, -0.81915206, 0.57357645, 0.15366018, 2.8496702, 2.4406226)
 fov = 104.06249
 
 [node name="test_Light" type="DirectionalLight3D" parent="." unique_id=76983028]
