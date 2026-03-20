@@ -6,38 +6,77 @@
 albedo_texture = ExtResource("1_vhfsq")
 roughness = 0.92
 
-[sub_resource type="BoxMesh" id="BoxMesh_7uo5n"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
+size = Vector3(8, 0.2, 4)
 
-[sub_resource type="BoxMesh" id="BoxMesh_w7xue"]
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+size = Vector3(8, 0.2, 4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_side"]
+size = Vector3(0.2, 1, 4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_side"]
+size = Vector3(0.2, 1, 4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_front_back"]
+size = Vector3(8, 1, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_front_back"]
+size = Vector3(8, 1, 0.2)
 
 [node name="board" type="Node3D" unique_id=1670483730]
 top_level = true
 
-[node name="floor" type="MeshInstance3D" parent="." unique_id=1507685687]
-transform = Transform3D(4, 0, 0, 0, 0.1, 0, 0, 0, 2, 0, 0, 0)
+[node name="floor" type="StaticBody3D" parent="." unique_id=1507685687]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+
+[node name="collision" type="CollisionShape3D" parent="floor" unique_id=257684001]
+shape = SubResource("BoxShape3D_floor")
+
+[node name="mesh" type="MeshInstance3D" parent="floor" unique_id=1742186677]
 layers = 3
 material_override = SubResource("StandardMaterial3D_b47iq")
-mesh = SubResource("BoxMesh_7uo5n")
+mesh = SubResource("BoxMesh_floor")
 
-[node name="left_wall" type="MeshInstance3D" parent="." unique_id=684787616]
-transform = Transform3D(0.1, 0, 0, 0, 0.5, 0, 0, 0, 2, -2.001, 0.25, 0)
-material_override = SubResource("StandardMaterial3D_b47iq")
-mesh = SubResource("BoxMesh_w7xue")
+[node name="left_wall" type="StaticBody3D" parent="." unique_id=684787616]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.1, 0.5, 0)
 
-[node name="right_wall" type="MeshInstance3D" parent="." unique_id=2095043171]
-transform = Transform3D(0.1, 0, 0, 0, 0.5, 0, 0, 0, 2, 2, 0.25, 0)
-material_override = SubResource("StandardMaterial3D_b47iq")
-mesh = SubResource("BoxMesh_w7xue")
+[node name="collision" type="CollisionShape3D" parent="left_wall" unique_id=153539856]
+shape = SubResource("BoxShape3D_wall_side")
 
-[node name="back_wall" type="MeshInstance3D" parent="." unique_id=242861752]
-transform = Transform3D(-4.371139e-09, 0, 4.1, 0, 0.5, 0, -0.1, 0, -1.7921668e-07, 0, 0.25, -1)
+[node name="mesh" type="MeshInstance3D" parent="left_wall" unique_id=1178126465]
 material_override = SubResource("StandardMaterial3D_b47iq")
-mesh = SubResource("BoxMesh_w7xue")
+mesh = SubResource("BoxMesh_wall_side")
 
-[node name="front_wall" type="MeshInstance3D" parent="." unique_id=958519929]
-transform = Transform3D(-4.371139e-09, 0, 4.1, 0, 0.5, 0, -0.1, 0, -1.7921668e-07, 0, 0.25, 1)
+[node name="right_wall" type="StaticBody3D" parent="." unique_id=2095043171]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.1, 0.5, 0)
+
+[node name="collision" type="CollisionShape3D" parent="right_wall" unique_id=25036020]
+shape = SubResource("BoxShape3D_wall_side")
+
+[node name="mesh" type="MeshInstance3D" parent="right_wall" unique_id=93301341]
 material_override = SubResource("StandardMaterial3D_b47iq")
-mesh = SubResource("BoxMesh_w7xue")
+mesh = SubResource("BoxMesh_wall_side")
+
+[node name="back_wall" type="StaticBody3D" parent="." unique_id=242861752]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -2.1)
+
+[node name="collision" type="CollisionShape3D" parent="back_wall" unique_id=2084832027]
+shape = SubResource("BoxShape3D_wall_front_back")
+
+[node name="mesh" type="MeshInstance3D" parent="back_wall" unique_id=481240012]
+material_override = SubResource("StandardMaterial3D_b47iq")
+mesh = SubResource("BoxMesh_wall_front_back")
+
+[node name="front_wall" type="StaticBody3D" parent="." unique_id=958519929]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 2.1)
+
+[node name="collision" type="CollisionShape3D" parent="front_wall" unique_id=1563118103]
+shape = SubResource("BoxShape3D_wall_front_back")
+
+[node name="mesh" type="MeshInstance3D" parent="front_wall" unique_id=348579445]
+material_override = SubResource("StandardMaterial3D_b47iq")
+mesh = SubResource("BoxMesh_wall_front_back")
 
 [node name="test_camera" type="Camera3D" parent="." unique_id=1142329002]
 transform = Transform3D(1, 0, 0, 0, 0.57357645, 0.81915206, 0, -0.81915206, 0.57357645, -0.04113269, 2.3223188, 1.0388587)
