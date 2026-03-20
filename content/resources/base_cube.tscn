@@ -1,8 +1,15 @@
-[gd_scene load_steps=3 format=3 uid="uid://boqsu0xoab2wo"]
+[gd_scene load_steps=4 format=3 uid="uid://boqsu0xoab2wo"]
 
 [ext_resource type="Script" path="res://content/dice/dice.gd" id="1_6ukd8"]
 [ext_resource type="Resource" path="res://content/resources/base_cube.tres" id="2_6r77e"]
 
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_low_friction"]
+friction = 0.08
+bounce = 0.12
+
 [node name="base_cube" type="RigidBody3D" unique_id=548484381]
+linear_damp = 0.04
+angular_damp = 0.03
+physics_material_override = SubResource("PhysicsMaterial_low_friction")
 script = ExtResource("1_6ukd8")
 definition = ExtResource("2_6r77e")
