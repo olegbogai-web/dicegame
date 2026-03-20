@@ -10,8 +10,8 @@ const Dice = preload("res://content/dice/dice.gd")
 
 @export_category("Spawn Bounds")
 @export var spawn_bounds_margin: Vector2 = Vector2(0.15, 0.15)
-@export var base_spawn_height: float = 1.2
-@export var spawn_height_variation: float = 0.35
+@export var base_spawn_height: float = 1.0
+@export var spawn_height_variation: float = 0.2
 @export var spawn_spacing: float = 0.05
 @export_range(1, 100, 1) var max_spawn_attempts: int = 24
 @export var fallback_height_step: float = 0.3
