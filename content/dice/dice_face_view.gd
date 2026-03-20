@@ -23,8 +23,8 @@ func apply_face(face_definition: DiceFaceDefinition, face_size: Vector2) -> void
 	_icon_sprite.visible = false
 	_aura_sprite.visible = false
 
-	var max_size := max(face_size.x, face_size.y)
-	var base_pixel_size := max_size / 320.0
+	var max_size = max(face_size.x, face_size.y)
+	var base_pixel_size = max_size / 320.0
 
 	if face_definition.has_aura():
 		_aura_sprite.texture = _build_aura_texture(face_definition.aura_color)
