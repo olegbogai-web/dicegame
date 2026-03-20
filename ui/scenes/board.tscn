@@ -42,3 +42,6 @@ mesh = SubResource("BoxMesh_w7xue")
 [node name="test_camera" type="Camera3D" parent="." unique_id=1142329002]
 transform = Transform3D(1, 0, 0, 0, 0.57357645, 0.81915206, 0, -0.81915206, 0.57357645, -0.04113269, 2.3223188, 1.0388587)
 fov = 87.1875
+
+[node name="test_Light" type="DirectionalLight3D" parent="." unique_id=76983028]
+transform = Transform3D(0.95406866, 0.19014458, -0.23151249, -0.07741402, 0.90299547, 0.42261827, 0.2894133, -0.38528454, 0.87623954, 0, 0, 0)
