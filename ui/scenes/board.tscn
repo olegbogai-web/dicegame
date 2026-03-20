@@ -4,13 +4,13 @@
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_b47iq"]
 albedo_texture = ExtResource("1_vhfsq")
+roughness = 0.92
 
 [sub_resource type="BoxMesh" id="BoxMesh_7uo5n"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_w7xue"]
 
 [node name="board" type="Node3D" unique_id=1670483730]
-transform = Transform3D(1, 0, 0, 0, 0.5, 0, 0, 0, 1, 0, 0, 0)
 top_level = true
 
 [node name="floor" type="MeshInstance3D" parent="." unique_id=1507685687]
@@ -20,21 +20,21 @@ material_override = SubResource("StandardMaterial3D_b47iq")
 mesh = SubResource("BoxMesh_7uo5n")
 
 [node name="left_wall" type="MeshInstance3D" parent="." unique_id=684787616]
-transform = Transform3D(0.1, 0, 0, 0, 1, 0, 0, 0, 2, -2.00074, 0.5, 0)
+transform = Transform3D(0.1, 0, 0, 0, 0.5, 0, 0, 0, 2, -2.001, 0.25, 0)
 material_override = SubResource("StandardMaterial3D_b47iq")
 mesh = SubResource("BoxMesh_w7xue")
 
 [node name="right_wall" type="MeshInstance3D" parent="." unique_id=2095043171]
-transform = Transform3D(0.1, 0, 0, 0, 1, 0, 0, 0, 2, 2, 0.5, 0)
+transform = Transform3D(0.1, 0, 0, 0, 0.5, 0, 0, 0, 2, 2, 0.25, 0)
 material_override = SubResource("StandardMaterial3D_b47iq")
 mesh = SubResource("BoxMesh_w7xue")
 
 [node name="back_wall" type="MeshInstance3D" parent="." unique_id=242861752]
-transform = Transform3D(-4.371139e-09, 0, 4.1, 0, 1, 0, -0.1, 0, -1.7921668e-07, 0, 0.5, -1.0370476)
+transform = Transform3D(-4.371139e-09, 0, 4.1, 0, 0.5, 0, -0.1, 0, -1.7921668e-07, 0, 0.25, -1.037)
 material_override = SubResource("StandardMaterial3D_b47iq")
 mesh = SubResource("BoxMesh_w7xue")
 
 [node name="front_wall" type="MeshInstance3D" parent="." unique_id=958519929]
-transform = Transform3D(-4.371139e-09, 0, 4.1, 0, 1, 0, -0.1, 0, -1.7921668e-07, 0, 0.5, 1.0050395)
+transform = Transform3D(-4.371139e-09, 0, 4.1, 0, 0.5, 0, -0.1, 0, -1.7921668e-07, 0, 0.25, 1.005)
 material_override = SubResource("StandardMaterial3D_b47iq")
 mesh = SubResource("BoxMesh_w7xue")
