@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="DiceDefinition" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://content/dice/resources/dice_definition.gd" id="1_j8m3r"]
+[ext_resource type="Script" path="res://content/dice/resources/dice_face_definition.gd" id="2_4c0xn"]
+
+[sub_resource type="Resource" id="Resource_1"]
+script = ExtResource("2_4c0xn")
+text_value = "1"
+text_color = Color(0, 0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_2"]
+script = ExtResource("2_4c0xn")
+text_value = "2"
+text_color = Color(0, 0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_3"]
+script = ExtResource("2_4c0xn")
+text_value = "3"
+text_color = Color(0, 0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_4"]
+script = ExtResource("2_4c0xn")
+text_value = "4"
+text_color = Color(0, 0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_5"]
+script = ExtResource("2_4c0xn")
+text_value = "5"
+text_color = Color(0, 0, 0, 1)
+
+[sub_resource type="Resource" id="Resource_6"]
+script = ExtResource("2_4c0xn")
+text_value = "6"
+text_color = Color(0, 0, 0, 1)
+
+[resource]
+script = ExtResource("1_j8m3r")
+dice_name = "base_cube"
+base_size = Vector3(0.2, 0.2, 0.2)
+base_color = Color(0.99495333, 0.854602, 0.83693045, 1)
+faces = Array[Resource]([SubResource("Resource_1"), SubResource("Resource_2"), SubResource("Resource_3"), SubResource("Resource_4"), SubResource("Resource_5"), SubResource("Resource_6")])
