@@ -1,7 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://0ssqyi084mdh"]
+[gd_scene format=3 uid="uid://0ssqyi084mdh"]
 
 [ext_resource type="Texture2D" uid="uid://dn66rechaasvk" path="res://assets/material/дерево.png" id="1_vhfsq"]
-[ext_resource type="PackedScene" path="res://content/resources/base_cube.tscn" id="2_ewl3r"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_b47iq"]
 albedo_texture = ExtResource("1_vhfsq")
@@ -39,9 +38,6 @@ mesh = SubResource("BoxMesh_w7xue")
 transform = Transform3D(-4.371139e-09, 0, 4.1, 0, 0.5, 0, -0.1, 0, -1.7921668e-07, 0, 0.25, 1)
 material_override = SubResource("StandardMaterial3D_b47iq")
 mesh = SubResource("BoxMesh_w7xue")
-
-[node name="base_cube" parent="." instance=ExtResource("2_ewl3r")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
 
 [node name="test_camera" type="Camera3D" parent="." unique_id=1142329002]
 transform = Transform3D(1, 0, 0, 0, 0.57357645, 0.81915206, 0, -0.81915206, 0.57357645, -0.04113269, 2.3223188, 1.0388587)
