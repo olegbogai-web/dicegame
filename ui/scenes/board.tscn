@@ -1,5 +1,7 @@
 [gd_scene format=3 uid="uid://0ssqyi084mdh"]
 
+[ext_resource type="PackedScene" path="res://content/resources/base_cube.tscn" id="2_jg8f2"]
+
 [ext_resource type="Texture2D" uid="uid://dn66rechaasvk" path="res://assets/material/дерево.png" id="1_vhfsq"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_b47iq"]
@@ -9,6 +11,15 @@ roughness = 0.92
 [sub_resource type="BoxMesh" id="BoxMesh_7uo5n"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_w7xue"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
+size = Vector3(4, 0.1, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_side_wall"]
+size = Vector3(0.1, 0.5, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_front_back_wall"]
+size = Vector3(4.1, 0.5, 0.1)
 
 [node name="board" type="Node3D" unique_id=1670483730]
 top_level = true
@@ -39,9 +50,43 @@ transform = Transform3D(-4.371139e-09, 0, 4.1, 0, 0.5, 0, -0.1, 0, -1.7921668e-0
 material_override = SubResource("StandardMaterial3D_b47iq")
 mesh = SubResource("BoxMesh_w7xue")
 
+
+[node name="floor_body" type="StaticBody3D" parent="." unique_id=171000001]
+transform = Transform3D(4, 0, 0, 0, 0.1, 0, 0, 0, 2, 0, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="floor_body"]
+shape = SubResource("BoxShape3D_floor")
+
+[node name="left_wall_body" type="StaticBody3D" parent="." unique_id=171000002]
+transform = Transform3D(0.1, 0, 0, 0, 0.5, 0, 0, 0, 2, -2.001, 0.25, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="left_wall_body"]
+shape = SubResource("BoxShape3D_side_wall")
+
+[node name="right_wall_body" type="StaticBody3D" parent="." unique_id=171000003]
+transform = Transform3D(0.1, 0, 0, 0, 0.5, 0, 0, 0, 2, 2, 0.25, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="right_wall_body"]
+shape = SubResource("BoxShape3D_side_wall")
+
+[node name="back_wall_body" type="StaticBody3D" parent="." unique_id=171000004]
+transform = Transform3D(-4.371139e-09, 0, 4.1, 0, 0.5, 0, -0.1, 0, -1.7921668e-07, 0, 0.25, -1)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="back_wall_body"]
+shape = SubResource("BoxShape3D_front_back_wall")
+
+[node name="front_wall_body" type="StaticBody3D" parent="." unique_id=171000005]
+transform = Transform3D(-4.371139e-09, 0, 4.1, 0, 0.5, 0, -0.1, 0, -1.7921668e-07, 0, 0.25, 1)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="front_wall_body"]
+shape = SubResource("BoxShape3D_front_back_wall")
+
 [node name="test_camera" type="Camera3D" parent="." unique_id=1142329002]
 transform = Transform3D(1, 0, 0, 0, 0.57357645, 0.81915206, 0, -0.81915206, 0.57357645, -0.04113269, 2.3223188, 1.0388587)
 fov = 87.1875
 
 [node name="test_Light" type="DirectionalLight3D" parent="." unique_id=76983028]
 transform = Transform3D(0.95406866, 0.19014458, -0.23151249, -0.07741402, 0.90299547, 0.42261827, 0.2894133, -0.38528454, 0.87623954, 0, 0, 0)
+
+[node name="base_cube" parent="." instance=ExtResource("2_jg8f2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)

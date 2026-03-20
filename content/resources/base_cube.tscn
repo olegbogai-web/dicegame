@@ -1,11 +1,11 @@
-[gd_scene format=3 uid="uid://boqsu0xoab2wo"]
+[gd_scene load_steps=3 format=3]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8ch5d"]
-albedo_color = Color(0.99495333, 0.854602, 0.83693045, 1)
+[ext_resource type="Script" path="res://src/presentation/dice/dice_view.gd" id="1_3x4gg"]
+[ext_resource type="Resource" path="res://content/dice/base_cube_definition.tres" id="2_kt4d2"]
 
-[sub_resource type="BoxMesh" id="BoxMesh_0wo7w"]
-
-[node name="base_cube" type="MeshInstance3D" unique_id=548484381]
-transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2, 0, 0, 0)
-material_override = SubResource("StandardMaterial3D_8ch5d")
-mesh = SubResource("BoxMesh_0wo7w")
+[node name="base_cube" type="RigidBody3D"]
+script = ExtResource("1_3x4gg")
+definition = ExtResource("2_kt4d2")
+mass = 1.0
+gravity_scale = 1.0
+continuous_cd = true
