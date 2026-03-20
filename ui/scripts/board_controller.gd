@@ -126,8 +126,8 @@ func _find_spawn_transform(
 
 
 func _random_spawn_position(resolved_size: Vector3, board_center: Vector3, spawn_extents: Vector2) -> Vector3:
-	var allowed_x := max(spawn_extents.x - resolved_size.x * 0.5 - spawn_spacing, 0.0)
-	var allowed_z := max(spawn_extents.y - resolved_size.z * 0.5 - spawn_spacing, 0.0)
+	var allowed_x = max(spawn_extents.x - resolved_size.x * 0.5 - spawn_spacing, 0.0)
+	var allowed_z = max(spawn_extents.y - resolved_size.z * 0.5 - spawn_spacing, 0.0)
 	return Vector3(
 		board_center.x + _rng.randf_range(-allowed_x, allowed_x),
 		base_spawn_height + _rng.randf_range(0.0, spawn_height_variation),
