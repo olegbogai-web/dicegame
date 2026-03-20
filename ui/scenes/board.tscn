@@ -1,40 +1,101 @@
-[gd_scene format=3 uid="uid://0ssqyi084mdh"]
+[gd_scene load_steps=12 format=3]
 
-[ext_resource type="Texture2D" uid="uid://dn66rechaasvk" path="res://assets/material/дерево.png" id="1_vhfsq"]
+[ext_resource type="Script" path="res://ui/scripts/board.gd" id="1_board"]
+[ext_resource type="Script" path="res://presentation/dice/dice_cube_3d.gd" id="2_dice"]
+[ext_resource type="Resource" path="res://data/dice/demo_die.tres" id="3_die"]
+[ext_resource type="Texture2D" path="res://assets/material/дерево.png" id="4_tex"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_b47iq"]
-albedo_texture = ExtResource("1_vhfsq")
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_board"]
+albedo_texture = ExtResource("4_tex")
+roughness = 0.98
 
-[sub_resource type="BoxMesh" id="BoxMesh_7uo5n"]
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+size = Vector3(8, 0.2, 4)
 
-[sub_resource type="BoxMesh" id="BoxMesh_w7xue"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
+size = Vector3(8, 0.2, 4)
 
-[node name="board" type="Node3D" unique_id=1670483730]
-transform = Transform3D(1, 0, 0, 0, 0.5, 0, 0, 0, 1, 0, 0, 0)
-top_level = true
+[sub_resource type="BoxMesh" id="BoxMesh_wall"]
+size = Vector3(0.2, 2, 4)
 
-[node name="floor" type="MeshInstance3D" parent="." unique_id=1507685687]
-transform = Transform3D(4, 0, 0, 0, 0.1, 0, 0, 0, 2, 0, 0, 0)
-layers = 3
-material_override = SubResource("StandardMaterial3D_b47iq")
-mesh = SubResource("BoxMesh_7uo5n")
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall"]
+size = Vector3(0.2, 2, 4)
 
-[node name="left_wall" type="MeshInstance3D" parent="." unique_id=684787616]
-transform = Transform3D(0.1, 0, 0, 0, 1, 0, 0, 0, 2, -2.00074, 0.5, 0)
-material_override = SubResource("StandardMaterial3D_b47iq")
-mesh = SubResource("BoxMesh_w7xue")
+[sub_resource type="BoxMesh" id="BoxMesh_front_back"]
+size = Vector3(8, 2, 0.2)
 
-[node name="right_wall" type="MeshInstance3D" parent="." unique_id=2095043171]
-transform = Transform3D(0.1, 0, 0, 0, 1, 0, 0, 0, 2, 2, 0.5, 0)
-material_override = SubResource("StandardMaterial3D_b47iq")
-mesh = SubResource("BoxMesh_w7xue")
+[sub_resource type="BoxShape3D" id="BoxShape3D_front_back"]
+size = Vector3(8, 2, 0.2)
 
-[node name="back_wall" type="MeshInstance3D" parent="." unique_id=242861752]
-transform = Transform3D(-4.371139e-09, 0, 4.1, 0, 1, 0, -0.1, 0, -1.7921668e-07, 0, 0.5, -1.0370476)
-material_override = SubResource("StandardMaterial3D_b47iq")
-mesh = SubResource("BoxMesh_w7xue")
+[node name="board" type="Node3D"]
+script = ExtResource("1_board")
 
-[node name="front_wall" type="MeshInstance3D" parent="." unique_id=958519929]
-transform = Transform3D(-4.371139e-09, 0, 4.1, 0, 1, 0, -0.1, 0, -1.7921668e-07, 0, 0.5, 1.0050395)
-material_override = SubResource("StandardMaterial3D_b47iq")
-mesh = SubResource("BoxMesh_w7xue")
+[node name="camera" type="Camera3D" parent="."]
+transform = Transform3D(0.95882, -0.123153, 0.256585, 0, 0.901885, 0.431975, -0.283994, -0.414177, 0.86585, 0, 4.31778, 7.72535)
+
+[node name="sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.91706, -0.398749, 0, 0.291022, 0.669105, -0.683802, 0.272709, 0.627076, 0.729668, 0, 4.38958, 0)
+light_energy = 2.4
+shadow_enabled = true
+
+[node name="fill_light" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.15749, 2.60368, 1.7554)
+light_energy = 0.9
+omni_range = 11.0
+
+[node name="floor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+
+[node name="collision" type="CollisionShape3D" parent="floor"]
+shape = SubResource("BoxShape3D_floor")
+
+[node name="mesh" type="MeshInstance3D" parent="floor"]
+mesh = SubResource("BoxMesh_floor")
+material_override = SubResource("StandardMaterial3D_board")
+
+[node name="left_wall" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.1, 0.9, 0)
+
+[node name="collision" type="CollisionShape3D" parent="left_wall"]
+shape = SubResource("BoxShape3D_wall")
+
+[node name="mesh" type="MeshInstance3D" parent="left_wall"]
+mesh = SubResource("BoxMesh_wall")
+material_override = SubResource("StandardMaterial3D_board")
+
+[node name="right_wall" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.1, 0.9, 0)
+
+[node name="collision" type="CollisionShape3D" parent="right_wall"]
+shape = SubResource("BoxShape3D_wall")
+
+[node name="mesh" type="MeshInstance3D" parent="right_wall"]
+mesh = SubResource("BoxMesh_wall")
+material_override = SubResource("StandardMaterial3D_board")
+
+[node name="back_wall" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -2.1)
+
+[node name="collision" type="CollisionShape3D" parent="back_wall"]
+shape = SubResource("BoxShape3D_front_back")
+
+[node name="mesh" type="MeshInstance3D" parent="back_wall"]
+mesh = SubResource("BoxMesh_front_back")
+material_override = SubResource("StandardMaterial3D_board")
+
+[node name="front_wall" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 2.1)
+
+[node name="collision" type="CollisionShape3D" parent="front_wall"]
+shape = SubResource("BoxShape3D_front_back")
+
+[node name="mesh" type="MeshInstance3D" parent="front_wall"]
+mesh = SubResource("BoxMesh_front_back")
+material_override = SubResource("StandardMaterial3D_board")
+
+[node name="dice" type="RigidBody3D" parent="."]
+transform = Transform3D(0.912855, -0.212348, 0.348155, 0.280815, 0.94495, -0.168993, -0.295798, 0.251974, 0.921525, 0, 1.4, 0)
+script = ExtResource("2_dice")
+definition = ExtResource("3_die")
+roll_impulse_strength = 5.0
+roll_torque_strength = 18.0
