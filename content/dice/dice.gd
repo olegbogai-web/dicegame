@@ -165,6 +165,8 @@ func _build_box_mesh(size: Vector3) -> BoxMesh:
 func _build_body_material() -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.albedo_color = definition.base_color
+	material.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
+	material.cull_mode = BaseMaterial3D.CULL_BACK
 	material.roughness = definition.roughness
 	material.metallic = definition.metallic
 	if definition.texture != null:

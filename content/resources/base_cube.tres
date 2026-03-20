@@ -30,4 +30,5 @@ text_value = "6"
 script = ExtResource("1_j8m3r")
 dice_name = "base_cube"
 base_color = Color(0.99495333, 0.854602, 0.83693045, 1)
+size_multiplier = Vector3(3, 3, 3)
 faces = Array[ExtResource("2_4c0xn")]([SubResource("Resource_1"), SubResource("Resource_2"), SubResource("Resource_3"), SubResource("Resource_4"), SubResource("Resource_5"), SubResource("Resource_6")])
