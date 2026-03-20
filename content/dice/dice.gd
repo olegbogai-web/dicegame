@@ -16,6 +16,7 @@ const FACE_NORMALS := [
 @export var extra_size_multiplier: Vector3 = Vector3.ONE
 
 var _visual_root: Node3D
+var _collision_shape: CollisionShape3D
 var _body_mesh: MeshInstance3D
 var _face_views: Array[DiceFaceView] = []
 var _bound_definition: DiceDefinition
@@ -83,6 +84,12 @@ func _ensure_nodes() -> void:
 		add_child(_visual_root)
 		_visual_root.owner = self if Engine.is_editor_hint() else null
 
+	if _collision_shape == null:
+		_collision_shape = CollisionShape3D.new()
+		_collision_shape.name = "Collision"
+		add_child(_collision_shape)
+		_collision_shape.owner = self if Engine.is_editor_hint() else null
+
 	if _body_mesh == null:
 		_body_mesh = MeshInstance3D.new()
 		_body_mesh.name = "Body"
@@ -106,12 +113,15 @@ func _refresh_visuals() -> void:
 	_bind_definition()
 
 	if definition == null:
+		if _collision_shape != null:
+			_collision_shape.shape = null
 		_body_mesh.mesh = null
 		for face_view in _face_views:
 			face_view.visible = false
 		return
 
 	var size := definition.get_resolved_size() * extra_size_multiplier
+	_collision_shape.shape = _build_box_shape(size)
 	_body_mesh.mesh = _build_box_mesh(size)
 	_body_mesh.material_override = _build_body_material()
 
@@ -138,6 +148,12 @@ func _resolve_face_size(face_index: int, size: Vector3) -> Vector2:
 			return Vector2(size.x, size.z)
 		_:
 			return Vector2.ONE * min(size.x, size.y)
+
+
+func _build_box_shape(size: Vector3) -> BoxShape3D:
+	var box_shape := BoxShape3D.new()
+	box_shape.size = size
+	return box_shape
 
 
 func _build_box_mesh(size: Vector3) -> BoxMesh:
