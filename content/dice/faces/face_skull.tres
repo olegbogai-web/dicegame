@@ -1,9 +1,0 @@
-[gd_resource type="Resource" script_class="DiceFaceDefinition" load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://src/domain/dice/dice_face_definition.gd" id="1_58gbj"]
-
-[resource]
-script = ExtResource("1_58gbj")
-content_type = 1
-icon_id = &"skull"
-foreground_color = Color(0.356863, 0.145098, 0.121569, 1)
