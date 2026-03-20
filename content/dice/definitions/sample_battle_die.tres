@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="DiceDefinition" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://src/domain/dice/dice_definition.gd" id="1_ekj3x"]
+[ext_resource type="Texture2D" path="res://assets/material/дерево.png" id="2_6grhd"]
+[ext_resource type="Resource" path="res://content/dice/faces/face_1.tres" id="3_iyn8l"]
+[ext_resource type="Resource" path="res://content/dice/faces/face_2.tres" id="4_4v76r"]
+[ext_resource type="Resource" path="res://content/dice/faces/face_3.tres" id="5_qgchc"]
+[ext_resource type="Resource" path="res://content/dice/faces/face_4.tres" id="6_6boaq"]
+[ext_resource type="Resource" path="res://content/dice/faces/face_skull.tres" id="7_1e022"]
+[ext_resource type="Resource" path="res://content/dice/faces/face_shield.tres" id="8_3qg1g"]
+
+[resource]
+script = ExtResource("1_ekj3x")
+id = &"starter_battle_die"
+display_name = "Starter Battle Die"
+base_texture = ExtResource("2_6grhd")
+faces = [ExtResource("3_iyn8l"), ExtResource("4_4v76r"), ExtResource("5_qgchc"), ExtResource("6_6boaq"), ExtResource("7_1e022"), ExtResource("8_3qg1g")]
