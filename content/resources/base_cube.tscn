@@ -6,4 +6,3 @@
 [node name="base_cube" type="RigidBody3D" unique_id=548484381]
 script = ExtResource("1_6ukd8")
 definition = ExtResource("2_6r77e")
-throw_on_ready = true

@@ -14,11 +14,6 @@ const FACE_NORMALS := [
 
 @export var definition: DiceDefinition
 @export var extra_size_multiplier: Vector3 = Vector3.ONE
-@export var throw_on_ready := false
-@export_range(0.0, 3.0, 0.01) var start_linear_speed_min := 0.35
-@export_range(0.0, 3.0, 0.01) var start_linear_speed_max := 0.9
-@export_range(0.0, 12.0, 0.01) var start_angular_speed_min := 1.5
-@export_range(0.0, 12.0, 0.01) var start_angular_speed_max := 4.0
 
 var _visual_root: Node3D
 var _body_mesh: MeshInstance3D
@@ -36,8 +31,6 @@ func _ready() -> void:
 	_ensure_nodes()
 	_bind_definition()
 	_refresh_visuals()
-	if throw_on_ready and not Engine.is_editor_hint():
-		call_deferred("throw_with_random_start_motion")
 
 
 func _exit_tree() -> void:
@@ -81,36 +74,6 @@ func _unbind_definition() -> void:
 func _on_definition_changed() -> void:
 	_refresh_visuals()
 	update_configuration_warnings()
-
-
-func throw_with_random_start_motion(rng: RandomNumberGenerator = null) -> void:
-	var random := rng
-	if random == null:
-		random = RandomNumberGenerator.new()
-		random.randomize()
-
-	sleeping = false
-	linear_velocity = _build_random_linear_velocity(random)
-	angular_velocity = _build_random_angular_velocity(random)
-
-
-func _build_random_linear_velocity(rng: RandomNumberGenerator) -> Vector3:
-	var horizontal_direction := Vector2(rng.randf_range(-1.0, 1.0), rng.randf_range(-1.0, 1.0))
-	if horizontal_direction.length_squared() == 0.0:
-		horizontal_direction = Vector2.RIGHT
-
-	var direction := Vector3(horizontal_direction.x, rng.randf_range(0.45, 1.0), horizontal_direction.y).normalized()
-	var speed := rng.randf_range(min(start_linear_speed_min, start_linear_speed_max), max(start_linear_speed_min, start_linear_speed_max))
-	return direction * speed
-
-
-func _build_random_angular_velocity(rng: RandomNumberGenerator) -> Vector3:
-	var axis := Vector3(rng.randf_range(-1.0, 1.0), rng.randf_range(-1.0, 1.0), rng.randf_range(-1.0, 1.0))
-	if axis.length_squared() == 0.0:
-		axis = Vector3.UP
-
-	var angular_speed := rng.randf_range(min(start_angular_speed_min, start_angular_speed_max), max(start_angular_speed_min, start_angular_speed_max))
-	return axis.normalized() * angular_speed
 
 
 func _ensure_nodes() -> void:
