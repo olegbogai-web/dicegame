@@ -1,0 +1,71 @@
+[gd_scene load_steps=3 format=3 uid="uid://c3dyp2m8l0jba"]
+
+[ext_resource type="Script" path="res://ui/scripts/die_face_view.gd" id="1_02c0s"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_56jyt"]
+size = Vector2(0.92, 0.92)
+
+[node name="DieFaceView" type="Node3D"]
+script = ExtResource("1_02c0s")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("QuadMesh_56jyt")
+cast_shadow = 0
+
+[node name="SubViewport" type="SubViewport" parent="."]
+transparent_bg = true
+handle_input_locally = false
+msaa_2d = 2
+size = Vector2i(256, 256)
+render_target_update_mode = 4
+
+[node name="FaceRoot" type="Control" parent="SubViewport"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="ColorRect" parent="SubViewport/FaceRoot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 0)
+
+[node name="BaseTexture" type="TextureRect" parent="SubViewport/FaceRoot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+stretch_mode = 6
+expand_mode = 1
+
+[node name="Overlay" type="CenterContainer" parent="SubViewport/FaceRoot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Icon" type="TextureRect" parent="SubViewport/FaceRoot/Overlay"]
+custom_minimum_size = Vector2(128, 128)
+layout_mode = 2
+stretch_mode = 5
+expand_mode = 1
+
+[node name="Label" type="Label" parent="SubViewport/FaceRoot/Overlay"]
+visible = false
+layout_mode = 2
+text = "1"
+horizontal_alignment = 1
+vertical_alignment = 1
