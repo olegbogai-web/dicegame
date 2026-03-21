@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="MonsterDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/monsters/resources/monster_definition.gd" id="1_monster"]
+[ext_resource type="Texture2D" path="res://assets/entity/monsters/test_monster.png" id="2_sprite"]
+[ext_resource type="Resource" path="res://content/abilities/definitions/common_attack.tres" id="3_ability"]
+
+[resource]
+script = ExtResource("1_monster")
+monster_id = "test_monster"
+display_name = "тестовый монстр"
+sprite = ExtResource("2_sprite")
+max_health = 10
+dice_count = 1
+abilities = Array[Resource]( [ExtResource("3_ability")] )
