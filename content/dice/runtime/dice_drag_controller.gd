@@ -1,9 +1,6 @@
 extends RefCounted
 class_name DiceDragController
 
-signal drag_started(dice: RigidBody3D)
-signal drag_stopped(dice: RigidBody3D)
-
 var _is_dragging := false
 var _drag_camera: Camera3D
 var _drag_plane_height := 0.0
@@ -25,7 +22,6 @@ func handle_input_event(
 		if event.pressed:
 			if not dice.sleeping:
 				return
-			drag_started.emit(dice)
 			_start_dragging(dice, camera, position, drag_lift_height)
 		else:
 			stop_dragging(dice)
@@ -55,11 +51,6 @@ func stop_dragging(dice: RigidBody3D) -> void:
 	_drag_camera = null
 	_drag_plane_height = 0.0
 	_drag_target_height = 0.0
-	drag_stopped.emit(dice)
-
-
-func is_dragging() -> bool:
-	return _is_dragging
 
 
 func _start_dragging(dice: RigidBody3D, camera: Camera3D, hit_position: Vector3, drag_lift_height: float) -> void:

@@ -1,7 +1,6 @@
 extends Node3D
 
 const BattleRoomScript = preload("res://content/rooms/subclasses/battle_room.gd")
-const BattleAbilityDiceRuntimeScript = preload("res://scenes/runtime/battle_ability_dice_runtime.gd")
 
 @onready var _camera: Camera3D = $Camera3D
 @onready var _board: Node3D = $board
@@ -18,17 +17,13 @@ var battle_room_data: BattleRoom
 var _generated_monster_sprites: Array[Node] = []
 var _generated_player_ability_frames: Array[Node] = []
 var _generated_monster_ability_frames: Array[Node] = []
-var _ability_dice_runtime: BattleAbilityDiceRuntime
 
 
 func _ready() -> void:
-	if _ability_dice_runtime == null:
-		_ability_dice_runtime = BattleAbilityDiceRuntimeScript.new()
 	if battle_room_data == null:
 		configure_from_battle_room(BattleRoomScript.create_test_battle_room())
 	else:
 		_apply_room_data()
-	set_physics_process(true)
 
 
 func configure_from_battle_room(next_battle_room: BattleRoom) -> void:
@@ -66,9 +61,6 @@ func _ensure_battle_room_data() -> void:
 func _apply_room_data() -> void:
 	if battle_room_data == null:
 		return
-	if _ability_dice_runtime == null:
-		_ability_dice_runtime = BattleAbilityDiceRuntimeScript.new()
-	_ability_dice_runtime.clear()
 	_apply_floor_textures()
 	_apply_player_sprite()
 	_apply_monster_sprites()
@@ -143,9 +135,7 @@ func _apply_ability_frames(
 			continue
 		frame.transform = Transform3D(frame.transform.basis, anchor + Vector3(0.0, 0.0, offsets[index]))
 		_apply_ability_icon(frame, ability)
-		var dice_places := _apply_dice_places(frame, battle_room_data.get_required_dice_slots(ability))
-		if template == _player_ability_template:
-			_ability_dice_runtime.register_player_frame(frame, ability, dice_places)
+		_apply_dice_places(frame, battle_room_data.get_required_dice_slots(ability))
 
 
 func _apply_ability_icon(frame: MeshInstance3D, ability: AbilityDefinition) -> void:
@@ -159,10 +149,10 @@ func _apply_ability_icon(frame: MeshInstance3D, ability: AbilityDefinition) -> v
 		_apply_texture_to_mesh(icon_node, ability.icon)
 
 
-func _apply_dice_places(frame: MeshInstance3D, required_count: int) -> Array[MeshInstance3D]:
+func _apply_dice_places(frame: MeshInstance3D, required_count: int) -> void:
 	var dice_places := _get_dice_place_nodes(frame)
 	if dice_places.is_empty():
-		return []
+		return
 
 	var active_count := clampi(required_count, 0, dice_places.size())
 	var base_positions := BattleRoomScript.DICE_PLACE_Z_POSITIONS
@@ -172,18 +162,15 @@ func _apply_dice_places(frame: MeshInstance3D, required_count: int) -> Array[Mes
 	var center = base_positions[1] if base_positions.size() >= 2 else 0.0
 
 	var slot_positions := _build_centered_offsets(active_count, spacing)
-	var active_dice_places: Array[MeshInstance3D] = []
 	for index in dice_places.size():
 		var dice_place := dice_places[index]
 		if index >= active_count:
 			dice_place.visible = false
 			continue
 		dice_place.visible = true
-		active_dice_places.append(dice_place)
 		var origin := dice_place.transform.origin
 		origin.z = center + slot_positions[index]
 		dice_place.transform = Transform3D(dice_place.transform.basis, origin)
-	return active_dice_places
 
 
 func _get_dice_place_nodes(frame: MeshInstance3D) -> Array[MeshInstance3D]:
@@ -247,14 +234,6 @@ func _apply_health_bar(combatant_sprite: MeshInstance3D, health_ratio: float) ->
 	health_bar.transform = Transform3D(target_basis, target_origin)
 
 
-
-
-func is_player_ability_ready(ability: AbilityDefinition) -> bool:
-	if _ability_dice_runtime == null:
-		return false
-	return _ability_dice_runtime.is_ability_ready(ability)
-
-
 func _apply_texture_to_mesh(mesh_instance: MeshInstance3D, texture: Texture2D) -> void:
 	if mesh_instance == null:
 		return
@@ -276,9 +255,3 @@ func _build_centered_offsets(count: int, spacing: float) -> Array[float]:
 	for index in count:
 		offsets.append(start + spacing * float(index))
 	return offsets
-
-
-func _physics_process(_delta: float) -> void:
-	if _ability_dice_runtime == null or _board == null:
-		return
-	_ability_dice_runtime.update(_board)
