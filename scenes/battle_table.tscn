@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://dn66rechaasvk" path="res://assets/material/дерево.png" id="1_7k81e"]
 [ext_resource type="Texture2D" uid="uid://cc0r8hvl0nlh5" path="res://assets/ability/common_attack.png" id="2_o6e7d"]
 [ext_resource type="Script" uid="uid://dasggp047n2cm" path="res://scenes/battle_table.gd" id="2_runtime"]
+[ext_resource type="Texture2D" uid="uid://cd253wjyhe31w" path="res://assets/entity/monsters/ability_frame_bot_bar_v2.png" id="3_dtdu1"]
 [ext_resource type="Texture2D" uid="uid://dsf7r7epuo0bi" path="res://assets/entity/monsters/test_monster.png" id="3_e555c"]
 [ext_resource type="Texture2D" uid="uid://cr5mbqdxoaee3" path="res://assets/entity/monsters/test_player.png" id="4_72q4h"]
 [ext_resource type="PackedScene" uid="uid://0ssqyi084mdh" path="res://scenes/board.tscn" id="5_dtdu1"]
@@ -14,6 +15,17 @@ transparency = 1
 albedo_texture = ExtResource("3_e555c")
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_dn2ro"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fc4uq"]
+transparency = 1
+albedo_texture = ExtResource("3_dtdu1")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_ags8d"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dtdu1"]
+albedo_color = Color(1, 0.07450981, 0, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_swnlx"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hup21"]
 transparency = 1
@@ -59,10 +71,30 @@ transform = Transform3D(1.25, 0, 0, 0, 1.25, 0, 0, 0, 1.25, 6.7, 0.41, 0)
 material_override = SubResource("StandardMaterial3D_2u1at")
 mesh = SubResource("PlaneMesh_dn2ro")
 
+[node name="HP_frame_monster" type="MeshInstance3D" parent="monster_sprite" unique_id=315109797]
+transform = Transform3D(0.8, 0, 0, 0, 1, 0, 0, 0, 0.1, 0, 0.001, -0.9993613)
+material_override = SubResource("StandardMaterial3D_fc4uq")
+mesh = SubResource("PlaneMesh_ags8d")
+
+[node name="HP_bar_monster" type="MeshInstance3D" parent="monster_sprite/HP_frame_monster" unique_id=1295097393]
+transform = Transform3D(0.85, 0, 0, 0, 0.8, 0, 0, 0, 0.6, 0, 0.001, 0)
+material_override = SubResource("StandardMaterial3D_dtdu1")
+mesh = SubResource("PlaneMesh_swnlx")
+
 [node name="player_sprite" type="MeshInstance3D" parent="." unique_id=9839672]
 transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, -6.7, 0.41, 0)
 material_override = SubResource("StandardMaterial3D_hup21")
 mesh = SubResource("PlaneMesh_dn2ro")
+
+[node name="HP_frame" type="MeshInstance3D" parent="player_sprite" unique_id=827430729]
+transform = Transform3D(0.8, 0, 0, 0, 1, 0, 0, 0, 0.1, 0, 0.001, -0.9993613)
+material_override = SubResource("StandardMaterial3D_fc4uq")
+mesh = SubResource("PlaneMesh_ags8d")
+
+[node name="HP_bar_player" type="MeshInstance3D" parent="player_sprite/HP_frame" unique_id=397627033]
+transform = Transform3D(0.85, 0, 0, 0, 0.8, 0, 0, 0, 0.6, 0, 0.001, 0)
+material_override = SubResource("StandardMaterial3D_dtdu1")
+mesh = SubResource("PlaneMesh_swnlx")
 
 [node name="board" parent="." unique_id=1670483730 instance=ExtResource("5_dtdu1")]
 transform = Transform3D(-4.8956753e-08, 0, -1.3, 0, 1.1, 0, 1.12, 0, -5.6824803e-08, 0, -0.69, 0)
