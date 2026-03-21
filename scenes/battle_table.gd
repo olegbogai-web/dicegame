@@ -11,6 +11,8 @@ const BattleRoomScript = preload("res://content/rooms/subclasses/battle_room.gd"
 @onready var _player_ability_template: MeshInstance3D = $ability_frame
 @onready var _monster_ability_template: MeshInstance3D = $ability_frame2
 
+const HEALTH_BAR_META_KEY := &"health_bar_base_transform"
+
 var battle_room_data: BattleRoom
 var _generated_monster_sprites: Array[Node] = []
 var _generated_player_ability_frames: Array[Node] = []
@@ -86,6 +88,7 @@ func _apply_player_sprite() -> void:
 		return
 	_apply_texture_to_mesh(_player_sprite, player_view.sprite)
 	_player_sprite.transform = Transform3D(Basis.from_scale(player_view.base_scale), BattleRoomScript.PLAYER_SPRITE_POSITION)
+	_apply_health_bar(_player_sprite, battle_room_data.get_player_health_ratio())
 
 
 func _apply_monster_sprites() -> void:
@@ -108,6 +111,7 @@ func _apply_monster_sprites() -> void:
 			Basis.from_scale(monster_view.base_scale),
 			BattleRoomScript.MONSTER_SPRITE_POSITION + Vector3(0.0, 0.0, offsets[index])
 		)
+		_apply_health_bar(target_sprite, battle_room_data.get_monster_health_ratio(index))
 
 
 func _apply_ability_frames(
@@ -201,6 +205,33 @@ func _clear_generated_nodes(nodes: Array[Node]) -> void:
 		if is_instance_valid(node):
 			node.queue_free()
 	nodes.clear()
+
+
+func _apply_health_bar(combatant_sprite: MeshInstance3D, health_ratio: float) -> void:
+	if combatant_sprite == null:
+		return
+
+	var health_bar := combatant_sprite.get_node_or_null(^"HP_frame/HP_bar_player") as MeshInstance3D
+	if health_bar == null:
+		health_bar = combatant_sprite.get_node_or_null(^"HP_frame_monster/HP_bar_monster") as MeshInstance3D
+	if health_bar == null:
+		return
+
+	var resolved_ratio := clampf(health_ratio, 0.0, 1.0)
+	if not health_bar.has_meta(HEALTH_BAR_META_KEY):
+		health_bar.set_meta(HEALTH_BAR_META_KEY, health_bar.transform)
+
+	var base_transform: Transform3D = health_bar.get_meta(HEALTH_BAR_META_KEY)
+	var base_scale := base_transform.basis.get_scale()
+	var target_scale_x := base_scale.x * resolved_ratio
+	health_bar.visible = not is_zero_approx(target_scale_x)
+	if not health_bar.visible:
+		return
+
+	var target_basis := Basis.from_scale(Vector3(target_scale_x, base_scale.y, base_scale.z))
+	var target_origin := base_transform.origin
+	target_origin.x = base_transform.origin.x - (base_scale.x - target_scale_x) * 0.5
+	health_bar.transform = Transform3D(target_basis, target_origin)
 
 
 func _apply_texture_to_mesh(mesh_instance: MeshInstance3D, texture: Texture2D) -> void:
