@@ -2,9 +2,6 @@
 extends RigidBody3D
 class_name Dice
 
-signal drag_started(dice: Dice)
-signal drag_stopped(dice: Dice)
-
 const FACE_NAMES: Array[StringName] = [&"Front", &"Back", &"Right", &"Left", &"Top", &"Bottom"]
 const FACE_NORMALS: Array[Vector3] = [
 	Vector3.FORWARD,
@@ -119,11 +116,6 @@ func get_top_face() -> DiceFaceDefinition:
 	return definition.get_face(get_top_face_index())
 
 
-func is_dragging() -> bool:
-	_setup_components()
-	return _drag_controller.is_dragging()
-
-
 func _setup_components() -> void:
 	if _node_graph == null:
 		_node_graph = DiceNodeGraphScript.new()
@@ -136,8 +128,6 @@ func _setup_components() -> void:
 		_definition_binding.definition_changed.connect(_on_definition_changed)
 	if _drag_controller == null:
 		_drag_controller = DiceDragControllerScript.new()
-		_drag_controller.drag_started.connect(_on_drag_started)
-		_drag_controller.drag_stopped.connect(_on_drag_stopped)
 	if _orientation_service == null:
 		_orientation_service = DiceOrientationServiceScript.new()
 
@@ -170,11 +160,3 @@ func _on_sleeping_state_changed() -> void:
 	angular_velocity = Vector3.ZERO
 	_physics_runtime.disable_bounce(self)
 	_rotation_locked_after_stop = true
-
-
-func _on_drag_started(_body: RigidBody3D) -> void:
-	drag_started.emit(self)
-
-
-func _on_drag_stopped(_body: RigidBody3D) -> void:
-	drag_stopped.emit(self)
