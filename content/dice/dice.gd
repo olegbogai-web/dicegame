@@ -35,6 +35,7 @@ var _visual_runtime: DiceVisualRuntime
 var _definition_binding: DiceDefinitionBinding
 var _drag_controller: DiceDragController
 var _orientation_service: DiceOrientationService
+var _rotation_locked_after_stop := false
 
 
 func _enter_tree() -> void:
@@ -53,6 +54,7 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	_setup_components()
+	_connect_runtime_signals()
 	_node_graph.ensure_nodes(self, FACE_NAMES)
 	_physics_runtime.apply_defaults(
 		self,
@@ -64,6 +66,7 @@ func _ready() -> void:
 	_definition_binding.bind(definition)
 	_sync_runtime()
 	input_ray_pickable = true
+	lock_rotation = false
 	set_physics_process(false)
 
 
@@ -129,6 +132,11 @@ func _setup_components() -> void:
 		_orientation_service = DiceOrientationServiceScript.new()
 
 
+func _connect_runtime_signals() -> void:
+	if not sleeping_state_changed.is_connected(_on_sleeping_state_changed):
+		sleeping_state_changed.connect(_on_sleeping_state_changed)
+
+
 func _sync_runtime() -> void:
 	if not is_inside_tree():
 		return
@@ -141,3 +149,13 @@ func _sync_runtime() -> void:
 
 func _on_definition_changed() -> void:
 	_sync_runtime()
+
+
+func _on_sleeping_state_changed() -> void:
+	if _rotation_locked_after_stop or not sleeping:
+		return
+
+	lock_rotation = true
+	linear_velocity = Vector3.ZERO
+	angular_velocity = Vector3.ZERO
+	_rotation_locked_after_stop = true
