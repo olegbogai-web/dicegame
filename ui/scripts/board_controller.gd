@@ -191,10 +191,15 @@ func _get_spawn_extents() -> Vector2:
 
 	var collision := _floor.get_node_or_null(^"collision") as CollisionShape3D
 	if collision != null and collision.shape is BoxShape3D:
-		var size := (collision.shape as BoxShape3D).size
+		var half_size := (collision.shape as BoxShape3D).size * 0.5
+		var basis := collision.global_transform.basis
+		var extents := Vector2(
+			absf(basis.x.x) * half_size.x + absf(basis.y.x) * half_size.y + absf(basis.z.x) * half_size.z,
+			absf(basis.x.z) * half_size.x + absf(basis.y.z) * half_size.y + absf(basis.z.z) * half_size.z
+		)
 		return Vector2(
-			max(size.x * 0.5 - spawn_bounds_margin.x, 0.1),
-			max(size.z * 0.5 - spawn_bounds_margin.y, 0.1)
+			max(extents.x - spawn_bounds_margin.x, 0.1),
+			max(extents.y - spawn_bounds_margin.y, 0.1)
 		)
 
 	return Vector2.ONE
