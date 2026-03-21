@@ -15,11 +15,19 @@ const FACE_NORMALS := [
 @export var definition: DiceDefinition
 @export var extra_size_multiplier: Vector3 = Vector3.ONE
 
+@export_category("Drag")
+@export var drag_lift_height: float = 0.12
+
 var _visual_root: Node3D
 var _collision_shape: CollisionShape3D
 var _body_mesh: MeshInstance3D
 var _face_views: Array[DiceFaceView] = []
 var _bound_definition: DiceDefinition
+var _is_dragging := false
+var _drag_camera: Camera3D
+var _drag_plane_height := 0.0
+var _default_gravity_scale := 1.0
+var _drag_body_offset := Vector3.ZERO
 
 
 func _enter_tree() -> void:
@@ -32,9 +40,12 @@ func _ready() -> void:
 	_ensure_nodes()
 	_bind_definition()
 	_refresh_visuals()
+	input_ray_pickable = true
+	set_physics_process(false)
 
 
 func _exit_tree() -> void:
+	_stop_dragging()
 	_unbind_definition()
 
 
@@ -75,6 +86,28 @@ func _unbind_definition() -> void:
 func _on_definition_changed() -> void:
 	_refresh_visuals()
 	update_configuration_warnings()
+
+
+func _input_event(camera: Camera3D, event: InputEvent, position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
+	if Engine.is_editor_hint():
+		return
+
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			_start_dragging(camera, position)
+		else:
+			_stop_dragging()
+
+
+func _physics_process(_delta: float) -> void:
+	if not _is_dragging:
+		return
+
+	if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		_stop_dragging()
+		return
+
+	_update_drag_position()
 
 
 func _ensure_nodes() -> void:
@@ -172,3 +205,56 @@ func _build_body_material() -> StandardMaterial3D:
 	if definition.texture != null:
 		material.albedo_texture = definition.texture
 	return material
+
+
+func _start_dragging(camera: Camera3D, hit_position: Vector3) -> void:
+	if camera == null:
+		return
+
+	_drag_camera = camera
+	_drag_plane_height = hit_position.y + drag_lift_height
+	_drag_body_offset = global_position - hit_position
+	_default_gravity_scale = gravity_scale
+	freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
+	freeze = true
+	linear_velocity = Vector3.ZERO
+	angular_velocity = Vector3.ZERO
+	gravity_scale = 0.0
+	_is_dragging = true
+	set_physics_process(true)
+	_update_drag_position()
+
+
+func _stop_dragging() -> void:
+	if not _is_dragging:
+		return
+
+	_is_dragging = false
+	set_physics_process(false)
+	freeze = false
+	gravity_scale = _default_gravity_scale
+	linear_velocity = Vector3.ZERO
+	angular_velocity = Vector3.ZERO
+	_drag_camera = null
+	_drag_body_offset = Vector3.ZERO
+
+
+func _update_drag_position() -> void:
+	if not _is_dragging or _drag_camera == null:
+		return
+
+	var mouse_position := get_viewport().get_mouse_position()
+	var ray_origin := _drag_camera.project_ray_origin(mouse_position)
+	var ray_direction := _drag_camera.project_ray_normal(mouse_position)
+	var denominator := ray_direction.y
+	if abs(denominator) < 0.0001:
+		return
+
+	var distance := (_drag_plane_height - ray_origin.y) / denominator
+	if distance < 0.0:
+		return
+
+	var target_hit_position := ray_origin + ray_direction * distance
+	var target_position := target_hit_position + _drag_body_offset
+	target_position.y = _drag_plane_height + _drag_body_offset.y
+	global_position = target_position
