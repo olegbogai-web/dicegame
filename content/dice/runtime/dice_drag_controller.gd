@@ -60,8 +60,8 @@ func _start_dragging(dice: RigidBody3D, camera: Camera3D, hit_position: Vector3,
 		return
 
 	_drag_camera = camera
-	_drag_plane_height = hit_position.y + drag_lift_height
-	_drag_target_height = dice.global_position.y + drag_lift_height
+	_drag_plane_height = drag_lift_height
+	_drag_target_height = drag_lift_height
 	_drag_body_offset = dice.global_position - hit_position
 	_drag_body_offset.y = 0.0
 	_default_gravity_scale = dice.gravity_scale
