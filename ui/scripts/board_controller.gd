@@ -58,13 +58,12 @@ func throw_dice(requests: Array[DiceThrowRequest]) -> Array[RigidBody3D]:
 
 		var dice_body := instance as RigidBody3D
 		var resolved_size := _resolve_request_size(dice_body, request)
+		var spawn_result := _find_spawn_transform(resolved_size, occupied_areas, board_center, spawn_extents)
 		var spawn_basis := Basis.from_euler(Vector3(
 			_rng.randf_range(-PI, PI),
 			_rng.randf_range(-PI, PI),
 			_rng.randf_range(-PI, PI)
 		))
-		var rotated_size := _get_rotated_size(resolved_size, spawn_basis)
-		var spawn_result := _find_spawn_transform(rotated_size, occupied_areas, board_center, spawn_extents)
 		dice_body.mass = max(request.mass, 0.001)
 
 		if dice_body is Dice:
@@ -72,7 +71,7 @@ func throw_dice(requests: Array[DiceThrowRequest]) -> Array[RigidBody3D]:
 
 		add_child(dice_body)
 		dice_body.global_transform = Transform3D(spawn_basis, spawn_result.origin)
-		occupied_areas.append(_build_spawn_aabb(spawn_result.origin, rotated_size))
+		occupied_areas.append(_build_spawn_aabb(spawn_result.origin, resolved_size))
 
 		var linear_velocity := _build_initial_velocity(spawn_result.origin, board_center)
 		dice_body.linear_velocity = linear_velocity
@@ -139,11 +138,6 @@ func _random_spawn_position(resolved_size: Vector3, board_center: Vector3, spawn
 func _build_spawn_aabb(origin: Vector3, resolved_size: Vector3) -> AABB:
 	var expanded_size := resolved_size + Vector3.ONE * spawn_spacing
 	return AABB(origin - expanded_size * 0.5, expanded_size)
-
-
-func _get_rotated_size(resolved_size: Vector3, spawn_basis: Basis) -> Vector3:
-	var absolute_basis := spawn_basis.orthonormalized().abs()
-	return absolute_basis * resolved_size
 
 
 func _intersects_spawned_dice(candidate_aabb: AABB, occupied_areas: Array[AABB]) -> bool:
