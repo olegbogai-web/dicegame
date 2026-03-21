@@ -225,6 +225,28 @@ func _build_body_material() -> StandardMaterial3D:
 	return material
 
 
+func get_top_face_index() -> int:
+	var resolved_basis := global_transform.basis.orthonormalized()
+	var top_face_index := -1
+	var top_face_alignment := -INF
+
+	for index in FACE_NORMALS.size():
+		var world_normal := resolved_basis * FACE_NORMALS[index]
+		var alignment := world_normal.dot(Vector3.UP)
+		if alignment > top_face_alignment:
+			top_face_alignment = alignment
+			top_face_index = index
+
+	return top_face_index
+
+
+func get_top_face() -> DiceFaceDefinition:
+	if definition == null:
+		return null
+
+	return definition.get_face(get_top_face_index())
+
+
 func _start_dragging(camera: Camera3D, hit_position: Vector3) -> void:
 	if camera == null:
 		return
