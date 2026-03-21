@@ -155,7 +155,7 @@ func _apply_dice_places(frame: MeshInstance3D, required_count: int) -> void:
 	var spacing := 0.0
 	if base_positions.size() >= 2:
 		spacing = absf(base_positions[1] - base_positions[0])
-	var center := base_positions[1] if base_positions.size() >= 2 else 0.0
+	var center = base_positions[1] if base_positions.size() >= 2 else 0.0
 
 	var slot_positions := _build_centered_offsets(active_count, spacing)
 	for index in dice_places.size():
