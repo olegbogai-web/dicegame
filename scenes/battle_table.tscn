@@ -36,8 +36,14 @@ albedo_texture = ExtResource("1_7k81e")
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_4cwgp"]
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_dtdu1"]
+size = Vector3(2.533205, 1, 2.3716002)
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_o6e7d"]
 albedo_texture = ExtResource("1_7k81e")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_fc4uq"]
+size = Vector3(2.4323123, 1, 2.3716002)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_e555c"]
 transparency = 1
@@ -104,10 +110,24 @@ transform = Transform3D(2.6, 0, 0, 0, 1, 0, 0, 0, 4.5, 5.3, 0.4, 0)
 material_override = SubResource("StandardMaterial3D_7k81e")
 mesh = SubResource("PlaneMesh_4cwgp")
 
+[node name="StaticBody3D" type="StaticBody3D" parent="right_floor" unique_id=1387613728]
+transform = Transform3D(0.84, 0, 0, 0, 0.84, 0, 0, 0, 0.84, -0.57, 0.06, 0.539)
+
+[node name="collision" type="CollisionShape3D" parent="right_floor/StaticBody3D" unique_id=646940204]
+transform = Transform3D(1, 0, 0, 0, 0.5, 0, 0, 0, 1.1, 0.831, -0.25, -0.676)
+shape = SubResource("BoxShape3D_dtdu1")
+
 [node name="left_floor" type="MeshInstance3D" parent="." unique_id=1635985671]
 transform = Transform3D(2.6, 0, 0, 0, 1, 0, 0, 0, 4.5, -5.3, 0.4, 0)
 material_override = SubResource("StandardMaterial3D_o6e7d")
 mesh = SubResource("PlaneMesh_4cwgp")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="left_floor" unique_id=1323234304]
+transform = Transform3D(0.84, 0, 0, 0, 0.84, 0, 0, 0, 0.84, -0.57, 0.06, 0.539)
+
+[node name="collision" type="CollisionShape3D" parent="left_floor/StaticBody3D" unique_id=1693895101]
+transform = Transform3D(1, 0, 0, 0, 0.5, 0, 0, 0, 1.1, 0.567, -0.25, -0.676)
+shape = SubResource("BoxShape3D_fc4uq")
 
 [node name="ability_frame" type="MeshInstance3D" parent="." unique_id=403838167]
 transform = Transform3D(1.35, 0, 0, 0, 0.9, 0, 0, 0, 0.9, -4.25, 0.405, 0)
