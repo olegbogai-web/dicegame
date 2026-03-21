@@ -1,0 +1,70 @@
+[gd_scene format=3 uid="uid://bpawrnjnwfgdf"]
+
+[ext_resource type="Texture2D" uid="uid://dn66rechaasvk" path="res://assets/material/дерево.png" id="1_7k81e"]
+[ext_resource type="Texture2D" uid="uid://cc0r8hvl0nlh5" path="res://assets/ability/common_attack.png" id="2_o6e7d"]
+[ext_resource type="Texture2D" uid="uid://dsf7r7epuo0bi" path="res://assets/entity/monsters/test_monster.png" id="3_e555c"]
+[ext_resource type="Texture2D" uid="uid://cr5mbqdxoaee3" path="res://assets/entity/monsters/test_player.png" id="4_72q4h"]
+[ext_resource type="PackedScene" uid="uid://0ssqyi084mdh" path="res://scenes/board.tscn" id="5_dtdu1"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_aj7ea"]
+albedo_texture = ExtResource("2_o6e7d")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_umdqk"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6l3rs"]
+albedo_texture = ExtResource("2_o6e7d")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2u1at"]
+albedo_texture = ExtResource("3_e555c")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_dn2ro"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hup21"]
+albedo_texture = ExtResource("4_72q4h")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7k81e"]
+albedo_texture = ExtResource("1_7k81e")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_4cwgp"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_o6e7d"]
+albedo_texture = ExtResource("1_7k81e")
+
+[node name="Node3D" type="Node3D" unique_id=52135583]
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=835222278]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 13.008608, -1.3151043e-07)
+fov = 38.9
+
+[node name="player_ability" type="MeshInstance3D" parent="." unique_id=1397748277]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -4.207, 0.41, 0)
+material_override = SubResource("StandardMaterial3D_aj7ea")
+mesh = SubResource("PlaneMesh_umdqk")
+
+[node name="monster_ability" type="MeshInstance3D" parent="." unique_id=591996951]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 4.2, 0.41, 0)
+material_override = SubResource("StandardMaterial3D_6l3rs")
+mesh = SubResource("PlaneMesh_umdqk")
+
+[node name="monster_sprite" type="MeshInstance3D" parent="." unique_id=1521767394]
+transform = Transform3D(1.25, 0, 0, 0, 1.25, 0, 0, 0, 1.25, 6.7, 0.41, 0)
+material_override = SubResource("StandardMaterial3D_2u1at")
+mesh = SubResource("PlaneMesh_dn2ro")
+
+[node name="player_sprite" type="MeshInstance3D" parent="." unique_id=9839672]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, -6.7, 0.41, 0)
+material_override = SubResource("StandardMaterial3D_hup21")
+mesh = SubResource("PlaneMesh_dn2ro")
+
+[node name="board" parent="." unique_id=1670483730 instance=ExtResource("5_dtdu1")]
+transform = Transform3D(-4.8956753e-08, 0, -1.3, 0, 1.1, 0, 1.12, 0, -5.6824803e-08, 0, -0.69, 0)
+
+[node name="right_floor" type="MeshInstance3D" parent="." unique_id=45208338]
+transform = Transform3D(2.6, 0, 0, 0, 1, 0, 0, 0, 4.5, 5.3, 0.4, 0)
+material_override = SubResource("StandardMaterial3D_7k81e")
+mesh = SubResource("PlaneMesh_4cwgp")
+
+[node name="left_floor" type="MeshInstance3D" parent="." unique_id=1635985671]
+transform = Transform3D(2.6, 0, 0, 0, 1, 0, 0, 0, 4.5, -5.3, 0.4, 0)
+material_override = SubResource("StandardMaterial3D_o6e7d")
+mesh = SubResource("PlaneMesh_4cwgp")
