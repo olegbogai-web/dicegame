@@ -27,7 +27,7 @@ const DiceOrientationServiceScript = preload("res://content/dice/runtime/dice_or
 @export var extra_size_multiplier: Vector3 = Vector3.ONE
 
 @export_category("Drag")
-@export var drag_lift_height: float = 1
+@export var drag_target_height: float = 0.5
 
 var _node_graph: DiceNodeGraph
 var _physics_runtime: DicePhysicsRuntime
@@ -65,7 +65,7 @@ func _ready() -> void:
 	)
 	_definition_binding.bind(definition)
 	_sync_runtime()
-	input_ray_pickable = true
+	input_ray_pickable = sleeping
 	lock_rotation = false
 	set_physics_process(false)
 
@@ -97,7 +97,7 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 func _input_event(camera: Camera3D, event: InputEvent, position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
 	_setup_components()
-	_drag_controller.handle_input_event(self, camera, event, position, drag_lift_height)
+	_drag_controller.handle_input_event(self, camera, event, position, drag_target_height)
 
 
 func _physics_process(_delta: float) -> void:
@@ -152,10 +152,17 @@ func _on_definition_changed() -> void:
 
 
 func _on_sleeping_state_changed() -> void:
-	if _rotation_locked_after_stop or not sleeping:
+	if not sleeping:
+		lock_rotation = false
+		input_ray_pickable = false
+		_rotation_locked_after_stop = false
+		return
+
+	if _rotation_locked_after_stop:
 		return
 
 	lock_rotation = true
 	linear_velocity = Vector3.ZERO
 	angular_velocity = Vector3.ZERO
+	input_ray_pickable = true
 	_rotation_locked_after_stop = true
