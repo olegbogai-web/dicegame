@@ -6,6 +6,7 @@ const Dice = preload("res://content/dice/dice.gd")
 
 @export_category("Board References")
 @export var floor_path: NodePath = ^"floor"
+@export var camera_path: NodePath = ^"test_camera"
 @export var default_dice_scene: PackedScene
 
 @export_category("Spawn Bounds")
@@ -27,15 +28,31 @@ const Dice = preload("res://content/dice/dice.gd")
 @export var angular_velocity_max: Vector3 = Vector3(14.0, 18.0, 14.0)
 
 @onready var _floor: Node3D = get_node_or_null(floor_path)
+@onready var _camera: Camera3D = get_node_or_null(camera_path)
 @onready var _throw_button: Button = %ThrowDiceButton
 
 var _rng := RandomNumberGenerator.new()
+var _dragged_dice: Dice
+var _drag_plane := Plane(Vector3.UP, 0.0)
+var _drag_local_grab_offset := Vector3.ZERO
 
 
 func _ready() -> void:
 	_rng.randomize()
 	if _throw_button != null and not _throw_button.pressed.is_connected(_on_throw_button_pressed):
 		_throw_button.pressed.connect(_on_throw_button_pressed)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			_try_begin_drag(event.position)
+		else:
+			_end_drag()
+		return
+
+	if event is InputEventMouseMotion and _dragged_dice != null:
+		_update_drag(event.position)
 
 
 func throw_dice(requests: Array[DiceThrowRequest]) -> Array[RigidBody3D]:
@@ -206,3 +223,64 @@ func _random_vector3(min_value: Vector3, max_value: Vector3) -> Vector3:
 		_rng.randf_range(min_value.y, max_value.y),
 		_rng.randf_range(min_value.z, max_value.z)
 	)
+
+
+func _try_begin_drag(mouse_position: Vector2) -> void:
+	if _camera == null:
+		push_warning("Dice drag is unavailable because no camera was assigned.")
+		return
+
+	var hit := _intersect_mouse_ray(mouse_position)
+	if hit.is_empty():
+		return
+
+	var collider = hit.get("collider")
+	if not collider is Dice:
+		return
+
+	_dragged_dice = collider as Dice
+	_drag_local_grab_offset = _dragged_dice.to_local(hit.get("position", _dragged_dice.global_position))
+	_drag_plane = Plane(Vector3.UP, _dragged_dice.global_position.y)
+	_dragged_dice.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
+	_dragged_dice.freeze = true
+	_dragged_dice.linear_velocity = Vector3.ZERO
+	_dragged_dice.angular_velocity = Vector3.ZERO
+	_update_drag(mouse_position)
+
+
+func _update_drag(mouse_position: Vector2) -> void:
+	if _dragged_dice == null or _camera == null:
+		return
+
+	var ray_origin := _camera.project_ray_origin(mouse_position)
+	var ray_direction := _camera.project_ray_normal(mouse_position)
+	var plane_hit := _drag_plane.intersects_ray(ray_origin, ray_direction)
+	if plane_hit == null:
+		return
+
+	var grab_offset := _dragged_dice.global_basis * _drag_local_grab_offset
+	_dragged_dice.global_position = plane_hit - grab_offset
+	_dragged_dice.linear_velocity = Vector3.ZERO
+	_dragged_dice.angular_velocity = Vector3.ZERO
+
+
+func _end_drag() -> void:
+	if _dragged_dice == null:
+		return
+
+	_dragged_dice.linear_velocity = Vector3.ZERO
+	_dragged_dice.angular_velocity = Vector3.ZERO
+	_dragged_dice.freeze = false
+	_dragged_dice = null
+
+
+func _intersect_mouse_ray(mouse_position: Vector2) -> Dictionary:
+	if _camera == null:
+		return {}
+
+	var ray_origin := _camera.project_ray_origin(mouse_position)
+	var ray_end := ray_origin + _camera.project_ray_normal(mouse_position) * 100.0
+	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_end)
+	query.collide_with_areas = false
+	query.collide_with_bodies = true
+	return get_world_3d().direct_space_state.intersect_ray(query)
