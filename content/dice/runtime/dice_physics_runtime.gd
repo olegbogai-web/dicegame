@@ -34,3 +34,10 @@ func refresh_collision_shape(
 	var box_shape := BoxShape3D.new()
 	box_shape.size = definition.get_resolved_size() * extra_size_multiplier
 	node_graph.collision_shape.shape = box_shape
+
+
+func disable_bounce(dice: RigidBody3D) -> void:
+	if dice.physics_material_override == null:
+		dice.physics_material_override = PhysicsMaterial.new()
+
+	dice.physics_material_override.bounce = 0.0

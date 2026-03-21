@@ -4,6 +4,7 @@ class_name DiceDragController
 var _is_dragging := false
 var _drag_camera: Camera3D
 var _drag_plane_height := 0.0
+var _drag_target_height := 0.0
 var _default_gravity_scale := 1.0
 var _drag_body_offset := Vector3.ZERO
 
@@ -20,6 +21,8 @@ func handle_input_event(
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
+			if not dice.sleeping:
+				return
 			_start_dragging(dice, camera, position, drag_lift_height)
 		else:
 			stop_dragging(dice)
@@ -47,6 +50,8 @@ func stop_dragging(dice: RigidBody3D) -> void:
 	dice.linear_velocity = Vector3.ZERO
 	dice.angular_velocity = Vector3.ZERO
 	_drag_camera = null
+	_drag_plane_height = 0.0
+	_drag_target_height = 0.0
 	_drag_body_offset = Vector3.ZERO
 
 
@@ -56,7 +61,9 @@ func _start_dragging(dice: RigidBody3D, camera: Camera3D, hit_position: Vector3,
 
 	_drag_camera = camera
 	_drag_plane_height = hit_position.y + drag_lift_height
+	_drag_target_height = dice.global_position.y + drag_lift_height
 	_drag_body_offset = dice.global_position - hit_position
+	_drag_body_offset.y = 0.0
 	_default_gravity_scale = dice.gravity_scale
 	dice.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
 	dice.freeze = true
@@ -85,5 +92,5 @@ func _update_drag_position(dice: RigidBody3D) -> void:
 
 	var target_hit_position := ray_origin + ray_direction * distance
 	var target_position := target_hit_position + _drag_body_offset
-	target_position.y = _drag_plane_height + _drag_body_offset.y
+	target_position.y = _drag_target_height
 	dice.global_position = target_position

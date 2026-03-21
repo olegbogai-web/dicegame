@@ -27,7 +27,7 @@ const DiceOrientationServiceScript = preload("res://content/dice/runtime/dice_or
 @export var extra_size_multiplier: Vector3 = Vector3.ONE
 
 @export_category("Drag")
-@export var drag_lift_height: float = 1
+@export var drag_lift_height: float = 0.5
 
 var _node_graph: DiceNodeGraph
 var _physics_runtime: DicePhysicsRuntime
@@ -158,4 +158,5 @@ func _on_sleeping_state_changed() -> void:
 	lock_rotation = true
 	linear_velocity = Vector3.ZERO
 	angular_velocity = Vector3.ZERO
+	_physics_runtime.disable_bounce(self)
 	_rotation_locked_after_stop = true
