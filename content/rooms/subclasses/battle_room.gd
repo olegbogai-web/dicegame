@@ -5,6 +5,7 @@ const DEFAULT_FLOOR_TEXTURE := preload("res://assets/material/дерево.png")
 const TEST_PLAYER_TEXTURE := preload("res://assets/entity/monsters/test_player.png")
 const TEST_MONSTER_DEFINITION := preload("res://content/monsters/definitions/test_monster.tres")
 const COMMON_ATTACK_ABILITY := preload("res://content/abilities/definitions/common_attack.tres")
+const HEAL_ABILITY := preload("res://content/abilities/definitions/heal.tres")
 
 const PLAYER_SPRITE_POSITION := Vector3(-6.7, 0.41, 0.0)
 const PLAYER_SPRITE_SCALE := Vector3(1.2, 1.2, 1.2)
@@ -151,5 +152,5 @@ static func _build_test_player() -> Player:
 	base_stat.max_hp = 30
 	base_stat.starting_hp = 30
 	base_stat.starting_armor = 0
-	base_stat.starting_abilities = [COMMON_ATTACK_ABILITY]
+	base_stat.starting_abilities = [COMMON_ATTACK_ABILITY, HEAL_ABILITY]
 	return Player.new(base_stat)

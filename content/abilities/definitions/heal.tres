@@ -1,0 +1,65 @@
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
+
+[ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" uid="uid://cijja5c0f6ibw" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
+[ext_resource type="Script" uid="uid://vqakigfsnb18" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
+[ext_resource type="Script" uid="uid://c2t7x3op44t3s" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
+[ext_resource type="Script" uid="uid://drneiu6png0u3" path="res://content/abilities/resources/ability_effect_definition.gd" id="6_effect"]
+[ext_resource type="Texture2D" path="res://assets/ability/heal.png" id="7_icon"]
+
+[sub_resource type="Resource" id="AbilityDiceCondition_pay"]
+script = ExtResource("3_dice_condition")
+required_count = 2
+required_tags = PackedStringArray()
+forbidden_tags = PackedStringArray()
+accepted_face_ids = PackedStringArray()
+consume_order = PackedStringArray()
+
+[sub_resource type="Resource" id="AbilityCost_main"]
+script = ExtResource("2_cost")
+dice_conditions = Array[ExtResource("3_dice_condition")]([SubResource("AbilityDiceCondition_pay")])
+
+[sub_resource type="Resource" id="AbilityEffect_heal"]
+script = ExtResource("6_effect")
+effect_id = "heal_restore_hp"
+effect_type = &"healing"
+magnitude = 5
+dice_query_tags = PackedStringArray()
+
+[sub_resource type="Resource" id="AbilityTargetRule_self"]
+script = ExtResource("4_target_rule")
+selection = 0
+min_targets = 0
+max_targets = 0
+allow_self = true
+required_tags = PackedStringArray()
+forbidden_tags = PackedStringArray()
+
+[resource]
+script = ExtResource("1_ability")
+ability_id = "heal"
+display_name = "Исцеление"
+description = "Требует 2 любых куба. Исцеляет на 5."
+flavor_text = ""
+icon = ExtResource("7_icon")
+sprite_scale = Vector2(1, 1)
+tags = PackedStringArray("heal", "support")
+kind = 0
+owner_scope = 0
+rarity = 0
+unlock_level = 0
+upgrade_level = 0
+max_upgrade_level = 3
+cooldown_turns = 0
+charges = 0
+starts_on_cooldown = false
+once_per_battle = false
+exhausts_for_battle = false
+cost = SubResource("AbilityCost_main")
+target_rule = SubResource("AbilityTargetRule_self")
+cast_conditions = Array[Resource]([])
+use_conditions = Array[Resource]([])
+effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_heal")])
+follow_up_ability_ids = PackedStringArray()
+ai_hints = {}
+ui_metadata = {}
