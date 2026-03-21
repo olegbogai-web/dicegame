@@ -13,14 +13,14 @@ func handle_input_event(
 	camera: Camera3D,
 	event: InputEvent,
 	position: Vector3,
-	drag_lift_height: float
+	drag_target_height: float
 ) -> void:
 	if Engine.is_editor_hint():
 		return
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
-			_start_dragging(dice, camera, position, drag_lift_height)
+			_start_dragging(dice, camera, position, drag_target_height)
 		else:
 			stop_dragging(dice)
 
@@ -42,6 +42,7 @@ func stop_dragging(dice: RigidBody3D) -> void:
 
 	_is_dragging = false
 	dice.set_physics_process(false)
+	dice.input_ray_pickable = false
 	dice.freeze = false
 	dice.gravity_scale = _default_gravity_scale
 	dice.linear_velocity = Vector3.ZERO
@@ -50,14 +51,16 @@ func stop_dragging(dice: RigidBody3D) -> void:
 	_drag_body_offset = Vector3.ZERO
 
 
-func _start_dragging(dice: RigidBody3D, camera: Camera3D, hit_position: Vector3, drag_lift_height: float) -> void:
+func _start_dragging(dice: RigidBody3D, camera: Camera3D, hit_position: Vector3, drag_target_height: float) -> void:
 	if camera == null:
 		return
 
 	_drag_camera = camera
-	_drag_plane_height = hit_position.y + drag_lift_height
+	_drag_plane_height = drag_target_height
 	_drag_body_offset = dice.global_position - hit_position
+	_drag_body_offset.y = 0.0
 	_default_gravity_scale = dice.gravity_scale
+	dice.input_ray_pickable = false
 	dice.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
 	dice.freeze = true
 	dice.linear_velocity = Vector3.ZERO
@@ -85,5 +88,5 @@ func _update_drag_position(dice: RigidBody3D) -> void:
 
 	var target_hit_position := ray_origin + ray_direction * distance
 	var target_position := target_hit_position + _drag_body_offset
-	target_position.y = _drag_plane_height + _drag_body_offset.y
+	target_position.y = _drag_plane_height
 	dice.global_position = target_position
