@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://bpawrnjnwfgdf"]
 
 [ext_resource type="Texture2D" uid="uid://dn66rechaasvk" path="res://assets/material/дерево.png" id="1_7k81e"]
+[ext_resource type="Script" path="res://scenes/battle_table.gd" id="2_runtime"]
 [ext_resource type="Texture2D" uid="uid://cc0r8hvl0nlh5" path="res://assets/ability/common_attack.png" id="2_o6e7d"]
 [ext_resource type="Texture2D" uid="uid://dsf7r7epuo0bi" path="res://assets/entity/monsters/test_monster.png" id="3_e555c"]
 [ext_resource type="Texture2D" uid="uid://cr5mbqdxoaee3" path="res://assets/entity/monsters/test_player.png" id="4_72q4h"]
@@ -47,6 +48,7 @@ albedo_texture = ExtResource("2_o6e7d")
 albedo_texture = ExtResource("2_o6e7d")
 
 [node name="battle_table" type="Node3D" unique_id=52135583]
+script = ExtResource("2_runtime")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=835222278]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 13.008608, -1.3151043e-07)
