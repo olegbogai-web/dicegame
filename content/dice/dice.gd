@@ -11,6 +11,10 @@ const FACE_NORMALS := [
 	Vector3.UP,
 	Vector3.DOWN,
 ]
+const DEFAULT_FRICTION := 0.25
+const DEFAULT_BOUNCE := 0.7
+const DEFAULT_LINEAR_DAMP := 0.25
+const DEFAULT_ANGULAR_DAMP := 0.25
 
 @export var definition: DiceDefinition
 @export var extra_size_multiplier: Vector3 = Vector3.ONE
@@ -32,12 +36,14 @@ var _drag_body_offset := Vector3.ZERO
 
 func _enter_tree() -> void:
 	_ensure_nodes()
+	_apply_physics_defaults()
 	_bind_definition()
 	_refresh_visuals()
 
 
 func _ready() -> void:
 	_ensure_nodes()
+	_apply_physics_defaults()
 	_bind_definition()
 	_refresh_visuals()
 	input_ray_pickable = true
@@ -51,6 +57,7 @@ func _exit_tree() -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_EDITOR_PRE_SAVE:
+		_apply_physics_defaults()
 		_bind_definition()
 		_refresh_visuals()
 
@@ -136,6 +143,17 @@ func _ensure_nodes() -> void:
 			_visual_root.add_child(face_view)
 			face_view.owner = self if Engine.is_editor_hint() else null
 			_face_views.append(face_view)
+
+
+func _apply_physics_defaults() -> void:
+	linear_damp = DEFAULT_LINEAR_DAMP
+	angular_damp = DEFAULT_ANGULAR_DAMP
+
+	if physics_material_override == null:
+		physics_material_override = PhysicsMaterial.new()
+
+	physics_material_override.friction = DEFAULT_FRICTION
+	physics_material_override.bounce = DEFAULT_BOUNCE
 
 
 func _refresh_visuals() -> void:
