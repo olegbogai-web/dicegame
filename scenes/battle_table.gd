@@ -6,6 +6,7 @@ const Dice = preload("res://content/dice/dice.gd")
 const SLOT_EMPTY_COLOR := Color(1.0, 1.0, 1.0, 1.0)
 const SLOT_ASSIGNED_COLOR := Color(0.82, 0.9, 1.0, 1.0)
 const SLOT_READY_COLOR := Color(0.2, 0.62, 1.0, 1.0)
+const SLOT_HIGHLIGHT_COLOR := Color(0.36, 0.9, 0.48, 1.0)
 const FRAME_READY_COLOR := Color(0.12, 0.55, 1.0, 1.0)
 const TINT_MATERIAL_META_KEY := &"runtime_tint_material"
 
@@ -431,11 +432,14 @@ func _get_slot_target_position(dice_place: MeshInstance3D, dice: Dice) -> Vector
 
 func _update_player_ability_visuals(dice_list: Array[Dice]) -> void:
 	var ability_status := {}
+	var active_drag_dice := _get_active_drag_dice(dice_list)
 	for slot_state in _player_ability_slot_states:
 		var assigned_dice := _find_dice_for_slot(slot_state, dice_list)
 		var is_ready := assigned_dice != null and assigned_dice.is_snapped_to_ability_slot()
 		var slot_color := SLOT_EMPTY_COLOR
-		if assigned_dice != null:
+		if _should_highlight_slot_for_dice(slot_state, assigned_dice, active_drag_dice):
+			slot_color = SLOT_HIGHLIGHT_COLOR
+		elif assigned_dice != null:
 			slot_color = SLOT_ASSIGNED_COLOR
 		if is_ready:
 			slot_color = SLOT_READY_COLOR
@@ -451,6 +455,19 @@ func _update_player_ability_visuals(dice_list: Array[Dice]) -> void:
 
 	for slot_info in ability_status.values():
 		_set_mesh_tint(slot_info["frame"], FRAME_READY_COLOR if slot_info["ready"] else SLOT_EMPTY_COLOR)
+
+
+func _get_active_drag_dice(dice_list: Array[Dice]) -> Dice:
+	for dice in dice_list:
+		if dice.is_being_dragged():
+			return dice
+	return null
+
+
+func _should_highlight_slot_for_dice(slot_state: Dictionary, assigned_dice: Dice, active_drag_dice: Dice) -> bool:
+	if active_drag_dice == null or assigned_dice != null:
+		return false
+	return _dice_matches_slot(active_drag_dice, slot_state)
 
 
 func _set_mesh_tint(mesh_instance: MeshInstance3D, color: Color) -> void:
