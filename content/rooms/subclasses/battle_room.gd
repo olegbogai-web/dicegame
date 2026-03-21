@@ -23,15 +23,21 @@ class CombatantViewData:
 	var sprite: Texture2D
 	var abilities: Array[AbilityDefinition] = []
 	var base_scale: Vector3 = Vector3.ONE
+	var current_hp := 0
+	var max_hp := 0
 
 	func _init(
 		next_sprite: Texture2D = null,
 		next_abilities: Array[AbilityDefinition] = [],
-		next_scale: Vector3 = Vector3.ONE
+		next_scale: Vector3 = Vector3.ONE,
+		next_current_hp: int = 0,
+		next_max_hp: int = 0
 	) -> void:
 		sprite = next_sprite
 		abilities = _sanitize_abilities(next_abilities)
 		base_scale = next_scale
+		current_hp = maxi(next_current_hp, 0)
+		max_hp = maxi(next_max_hp, 0)
 
 	static func _sanitize_abilities(next_abilities: Array[AbilityDefinition]) -> Array[AbilityDefinition]:
 		var sanitized: Array[AbilityDefinition] = []
@@ -39,6 +45,11 @@ class CombatantViewData:
 			if ability != null:
 				sanitized.append(ability)
 		return sanitized
+
+	func get_health_ratio() -> float:
+		if max_hp <= 0:
+			return 0.0
+		return clampf(float(current_hp) / float(max_hp), 0.0, 1.0)
 
 
 func _init() -> void:
@@ -88,9 +99,20 @@ func set_floor_textures(left_texture: Texture2D, right_texture: Texture2D) -> vo
 func set_player_data(player: Player, sprite: Texture2D) -> void:
 	player_instance = player
 	var abilities: Array[AbilityDefinition] = []
+	var current_hp := 0
+	var max_hp := 0
 	if player_instance != null:
 		abilities.assign(player_instance.ability_loadout)
-	player_view = CombatantViewData.new(sprite, abilities, PLAYER_SPRITE_SCALE)
+		current_hp = player_instance.current_hp
+		if player_instance.base_stat != null:
+			max_hp = player_instance.base_stat.max_hp
+	player_view = CombatantViewData.new(
+		sprite,
+		abilities,
+		PLAYER_SPRITE_SCALE,
+		current_hp,
+		max_hp
+	)
 
 
 func set_monsters_from_definitions(monster_definitions: Array[MonsterDefinition]) -> void:
@@ -102,9 +124,23 @@ func set_monsters_from_definitions(monster_definitions: Array[MonsterDefinition]
 			CombatantViewData.new(
 				monster_definition.sprite,
 				monster_definition.abilities,
-				MONSTER_SPRITE_SCALE
+				MONSTER_SPRITE_SCALE,
+				monster_definition.max_health,
+				monster_definition.max_health
 			)
 		)
+
+
+func get_player_health_ratio() -> float:
+	if player_view == null:
+		return 0.0
+	return player_view.get_health_ratio()
+
+
+func get_monster_health_ratio(index: int) -> float:
+	if index < 0 or index >= monster_views.size():
+		return 0.0
+	return monster_views[index].get_health_ratio()
 
 
 func get_player_abilities() -> Array[AbilityDefinition]:
