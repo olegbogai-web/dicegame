@@ -64,7 +64,7 @@ func _ready() -> void:
 	_definition_binding.bind(definition)
 	_sync_runtime()
 	input_ray_pickable = true
-	set_physics_process(true)
+	set_physics_process(false)
 
 
 func _exit_tree() -> void:
@@ -99,7 +99,6 @@ func _input_event(camera: Camera3D, event: InputEvent, position: Vector3, _norma
 
 func _physics_process(_delta: float) -> void:
 	_setup_components()
-	_physics_runtime.physics_process(self)
 	_drag_controller.physics_process(self)
 
 
