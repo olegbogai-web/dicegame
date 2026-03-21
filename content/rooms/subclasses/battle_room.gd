@@ -6,6 +6,11 @@ const TEST_PLAYER_TEXTURE := preload("res://assets/entity/monsters/test_player.p
 const TEST_MONSTER_DEFINITION := preload("res://content/monsters/definitions/test_monster.tres")
 const COMMON_ATTACK_ABILITY := preload("res://content/abilities/definitions/common_attack.tres")
 const HEAL_ABILITY := preload("res://content/abilities/definitions/heal.tres")
+const BASE_DICE := preload("res://content/resources/base_cube.tres")
+const CombatEnums = preload("res://content/combat/resources/combat_enums.gd")
+const CombatService = preload("res://content/combat/services/combat_service.gd")
+const BattleState = preload("res://content/combat/runtime/battle_state.gd")
+const BattleResult = preload("res://content/combat/runtime/battle_result.gd")
 
 const PLAYER_SPRITE_POSITION := Vector3(-6.7, 0.41, 0.0)
 const PLAYER_SPRITE_SCALE := Vector3(1.2, 1.2, 1.2)
@@ -71,9 +76,13 @@ var reward_refs: PackedStringArray = PackedStringArray()
 
 var player_instance: Player
 var player_view: CombatantViewData = CombatantViewData.new()
+var monster_definitions: Array[MonsterDefinition] = []
 var monster_views: Array[CombatantViewData] = []
 var left_floor_texture: Texture2D = DEFAULT_FLOOR_TEXTURE
 var right_floor_texture: Texture2D = DEFAULT_FLOOR_TEXTURE
+var combat_service: CombatService = CombatService.new()
+var active_battle_state: BattleState
+var last_battle_result: BattleResult
 
 
 func apply_battle_definition(definition: BattleRoomDefinition) -> void:
@@ -113,13 +122,16 @@ func set_player_data(player: Player, sprite: Texture2D) -> void:
 		current_hp,
 		max_hp
 	)
+	_sync_active_battle_from_entities()
 
 
-func set_monsters_from_definitions(monster_definitions: Array[MonsterDefinition]) -> void:
+func set_monsters_from_definitions(next_monster_definitions: Array[MonsterDefinition]) -> void:
+	monster_definitions.clear()
 	monster_views.clear()
-	for monster_definition in monster_definitions:
+	for monster_definition in next_monster_definitions:
 		if monster_definition == null:
 			continue
+		monster_definitions.append(monster_definition)
 		monster_views.append(
 			CombatantViewData.new(
 				monster_definition.sprite,
@@ -129,6 +141,74 @@ func set_monsters_from_definitions(monster_definitions: Array[MonsterDefinition]
 				monster_definition.max_health
 			)
 		)
+	_sync_active_battle_from_entities()
+
+
+func prepare_room() -> void:
+	state.status = RoomEnums.RoomStatus.PREPARED
+	battle_status = &"prepared"
+	encounter_instance_data = {
+		"room_id": room_id,
+		"monster_ids": PackedStringArray(_get_monster_ids()),
+	}
+
+
+func enter_room() -> void:
+	state.status = RoomEnums.RoomStatus.ENTERED
+	state.visited = true
+	battle_status = &"entered"
+
+
+func start_battle() -> BattleState:
+	if player_instance == null:
+		player_instance = _build_test_player()
+	if monster_definitions.is_empty():
+		set_monsters_from_definitions([TEST_MONSTER_DEFINITION])
+	if state.status == RoomEnums.RoomStatus.CREATED:
+		prepare_room()
+	if state.status == RoomEnums.RoomStatus.PREPARED:
+		enter_room()
+	state.status = RoomEnums.RoomStatus.ACTIVE
+	battle_status = &"combat_active"
+	active_battle_state = combat_service.create_battle_state(player_instance, monster_definitions, room_id)
+	_sync_views_from_battle_state()
+	return active_battle_state
+
+
+func activate_player_ability(
+	ability: AbilityDefinition,
+	target_ids: PackedStringArray = PackedStringArray(),
+	selected_dice_ids: Array[String] = []
+) -> Dictionary:
+	if active_battle_state == null:
+		start_battle()
+	var result := combat_service.activate_player_ability(active_battle_state, ability, target_ids, selected_dice_ids)
+	_finalize_battle_if_needed()
+	_sync_views_from_battle_state()
+	return result
+
+
+func end_player_turn() -> void:
+	if active_battle_state == null or active_battle_state.is_finished:
+		return
+	combat_service.end_turn(active_battle_state, CombatEnums.TurnEndReason.MANUAL)
+	combat_service.run_monsters_until_player_turn(active_battle_state)
+	_finalize_battle_if_needed()
+	_sync_views_from_battle_state()
+
+
+func run_current_monster_turn() -> void:
+	if active_battle_state == null or active_battle_state.is_finished:
+		return
+	combat_service.run_current_monster_turn(active_battle_state)
+	_finalize_battle_if_needed()
+	_sync_views_from_battle_state()
+
+
+func get_active_turn_dice() -> Array:
+	if active_battle_state == null or active_battle_state.turn_state == null:
+		return []
+	return active_battle_state.turn_state.get_available_dice()
 
 
 func get_player_health_ratio() -> float:
@@ -172,12 +252,81 @@ func is_valid_room() -> bool:
 	return super.is_valid_room() and room_type == RoomEnums.RoomType.BATTLE
 
 
+func get_battle_result() -> BattleResult:
+	return last_battle_result
+
+
+func is_battle_active() -> bool:
+	return active_battle_state != null and not active_battle_state.is_finished
+
+
+func _finalize_battle_if_needed() -> void:
+	if active_battle_state == null or not active_battle_state.is_finished:
+		return
+	last_battle_result = active_battle_state.result
+	state.status = RoomEnums.RoomStatus.RESOLVING
+	state.resolution_payload = {
+		"battle_id": active_battle_state.battle_id,
+		"outcome": last_battle_result.outcome,
+		"reason": last_battle_result.reason,
+		"surviving_ids": last_battle_result.surviving_ids,
+		"defeated_ids": last_battle_result.defeated_ids,
+	}
+	if last_battle_result.outcome == CombatEnums.BattleOutcome.PLAYER_VICTORY:
+		state.status = RoomEnums.RoomStatus.COMPLETED
+		state.completed_successfully = true
+		battle_status = &"completed"
+	else:
+		state.status = RoomEnums.RoomStatus.FAILED
+		state.completed_successfully = false
+		battle_status = &"failed"
+
+
+func _sync_active_battle_from_entities() -> void:
+	if active_battle_state == null or active_battle_state.is_finished:
+		return
+	_sync_views_from_battle_state()
+
+
+func _sync_views_from_battle_state() -> void:
+	if active_battle_state == null:
+		return
+	var player_runtime = active_battle_state.get_player()
+	if player_runtime != null:
+		player_view.current_hp = player_runtime.current_hp
+		player_view.max_hp = player_runtime.max_hp
+		if player_instance != null:
+			player_instance.current_hp = player_runtime.current_hp
+			player_instance.current_armor = player_runtime.armor
+	monster_views.clear()
+	for enemy in active_battle_state.get_enemies(true):
+		var monster_definition := enemy.definition_ref as MonsterDefinition
+		monster_views.append(
+			CombatantViewData.new(
+				monster_definition.sprite if monster_definition != null else null,
+				enemy.abilities,
+				MONSTER_SPRITE_SCALE,
+				enemy.current_hp,
+				enemy.max_hp
+			)
+		)
+
+
+func _get_monster_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for monster_definition in monster_definitions:
+		if monster_definition != null:
+			ids.append(monster_definition.monster_id)
+	return ids
+
+
 static func create_test_battle_room() -> BattleRoom:
 	var room := BattleRoom.new()
 	room.room_id = "test_battle_room"
 	room.set_floor_textures(DEFAULT_FLOOR_TEXTURE, DEFAULT_FLOOR_TEXTURE)
 	room.set_player_data(_build_test_player(), TEST_PLAYER_TEXTURE)
 	room.set_monsters_from_definitions([TEST_MONSTER_DEFINITION])
+	room.prepare_room()
 	return room
 
 
@@ -188,5 +337,6 @@ static func _build_test_player() -> Player:
 	base_stat.max_hp = 30
 	base_stat.starting_hp = 30
 	base_stat.starting_armor = 0
+	base_stat.starting_dice = [BASE_DICE, BASE_DICE, BASE_DICE]
 	base_stat.starting_abilities = [COMMON_ATTACK_ABILITY, HEAL_ABILITY]
 	return Player.new(base_stat)
