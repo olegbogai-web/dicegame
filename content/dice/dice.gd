@@ -20,7 +20,7 @@ const DEFAULT_ANGULAR_DAMP := 0.25
 @export var extra_size_multiplier: Vector3 = Vector3.ONE
 
 @export_category("Drag")
-@export var drag_lift_height: float = 0.7
+@export var drag_lift_height: float = 1
 
 var _visual_root: Node3D
 var _collision_shape: CollisionShape3D

@@ -83,8 +83,8 @@ material_override = SubResource("StandardMaterial3D_b47iq")
 mesh = SubResource("BoxMesh_wall_front_back")
 
 [node name="test_camera" type="Camera3D" parent="." unique_id=1142329002]
-transform = Transform3D(1, 0, 0, 0, 0.57357645, 0.81915206, 0, -0.81915206, 0.57357645, 0.15366018, 2.8496702, 2.4406226)
-fov = 104.06249
+transform = Transform3D(1, 0, 0, 0, 0.036225095, 0.99934375, 0, -0.99934375, 0.036225095, 0, 5.834158, 0.33661497)
+fov = 60.2731
 
 [node name="test_Light" type="DirectionalLight3D" parent="." unique_id=76983028]
 transform = Transform3D(0.95406866, 0.19014458, -0.23151249, -0.07741402, 0.90299547, 0.42261827, 0.2894133, -0.38528454, 0.87623954, 0, 0, 0)
