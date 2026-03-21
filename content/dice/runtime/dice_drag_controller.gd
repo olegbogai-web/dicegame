@@ -13,14 +13,15 @@ func handle_input_event(
 	camera: Camera3D,
 	event: InputEvent,
 	position: Vector3,
-	drag_lift_height: float
+	drag_lift_height: float,
+	allow_drag_without_sleep: bool = false
 ) -> void:
 	if Engine.is_editor_hint():
 		return
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
-			if not dice.sleeping:
+			if not allow_drag_without_sleep and not dice.sleeping:
 				return
 			_start_dragging(dice, camera, position, drag_lift_height)
 		else:
@@ -43,9 +44,9 @@ func stop_dragging(dice: RigidBody3D) -> void:
 		return
 
 	_is_dragging = false
-	dice.set_physics_process(false)
 	dice.freeze = false
 	dice.gravity_scale = _default_gravity_scale
+	dice.lock_rotation = false
 	dice.linear_velocity = Vector3.ZERO
 	dice.angular_velocity = Vector3.ZERO
 	_drag_camera = null
@@ -67,7 +68,7 @@ func _start_dragging(dice: RigidBody3D, camera: Camera3D, hit_position: Vector3,
 	dice.angular_velocity = Vector3.ZERO
 	dice.gravity_scale = 0.0
 	_is_dragging = true
-	dice.set_physics_process(true)
+	dice.lock_rotation = false
 	_update_drag_position(dice)
 
 
@@ -90,3 +91,7 @@ func _update_drag_position(dice: RigidBody3D) -> void:
 	var target_position := target_hit_position
 	target_position.y = _drag_target_height
 	dice.global_position = target_position
+
+
+func is_dragging() -> bool:
+	return _is_dragging
