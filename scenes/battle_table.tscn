@@ -8,14 +8,6 @@
 [ext_resource type="Texture2D" uid="uid://b6ojmoowtta8k" path="res://assets/ui/base_frame_mid_v2.png" id="6_o6e7d"]
 [ext_resource type="Texture2D" uid="uid://bjpqv8q13kqq7" path="res://assets/ui/base_frame_mid.png" id="7_e555c"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_aj7ea"]
-albedo_texture = ExtResource("2_o6e7d")
-
-[sub_resource type="PlaneMesh" id="PlaneMesh_umdqk"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6l3rs"]
-albedo_texture = ExtResource("2_o6e7d")
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2u1at"]
 transparency = 1
 albedo_texture = ExtResource("3_e555c")
@@ -46,21 +38,19 @@ albedo_texture = ExtResource("7_e555c")
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_o6e7d"]
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_aj7ea"]
+albedo_texture = ExtResource("2_o6e7d")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_umdqk"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6l3rs"]
+albedo_texture = ExtResource("2_o6e7d")
+
 [node name="battle_table" type="Node3D" unique_id=52135583]
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=835222278]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 13.008608, -1.3151043e-07)
 fov = 38.9
-
-[node name="player_ability" type="MeshInstance3D" parent="." unique_id=1397748277]
-transform = Transform3D(0.65, 0, 0, 0, 0.65, 0, 0, 0, 0.65, -4.6, 0.41, 0)
-material_override = SubResource("StandardMaterial3D_aj7ea")
-mesh = SubResource("PlaneMesh_umdqk")
-
-[node name="monster_ability" type="MeshInstance3D" parent="." unique_id=591996951]
-transform = Transform3D(-0.65, 0, -5.6824803e-08, 0, 0.65, 0, 5.6824803e-08, 0, -0.65, 4.6, 0.41, 0)
-material_override = SubResource("StandardMaterial3D_6l3rs")
-mesh = SubResource("PlaneMesh_umdqk")
 
 [node name="monster_sprite" type="MeshInstance3D" parent="." unique_id=1521767394]
 transform = Transform3D(1.25, 0, 0, 0, 1.25, 0, 0, 0, 1.25, 6.7, 0.41, 0)
@@ -105,6 +95,11 @@ transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.25, 0.53, 0.01, 0.55)
 material_override = SubResource("StandardMaterial3D_72q4h")
 mesh = SubResource("PlaneMesh_o6e7d")
 
+[node name="player_ability" type="MeshInstance3D" parent="ability_frame" unique_id=1397748277]
+transform = Transform3D(0.48148146, 0, 0, 0, 0.7222223, 0, 0, 0, 0.7222223, -0.25925922, 0.0055555403, 0)
+material_override = SubResource("StandardMaterial3D_aj7ea")
+mesh = SubResource("PlaneMesh_umdqk")
+
 [node name="ability_frame2" type="MeshInstance3D" parent="." unique_id=988963854]
 transform = Transform3D(-1.35, 0, -7.86805e-08, 0, 0.9, 0, 1.1802075e-07, 0, -0.9, 4.25, 0.405, 0)
 material_override = SubResource("StandardMaterial3D_e555c")
@@ -124,3 +119,8 @@ mesh = SubResource("PlaneMesh_o6e7d")
 transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.25, 0.53, 0.01, 0.55)
 material_override = SubResource("StandardMaterial3D_72q4h")
 mesh = SubResource("PlaneMesh_o6e7d")
+
+[node name="monster_ability" type="MeshInstance3D" parent="ability_frame2" unique_id=591996951]
+transform = Transform3D(0.48148146, 0, -3.5527137e-15, 0, 0.7222223, 0, -7.1054274e-15, 0, 0.7222223, -0.25925922, 0.0055555403, -3.3997736e-08)
+material_override = SubResource("StandardMaterial3D_6l3rs")
+mesh = SubResource("PlaneMesh_umdqk")
