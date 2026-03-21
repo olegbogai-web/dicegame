@@ -5,8 +5,8 @@ const Dice = preload("res://content/dice/dice.gd")
 
 const SLOT_EMPTY_COLOR := Color(1.0, 1.0, 1.0, 1.0)
 const SLOT_ASSIGNED_COLOR := Color(0.82, 0.9, 1.0, 1.0)
-const SLOT_READY_COLOR := Color(0.64, 1.0, 0.64, 1.0)
-const FRAME_READY_COLOR := Color(0.8, 1.0, 0.8, 1.0)
+const SLOT_READY_COLOR := Color(0.2, 0.62, 1.0, 1.0)
+const FRAME_READY_COLOR := Color(0.12, 0.55, 1.0, 1.0)
 const TINT_MATERIAL_META_KEY := &"runtime_tint_material"
 
 @onready var _camera: Camera3D = $Camera3D
