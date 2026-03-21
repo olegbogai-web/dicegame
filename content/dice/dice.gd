@@ -41,7 +41,7 @@ var _definition_binding: DiceDefinitionBinding
 var _drag_controller: DiceDragController
 var _orientation_service: DiceOrientationService
 var _slot_snap_controller: DiceSlotSnapController
-var _rotation_locked_after_stop := false
+var _has_completed_first_stop := false
 
 
 func _enter_tree() -> void:
@@ -104,6 +104,8 @@ func _get_configuration_warnings() -> PackedStringArray:
 func _input_event(camera: Camera3D, event: InputEvent, position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
 	_setup_components()
 	var allow_drag_without_sleep := _slot_snap_controller.prepare_for_manual_drag(self, event)
+	if _has_completed_first_stop:
+		allow_drag_without_sleep = true
 	_drag_controller.handle_input_event(self, camera, event, position, drag_lift_height, allow_drag_without_sleep)
 
 
@@ -111,6 +113,8 @@ func _physics_process(delta: float) -> void:
 	_setup_components()
 	_drag_controller.physics_process(self)
 	_slot_snap_controller.physics_process(self, delta, _drag_controller.is_dragging())
+	if _has_completed_first_stop and not _drag_controller.is_dragging():
+		lock_rotation = true
 
 
 func get_top_face_index() -> int:
@@ -205,11 +209,16 @@ func _on_definition_changed() -> void:
 
 
 func _on_sleeping_state_changed() -> void:
-	if _rotation_locked_after_stop or not sleeping:
+	if not sleeping:
+		if _has_completed_first_stop:
+			lock_rotation = true
+			angular_velocity = Vector3.ZERO
 		return
+
+	if not _has_completed_first_stop:
+		_has_completed_first_stop = true
 
 	lock_rotation = true
 	linear_velocity = Vector3.ZERO
 	angular_velocity = Vector3.ZERO
 	_physics_runtime.disable_bounce(self)
-	_rotation_locked_after_stop = true

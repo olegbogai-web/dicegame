@@ -6,6 +6,7 @@ var _drag_camera: Camera3D
 var _drag_plane_height := 0.0
 var _drag_target_height := 0.0
 var _default_gravity_scale := 1.0
+var _rotation_locked_before_drag := false
 
 
 func handle_input_event(
@@ -46,12 +47,13 @@ func stop_dragging(dice: RigidBody3D) -> void:
 	_is_dragging = false
 	dice.freeze = false
 	dice.gravity_scale = _default_gravity_scale
-	dice.lock_rotation = false
+	dice.lock_rotation = _rotation_locked_before_drag
 	dice.linear_velocity = Vector3.ZERO
 	dice.angular_velocity = Vector3.ZERO
 	_drag_camera = null
 	_drag_plane_height = 0.0
 	_drag_target_height = 0.0
+	_rotation_locked_before_drag = false
 
 
 func _start_dragging(dice: RigidBody3D, camera: Camera3D, hit_position: Vector3, drag_lift_height: float) -> void:
@@ -62,13 +64,14 @@ func _start_dragging(dice: RigidBody3D, camera: Camera3D, hit_position: Vector3,
 	_drag_plane_height = drag_lift_height
 	_drag_target_height = drag_lift_height
 	_default_gravity_scale = dice.gravity_scale
+	_rotation_locked_before_drag = dice.lock_rotation
 	dice.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
 	dice.freeze = true
 	dice.linear_velocity = Vector3.ZERO
 	dice.angular_velocity = Vector3.ZERO
 	dice.gravity_scale = 0.0
 	_is_dragging = true
-	dice.lock_rotation = false
+	dice.lock_rotation = _rotation_locked_before_drag
 	_update_drag_position(dice)
 
 
