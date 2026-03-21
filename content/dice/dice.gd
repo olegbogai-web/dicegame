@@ -158,4 +158,5 @@ func _on_sleeping_state_changed() -> void:
 	lock_rotation = true
 	linear_velocity = Vector3.ZERO
 	angular_velocity = Vector3.ZERO
+	_physics_runtime.disable_bounce(self)
 	_rotation_locked_after_stop = true
