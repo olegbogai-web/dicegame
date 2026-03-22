@@ -22,7 +22,6 @@ enum Selection {
 	CUSTOM,
 }
 
-@export var side: Side = Side.ENEMY
 @export var selection: Selection = Selection.SINGLE
 @export_range(0, 32, 1) var min_targets := 1
 @export_range(0, 32, 1) var max_targets := 1

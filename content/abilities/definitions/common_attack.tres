@@ -27,9 +27,8 @@ dice_query_tags = PackedStringArray()
 
 [sub_resource type="Resource" id="AbilityTargetRule_enemy"]
 script = ExtResource("4_target_rule")
-side = 1
-required_tags = PackedStringArray()
-forbidden_tags = PackedStringArray()
+required_tags = null
+forbidden_tags = null
 
 [sub_resource type="Resource" id="AbilityCondition_even_top_face"]
 script = ExtResource("5_condition")
@@ -50,7 +49,7 @@ icon = ExtResource("7_icon")
 sprite_scale = Vector2(1, 1)
 tags = PackedStringArray("attack")
 kind = 0
-owner_scope = 2
+owner_scope = 1
 rarity = 0
 unlock_level = 0
 upgrade_level = 0
