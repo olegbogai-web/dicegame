@@ -8,7 +8,13 @@ const SLOT_ASSIGNED_COLOR := Color(0.82, 0.9, 1.0, 1.0)
 const SLOT_READY_COLOR := Color(0.2, 0.62, 1.0, 1.0)
 const SLOT_HIGHLIGHT_COLOR := Color(0.36, 0.9, 0.48, 1.0)
 const FRAME_READY_COLOR := Color(0.12, 0.55, 1.0, 1.0)
+const FRAME_SELECTED_COLOR := Color(1.0, 0.92, 0.52, 1.0)
 const TINT_MATERIAL_META_KEY := &"runtime_tint_material"
+const HEALTH_BAR_META_KEY := &"health_bar_base_transform"
+const SELECTED_FRAME_LIFT_Y := 0.4
+const SELECTED_FRAME_MOUSE_FOLLOW_FACTOR := 0.2
+const ACTIVATION_ANIMATION_DURATION := 0.5
+const ACTIVATION_TARGET_LIFT_Y := 0.4
 
 @onready var _camera: Camera3D = $Camera3D
 @onready var _board: Node3D = $board
@@ -19,13 +25,16 @@ const TINT_MATERIAL_META_KEY := &"runtime_tint_material"
 @onready var _player_ability_template: MeshInstance3D = $ability_frame
 @onready var _monster_ability_template: MeshInstance3D = $ability_frame2
 
-const HEALTH_BAR_META_KEY := &"health_bar_base_transform"
-
 var battle_room_data: BattleRoom
 var _generated_monster_sprites: Array[Node] = []
 var _generated_player_ability_frames: Array[Node] = []
 var _generated_monster_ability_frames: Array[Node] = []
 var _player_ability_slot_states: Array[Dictionary] = []
+var _player_ability_frame_states: Array[Dictionary] = []
+var _monster_sprite_states: Array[Dictionary] = []
+var _selected_ability_state: Dictionary = {}
+var _selected_mouse_anchor := Vector3.ZERO
+var _activation_in_progress := false
 
 
 func _ready() -> void:
@@ -71,6 +80,9 @@ func _ensure_battle_room_data() -> void:
 func _apply_room_data() -> void:
 	if battle_room_data == null:
 		return
+	_cancel_selected_ability(true)
+	_player_ability_frame_states.clear()
+	_monster_sprite_states.clear()
 	_apply_floor_textures()
 	_apply_player_sprite()
 	_apply_monster_sprites()
@@ -106,6 +118,7 @@ func _apply_player_sprite() -> void:
 
 func _apply_monster_sprites() -> void:
 	_clear_generated_nodes(_generated_monster_sprites)
+	_monster_sprite_states.clear()
 
 	var monster_views := battle_room_data.monster_views
 	if monster_views.is_empty():
@@ -125,6 +138,10 @@ func _apply_monster_sprites() -> void:
 			BattleRoomScript.MONSTER_SPRITE_POSITION + Vector3(0.0, 0.0, offsets[index])
 		)
 		_apply_health_bar(target_sprite, battle_room_data.get_monster_health_ratio(index))
+		_monster_sprite_states.append({
+			"sprite": target_sprite,
+			"index": index,
+		})
 
 
 func _apply_ability_frames(
@@ -151,6 +168,7 @@ func _apply_ability_frames(
 		_apply_ability_icon(frame, ability)
 		_apply_dice_places(frame, battle_room_data.get_required_dice_slots(ability))
 		if track_player_slots:
+			_register_player_ability_frame(frame, ability, index)
 			_register_player_ability_slots(frame, ability, index)
 
 
@@ -275,6 +293,47 @@ func _build_centered_offsets(count: int, spacing: float) -> Array[float]:
 
 func _physics_process(_delta: float) -> void:
 	_refresh_player_ability_snap_state()
+	if not _selected_ability_state.is_empty() and not _activation_in_progress:
+		if not _is_ability_state_ready(_selected_ability_state):
+			_cancel_selected_ability()
+		else:
+			_update_selected_ability_follow()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if Engine.is_editor_hint() or _activation_in_progress:
+		return
+	if event is InputEventMouseButton and not event.pressed:
+		return
+
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
+		_cancel_selected_ability()
+		get_viewport().set_input_as_handled()
+		return
+
+	if not (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT):
+		return
+
+	var mouse_event := event as InputEventMouseButton
+	var clicked_frame_state := _find_player_ability_frame_at_screen_point(mouse_event.position)
+	if not clicked_frame_state.is_empty():
+		if _is_ability_state_ready(clicked_frame_state):
+			_select_player_ability(clicked_frame_state)
+			get_viewport().set_input_as_handled()
+			return
+
+	if _selected_ability_state.is_empty():
+		return
+
+	var target_descriptor := _resolve_target_descriptor_at_screen_point(
+		_selected_ability_state.get("ability") as AbilityDefinition,
+		mouse_event.position
+	)
+	if target_descriptor.is_empty():
+		return
+
+	_activate_selected_ability(target_descriptor)
+	get_viewport().set_input_as_handled()
 
 
 func _refresh_player_ability_snap_state() -> void:
@@ -313,6 +372,15 @@ func _refresh_player_ability_snap_state() -> void:
 		candidate.assign_ability_slot(slot_state["slot_id"], _get_slot_target_position(slot_state["dice_place"], candidate))
 
 	_update_player_ability_visuals(dice_list)
+
+
+func _register_player_ability_frame(frame: MeshInstance3D, ability: AbilityDefinition, ability_index: int) -> void:
+	_player_ability_frame_states.append({
+		"frame": frame,
+		"ability": ability,
+		"ability_index": ability_index,
+		"base_origin": frame.transform.origin,
+	})
 
 
 func _register_player_ability_slots(frame: MeshInstance3D, ability: AbilityDefinition, ability_index: int) -> void:
@@ -454,7 +522,11 @@ func _update_player_ability_visuals(dice_list: Array[Dice]) -> void:
 			ability_status[ability_key]["ready"] = false
 
 	for slot_info in ability_status.values():
-		_set_mesh_tint(slot_info["frame"], FRAME_READY_COLOR if slot_info["ready"] else SLOT_EMPTY_COLOR)
+		var frame := slot_info["frame"] as MeshInstance3D
+		var tint := FRAME_READY_COLOR if slot_info["ready"] else SLOT_EMPTY_COLOR
+		if not _selected_ability_state.is_empty() and _selected_ability_state.get("frame") == frame:
+			tint = FRAME_SELECTED_COLOR
+		_set_mesh_tint(frame, tint)
 
 
 func _get_active_drag_dice(dice_list: Array[Dice]) -> Dice:
@@ -482,3 +554,224 @@ func _set_mesh_tint(mesh_instance: MeshInstance3D, color: Color) -> void:
 		mesh_instance.set_meta(TINT_MATERIAL_META_KEY, material)
 		mesh_instance.material_override = material
 	material.albedo_color = color
+
+
+func _find_player_ability_frame_at_screen_point(screen_point: Vector2) -> Dictionary:
+	for index in range(_player_ability_frame_states.size() - 1, -1, -1):
+		var frame_state := _player_ability_frame_states[index]
+		var frame := frame_state.get("frame") as MeshInstance3D
+		if _screen_point_hits_mesh(frame, screen_point):
+			return frame_state
+	return {}
+
+
+func _select_player_ability(frame_state: Dictionary) -> void:
+	if frame_state.is_empty():
+		return
+	if not _selected_ability_state.is_empty() and _selected_ability_state.get("frame") == frame_state.get("frame"):
+		return
+	_cancel_selected_ability()
+	_selected_ability_state = frame_state.duplicate()
+	var selected_base_origin: Vector3 = frame_state.get("base_origin", Vector3.ZERO)
+	_selected_mouse_anchor = _project_mouse_to_horizontal_plane(selected_base_origin.y)
+	_update_selected_ability_follow()
+
+
+func _cancel_selected_ability(skip_visual_reset: bool = false) -> void:
+	if _selected_ability_state.is_empty():
+		return
+	if not skip_visual_reset:
+		var frame := _selected_ability_state.get("frame") as MeshInstance3D
+		var base_origin: Vector3 = _selected_ability_state.get("base_origin", Vector3.ZERO)
+		if is_instance_valid(frame):
+			frame.transform = Transform3D(frame.transform.basis, base_origin)
+	_selected_ability_state.clear()
+	_selected_mouse_anchor = Vector3.ZERO
+
+
+func _update_selected_ability_follow() -> void:
+	var frame := _selected_ability_state.get("frame") as MeshInstance3D
+	if not is_instance_valid(frame):
+		_selected_ability_state.clear()
+		return
+	var base_origin: Vector3 = _selected_ability_state.get("base_origin", frame.transform.origin)
+	var mouse_world := _project_mouse_to_horizontal_plane(base_origin.y)
+	var mouse_delta := (mouse_world - _selected_mouse_anchor) * SELECTED_FRAME_MOUSE_FOLLOW_FACTOR
+	var target_origin := base_origin + Vector3(mouse_delta.x, SELECTED_FRAME_LIFT_Y, mouse_delta.z)
+	frame.transform = Transform3D(frame.transform.basis, target_origin)
+
+
+func _is_ability_state_ready(frame_state: Dictionary) -> bool:
+	var frame := frame_state.get("frame") as MeshInstance3D
+	if frame == null:
+		return false
+	var relevant_slot_count := 0
+	for slot_state in _player_ability_slot_states:
+		if slot_state.get("frame") != frame:
+			continue
+		relevant_slot_count += 1
+		var assigned_dice := _find_dice_for_slot(slot_state, _get_board_dice())
+		if assigned_dice == null or not assigned_dice.is_snapped_to_ability_slot():
+			return false
+	return relevant_slot_count > 0 or battle_room_data.get_required_dice_slots(frame_state.get("ability") as AbilityDefinition) == 0
+
+
+func _collect_ready_dice_for_frame(frame: MeshInstance3D) -> Array[Dice]:
+	var dice_list := _get_board_dice()
+	var consumed_dice: Array[Dice] = []
+	for slot_state in _player_ability_slot_states:
+		if slot_state.get("frame") != frame:
+			continue
+		var assigned_dice := _find_dice_for_slot(slot_state, dice_list)
+		if assigned_dice != null and assigned_dice.is_snapped_to_ability_slot():
+			consumed_dice.append(assigned_dice)
+	return consumed_dice
+
+
+func _resolve_target_descriptor_at_screen_point(ability: AbilityDefinition, screen_point: Vector2) -> Dictionary:
+	if battle_room_data == null or ability == null or ability.target_rule == null:
+		return {}
+
+	match ability.target_rule.get_target_hint():
+		&"self":
+			if _screen_point_hits_mesh(_player_sprite, screen_point) and battle_room_data.can_target_player():
+				return {
+					"kind": &"player",
+				}
+		&"single_enemy":
+			for index in range(_monster_sprite_states.size() - 1, -1, -1):
+				var monster_state := _monster_sprite_states[index]
+				var sprite := monster_state.get("sprite") as MeshInstance3D
+				var monster_index := int(monster_state.get("index", -1))
+				if _screen_point_hits_mesh(sprite, screen_point) and battle_room_data.can_target_monster(monster_index):
+					return {
+						"kind": &"monster",
+						"index": monster_index,
+					}
+		&"all_enemies":
+			for monster_state in _monster_sprite_states:
+				var sprite := monster_state.get("sprite") as MeshInstance3D
+				if _screen_point_hits_mesh(sprite, screen_point):
+					return {
+						"kind": &"all_monsters",
+					}
+			if _screen_point_hits_mesh(_right_floor, screen_point):
+				return {
+					"kind": &"all_monsters",
+				}
+		&"global":
+			return {
+				"kind": &"all_monsters",
+			}
+	return {}
+
+
+func _activate_selected_ability(target_descriptor: Dictionary) -> void:
+	if _selected_ability_state.is_empty():
+		return
+	if not _is_ability_state_ready(_selected_ability_state):
+		_cancel_selected_ability()
+		return
+
+	var frame := _selected_ability_state.get("frame") as MeshInstance3D
+	var ability := _selected_ability_state.get("ability") as AbilityDefinition
+	var base_origin: Vector3 = _selected_ability_state.get("base_origin", frame.transform.origin)
+	var consumed_dice := _collect_ready_dice_for_frame(frame)
+	var target_origin := _resolve_activation_target_origin(target_descriptor, base_origin)
+	_activation_in_progress = true
+	_selected_ability_state.clear()
+
+	var lift_origin := Vector3(base_origin.x, base_origin.y + SELECTED_FRAME_LIFT_Y, base_origin.z)
+	var half_duration := ACTIVATION_ANIMATION_DURATION * 0.5
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_SINE)
+	tween.set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(frame, "transform:origin", lift_origin, half_duration * 0.3)
+	tween.tween_property(frame, "transform:origin", target_origin, half_duration * 0.7)
+	tween.tween_callback(func() -> void:
+		for dice in consumed_dice:
+			if is_instance_valid(dice):
+				dice.queue_free()
+		battle_room_data.activate_player_ability(ability, target_descriptor)
+		_apply_player_sprite()
+		_apply_monster_sprites()
+	)
+	tween.tween_property(frame, "transform:origin", base_origin, half_duration)
+	tween.finished.connect(func() -> void:
+		_activation_in_progress = false
+		_refresh_player_ability_snap_state()
+	)
+
+
+func _resolve_activation_target_origin(target_descriptor: Dictionary, base_origin: Vector3) -> Vector3:
+	var target_kind := StringName(target_descriptor.get("kind", &""))
+	if target_kind == &"player":
+		return _player_sprite.global_position + Vector3.UP * ACTIVATION_TARGET_LIFT_Y
+	if target_kind == &"monster":
+		var monster_index := int(target_descriptor.get("index", -1))
+		for monster_state in _monster_sprite_states:
+			if int(monster_state.get("index", -1)) == monster_index:
+				var sprite := monster_state.get("sprite") as MeshInstance3D
+				return sprite.global_position + Vector3.UP * ACTIVATION_TARGET_LIFT_Y
+	if target_kind == &"all_monsters":
+		var living_monster_positions: Array[Vector3] = []
+		for monster_state in _monster_sprite_states:
+			var monster_index := int(monster_state.get("index", -1))
+			if not battle_room_data.can_target_monster(monster_index):
+				continue
+			var sprite := monster_state.get("sprite") as MeshInstance3D
+			living_monster_positions.append(sprite.global_position)
+		if not living_monster_positions.is_empty():
+			var center := Vector3.ZERO
+			for position in living_monster_positions:
+				center += position
+			center /= float(living_monster_positions.size())
+			return center + Vector3.UP * ACTIVATION_TARGET_LIFT_Y
+	return base_origin + Vector3.UP * SELECTED_FRAME_LIFT_Y
+
+
+func _project_mouse_to_horizontal_plane(plane_y: float) -> Vector3:
+	var mouse_position := get_viewport().get_mouse_position()
+	var ray_origin := _camera.project_ray_origin(mouse_position)
+	var ray_direction := _camera.project_ray_normal(mouse_position)
+	var denominator := ray_direction.y
+	if absf(denominator) < 0.0001:
+		return Vector3(ray_origin.x, plane_y, ray_origin.z)
+	var distance := (plane_y - ray_origin.y) / denominator
+	if distance < 0.0:
+		distance = 0.0
+	var hit_position := ray_origin + ray_direction * distance
+	hit_position.y = plane_y
+	return hit_position
+
+
+func _screen_point_hits_mesh(mesh_instance: MeshInstance3D, screen_point: Vector2) -> bool:
+	if mesh_instance == null or not is_instance_valid(mesh_instance) or not mesh_instance.visible:
+		return false
+	if mesh_instance.mesh == null:
+		return false
+	var projected_rect := _project_mesh_screen_rect(mesh_instance)
+	return projected_rect.size.x > 0.0 and projected_rect.size.y > 0.0 and projected_rect.has_point(screen_point)
+
+
+func _project_mesh_screen_rect(mesh_instance: MeshInstance3D) -> Rect2:
+	var aabb := mesh_instance.mesh.get_aabb()
+	var corners := [
+		Vector3(aabb.position.x, aabb.position.y, aabb.position.z),
+		Vector3(aabb.position.x + aabb.size.x, aabb.position.y, aabb.position.z),
+		Vector3(aabb.position.x, aabb.position.y + aabb.size.y, aabb.position.z),
+		Vector3(aabb.position.x, aabb.position.y, aabb.position.z + aabb.size.z),
+		Vector3(aabb.position.x + aabb.size.x, aabb.position.y + aabb.size.y, aabb.position.z),
+		Vector3(aabb.position.x + aabb.size.x, aabb.position.y, aabb.position.z + aabb.size.z),
+		Vector3(aabb.position.x, aabb.position.y + aabb.size.y, aabb.position.z + aabb.size.z),
+		Vector3(aabb.position.x + aabb.size.x, aabb.position.y + aabb.size.y, aabb.position.z + aabb.size.z),
+	]
+	var min_point := Vector2(INF, INF)
+	var max_point := Vector2(-INF, -INF)
+	for corner in corners:
+		var projected := _camera.unproject_position(mesh_instance.to_global(corner))
+		min_point.x = minf(min_point.x, projected.x)
+		min_point.y = minf(min_point.y, projected.y)
+		max_point.x = maxf(max_point.x, projected.x)
+		max_point.y = maxf(max_point.y, projected.y)
+	return Rect2(min_point, max_point - min_point)
