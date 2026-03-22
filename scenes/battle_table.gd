@@ -1,7 +1,10 @@
 extends Node3D
 
 const BattleRoomScript = preload("res://content/rooms/subclasses/battle_room.gd")
+const BattleControllerScript = preload("res://content/combat/battle_controller.gd")
+const BoardControllerScript = preload("res://ui/scripts/board_controller.gd")
 const Dice = preload("res://content/dice/dice.gd")
+const TEST_MONSTER_DEFINITION := preload("res://content/monsters/definitions/test_monster.tres")
 
 const SLOT_EMPTY_COLOR := Color(1.0, 1.0, 1.0, 1.0)
 const SLOT_ASSIGNED_COLOR := Color(0.82, 0.9, 1.0, 1.0)
@@ -9,15 +12,21 @@ const SLOT_READY_COLOR := Color(0.2, 0.62, 1.0, 1.0)
 const SLOT_HIGHLIGHT_COLOR := Color(0.36, 0.9, 0.48, 1.0)
 const FRAME_READY_COLOR := Color(0.12, 0.55, 1.0, 1.0)
 const TINT_MATERIAL_META_KEY := &"runtime_tint_material"
+const MAX_LOG_LINES := 10
 
 @onready var _camera: Camera3D = $Camera3D
-@onready var _board: Node3D = $board
+@onready var _board: BoardController = $board
 @onready var _left_floor: MeshInstance3D = $left_floor
 @onready var _right_floor: MeshInstance3D = $right_floor
 @onready var _player_sprite: MeshInstance3D = $player_sprite
 @onready var _monster_sprite_template: MeshInstance3D = $monster_sprite
 @onready var _player_ability_template: MeshInstance3D = $ability_frame
 @onready var _monster_ability_template: MeshInstance3D = $ability_frame2
+@onready var _battle_status_label: Label = %BattleStatusLabel
+@onready var _turn_status_label: Label = %TurnStatusLabel
+@onready var _player_abilities_box: VBoxContainer = %PlayerAbilitiesBox
+@onready var _targets_box: VBoxContainer = %TargetsBox
+@onready var _battle_log_label: Label = %BattleLogLabel
 
 const HEALTH_BAR_META_KEY := &"health_bar_base_transform"
 
@@ -26,6 +35,11 @@ var _generated_monster_sprites: Array[Node] = []
 var _generated_player_ability_frames: Array[Node] = []
 var _generated_monster_ability_frames: Array[Node] = []
 var _player_ability_slot_states: Array[Dictionary] = []
+var _battle_controller: BattleController
+var _battle_log_lines: Array[String] = []
+var _pending_ability: AbilityDefinition
+var _monster_definitions: Array[MonsterDefinition] = [TEST_MONSTER_DEFINITION]
+var _last_player_ability_signature := ""
 
 
 func _ready() -> void:
@@ -34,6 +48,9 @@ func _ready() -> void:
 		configure_from_battle_room(BattleRoomScript.create_test_battle_room())
 	else:
 		_apply_room_data()
+	_setup_board_signals()
+	_setup_battle_controller()
+	_reset_battle_ui()
 
 
 func configure_from_battle_room(next_battle_room: BattleRoom) -> void:
@@ -57,6 +74,7 @@ func set_player_data(player: Player, sprite: Texture2D) -> void:
 
 
 func set_monsters(monster_definitions: Array[MonsterDefinition]) -> void:
+	_monster_definitions = monster_definitions.duplicate()
 	_ensure_battle_room_data()
 	battle_room_data.set_monsters_from_definitions(monster_definitions)
 	if is_node_ready():
@@ -87,6 +105,9 @@ func _apply_room_data() -> void:
 		_generated_monster_ability_frames
 	)
 	_refresh_player_ability_snap_state()
+	_last_player_ability_signature = ""
+	_rebuild_player_ability_buttons()
+	_update_turn_status_label()
 
 
 func _apply_floor_textures() -> void:
@@ -275,6 +296,8 @@ func _build_centered_offsets(count: int, spacing: float) -> Array[float]:
 
 func _physics_process(_delta: float) -> void:
 	_refresh_player_ability_snap_state()
+	_sync_player_dice_with_battle_state()
+	_rebuild_player_ability_buttons()
 
 
 func _refresh_player_ability_snap_state() -> void:
@@ -345,13 +368,7 @@ func _build_slot_conditions(ability: AbilityDefinition) -> Array[AbilityDiceCond
 
 
 func _get_board_dice() -> Array[Dice]:
-	var dice_list: Array[Dice] = []
-	if _board == null:
-		return dice_list
-	for child in _board.get_children():
-		if child is Dice and is_instance_valid(child):
-			dice_list.append(child as Dice)
-	return dice_list
+	return _board.get_board_dice() if _board != null else []
 
 
 func _find_dice_for_slot(slot_state: Dictionary, dice_list: Array[Dice]) -> Dice:
@@ -482,3 +499,356 @@ func _set_mesh_tint(mesh_instance: MeshInstance3D, color: Color) -> void:
 		mesh_instance.set_meta(TINT_MATERIAL_META_KEY, material)
 		mesh_instance.material_override = material
 	material.albedo_color = color
+
+
+func _setup_board_signals() -> void:
+	if _board == null:
+		return
+	if not _board.throw_button_pressed.is_connected(_on_board_throw_button_pressed):
+		_board.throw_button_pressed.connect(_on_board_throw_button_pressed)
+	if not _board.start_test_battle_pressed.is_connected(_on_start_test_battle_pressed):
+		_board.start_test_battle_pressed.connect(_on_start_test_battle_pressed)
+	if not _board.end_turn_pressed.is_connected(_on_end_turn_pressed):
+		_board.end_turn_pressed.connect(_on_end_turn_pressed)
+
+
+func _setup_battle_controller() -> void:
+	_battle_controller = BattleControllerScript.new()
+	_battle_controller.log_emitted.connect(_append_battle_log)
+	_battle_controller.player_dice_requested.connect(_on_player_dice_requested)
+	_battle_controller.player_action_required.connect(_on_player_action_required)
+	_battle_controller.battle_state_changed.connect(_on_battle_state_changed)
+	_battle_controller.battle_ended.connect(_on_battle_ended)
+	_battle_controller.turn_started.connect(_on_turn_started)
+
+
+func _reset_battle_ui() -> void:
+	_pending_ability = null
+	_clear_container_children(_targets_box)
+	if _battle_status_label != null:
+		_battle_status_label.text = 'Нажмите "Начать тестовый бой".'
+	if _turn_status_label != null:
+		_turn_status_label.text = "Бой не активен."
+	if _battle_log_label != null:
+		_battle_log_label.text = ""
+	if _board != null:
+		_board.set_end_turn_enabled(false)
+	_rebuild_player_ability_buttons()
+
+
+func _on_board_throw_button_pressed() -> void:
+	if _is_battle_active():
+		_append_battle_log("Во время боя кубы бросаются автоматически в начале хода игрока.")
+		return
+
+	_board.throw_single_default_die()
+
+
+func _on_start_test_battle_pressed() -> void:
+	_start_test_battle()
+
+
+func _on_end_turn_pressed() -> void:
+	if not _is_player_turn():
+		_append_battle_log("Закончить ход можно только во время хода игрока.")
+		return
+	_clear_pending_target_selection()
+	if _board != null:
+		_board.clear_board_dice()
+	_battle_controller.end_player_turn()
+
+
+func _start_test_battle() -> void:
+	var room := BattleRoomScript.create_test_battle_room()
+	configure_from_battle_room(room)
+	_monster_definitions = [TEST_MONSTER_DEFINITION]
+	_battle_log_lines.clear()
+	if _battle_log_label != null:
+		_battle_log_label.text = ""
+	_pending_ability = null
+	_clear_container_children(_targets_box)
+	if _board != null:
+		_board.clear_board_dice()
+	_battle_controller.setup_battle(room.player_instance, room.player_view.sprite, _monster_definitions)
+	_battle_controller.start_battle()
+
+
+func _on_player_dice_requested(dice_count: int) -> void:
+	if _board == null:
+		return
+	_board.clear_board_dice()
+	_board.throw_default_dice(dice_count)
+	_board.set_end_turn_enabled(true)
+	_append_battle_log("Игрок получил %d куб(а/ов) на ход." % dice_count)
+
+
+func _on_player_action_required(_combatant: CombatantState, _turn_state: TurnState) -> void:
+	if _board != null:
+		_board.set_end_turn_enabled(true)
+	_rebuild_player_ability_buttons()
+
+
+func _on_turn_started(combatant: CombatantState, _turn_state: TurnState) -> void:
+	if _turn_status_label == null:
+		return
+	if combatant.is_player():
+		_turn_status_label.text = "Ход игрока: разложите кубы по слотам, затем активируйте способность."
+	else:
+		_turn_status_label.text = "Ход монстра: %s." % combatant.display_name
+
+
+func _on_battle_state_changed(state: BattleState) -> void:
+	_update_battle_room_from_state(state)
+	_apply_room_data()
+	_update_battle_status_label(state)
+	_update_turn_status_label()
+	_rebuild_player_ability_buttons()
+
+
+func _on_battle_ended(result_code: StringName, _state: BattleState) -> void:
+	if _board != null:
+		_board.set_end_turn_enabled(false)
+		_board.clear_board_dice()
+	_clear_pending_target_selection()
+	if result_code == &"player_victory":
+		_battle_status_label.text = "Тестовый бой завершен: победа игрока."
+	else:
+		_battle_status_label.text = "Тестовый бой завершен: поражение игрока."
+
+
+func _append_battle_log(message: String) -> void:
+	if message.is_empty():
+		return
+	_battle_log_lines.append(message)
+	while _battle_log_lines.size() > MAX_LOG_LINES:
+		_battle_log_lines.remove_at(0)
+	if _battle_log_label != null:
+		_battle_log_label.text = "\n".join(_battle_log_lines)
+
+
+func _sync_player_dice_with_battle_state() -> void:
+	if not _is_player_turn():
+		return
+	if _battle_controller == null:
+		return
+	_battle_controller.sync_player_dice(_build_player_dice_entries())
+
+
+func _build_player_dice_entries() -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	for dice in _get_board_dice():
+		var top_face := dice.get_top_face()
+		entries.append({
+			"id": StringName(str(dice.get_instance_id())),
+			"value": dice.get_top_face_value(),
+			"tags": dice.get_match_tags(),
+			"face_id": StringName(top_face.text_value if top_face != null else ""),
+		})
+	return entries
+
+
+func _rebuild_player_ability_buttons() -> void:
+	if _player_abilities_box == null or battle_room_data == null:
+		return
+
+	var signature := _build_player_ability_signature()
+	if signature == _last_player_ability_signature:
+		return
+	_last_player_ability_signature = signature
+
+	_clear_container_children(_player_abilities_box)
+	var player_turn_active := _is_player_turn()
+	for ability in battle_room_data.get_player_abilities():
+		if ability == null:
+			continue
+		var button := Button.new()
+		button.text = _build_ability_button_text(ability)
+		button.disabled = not player_turn_active or not _can_activate_ability_from_ui(ability)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.pressed.connect(_on_player_ability_pressed.bind(ability))
+		_player_abilities_box.add_child(button)
+
+
+
+
+func _build_player_ability_signature() -> String:
+	var parts: Array[String] = ["player_turn=%s" % str(_is_player_turn())]
+	for ability in battle_room_data.get_player_abilities():
+		if ability == null:
+			continue
+		var selected_ids := _collect_selected_dice_ids_for_ability(ability)
+		selected_ids.sort()
+		var selected_texts: Array[String] = []
+		for selected_id in selected_ids:
+			selected_texts.append(String(selected_id))
+		parts.append("%s:%s" % [ability.ability_id, ",".join(selected_texts)])
+	return "|".join(parts)
+
+
+func _build_ability_button_text(ability: AbilityDefinition) -> String:
+	var required_slots := battle_room_data.get_required_dice_slots(ability)
+	var selected_dice_ids := _collect_selected_dice_ids_for_ability(ability)
+	var suffix := ""
+	if required_slots > 0:
+		suffix = " [%d/%d кубов]" % [selected_dice_ids.size(), required_slots]
+	return "%s%s\n%s" % [ability.display_name, suffix, ability.description]
+
+
+func _on_player_ability_pressed(ability: AbilityDefinition) -> void:
+	if not _is_player_turn():
+		return
+	if ability == null:
+		return
+	if not _can_activate_ability_from_ui(ability):
+		_append_battle_log("Способность пока нельзя применить: проверьте выбранные кубы и цель.")
+		return
+
+	_pending_ability = ability
+	var target_rule := ability.target_rule
+	if target_rule == null or target_rule.selection == AbilityTargetRule.Selection.NONE:
+		_try_activate_pending_ability(&"player")
+		return
+	if target_rule.allow_self and (target_rule.max_targets == 0 or target_rule.selection == AbilityTargetRule.Selection.NONE):
+		_try_activate_pending_ability(&"player")
+		return
+	_build_target_buttons_for_ability(ability)
+
+
+func _build_target_buttons_for_ability(ability: AbilityDefinition) -> void:
+	_clear_container_children(_targets_box)
+	if ability == null or _battle_controller == null or _battle_controller.battle_state == null:
+		return
+
+	if ability.target_rule != null and ability.target_rule.allow_self:
+		var self_button := Button.new()
+		self_button.text = "Выбрать себя"
+		self_button.pressed.connect(_try_activate_pending_ability.bind(&"player"))
+		_targets_box.add_child(self_button)
+
+	for enemy in _battle_controller.battle_state.get_alive_enemies():
+		var button := Button.new()
+		button.text = enemy.display_name
+		button.pressed.connect(_try_activate_pending_ability.bind(enemy.combatant_id))
+		_targets_box.add_child(button)
+
+
+func _try_activate_pending_ability(target_id: StringName) -> void:
+	if _pending_ability == null:
+		return
+	var selected_dice_ids := _collect_selected_dice_ids_for_ability(_pending_ability)
+	var response := _battle_controller.activate_player_ability(_pending_ability, target_id, selected_dice_ids)
+	if not response["success"]:
+		_append_battle_log(String(response["message"]))
+		return
+	var consumed_dice_ids: Array[StringName] = response["consumed_dice_ids"]
+	_remove_consumed_dice(consumed_dice_ids)
+	_clear_pending_target_selection()
+
+
+func _collect_selected_dice_ids_for_ability(ability: AbilityDefinition) -> Array[StringName]:
+	var selected_ids: Array[StringName] = []
+	for slot_state in _player_ability_slot_states:
+		if slot_state.get("ability") != ability:
+			continue
+		var assigned_dice := _find_dice_for_slot(slot_state, _get_board_dice())
+		if assigned_dice == null or not assigned_dice.is_snapped_to_ability_slot():
+			continue
+		selected_ids.append(StringName(str(assigned_dice.get_instance_id())))
+	return selected_ids
+
+
+func _remove_consumed_dice(consumed_dice_ids: Array[StringName]) -> void:
+	var consumed_lookup := {}
+	for consumed_id in consumed_dice_ids:
+		consumed_lookup[String(consumed_id)] = true
+	for dice in _get_board_dice():
+		if consumed_lookup.has(str(dice.get_instance_id())):
+			dice.queue_free()
+
+
+func _can_activate_ability_from_ui(ability: AbilityDefinition) -> bool:
+	if not _is_player_turn() or ability == null or _battle_controller == null:
+		return false
+	var selected_dice_ids := _collect_selected_dice_ids_for_ability(ability)
+	if ability.cost != null and ability.cost.requires_dice():
+		return _battle_controller.can_activate_ability(_battle_controller.get_active_combatant(), ability, selected_dice_ids)
+	return true
+
+
+func _clear_pending_target_selection() -> void:
+	_pending_ability = null
+	_clear_container_children(_targets_box)
+
+
+func _clear_container_children(container: Node) -> void:
+	if container == null:
+		return
+	for child in container.get_children():
+		child.queue_free()
+
+
+func _update_battle_room_from_state(state: BattleState) -> void:
+	if state == null or battle_room_data == null:
+		return
+	var player := state.get_player()
+	if player != null and battle_room_data.player_view != null:
+		battle_room_data.player_view.current_hp = player.current_hp
+		battle_room_data.player_view.max_hp = player.max_hp
+
+	for monster_view in battle_room_data.monster_views:
+		monster_view.current_hp = 0
+	for enemy in state.get_alive_enemies():
+		if enemy.spawn_index >= 0 and enemy.spawn_index < battle_room_data.monster_views.size():
+			battle_room_data.monster_views[enemy.spawn_index].current_hp = enemy.current_hp
+			battle_room_data.monster_views[enemy.spawn_index].max_hp = enemy.max_hp
+	for combatant in state.combatants:
+		if combatant.side != CombatantState.Side.ENEMY:
+			continue
+		if combatant.spawn_index >= 0 and combatant.spawn_index < battle_room_data.monster_views.size():
+			battle_room_data.monster_views[combatant.spawn_index].current_hp = combatant.current_hp
+			battle_room_data.monster_views[combatant.spawn_index].max_hp = combatant.max_hp
+
+
+func _update_battle_status_label(state: BattleState) -> void:
+	if _battle_status_label == null:
+		return
+	if state == null:
+		_battle_status_label.text = 'Нажмите "Начать тестовый бой".'
+		return
+	var enemies_alive := state.get_alive_enemies().size()
+	_battle_status_label.text = "Раунд %d. Игрок HP: %d/%d. Живых монстров: %d." % [
+		state.round_index,
+		battle_room_data.player_view.current_hp,
+		battle_room_data.player_view.max_hp,
+		enemies_alive,
+	]
+	if state.is_finished:
+		_battle_status_label.text += " Итог: %s." % ("победа" if state.result_code == &"player_victory" else "поражение")
+
+
+func _update_turn_status_label() -> void:
+	if _turn_status_label == null:
+		return
+	if _battle_controller == null or _battle_controller.battle_state == null or _battle_controller.battle_state.is_finished:
+		if _battle_controller != null and _battle_controller.battle_state != null and _battle_controller.battle_state.is_finished:
+			_turn_status_label.text = "Бой завершен. Можно начать новый тестовый бой."
+		return
+	var active_combatant := _battle_controller.get_active_combatant()
+	if active_combatant == null:
+		_turn_status_label.text = "Ожидание начала боя."
+		return
+	if active_combatant.is_player():
+		_turn_status_label.text = "Ход игрока. Перетащите кубы в слоты и выберите способность."
+	else:
+		_turn_status_label.text = "Ход монстра: %s." % active_combatant.display_name
+
+
+func _is_battle_active() -> bool:
+	return _battle_controller != null and _battle_controller.battle_state != null and not _battle_controller.battle_state.is_finished
+
+
+func _is_player_turn() -> bool:
+	if not _is_battle_active():
+		return false
+	var active_combatant := _battle_controller.get_active_combatant()
+	return active_combatant != null and active_combatant.is_player()

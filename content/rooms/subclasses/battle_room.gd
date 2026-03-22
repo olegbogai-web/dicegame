@@ -25,19 +25,25 @@ class CombatantViewData:
 	var base_scale: Vector3 = Vector3.ONE
 	var current_hp := 0
 	var max_hp := 0
+	var dice_count := 0
+	var display_name := ""
 
 	func _init(
 		next_sprite: Texture2D = null,
 		next_abilities: Array[AbilityDefinition] = [],
 		next_scale: Vector3 = Vector3.ONE,
 		next_current_hp: int = 0,
-		next_max_hp: int = 0
+		next_max_hp: int = 0,
+		next_dice_count: int = 0,
+		next_display_name: String = ""
 	) -> void:
 		sprite = next_sprite
 		abilities = _sanitize_abilities(next_abilities)
 		base_scale = next_scale
 		current_hp = maxi(next_current_hp, 0)
 		max_hp = maxi(next_max_hp, 0)
+		dice_count = maxi(next_dice_count, 0)
+		display_name = next_display_name
 
 	static func _sanitize_abilities(next_abilities: Array[AbilityDefinition]) -> Array[AbilityDefinition]:
 		var sanitized: Array[AbilityDefinition] = []
@@ -101,6 +107,8 @@ func set_player_data(player: Player, sprite: Texture2D) -> void:
 	var abilities: Array[AbilityDefinition] = []
 	var current_hp := 0
 	var max_hp := 0
+	var dice_count := 0
+	var display_name := ""
 	if player_instance != null:
 		abilities.assign(player_instance.ability_loadout)
 		current_hp = player_instance.current_hp
@@ -111,7 +119,9 @@ func set_player_data(player: Player, sprite: Texture2D) -> void:
 		abilities,
 		PLAYER_SPRITE_SCALE,
 		current_hp,
-		max_hp
+		max_hp,
+		player_instance.dice_loadout.size() if player_instance != null else 0,
+		player_instance.base_stat.display_name if player_instance != null and player_instance.base_stat != null else "Игрок"
 	)
 
 
@@ -126,7 +136,9 @@ func set_monsters_from_definitions(monster_definitions: Array[MonsterDefinition]
 				monster_definition.abilities,
 				MONSTER_SPRITE_SCALE,
 				monster_definition.max_health,
-				monster_definition.max_health
+				monster_definition.max_health,
+				monster_definition.dice_count,
+				monster_definition.display_name
 			)
 		)
 
@@ -188,5 +200,10 @@ static func _build_test_player() -> Player:
 	base_stat.max_hp = 30
 	base_stat.starting_hp = 30
 	base_stat.starting_armor = 0
+	base_stat.starting_dice = [
+		preload("res://content/resources/base_cube.tres"),
+		preload("res://content/resources/base_cube.tres"),
+		preload("res://content/resources/base_cube.tres"),
+	]
 	base_stat.starting_abilities = [COMMON_ATTACK_ABILITY, HEAL_ABILITY]
 	return Player.new(base_stat)

@@ -178,3 +178,66 @@ mesh = SubResource("PlaneMesh_o6e7d")
 transform = Transform3D(0, 0, 0.48148146, 0, 0.7222223, 0, -0.7222223, 0, 0, -0.25925922, 0.0055555403, -3.3997736e-08)
 material_override = SubResource("StandardMaterial3D_6l3rs")
 mesh = SubResource("PlaneMesh_umdqk")
+
+[node name="BattleUI" type="CanvasLayer" parent="." unique_id=1414141414]
+
+[node name="BattlePanel" type="PanelContainer" parent="BattleUI" unique_id=1414141415]
+offset_left = 24.0
+offset_top = 92.0
+offset_right = 430.0
+offset_bottom = 436.0
+
+[node name="MarginContainer" type="MarginContainer" parent="BattleUI/BattlePanel" unique_id=1414141416]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="BattleUIVBox" type="VBoxContainer" parent="BattleUI/BattlePanel/MarginContainer" unique_id=1414141417]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="BattleStatusLabel" type="Label" parent="BattleUI/BattlePanel/MarginContainer/BattleUIVBox" unique_id=1414141418]
+unique_name_in_owner = true
+text = "Нажмите \"Начать тестовый бой\"."
+autowrap_mode = 3
+
+[node name="TurnStatusLabel" type="Label" parent="BattleUI/BattlePanel/MarginContainer/BattleUIVBox" unique_id=1414141419]
+unique_name_in_owner = true
+text = "Бой не активен."
+autowrap_mode = 3
+
+[node name="PlayerAbilitiesTitle" type="Label" parent="BattleUI/BattlePanel/MarginContainer/BattleUIVBox" unique_id=1414141420]
+text = "Способности игрока"
+
+[node name="PlayerAbilitiesBox" type="VBoxContainer" parent="BattleUI/BattlePanel/MarginContainer/BattleUIVBox" unique_id=1414141421]
+unique_name_in_owner = true
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="TargetsTitle" type="Label" parent="BattleUI/BattlePanel/MarginContainer/BattleUIVBox" unique_id=1414141422]
+text = "Выбор цели"
+
+[node name="TargetsBox" type="VBoxContainer" parent="BattleUI/BattlePanel/MarginContainer/BattleUIVBox" unique_id=1414141423]
+unique_name_in_owner = true
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="BattleLogTitle" type="Label" parent="BattleUI/BattlePanel/MarginContainer/BattleUIVBox" unique_id=1414141424]
+text = "Журнал боя"
+
+[node name="BattleLogLabel" type="Label" parent="BattleUI/BattlePanel/MarginContainer/BattleUIVBox" unique_id=1414141425]
+unique_name_in_owner = true
+size_flags_vertical = 3
+text = ""
+autowrap_mode = 3
+vertical_alignment = 0
