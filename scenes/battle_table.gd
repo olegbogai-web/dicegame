@@ -126,6 +126,7 @@ func _apply_player_sprite() -> void:
 	_apply_texture_to_mesh(_player_sprite, player_view.sprite)
 	_player_sprite.transform = Transform3D(Basis.from_scale(player_view.base_scale), BattleRoomScript.PLAYER_SPRITE_POSITION)
 	_apply_health_bar(_player_sprite, battle_room_data.get_player_health_ratio())
+	_apply_health_text(_player_sprite, battle_room_data.get_player_health_values(), ^"HP_frame/HP_text_player")
 
 
 func _apply_monster_sprites() -> void:
@@ -282,10 +283,14 @@ func _apply_health_bar(combatant_sprite: MeshInstance3D, health_ratio: float) ->
 
 
 func _apply_monster_health_text(combatant_sprite: MeshInstance3D, health_values: Vector2i) -> void:
+	_apply_health_text(combatant_sprite, health_values, ^"HP_frame_monster/HP_text_monster")
+
+
+func _apply_health_text(combatant_sprite: MeshInstance3D, health_values: Vector2i, label_path: NodePath) -> void:
 	if combatant_sprite == null:
 		return
 
-	var health_label := combatant_sprite.get_node_or_null(^"HP_frame_monster/HP_text_monster") as Label3D
+	var health_label := combatant_sprite.get_node_or_null(label_path) as Label3D
 	if health_label == null:
 		return
 
