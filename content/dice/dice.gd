@@ -147,8 +147,7 @@ func get_match_tags() -> PackedStringArray:
 
 func assign_ability_slot(slot_id: StringName, target_position: Vector3) -> void:
 	_setup_components()
-	var target_basis := _orientation_service.get_upright_basis(self, FACE_NORMALS)
-	_slot_snap_controller.assign_slot(self, slot_id, target_position, target_basis)
+	_slot_snap_controller.assign_slot(self, slot_id, target_position)
 
 
 func clear_ability_slot() -> void:
