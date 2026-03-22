@@ -178,3 +178,19 @@ mesh = SubResource("PlaneMesh_o6e7d")
 transform = Transform3D(0, 0, 0.48148146, 0, 0.7222223, 0, -0.7222223, 0, 0, -0.25925922, 0.0055555403, -3.3997736e-08)
 material_override = SubResource("StandardMaterial3D_6l3rs")
 mesh = SubResource("PlaneMesh_umdqk")
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=151234001]
+
+[node name="EndTurnButton" type="Button" parent="UI" unique_id=151234002]
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 214.0
+offset_bottom = 68.0
+text = "Закончить ход"
+
+[node name="TurnStatusLabel" type="Label" parent="UI" unique_id=151234003]
+offset_left = 24.0
+offset_top = 80.0
+offset_right = 360.0
+offset_bottom = 116.0
+text = "Ожидание боя"
