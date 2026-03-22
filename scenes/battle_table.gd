@@ -2,8 +2,6 @@ extends Node3D
 
 const BattleRoomScript = preload("res://content/rooms/subclasses/battle_room.gd")
 const Dice = preload("res://content/dice/dice.gd")
-const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd")
-const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 
 const SLOT_EMPTY_COLOR := Color(1.0, 1.0, 1.0, 1.0)
 const SLOT_ASSIGNED_COLOR := Color(0.82, 0.9, 1.0, 1.0)
@@ -19,15 +17,13 @@ const ACTIVATION_ANIMATION_DURATION := 0.5
 const ACTIVATION_TARGET_LIFT_Y := 0.4
 
 @onready var _camera: Camera3D = $Camera3D
-@onready var _board: BoardController = $board
+@onready var _board: Node3D = $board
 @onready var _left_floor: MeshInstance3D = $left_floor
 @onready var _right_floor: MeshInstance3D = $right_floor
 @onready var _player_sprite: MeshInstance3D = $player_sprite
 @onready var _monster_sprite_template: MeshInstance3D = $monster_sprite
 @onready var _player_ability_template: MeshInstance3D = $ability_frame
 @onready var _monster_ability_template: MeshInstance3D = $ability_frame2
-@onready var _end_turn_button: Button = $UI/EndTurnButton
-@onready var _turn_status_label: Label = $UI/TurnStatusLabel
 
 var battle_room_data: BattleRoom
 var _generated_monster_sprites: Array[Node] = []
@@ -39,25 +35,20 @@ var _monster_sprite_states: Array[Dictionary] = []
 var _selected_ability_state: Dictionary = {}
 var _selected_mouse_anchor := Vector3.ZERO
 var _activation_in_progress := false
-var _turn_transition_in_progress := false
 
 
 func _ready() -> void:
 	set_physics_process(true)
-	if _end_turn_button != null and not _end_turn_button.pressed.is_connected(_on_end_turn_button_pressed):
-		_end_turn_button.pressed.connect(_on_end_turn_button_pressed)
 	if battle_room_data == null:
 		configure_from_battle_room(BattleRoomScript.create_test_battle_room())
 	else:
 		_apply_room_data()
-	_initialize_battle_state()
 
 
 func configure_from_battle_room(next_battle_room: BattleRoom) -> void:
 	battle_room_data = next_battle_room
 	if is_node_ready():
 		_apply_room_data()
-		_initialize_battle_state()
 
 
 func set_floor_textures(left_texture: Texture2D, right_texture: Texture2D) -> void:
@@ -72,7 +63,6 @@ func set_player_data(player: Player, sprite: Texture2D) -> void:
 	battle_room_data.set_player_data(player, sprite)
 	if is_node_ready():
 		_apply_room_data()
-		_initialize_battle_state()
 
 
 func set_monsters(monster_definitions: Array[MonsterDefinition]) -> void:
@@ -80,7 +70,6 @@ func set_monsters(monster_definitions: Array[MonsterDefinition]) -> void:
 	battle_room_data.set_monsters_from_definitions(monster_definitions)
 	if is_node_ready():
 		_apply_room_data()
-		_initialize_battle_state()
 
 
 func _ensure_battle_room_data() -> void:
@@ -110,7 +99,6 @@ func _apply_room_data() -> void:
 		_generated_monster_ability_frames
 	)
 	_refresh_player_ability_snap_state()
-	_update_turn_ui()
 
 
 func _apply_floor_textures() -> void:
@@ -305,7 +293,6 @@ func _build_centered_offsets(count: int, spacing: float) -> Array[float]:
 
 func _physics_process(_delta: float) -> void:
 	_refresh_player_ability_snap_state()
-	_update_turn_ui()
 	if not _selected_ability_state.is_empty() and not _activation_in_progress:
 		if not _is_ability_state_ready(_selected_ability_state):
 			_cancel_selected_ability()
@@ -314,9 +301,7 @@ func _physics_process(_delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if Engine.is_editor_hint() or _activation_in_progress or _turn_transition_in_progress:
-		return
-	if battle_room_data == null or not battle_room_data.is_player_turn() or battle_room_data.is_battle_over():
+	if Engine.is_editor_hint() or _activation_in_progress:
 		return
 	if event is InputEventMouseButton and not event.pressed:
 		return
@@ -356,13 +341,6 @@ func _refresh_player_ability_snap_state() -> void:
 		return
 
 	var dice_list := _get_board_dice()
-	if battle_room_data == null or not battle_room_data.is_player_turn() or battle_room_data.is_battle_over():
-		for dice in dice_list:
-			if dice.get_assigned_ability_slot_id() != &"":
-				dice.clear_ability_slot()
-		_update_player_ability_visuals([])
-		return
-
 	var slot_by_id := {}
 	for slot_state in _player_ability_slot_states:
 		slot_by_id[slot_state["slot_id"]] = slot_state
@@ -719,15 +697,11 @@ func _activate_selected_ability(target_descriptor: Dictionary) -> void:
 		battle_room_data.activate_player_ability(ability, target_descriptor)
 		_apply_player_sprite()
 		_apply_monster_sprites()
-		_update_turn_ui()
-		if battle_room_data.is_battle_over():
-			_clear_board_dice()
 	)
 	tween.tween_property(frame, "transform:origin", base_origin, half_duration)
 	tween.finished.connect(func() -> void:
 		_activation_in_progress = false
 		_refresh_player_ability_snap_state()
-		_update_turn_ui()
 	)
 
 
@@ -756,111 +730,6 @@ func _resolve_activation_target_origin(target_descriptor: Dictionary, base_origi
 			center /= float(living_monster_positions.size())
 			return center + Vector3.UP * ACTIVATION_TARGET_LIFT_Y
 	return base_origin + Vector3.UP * SELECTED_FRAME_LIFT_Y
-
-
-func _initialize_battle_state() -> void:
-	if battle_room_data == null:
-		return
-	if battle_room_data.battle_status == &"not_started":
-		battle_room_data.start_battle()
-	_start_current_turn()
-
-
-func _start_current_turn() -> void:
-	if battle_room_data == null:
-		return
-	_clear_board_dice()
-	if battle_room_data.is_battle_over():
-		_update_turn_ui()
-		return
-	_throw_current_turn_dice()
-	_update_turn_ui()
-	if battle_room_data.is_monster_turn():
-		_process_monster_turn_without_ai()
-
-
-func _throw_current_turn_dice() -> void:
-	if _board == null or battle_room_data == null:
-		return
-	var requests: Array[DiceThrowRequest] = []
-	if battle_room_data.is_player_turn() and battle_room_data.player_instance != null:
-		for dice_definition in battle_room_data.player_instance.dice_loadout:
-			if dice_definition == null:
-				continue
-			requests.append(_build_dice_throw_request(dice_definition, {"owner": "player"}))
-	elif battle_room_data.is_monster_turn() and battle_room_data.can_target_monster(battle_room_data.current_monster_turn_index):
-		var monster_view := battle_room_data.monster_views[battle_room_data.current_monster_turn_index]
-		for _index in range(monster_view.dice_count):
-			requests.append(_build_dice_throw_request(null, {
-				"owner": "monster",
-				"monster_index": battle_room_data.current_monster_turn_index,
-			}))
-	if not requests.is_empty():
-		_board.throw_dice(requests)
-
-
-func _build_dice_throw_request(dice_definition: DiceDefinition, metadata: Dictionary) -> DiceThrowRequest:
-	var request := DiceThrowRequestScript.create(BASE_DICE_SCENE, Vector3.ZERO, 1.0, Vector3.ONE, metadata)
-	if dice_definition != null:
-		request.metadata["definition"] = dice_definition
-	return request
-
-
-func _clear_board_dice() -> void:
-	for dice in _get_board_dice():
-		if not is_instance_valid(dice):
-			continue
-		if dice.get_parent() != null:
-			dice.get_parent().remove_child(dice)
-		dice.queue_free()
-
-
-func _on_end_turn_button_pressed() -> void:
-	if battle_room_data == null or not battle_room_data.is_player_turn() or battle_room_data.is_battle_over():
-		return
-	_cancel_selected_ability()
-	_advance_to_next_turn()
-
-
-func _advance_to_next_turn() -> void:
-	if battle_room_data == null or _turn_transition_in_progress:
-		return
-	_turn_transition_in_progress = true
-	battle_room_data.advance_turn()
-	_start_current_turn()
-	_turn_transition_in_progress = false
-
-
-func _process_monster_turn_without_ai() -> void:
-	if battle_room_data == null or not battle_room_data.is_monster_turn() or battle_room_data.is_battle_over():
-		return
-	await get_tree().process_frame
-	if battle_room_data == null or not is_inside_tree() or not battle_room_data.is_monster_turn() or battle_room_data.is_battle_over():
-		return
-	_advance_to_next_turn()
-
-
-func _update_turn_ui() -> void:
-	if _end_turn_button != null:
-		_end_turn_button.disabled = battle_room_data == null or not battle_room_data.is_player_turn() or _activation_in_progress or battle_room_data.is_battle_over()
-	if _turn_status_label == null:
-		return
-	if battle_room_data == null:
-		_turn_status_label.text = "Бой не готов"
-		return
-	if battle_room_data.battle_status == &"victory":
-		_turn_status_label.text = "Победа: все монстры мертвы"
-		return
-	if battle_room_data.battle_status == &"defeat":
-		_turn_status_label.text = "Поражение: игрок мертв"
-		return
-	if battle_room_data.is_player_turn():
-		_turn_status_label.text = "Ход %d · Ход игрока" % battle_room_data.turn_counter
-		return
-	if battle_room_data.is_monster_turn():
-		_turn_status_label.text = "Ход %d · Ход монстра %d" % [battle_room_data.turn_counter, battle_room_data.current_monster_turn_index + 1]
-		return
-	_turn_status_label.text = "Ожидание боя"
 
 
 func _project_mouse_to_horizontal_plane(plane_y: float) -> Vector3:

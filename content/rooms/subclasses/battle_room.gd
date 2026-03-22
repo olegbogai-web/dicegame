@@ -25,22 +25,19 @@ class CombatantViewData:
 	var base_scale: Vector3 = Vector3.ONE
 	var current_hp := 0
 	var max_hp := 0
-	var dice_count := 0
 
 	func _init(
 		next_sprite: Texture2D = null,
 		next_abilities: Array[AbilityDefinition] = [],
 		next_scale: Vector3 = Vector3.ONE,
 		next_current_hp: int = 0,
-		next_max_hp: int = 0,
-		next_dice_count: int = 0
+		next_max_hp: int = 0
 	) -> void:
 		sprite = next_sprite
 		abilities = _sanitize_abilities(next_abilities)
 		base_scale = next_scale
 		current_hp = maxi(next_current_hp, 0)
 		max_hp = maxi(next_max_hp, 0)
-		dice_count = maxi(next_dice_count, 0)
 
 	static func _sanitize_abilities(next_abilities: Array[AbilityDefinition]) -> Array[AbilityDefinition]:
 		var sanitized: Array[AbilityDefinition] = []
@@ -91,10 +88,6 @@ var player_view: CombatantViewData = CombatantViewData.new()
 var monster_views: Array[CombatantViewData] = []
 var left_floor_texture: Texture2D = DEFAULT_FLOOR_TEXTURE
 var right_floor_texture: Texture2D = DEFAULT_FLOOR_TEXTURE
-var current_turn_owner: StringName = &"none"
-var current_monster_turn_index := -1
-var turn_counter := 0
-var battle_result: StringName = &"none"
 
 
 func apply_battle_definition(definition: BattleRoomDefinition) -> void:
@@ -122,11 +115,9 @@ func set_player_data(player: Player, sprite: Texture2D) -> void:
 	var abilities: Array[AbilityDefinition] = []
 	var current_hp := 0
 	var max_hp := 0
-	var dice_count := 0
 	if player_instance != null:
 		abilities.assign(player_instance.ability_loadout)
 		current_hp = player_instance.current_hp
-		dice_count = player_instance.dice_loadout.size()
 		if player_instance.base_stat != null:
 			max_hp = player_instance.base_stat.max_hp
 	player_view = CombatantViewData.new(
@@ -134,10 +125,8 @@ func set_player_data(player: Player, sprite: Texture2D) -> void:
 		abilities,
 		PLAYER_SPRITE_SCALE,
 		current_hp,
-		max_hp,
-		dice_count
+		max_hp
 	)
-	_reset_battle_progression()
 
 
 func set_monsters_from_definitions(monster_definitions: Array[MonsterDefinition]) -> void:
@@ -151,11 +140,9 @@ func set_monsters_from_definitions(monster_definitions: Array[MonsterDefinition]
 				monster_definition.abilities,
 				MONSTER_SPRITE_SCALE,
 				monster_definition.max_health,
-				monster_definition.max_health,
-				monster_definition.dice_count
+				monster_definition.max_health
 			)
 		)
-	_reset_battle_progression()
 
 
 func get_player_health_ratio() -> float:
@@ -213,95 +200,11 @@ func get_living_monster_indexes() -> Array[int]:
 	return indexes
 
 
-func get_monster_turn_order() -> Array[int]:
-	var living_indexes := get_living_monster_indexes()
-	living_indexes.sort_custom(func(a: int, b: int) -> bool:
-		var left_dice := monster_views[a].dice_count if a >= 0 and a < monster_views.size() and monster_views[a] != null else 0
-		var right_dice := monster_views[b].dice_count if b >= 0 and b < monster_views.size() and monster_views[b] != null else 0
-		if left_dice == right_dice:
-			return a < b
-		return left_dice > right_dice
-	)
-	return living_indexes
-
-
-func start_battle() -> Dictionary:
-	_reset_battle_progression()
-	if _update_battle_result_if_finished():
-		return get_current_turn_context()
-	battle_status = &"active"
-	current_turn_owner = &"player"
-	current_monster_turn_index = -1
-	turn_counter = 1
-	return get_current_turn_context()
-
-
-func get_current_turn_context() -> Dictionary:
-	return {
-		"battle_status": battle_status,
-		"battle_result": battle_result,
-		"turn_counter": turn_counter,
-		"owner": current_turn_owner,
-		"monster_index": current_monster_turn_index,
-		"dice_count": get_current_turn_dice_count(),
-	}
-
-
-func get_current_turn_dice_count() -> int:
-	if current_turn_owner == &"player":
-		return player_view.dice_count if player_view != null else 0
-	if current_turn_owner == &"monster" and can_target_monster(current_monster_turn_index):
-		return monster_views[current_monster_turn_index].dice_count
-	return 0
-
-
-func is_player_turn() -> bool:
-	return battle_status == &"active" and current_turn_owner == &"player"
-
-
-func is_monster_turn() -> bool:
-	return battle_status == &"active" and current_turn_owner == &"monster"
-
-
-func is_battle_over() -> bool:
-	return battle_status == &"victory" or battle_status == &"defeat"
-
-
-func advance_turn() -> Dictionary:
-	if _update_battle_result_if_finished():
-		return get_current_turn_context()
-	if battle_status != &"active":
-		return get_current_turn_context()
-
-	if current_turn_owner == &"player":
-		var monster_order := get_monster_turn_order()
-		if monster_order.is_empty():
-			_update_battle_result_if_finished()
-			return get_current_turn_context()
-		current_turn_owner = &"monster"
-		current_monster_turn_index = monster_order[0]
-		return get_current_turn_context()
-
-	if current_turn_owner == &"monster":
-		var current_order := get_monster_turn_order()
-		var next_order_position := current_order.find(current_monster_turn_index) + 1
-		if next_order_position > 0 and next_order_position < current_order.size():
-			current_monster_turn_index = current_order[next_order_position]
-			return get_current_turn_context()
-		current_turn_owner = &"player"
-		current_monster_turn_index = -1
-		turn_counter += 1
-		return get_current_turn_context()
-
-	return start_battle()
-
-
 func activate_player_ability(ability: AbilityDefinition, target_descriptor: Dictionary) -> Dictionary:
-	if ability == null or not is_player_turn() or is_battle_over():
+	if ability == null:
 		return {
 			"success": false,
 			"affected_targets": [],
-			"battle_finished": is_battle_over(),
 		}
 
 	var affected_targets: Array[Dictionary] = []
@@ -313,12 +216,9 @@ func activate_player_ability(ability: AbilityDefinition, target_descriptor: Dict
 			if _apply_effect_to_target(effect, effect_target):
 				affected_targets.append(effect_target)
 
-	_update_battle_result_if_finished()
 	return {
 		"success": true,
 		"affected_targets": affected_targets,
-		"battle_finished": is_battle_over(),
-		"battle_result": battle_result,
 	}
 
 
@@ -378,30 +278,6 @@ func _apply_effect_to_target(effect: AbilityEffectDefinition, target_descriptor:
 	return false
 
 
-func _reset_battle_progression() -> void:
-	battle_status = &"not_started"
-	battle_result = &"none"
-	current_turn_owner = &"none"
-	current_monster_turn_index = -1
-	turn_counter = 0
-
-
-func _update_battle_result_if_finished() -> bool:
-	if player_view == null or not player_view.is_alive():
-		battle_status = &"defeat"
-		battle_result = &"player_dead"
-		current_turn_owner = &"none"
-		current_monster_turn_index = -1
-		return true
-	if get_living_monster_indexes().is_empty():
-		battle_status = &"victory"
-		battle_result = &"monsters_defeated"
-		current_turn_owner = &"none"
-		current_monster_turn_index = -1
-		return true
-	return false
-
-
 static func create_test_battle_room() -> BattleRoom:
 	var room := BattleRoom.new()
 	room.room_id = "test_battle_room"
@@ -419,9 +295,4 @@ static func _build_test_player() -> Player:
 	base_stat.starting_hp = 30
 	base_stat.starting_armor = 0
 	base_stat.starting_abilities = [COMMON_ATTACK_ABILITY, HEAL_ABILITY]
-	base_stat.starting_dice = [
-		preload("res://content/resources/base_cube.tres"),
-		preload("res://content/resources/base_cube.tres"),
-		preload("res://content/resources/base_cube.tres"),
-	]
 	return Player.new(base_stat)
