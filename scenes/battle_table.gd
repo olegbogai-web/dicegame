@@ -355,6 +355,7 @@ func _build_centered_offsets(count: int, spacing: float) -> Array[float]:
 
 
 func _physics_process(_delta: float) -> void:
+	_sync_board_dice_interactivity()
 	_refresh_player_ability_snap_state()
 	_update_turn_ui()
 	if not _selected_ability_state.is_empty() and not _activation_in_progress:
@@ -790,6 +791,7 @@ func _throw_current_turn_dice() -> void:
 			}))
 	if not requests.is_empty():
 		_board.throw_dice(requests)
+		_sync_board_dice_interactivity()
 
 
 func _build_dice_throw_request(dice_definition: DiceDefinition, metadata: Dictionary) -> DiceThrowRequest:
@@ -808,52 +810,17 @@ func _clear_board_dice() -> void:
 		dice.queue_free()
 
 
-func get_battle_room_data() -> BattleRoom:
-	return battle_room_data
-
-
-func get_board_controller() -> BoardController:
-	return _board
-
-
-func get_monster_ability_frame_state(monster_index: int, ability: AbilityDefinition) -> Dictionary:
-	for frame_state in _monster_ability_frame_states:
-		if int(frame_state.get("monster_index", -1)) != monster_index:
+func _sync_board_dice_interactivity() -> void:
+	var can_player_move_dice := battle_room_data != null and battle_room_data.is_player_turn() and not battle_room_data.is_battle_over() and not _activation_in_progress and not _turn_transition_in_progress
+	for dice in _get_board_dice():
+		if not is_instance_valid(dice):
 			continue
-		if frame_state.get("ability") != ability:
+		dice.input_ray_pickable = can_player_move_dice
+		if can_player_move_dice:
 			continue
-		return frame_state
-	return {}
-
-
-func get_dice_place_nodes_for_frame(frame: MeshInstance3D) -> Array[MeshInstance3D]:
-	return _get_dice_place_nodes(frame)
-
-
-func get_slot_target_position(dice_place: MeshInstance3D, dice: Dice) -> Vector3:
-	return _get_slot_target_position(dice_place, dice)
-
-
-func set_activation_in_progress(is_active: bool) -> void:
-	_activation_in_progress = is_active
-	_update_turn_ui()
-
-
-func get_activation_animation_duration() -> float:
-	return ACTIVATION_ANIMATION_DURATION
-
-
-func get_selected_frame_lift_y() -> float:
-	return SELECTED_FRAME_LIFT_Y
-
-
-func refresh_battle_view() -> void:
-	_apply_player_sprite()
-	_apply_monster_sprites()
-	_apply_monster_ability_frames()
-	_update_turn_ui()
-	if battle_room_data != null and battle_room_data.is_battle_over():
-		_clear_board_dice()
+		if dice.is_being_dragged():
+			dice.stop_dragging()
+		dice.clear_ability_slot()
 
 
 func _on_end_turn_button_pressed() -> void:
