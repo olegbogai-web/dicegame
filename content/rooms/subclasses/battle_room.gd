@@ -20,6 +20,7 @@ const DICE_PLACE_Z_POSITIONS := [-0.557, -0.007, 0.55]
 class CombatantViewData:
 	extends RefCounted
 
+	var entity_id := StringName()
 	var sprite: Texture2D
 	var abilities: Array[AbilityDefinition] = []
 	var base_scale: Vector3 = Vector3.ONE
@@ -28,6 +29,7 @@ class CombatantViewData:
 	var dice_count := 0
 
 	func _init(
+		next_entity_id: StringName = &"",
 		next_sprite: Texture2D = null,
 		next_abilities: Array[AbilityDefinition] = [],
 		next_scale: Vector3 = Vector3.ONE,
@@ -35,6 +37,7 @@ class CombatantViewData:
 		next_max_hp: int = 0,
 		next_dice_count: int = 0
 	) -> void:
+		entity_id = next_entity_id
 		sprite = next_sprite
 		abilities = _sanitize_abilities(next_abilities)
 		base_scale = next_scale
@@ -130,6 +133,7 @@ func set_player_data(player: Player, sprite: Texture2D) -> void:
 		if player_instance.base_stat != null:
 			max_hp = player_instance.base_stat.max_hp
 	player_view = CombatantViewData.new(
+		StringName(player_instance.base_stat.player_id) if player_instance != null and player_instance.base_stat != null else &"",
 		sprite,
 		abilities,
 		PLAYER_SPRITE_SCALE,
@@ -147,6 +151,7 @@ func set_monsters_from_definitions(monster_definitions: Array[MonsterDefinition]
 			continue
 		monster_views.append(
 			CombatantViewData.new(
+				StringName(monster_definition.monster_id),
 				monster_definition.sprite,
 				monster_definition.abilities,
 				MONSTER_SPRITE_SCALE,
@@ -303,7 +308,26 @@ func activate_player_ability(ability: AbilityDefinition, target_descriptor: Dict
 			"affected_targets": [],
 			"battle_finished": is_battle_over(),
 		}
+	return _activate_ability(ability, target_descriptor, true)
 
+
+func activate_monster_ability(ability: AbilityDefinition, target_descriptor: Dictionary) -> Dictionary:
+	if ability == null or not is_monster_turn() or is_battle_over() or not can_target_monster(current_monster_turn_index):
+		return {
+			"success": false,
+			"affected_targets": [],
+			"battle_finished": is_battle_over(),
+		}
+	return _activate_ability(ability, target_descriptor, false)
+
+
+func _activate_ability(ability: AbilityDefinition, target_descriptor: Dictionary, is_player_owner: bool) -> Dictionary:
+	if ability == null or not ability.supports_owner(is_player_owner):
+		return {
+			"success": false,
+			"affected_targets": [],
+			"battle_finished": is_battle_over(),
+		}
 	var affected_targets: Array[Dictionary] = []
 	for effect in ability.effects:
 		if effect == null:
