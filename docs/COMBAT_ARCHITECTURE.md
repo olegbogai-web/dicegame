@@ -16,6 +16,8 @@
 
 Документ фиксирует целевую архитектуру так, чтобы боевая логика оставалась расширяемой, предсказуемой и data-driven.
 
+Связанный документ по архитектуре решений монстров: [docs/MONSTER_AI_ARCHITECTURE.md](./MONSTER_AI_ARCHITECTURE.md).
+
 ---
 
 ## 1. Цель подсистемы Combat
@@ -245,6 +247,8 @@
 - получает результат через `ActionResolver`.
 
 Для ИИ здесь же исполняется выбор действия через внешний decision policy.
+
+Подробные требования к границам monster-specific decision logic см. в [docs/MONSTER_AI_ARCHITECTURE.md](./MONSTER_AI_ARCHITECTURE.md).
 
 ### 5.4. Resolution
 

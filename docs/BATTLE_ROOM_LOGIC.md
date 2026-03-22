@@ -90,6 +90,8 @@
 - AI-решения монстров;
 - покадровые визуальные анимации.
 
+Подробная архитектура принятия решений монстров описана отдельно в [docs/MONSTER_AI_ARCHITECTURE.md](./MONSTER_AI_ARCHITECTURE.md), чтобы не смешивать `BattleRoom` lifecycle и monster-specific AI rules.
+
 Это должно жить либо в `Combat`, либо в presentation/UI слое.
 
 ---
