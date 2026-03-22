@@ -177,6 +177,12 @@ func get_monster_health_values(index: int) -> Vector2i:
 	return Vector2i(monster_view.current_hp, monster_view.max_hp)
 
 
+func get_player_health_values() -> Vector2i:
+	if player_view == null:
+		return Vector2i.ZERO
+	return Vector2i(player_view.current_hp, player_view.max_hp)
+
+
 func get_player_abilities() -> Array[AbilityDefinition]:
 	return player_view.abilities
 
