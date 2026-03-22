@@ -8,6 +8,7 @@ class_name MonsterDefinition
 @export_multiline var description := ""
 @export var sprite: Texture2D
 @export var tags: PackedStringArray = PackedStringArray()
+@export var ai_profile_id: StringName = &""
 
 @export_category("Combat")
 @export_range(1, 999, 1) var max_health := 1
