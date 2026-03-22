@@ -16,6 +16,8 @@ const FRAME_READY_COLOR := Color(0.12, 0.55, 1.0, 1.0)
 const FRAME_SELECTED_COLOR := Color(1.0, 0.92, 0.52, 1.0)
 const TINT_MATERIAL_META_KEY := &"runtime_tint_material"
 const HEALTH_BAR_META_KEY := &"health_bar_base_transform"
+const HEALTH_BAR_TWEEN_META_KEY := &"health_bar_tween"
+const HEALTH_BAR_ANIMATION_DURATION := 0.5
 const SELECTED_FRAME_LIFT_Y := 0.4
 const SELECTED_FRAME_MOUSE_FOLLOW_FACTOR := 0.2
 const ACTIVATION_ANIMATION_DURATION := 0.5
@@ -307,16 +309,39 @@ func _apply_health_bar(combatant_sprite: MeshInstance3D, health_ratio: float) ->
 		health_bar.set_meta(HEALTH_BAR_META_KEY, health_bar.transform)
 
 	var base_transform: Transform3D = health_bar.get_meta(HEALTH_BAR_META_KEY)
-	var base_scale := base_transform.basis.get_scale()
-	var target_scale_x := base_scale.x * resolved_ratio
-	health_bar.visible = not is_zero_approx(target_scale_x)
-	if not health_bar.visible:
+	var target_transform := _build_health_bar_transform(base_transform, resolved_ratio)
+	var current_scale_x := health_bar.transform.basis.get_scale().x
+	var target_scale_x := target_transform.basis.get_scale().x
+	var active_tween := health_bar.get_meta(HEALTH_BAR_TWEEN_META_KEY, null) as Tween
+	if active_tween != null and is_instance_valid(active_tween):
+		active_tween.kill()
+		health_bar.remove_meta(HEALTH_BAR_TWEEN_META_KEY)
+
+	health_bar.visible = true
+	if target_scale_x < current_scale_x and not is_zero_approx(current_scale_x):
+		var tween := create_tween()
+		tween.set_trans(Tween.TRANS_SINE)
+		tween.set_ease(Tween.EASE_OUT)
+		health_bar.set_meta(HEALTH_BAR_TWEEN_META_KEY, tween)
+		tween.tween_property(health_bar, "transform", target_transform, HEALTH_BAR_ANIMATION_DURATION)
+		tween.finished.connect(func() -> void:
+			if is_instance_valid(health_bar):
+				health_bar.remove_meta(HEALTH_BAR_TWEEN_META_KEY)
+				health_bar.visible = not is_zero_approx(target_scale_x)
+		)
 		return
 
+	health_bar.transform = target_transform
+	health_bar.visible = not is_zero_approx(target_scale_x)
+
+
+func _build_health_bar_transform(base_transform: Transform3D, health_ratio: float) -> Transform3D:
+	var base_scale := base_transform.basis.get_scale()
+	var target_scale_x := base_scale.x * clampf(health_ratio, 0.0, 1.0)
 	var target_basis := Basis.from_scale(Vector3(target_scale_x, base_scale.y, base_scale.z))
 	var target_origin := base_transform.origin
-	target_origin.x = base_transform.origin.x - (base_scale.x - target_scale_x) * 0.5
-	health_bar.transform = Transform3D(target_basis, target_origin)
+	target_origin.x = base_transform.origin.x + (base_scale.x - target_scale_x) * 0.5
+	return Transform3D(target_basis, target_origin)
 
 
 func _apply_monster_health_text(combatant_sprite: MeshInstance3D, health_values: Vector2i) -> void:
