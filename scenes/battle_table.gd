@@ -89,6 +89,43 @@ func _apply_room_data() -> void:
 	_refresh_player_ability_snap_state()
 
 
+
+
+func sync_from_battle_state(state: BattleState) -> void:
+	_ensure_battle_room_data()
+	battle_room_data.sync_from_battle_state(state)
+	if is_node_ready():
+		_apply_room_data()
+
+
+func get_board_dice() -> Array[Dice]:
+	return _get_board_dice()
+
+
+func get_ready_player_abilities() -> Array[Dictionary]:
+	var ready_entries: Array[Dictionary] = []
+	var dice_list := _get_board_dice()
+	var ability_map := {}
+	for slot_state in _player_ability_slot_states:
+		var assigned_dice := _find_dice_for_slot(slot_state, dice_list)
+		if assigned_dice == null or not assigned_dice.is_snapped_to_ability_slot():
+			continue
+		var key := "%s_%s" % [slot_state["ability_id"], String(slot_state["frame"].get_instance_id())]
+		if not ability_map.has(key):
+			ability_map[key] = {
+				"ability": slot_state["ability"],
+				"dice_ids": [],
+			}
+		ability_map[key]["dice_ids"].append(int(assigned_dice.get_meta("battle_dice_id", assigned_dice.get_instance_id())))
+	for value in ability_map.values():
+		ready_entries.append(value)
+	return ready_entries
+
+
+func clear_all_dice_assignments() -> void:
+	for dice in _get_board_dice():
+		dice.clear_ability_slot()
+
 func _apply_floor_textures() -> void:
 	_apply_texture_to_mesh(_left_floor, battle_room_data.left_floor_texture)
 	_apply_texture_to_mesh(_right_floor, battle_room_data.right_floor_texture)
