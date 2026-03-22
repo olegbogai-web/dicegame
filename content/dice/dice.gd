@@ -170,6 +170,11 @@ func is_being_dragged() -> bool:
 	return _drag_controller.is_dragging()
 
 
+func align_to_upright_top_face() -> void:
+	_setup_components()
+	global_basis = _orientation_service.get_nearest_upright_basis(self, FACE_NORMALS)
+
+
 func _setup_components() -> void:
 	if _node_graph == null:
 		_node_graph = DiceNodeGraphScript.new()
