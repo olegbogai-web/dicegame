@@ -132,6 +132,7 @@
 
 - [docs/COMBAT_ARCHITECTURE.md](./COMBAT_ARCHITECTURE.md) — архитектура ядра боя, очередность ходов, кубы и активация способностей.
 - [docs/BATTLE_ROOM_LOGIC.md](./BATTLE_ROOM_LOGIC.md) — прикладная логика `BattleRoom`, lifecycle боевой комнаты и интеграция комнаты с результатом боя.
+- [docs/MONSTER_AI_ARCHITECTURE.md](./MONSTER_AI_ARCHITECTURE.md) — архитектура monster-specific AI, границы decision logic монстров и правило выноса общих боевых правил из AI-профилей.
 
 ---
 
