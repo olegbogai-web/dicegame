@@ -1,6 +1,8 @@
 extends RefCounted
 class_name DiceSlotSnapController
 
+const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd")
+
 var _assigned_slot_id: StringName = &""
 var _target_position := Vector3.ZERO
 var _snap_distance := 0.5
@@ -77,14 +79,7 @@ func is_snapped() -> bool:
 
 
 func _begin_attraction(dice: RigidBody3D) -> void:
-	_saved_gravity_scale = dice.gravity_scale
-	dice.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
-	dice.freeze = true
-	dice.gravity_scale = 0.0
-	dice.linear_velocity = Vector3.ZERO
-	dice.angular_velocity = Vector3.ZERO
-	dice.sleeping = false
-	dice.lock_rotation = true
+	_saved_gravity_scale = DiceMotionState.begin_kinematic_control(dice)
 	_is_attracting = true
 
 
@@ -97,8 +92,7 @@ func _update_attraction(dice: RigidBody3D, delta: float) -> void:
 
 func _snap_now(dice: RigidBody3D) -> void:
 	dice.global_position = _target_position
-	dice.linear_velocity = Vector3.ZERO
-	dice.angular_velocity = Vector3.ZERO
+	DiceMotionState.stop_motion(dice)
 	dice.sleeping = true
 	_is_attracting = false
 	_is_snapped = true
@@ -106,19 +100,8 @@ func _snap_now(dice: RigidBody3D) -> void:
 
 func _hold_to_slot(dice: RigidBody3D) -> void:
 	dice.global_position = _target_position
-	dice.linear_velocity = Vector3.ZERO
-	dice.angular_velocity = Vector3.ZERO
-	dice.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
-	dice.freeze = true
-	dice.gravity_scale = 0.0
-	dice.lock_rotation = true
-	dice.sleeping = true
+	DiceMotionState.begin_kinematic_control(dice, true, true, 0.0)
 
 
 func _restore_physics(dice: RigidBody3D) -> void:
-	dice.freeze = false
-	dice.gravity_scale = _saved_gravity_scale
-	dice.linear_velocity = Vector3.ZERO
-	dice.angular_velocity = Vector3.ZERO
-	dice.sleeping = false
-	dice.lock_rotation = false
+	DiceMotionState.restore_dynamic_control(dice, _saved_gravity_scale, false)

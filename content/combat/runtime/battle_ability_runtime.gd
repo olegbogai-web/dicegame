@@ -2,6 +2,7 @@ extends RefCounted
 class_name BattleAbilityRuntime
 
 const Dice = preload("res://content/dice/dice.gd")
+const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd")
 
 
 static func build_slot_conditions(ability: AbilityDefinition) -> Array[AbilityDiceCondition]:
@@ -109,15 +110,7 @@ static func is_die_usable_for_ability(
 
 
 static func is_die_fully_stopped(dice: Dice) -> bool:
-	if dice == null or not is_instance_valid(dice):
-		return false
-	if dice.is_being_dragged():
-		return false
-	var is_motionless := dice.linear_velocity.length_squared() <= 0.0001 \
-		and dice.angular_velocity.length_squared() <= 0.0001
-	if not is_motionless:
-		return false
-	return dice.sleeping or dice.has_completed_first_stop()
+	return DiceMotionState.is_fully_stopped(dice)
 
 
 static func _filter_candidate_dice(dice_list: Array[Dice], require_stopped: bool) -> Array[Dice]:

@@ -94,6 +94,17 @@
 
 Это должно жить либо в `Combat`, либо в presentation/UI слое.
 
+### Текущее разбиение runtime-логики
+
+Чтобы `BattleRoom` оставался контейнером данных, а не местом хранения боевых процедур, текущая реализация должна выносить логику по отдельным reusable runtime-модулям:
+
+- `content/combat/runtime/battle_turn_runtime.gd` — старт боя, проверка завершения боя и переключение очередности ходов;
+- `content/combat/runtime/battle_effect_runtime.gd` — резолв целей и применение эффектов способности к участникам;
+- `content/monster_ai/monster_turn_runtime.gd` — orchestration monster turn поверх общего контракта боя;
+- `content/combat/runtime/battle_activation_animation_runtime.gd` — presentation-only анимация переноса и потребления кубов.
+
+`BattleRoom` при этом хранит только encounter/runtime state и делегирует исполнение этим сервисам.
+
 ---
 
 ## 4. Жизненный цикл боевой комнаты

@@ -2,6 +2,7 @@ extends RefCounted
 class_name BattleActivationAnimationRuntime
 
 const Dice = preload("res://content/dice/dice.gd")
+const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd")
 const DEFAULT_DICE_MOVE_DURATION := 0.24
 
 
@@ -64,8 +65,4 @@ static func play_ability_use_animation(
 
 
 static func _prepare_dice_for_scripted_motion(dice: Dice) -> void:
-	dice.freeze = true
-	dice.sleeping = true
-	dice.linear_velocity = Vector3.ZERO
-	dice.angular_velocity = Vector3.ZERO
-	dice.lock_rotation = true
+	DiceMotionState.begin_kinematic_control(dice, true, true, dice.gravity_scale)
