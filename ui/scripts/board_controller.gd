@@ -11,8 +11,8 @@ const Dice = preload("res://content/dice/dice.gd")
 
 @export_category("Spawn Bounds")
 @export var spawn_bounds_margin: Vector2 = Vector2(0.15, 0.15)
-@export var base_spawn_height: float = 0.7
-@export var spawn_height_variation: float = 0.18
+@export var base_spawn_height: float = 0.4
+@export var spawn_height_variation: float = 0.08
 @export var spawn_spacing: float = 0.05
 @export_range(1, 100, 1) var max_spawn_attempts: int = 24
 @export var fallback_height_step: float = 0.3
@@ -20,10 +20,10 @@ const Dice = preload("res://content/dice/dice.gd")
 
 @export_category("Throw")
 @export var throw_speed_min: float = 4.56
-@export var throw_speed_max: float = 7.68
+@export var throw_speed_max: float = 9.68
 @export var throw_direction_spread: float = 1.25
-@export var throw_vertical_velocity_min: float = 0.28
-@export var throw_vertical_velocity_max: float = 1.12
+@export var throw_vertical_velocity_min: float = 0.18
+@export var throw_vertical_velocity_max: float = 0.25
 @export var angular_velocity_min: Vector3 = Vector3(-14.0, -18.0, -14.0)
 @export var angular_velocity_max: Vector3 = Vector3(14.0, 18.0, 14.0)
 
