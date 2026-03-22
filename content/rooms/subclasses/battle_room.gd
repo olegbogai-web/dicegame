@@ -228,8 +228,8 @@ func is_valid_room() -> bool:
 
 func _resolve_effect_targets(target_descriptor: Dictionary) -> Array[Dictionary]:
 	var target_kind := StringName(target_descriptor.get("kind", &""))
+	var resolved_targets: Array[Dictionary] = []
 	if target_kind == &"all_monsters":
-		var resolved_targets: Array[Dictionary] = []
 		for monster_index in get_living_monster_indexes():
 			resolved_targets.append({
 				"kind": &"monster",
@@ -239,11 +239,11 @@ func _resolve_effect_targets(target_descriptor: Dictionary) -> Array[Dictionary]
 	if target_kind == &"monster":
 		var monster_index := int(target_descriptor.get("index", -1))
 		if can_target_monster(monster_index):
-			return [target_descriptor]
-		return []
-	if target_kind == &"player":
-		return [target_descriptor] if can_target_player() else []
-	return []
+			resolved_targets.append(target_descriptor)
+		return resolved_targets
+	if target_kind == &"player" and can_target_player():
+		resolved_targets.append(target_descriptor)
+	return resolved_targets
 
 
 func _apply_effect_to_target(effect: AbilityEffectDefinition, target_descriptor: Dictionary) -> bool:
