@@ -3,6 +3,7 @@ class_name DiceSlotSnapController
 
 var _assigned_slot_id: StringName = &""
 var _target_position := Vector3.ZERO
+var _target_basis := Basis.IDENTITY
 var _snap_distance := 0.5
 var _snap_speed := 6.5
 var _is_snapped := false
@@ -31,14 +32,16 @@ func physics_process(dice: RigidBody3D, delta: float, is_dragging: bool) -> void
 	_update_attraction(dice, delta)
 
 
-func assign_slot(dice: RigidBody3D, slot_id: StringName, target_position: Vector3) -> void:
+func assign_slot(dice: RigidBody3D, slot_id: StringName, target_position: Vector3, target_basis: Basis = Basis.IDENTITY) -> void:
 	if _assigned_slot_id == slot_id:
 		_target_position = target_position
+		_target_basis = target_basis.orthonormalized()
 		return
 
 	clear_slot(dice)
 	_assigned_slot_id = slot_id
 	_target_position = target_position
+	_target_basis = target_basis.orthonormalized()
 
 
 func clear_slot(dice: RigidBody3D) -> void:
@@ -46,6 +49,7 @@ func clear_slot(dice: RigidBody3D) -> void:
 		_restore_physics(dice)
 	_assigned_slot_id = &""
 	_target_position = Vector3.ZERO
+	_target_basis = Basis.IDENTITY
 	_is_snapped = false
 	_is_attracting = false
 
@@ -91,12 +95,14 @@ func _begin_attraction(dice: RigidBody3D) -> void:
 func _update_attraction(dice: RigidBody3D, delta: float) -> void:
 	var next_position := dice.global_position.move_toward(_target_position, _snap_speed * delta)
 	dice.global_position = next_position
+	dice.global_basis = _interpolate_basis(dice.global_basis, _target_basis, delta)
 	if next_position.distance_to(_target_position) <= 0.01:
 		_snap_now(dice)
 
 
 func _snap_now(dice: RigidBody3D) -> void:
 	dice.global_position = _target_position
+	dice.global_basis = _target_basis
 	dice.linear_velocity = Vector3.ZERO
 	dice.angular_velocity = Vector3.ZERO
 	dice.sleeping = true
@@ -106,6 +112,7 @@ func _snap_now(dice: RigidBody3D) -> void:
 
 func _hold_to_slot(dice: RigidBody3D) -> void:
 	dice.global_position = _target_position
+	dice.global_basis = _target_basis
 	dice.linear_velocity = Vector3.ZERO
 	dice.angular_velocity = Vector3.ZERO
 	dice.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
@@ -122,3 +129,10 @@ func _restore_physics(dice: RigidBody3D) -> void:
 	dice.angular_velocity = Vector3.ZERO
 	dice.sleeping = false
 	dice.lock_rotation = false
+
+
+func _interpolate_basis(from_basis: Basis, to_basis: Basis, delta: float) -> Basis:
+	var weight := clampf(_snap_speed * delta, 0.0, 1.0)
+	var from_quaternion := from_basis.orthonormalized().get_rotation_quaternion()
+	var to_quaternion := to_basis.orthonormalized().get_rotation_quaternion()
+	return Basis(from_quaternion.slerp(to_quaternion, weight)).orthonormalized()
