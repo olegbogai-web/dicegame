@@ -51,6 +51,20 @@ class CombatantViewData:
 			return 0.0
 		return clampf(float(current_hp) / float(max_hp), 0.0, 1.0)
 
+	func is_alive() -> bool:
+		return current_hp > 0
+
+	func take_damage(amount: int) -> int:
+		var resolved_damage := maxi(amount, 0)
+		current_hp = maxi(current_hp - resolved_damage, 0)
+		return resolved_damage
+
+	func heal(amount: int) -> int:
+		var resolved_heal := maxi(amount, 0)
+		var previous_hp := current_hp
+		current_hp = mini(current_hp + resolved_heal, max_hp)
+		return current_hp - previous_hp
+
 
 func _init() -> void:
 	super()
@@ -168,8 +182,100 @@ func get_required_dice_slots(ability: AbilityDefinition) -> int:
 	return mini(total_required, 3)
 
 
+func can_target_player() -> bool:
+	return player_view != null and player_view.is_alive()
+
+
+func can_target_monster(index: int) -> bool:
+	if index < 0 or index >= monster_views.size():
+		return false
+	return monster_views[index] != null and monster_views[index].is_alive()
+
+
+func get_living_monster_indexes() -> Array[int]:
+	var indexes: Array[int] = []
+	for index in monster_views.size():
+		if can_target_monster(index):
+			indexes.append(index)
+	return indexes
+
+
+func activate_player_ability(ability: AbilityDefinition, target_descriptor: Dictionary) -> Dictionary:
+	if ability == null:
+		return {
+			"success": false,
+			"affected_targets": [],
+		}
+
+	var affected_targets: Array[Dictionary] = []
+	for effect in ability.effects:
+		if effect == null:
+			continue
+		var effect_targets := _resolve_effect_targets(target_descriptor)
+		for effect_target in effect_targets:
+			if _apply_effect_to_target(effect, effect_target):
+				affected_targets.append(effect_target)
+
+	return {
+		"success": true,
+		"affected_targets": affected_targets,
+	}
+
+
 func is_valid_room() -> bool:
 	return super.is_valid_room() and room_type == RoomEnums.RoomType.BATTLE
+
+
+func _resolve_effect_targets(target_descriptor: Dictionary) -> Array[Dictionary]:
+	var target_kind := StringName(target_descriptor.get("kind", &""))
+	if target_kind == &"all_monsters":
+		var resolved_targets: Array[Dictionary] = []
+		for monster_index in get_living_monster_indexes():
+			resolved_targets.append({
+				"kind": &"monster",
+				"index": monster_index,
+			})
+		return resolved_targets
+	if target_kind == &"monster":
+		var monster_index := int(target_descriptor.get("index", -1))
+		if can_target_monster(monster_index):
+			return [target_descriptor]
+		return []
+	if target_kind == &"player":
+		return [target_descriptor] if can_target_player() else []
+	return []
+
+
+func _apply_effect_to_target(effect: AbilityEffectDefinition, target_descriptor: Dictionary) -> bool:
+	var target_kind := StringName(target_descriptor.get("kind", &""))
+	match effect.effect_type:
+		&"damage":
+			if target_kind == &"monster":
+				var monster_index := int(target_descriptor.get("index", -1))
+				if not can_target_monster(monster_index):
+					return false
+				monster_views[monster_index].take_damage(effect.magnitude)
+				return true
+			if target_kind == &"player":
+				if player_instance != null:
+					player_instance.take_damage(effect.magnitude)
+				if player_view != null:
+					player_view.take_damage(effect.magnitude)
+				return true
+		&"healing":
+			if target_kind == &"player":
+				if player_instance != null:
+					player_instance.heal(effect.magnitude)
+				if player_view != null:
+					player_view.heal(effect.magnitude)
+				return true
+			if target_kind == &"monster":
+				var monster_index := int(target_descriptor.get("index", -1))
+				if not can_target_monster(monster_index):
+					return false
+				monster_views[monster_index].heal(effect.magnitude)
+				return true
+	return false
 
 
 static func create_test_battle_room() -> BattleRoom:

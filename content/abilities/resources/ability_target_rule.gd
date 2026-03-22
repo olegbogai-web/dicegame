@@ -22,6 +22,7 @@ enum Selection {
 	CUSTOM,
 }
 
+@export var side: Side = Side.ENEMY
 @export var selection: Selection = Selection.SINGLE
 @export_range(0, 32, 1) var min_targets := 1
 @export_range(0, 32, 1) var max_targets := 1
@@ -38,3 +39,17 @@ func requires_target_selection() -> bool:
 
 func supports_multiple_targets() -> bool:
 	return max_targets > 1 or selection == Selection.ALL
+
+
+func get_target_hint() -> StringName:
+	if side == Side.SELF or (selection == Selection.NONE and allow_self):
+		return &"self"
+	if side == Side.ENEMY and selection == Selection.ALL:
+		return &"all_enemies"
+	if side == Side.ENEMY and selection == Selection.SINGLE:
+		return &"single_enemy"
+	if side == Side.ANY and selection == Selection.SINGLE:
+		return &"die"
+	if selection == Selection.NONE:
+		return &"global"
+	return &"custom"
