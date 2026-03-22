@@ -7,6 +7,7 @@ const Dice = preload("res://content/dice/dice.gd")
 @export_category("Board References")
 @export var floor_path: NodePath = ^"floor"
 @export var default_dice_scene: PackedScene
+@export_file("*.tscn") var test_battle_scene_path := "res://scenes/battle_table.tscn"
 
 @export_category("Spawn Bounds")
 @export var spawn_bounds_margin: Vector2 = Vector2(0.15, 0.15)
@@ -28,6 +29,7 @@ const Dice = preload("res://content/dice/dice.gd")
 
 @onready var _floor: Node3D = get_node_or_null(floor_path)
 @onready var _throw_button: Button = %ThrowDiceButton
+@onready var _test_battle_button: Button = %TestBattleButton
 
 var _rng := RandomNumberGenerator.new()
 
@@ -36,6 +38,8 @@ func _ready() -> void:
 	_rng.randomize()
 	if _throw_button != null and not _throw_button.pressed.is_connected(_on_throw_button_pressed):
 		_throw_button.pressed.connect(_on_throw_button_pressed)
+	if _test_battle_button != null and not _test_battle_button.pressed.is_connected(_on_test_battle_button_pressed):
+		_test_battle_button.pressed.connect(_on_test_battle_button_pressed)
 
 
 func throw_dice(requests: Array[DiceThrowRequest]) -> Array[RigidBody3D]:
@@ -97,6 +101,16 @@ func throw_single_default_die() -> RigidBody3D:
 
 func _on_throw_button_pressed() -> void:
 	throw_single_default_die()
+
+
+func _on_test_battle_button_pressed() -> void:
+	if test_battle_scene_path.is_empty():
+		push_warning("Test battle scene path is not assigned.")
+		return
+
+	var result := get_tree().change_scene_to_file(test_battle_scene_path)
+	if result != OK:
+		push_warning("Failed to open test battle scene: %s" % test_battle_scene_path)
 
 
 func _find_spawn_transform(
