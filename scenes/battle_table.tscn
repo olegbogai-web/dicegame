@@ -87,6 +87,16 @@ transform = Transform3D(0.85, 0, 0, 0, 0.8, 0, 0, 0, 0.6, 0, 0.001, 0)
 material_override = SubResource("StandardMaterial3D_dtdu1")
 mesh = SubResource("PlaneMesh_swnlx")
 
+[node name="HP_text_monster" type="Label3D" parent="monster_sprite/HP_frame_monster"]
+transform = Transform3D(0.1, 0, 0, 0, 0.08, 0, 0, 0, 0.08, 0, 0.0025, 0)
+pixel_size = 0.05
+billboard = 1
+text = "(0/0)"
+font_size = 48
+modulate = Color(1, 0.45, 0.75, 1)
+outline_size = 6
+outline_modulate = Color(0.15, 0, 0.08, 1)
+
 [node name="player_sprite" type="MeshInstance3D" parent="." unique_id=9839672]
 transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, -6.7, 0.41, 0)
 material_override = SubResource("StandardMaterial3D_hup21")
