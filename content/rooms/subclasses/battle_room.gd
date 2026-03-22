@@ -6,6 +6,7 @@ const TEST_PLAYER_TEXTURE := preload("res://assets/entity/monsters/test_player.p
 const TEST_MONSTER_DEFINITION := preload("res://content/monsters/definitions/test_monster.tres")
 const COMMON_ATTACK_ABILITY := preload("res://content/abilities/definitions/common_attack.tres")
 const HEAL_ABILITY := preload("res://content/abilities/definitions/heal.tres")
+const BASE_CUBE_DEFINITION := preload("res://content/resources/base_cube.tres")
 
 const PLAYER_SPRITE_POSITION := Vector3(-6.7, 0.41, 0.0)
 const PLAYER_SPRITE_SCALE := Vector3(1.2, 1.2, 1.2)
@@ -131,6 +132,30 @@ func set_monsters_from_definitions(monster_definitions: Array[MonsterDefinition]
 		)
 
 
+func sync_from_battle_state(state: BattleState) -> void:
+	if state == null:
+		return
+	var player_combatant := state.get_player()
+	if player_combatant != null:
+		player_view = CombatantViewData.new(
+			player_combatant.sprite,
+			player_combatant.abilities,
+			PLAYER_SPRITE_SCALE,
+			player_combatant.current_hp,
+			player_combatant.max_hp
+		)
+	monster_views.clear()
+	for enemy in state.get_enemies(true):
+		monster_views.append(
+			CombatantViewData.new(
+				enemy.sprite,
+				enemy.abilities,
+				MONSTER_SPRITE_SCALE,
+				enemy.current_hp,
+				enemy.max_hp
+			)
+		)
+
 func get_player_health_ratio() -> float:
 	if player_view == null:
 		return 0.0
@@ -188,5 +213,6 @@ static func _build_test_player() -> Player:
 	base_stat.max_hp = 30
 	base_stat.starting_hp = 30
 	base_stat.starting_armor = 0
+	base_stat.starting_dice = [BASE_CUBE_DEFINITION, BASE_CUBE_DEFINITION, BASE_CUBE_DEFINITION]
 	base_stat.starting_abilities = [COMMON_ATTACK_ABILITY, HEAL_ABILITY]
 	return Player.new(base_stat)

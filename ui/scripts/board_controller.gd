@@ -3,6 +3,10 @@ class_name BoardController
 
 const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd")
 const Dice = preload("res://content/dice/dice.gd")
+const BattleServiceScript = preload("res://content/combat/services/battle_service.gd")
+const BattleEnums = preload("res://content/combat/resources/battle_enums.gd")
+const BattleRoomScript = preload("res://content/rooms/subclasses/battle_room.gd")
+const TEST_MONSTER_DEFINITION = preload("res://content/monsters/definitions/test_monster.tres")
 
 @export_category("Board References")
 @export var floor_path: NodePath = ^"floor"
@@ -28,15 +32,35 @@ const Dice = preload("res://content/dice/dice.gd")
 
 @onready var _floor: Node3D = get_node_or_null(floor_path)
 @onready var _throw_button: Button = %ThrowDiceButton
+@onready var _start_test_battle_button: Button = %StartTestBattleButton
+@onready var _end_turn_button: Button = %EndTurnButton
+@onready var _status_label: Label = %BattleStatusLabel
+@onready var _ability_buttons: HBoxContainer = %AbilityButtons
+@onready var _target_buttons: HBoxContainer = %TargetButtons
 
 var _rng := RandomNumberGenerator.new()
+var _battle_service := BattleServiceScript.new()
+var _battle_state: BattleState
+var _selected_player_ability: AbilityDefinition
+var _selected_player_dice_ids: Array[int] = []
 
 
 func _ready() -> void:
 	_rng.randomize()
 	if _throw_button != null and not _throw_button.pressed.is_connected(_on_throw_button_pressed):
 		_throw_button.pressed.connect(_on_throw_button_pressed)
+	if _start_test_battle_button != null and not _start_test_battle_button.pressed.is_connected(_on_start_test_battle_pressed):
+		_start_test_battle_button.pressed.connect(_on_start_test_battle_pressed)
+	if _end_turn_button != null and not _end_turn_button.pressed.is_connected(_on_end_turn_button_pressed):
+		_end_turn_button.pressed.connect(_on_end_turn_button_pressed)
+	_refresh_battle_ui()
 
+
+
+
+func _physics_process(_delta: float) -> void:
+	if _battle_state != null and not _battle_state.is_finished and _battle_state.phase == BattleEnums.Phase.AWAITING_PLAYER_ACTION:
+		_refresh_battle_ui()
 
 func throw_dice(requests: Array[DiceThrowRequest]) -> Array[RigidBody3D]:
 	var spawned_dice: Array[RigidBody3D] = []
@@ -96,8 +120,195 @@ func throw_single_default_die() -> RigidBody3D:
 
 
 func _on_throw_button_pressed() -> void:
+	if _has_active_battle():
+		_status_label.text = "Во время боя кубы бросаются автоматически в начале хода."
+		return
 	throw_single_default_die()
 
+
+func _on_start_test_battle_pressed() -> void:
+	var battle_room := BattleRoomScript.create_test_battle_room()
+	var monsters := [TEST_MONSTER_DEFINITION]
+	_battle_state = _battle_service.create_test_battle(
+		battle_room.player_instance,
+		battle_room.player_view.sprite,
+		monsters
+	)
+	_selected_player_ability = null
+	_selected_player_dice_ids.clear()
+	_sync_battle_table()
+	_spawn_turn_dice()
+	_refresh_battle_ui()
+
+
+func _on_end_turn_button_pressed() -> void:
+	if not _has_active_battle():
+		return
+	_selected_player_ability = null
+	_selected_player_dice_ids.clear()
+	_clear_spawned_dice()
+	_battle_service.end_player_turn_and_run_monsters(_battle_state)
+	_sync_battle_table()
+	if not _battle_state.is_finished:
+		_spawn_turn_dice()
+	_refresh_battle_ui()
+
+
+func _has_active_battle() -> bool:
+	return _battle_state != null and not _battle_state.is_finished
+
+
+func _spawn_turn_dice() -> void:
+	_clear_spawned_dice()
+	if _battle_state == null or _battle_state.active_turn == null or default_dice_scene == null:
+		return
+	var requests: Array[DiceThrowRequest] = []
+	for die_data in _battle_state.active_turn.available_dice:
+		var request := DiceThrowRequestScript.create(default_dice_scene)
+		var definition: DiceDefinition = die_data.get("definition", null)
+		if definition != null:
+			request.size = definition.get_resolved_size()
+		requests.append(request)
+	var spawned := throw_dice(requests)
+	for index in min(spawned.size(), _battle_state.active_turn.available_dice.size()):
+		var body := spawned[index]
+		if body is Dice:
+			var die_node := body as Dice
+			var die_data: Dictionary = _battle_state.active_turn.available_dice[index]
+			var definition: DiceDefinition = die_data.get("definition", null)
+			if definition != null:
+				die_node.definition = definition
+			die_node.set_meta("battle_dice_id", int(die_data.get("dice_id", -1)))
+			die_node.set_meta("battle_value", int(die_data.get("value", 1)))
+
+
+func _clear_spawned_dice() -> void:
+	for child in get_children():
+		if child is Dice and is_instance_valid(child):
+			child.queue_free()
+
+
+func _sync_battle_table() -> void:
+	var battle_table := get_parent()
+	if battle_table != null and battle_table.has_method("sync_from_battle_state"):
+		battle_table.sync_from_battle_state(_battle_state)
+
+
+func _refresh_battle_ui() -> void:
+	for child in _ability_buttons.get_children():
+		child.queue_free()
+	for child in _target_buttons.get_children():
+		child.queue_free()
+
+	if _status_label == null:
+		return
+
+	if _battle_state == null:
+		_status_label.text = "Нажмите «Начать тестовый бой», чтобы запустить бой."
+		_end_turn_button.visible = false
+		return
+
+	_end_turn_button.visible = not _battle_state.is_finished
+	if _battle_state.is_finished:
+		_status_label.text = _battle_state.battle_log[_battle_state.battle_log.size() - 1] if not _battle_state.battle_log.is_empty() else "Бой завершен."
+		return
+
+	var active_combatant := _battle_state.get_combatant(_battle_state.active_combatant_id)
+	if active_combatant != null:
+		_status_label.text = "Раунд %d · Ход: %s" % [_battle_state.round_number, active_combatant.display_name]
+	else:
+		_status_label.text = "Бой активен."
+
+	if _battle_state.phase != BattleEnums.Phase.AWAITING_PLAYER_ACTION:
+		return
+
+	var ready_abilities := _get_ready_player_abilities()
+	if ready_abilities.is_empty():
+		_status_label.text += " · Перетащите кубы в слоты способности или завершите ход."
+		return
+
+	for ready_entry in ready_abilities:
+		var ability := ready_entry.get("ability") as AbilityDefinition
+		if ability == null:
+			continue
+		var button := Button.new()
+		button.text = ability.display_name
+		button.pressed.connect(_on_player_ability_button_pressed.bind(ability, ready_entry.get("dice_ids", [])))
+		_ability_buttons.add_child(button)
+
+	if _selected_player_ability != null:
+		_build_target_buttons(_selected_player_ability)
+
+
+func _get_ready_player_abilities() -> Array[Dictionary]:
+	_sync_runtime_dice_values_from_board()
+	var battle_table := get_parent()
+	if battle_table != null and battle_table.has_method("get_ready_player_abilities"):
+		return battle_table.get_ready_player_abilities()
+	return []
+
+
+func _on_player_ability_button_pressed(ability: AbilityDefinition, dice_ids: Array) -> void:
+	_selected_player_ability = ability
+	_selected_player_dice_ids.clear()
+	for dice_id in dice_ids:
+		_selected_player_dice_ids.append(int(dice_id))
+	_build_target_buttons(ability)
+	if ability != null and ability.target_rule != null and ability.target_rule.selection == AbilityTargetRule.Selection.NONE:
+		_confirm_player_ability(PackedStringArray([_battle_state.get_player().combatant_id]))
+
+
+func _build_target_buttons(ability: AbilityDefinition) -> void:
+	for child in _target_buttons.get_children():
+		child.queue_free()
+	if _battle_state == null or ability == null:
+		return
+	var targets := _battle_service.get_valid_player_targets(_battle_state, ability)
+	for target in targets:
+		if target == null:
+			continue
+		var button := Button.new()
+		button.text = target.display_name
+		button.pressed.connect(_on_target_button_pressed.bind(target.combatant_id))
+		_target_buttons.add_child(button)
+
+
+func _on_target_button_pressed(target_id: String) -> void:
+	_confirm_player_ability(PackedStringArray([target_id]))
+
+
+func _confirm_player_ability(target_ids: PackedStringArray) -> void:
+	if _battle_state == null or _selected_player_ability == null:
+		return
+	_sync_runtime_dice_values_from_board()
+	var result := _battle_service.activate_player_ability(_battle_state, _selected_player_ability, _selected_player_dice_ids, target_ids)
+	if not result.get("ok", false):
+		_status_label.text = "Не удалось активировать способность: %s" % String(result.get("reason", "unknown"))
+		return
+	_selected_player_ability = null
+	_selected_player_dice_ids.clear()
+	_sync_battle_table()
+	_spawn_turn_dice()
+	_refresh_battle_ui()
+
+
+
+
+func _sync_runtime_dice_values_from_board() -> void:
+	if _battle_state == null or _battle_state.active_turn == null:
+		return
+	var dice_by_id := {}
+	for child in get_children():
+		if child is Dice:
+			var die_node := child as Dice
+			var battle_dice_id := int(die_node.get_meta("battle_dice_id", -1))
+			if battle_dice_id != -1:
+				dice_by_id[battle_dice_id] = die_node.get_top_face_value()
+	for die_data in _battle_state.active_turn.dice_pool.rolled_dice:
+		var battle_dice_id := int(die_data.get("dice_id", -1))
+		if dice_by_id.has(battle_dice_id):
+			die_data["value"] = int(dice_by_id[battle_dice_id])
+	_battle_state.active_turn.refresh_available_dice()
 
 func _find_spawn_transform(
 	resolved_size: Vector3,

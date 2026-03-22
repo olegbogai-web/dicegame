@@ -29,6 +29,7 @@ dice_query_tags = PackedStringArray()
 
 [sub_resource type="Resource" id="AbilityTargetRule_self"]
 script = ExtResource("4_target_rule")
+side = 3
 selection = 0
 min_targets = 0
 max_targets = 0
