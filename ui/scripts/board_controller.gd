@@ -4,10 +4,6 @@ class_name BoardController
 const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd")
 const Dice = preload("res://content/dice/dice.gd")
 
-signal throw_button_pressed
-signal start_test_battle_pressed
-signal end_turn_pressed
-
 @export_category("Board References")
 @export var floor_path: NodePath = ^"floor"
 @export var default_dice_scene: PackedScene
@@ -32,8 +28,6 @@ signal end_turn_pressed
 
 @onready var _floor: Node3D = get_node_or_null(floor_path)
 @onready var _throw_button: Button = %ThrowDiceButton
-@onready var _start_test_battle_button: Button = %StartTestBattleButton
-@onready var _end_turn_button: Button = %EndTurnButton
 
 var _rng := RandomNumberGenerator.new()
 
@@ -42,10 +36,6 @@ func _ready() -> void:
 	_rng.randomize()
 	if _throw_button != null and not _throw_button.pressed.is_connected(_on_throw_button_pressed):
 		_throw_button.pressed.connect(_on_throw_button_pressed)
-	if _start_test_battle_button != null and not _start_test_battle_button.pressed.is_connected(_on_start_test_battle_button_pressed):
-		_start_test_battle_button.pressed.connect(_on_start_test_battle_button_pressed)
-	if _end_turn_button != null and not _end_turn_button.pressed.is_connected(_on_end_turn_button_pressed):
-		_end_turn_button.pressed.connect(_on_end_turn_button_pressed)
 
 
 func throw_dice(requests: Array[DiceThrowRequest]) -> Array[RigidBody3D]:
@@ -94,19 +84,6 @@ func throw_dice(requests: Array[DiceThrowRequest]) -> Array[RigidBody3D]:
 	return spawned_dice
 
 
-func throw_default_dice(count: int) -> Array[Dice]:
-	var resolved_count := maxi(count, 0)
-	var dice_requests: Array[DiceThrowRequest] = []
-	for _index in resolved_count:
-		dice_requests.append(DiceThrowRequestScript.create(default_dice_scene))
-	var thrown := throw_dice(dice_requests)
-	var resolved_dice: Array[Dice] = []
-	for entry in thrown:
-		if entry is Dice:
-			resolved_dice.append(entry as Dice)
-	return resolved_dice
-
-
 func throw_single_default_die() -> RigidBody3D:
 	if default_dice_scene == null:
 		push_warning("Default dice scene is not assigned.")
@@ -118,34 +95,8 @@ func throw_single_default_die() -> RigidBody3D:
 	return result[0] if not result.is_empty() else null
 
 
-func clear_board_dice() -> void:
-	for dice in get_board_dice():
-		dice.queue_free()
-
-
-func get_board_dice() -> Array[Dice]:
-	var dice_list: Array[Dice] = []
-	for child in get_children():
-		if child is Dice and is_instance_valid(child):
-			dice_list.append(child as Dice)
-	return dice_list
-
-
-func set_end_turn_enabled(is_enabled: bool) -> void:
-	if _end_turn_button != null:
-		_end_turn_button.disabled = not is_enabled
-
-
 func _on_throw_button_pressed() -> void:
-	emit_signal("throw_button_pressed")
-
-
-func _on_start_test_battle_button_pressed() -> void:
-	emit_signal("start_test_battle_pressed")
-
-
-func _on_end_turn_button_pressed() -> void:
-	emit_signal("end_turn_pressed")
+	throw_single_default_die()
 
 
 func _find_spawn_transform(
@@ -154,7 +105,7 @@ func _find_spawn_transform(
 	board_center: Vector3,
 	spawn_extents: Vector2
 ) -> Dictionary:
-	for _attempt in max_spawn_attempts:
+	for attempt in max_spawn_attempts:
 		var candidate_position := _random_spawn_position(resolved_size, board_center, spawn_extents)
 		var candidate_aabb := _build_spawn_aabb(candidate_position, resolved_size)
 		if not _intersects_spawned_dice(candidate_aabb, occupied_areas):
