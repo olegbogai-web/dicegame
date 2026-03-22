@@ -164,6 +164,12 @@ func get_player_health_ratio() -> float:
 	return player_view.get_health_ratio()
 
 
+func get_player_health_values() -> Vector2i:
+	if player_view == null:
+		return Vector2i.ZERO
+	return Vector2i(player_view.current_hp, player_view.max_hp)
+
+
 func get_monster_health_ratio(index: int) -> float:
 	if index < 0 or index >= monster_views.size():
 		return 0.0
