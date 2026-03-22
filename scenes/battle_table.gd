@@ -331,9 +331,15 @@ func _update_health_bar_transform(health_bar: MeshInstance3D, health_ratio: floa
 	if not health_bar.visible:
 		return
 
-	var target_basis := Basis.from_scale(Vector3(target_scale_x, base_scale.y, base_scale.z))
-	var target_origin := base_transform.origin
-	target_origin.x = base_transform.origin.x - (base_scale.x - target_scale_x) * 0.5
+	var target_basis := base_transform.basis
+	var x_axis := base_transform.basis.x
+	var x_axis_length := x_axis.length()
+	if is_zero_approx(x_axis_length):
+		return
+
+	var x_axis_direction := x_axis / x_axis_length
+	target_basis.x = x_axis_direction * target_scale_x
+	var target_origin := base_transform.origin - x_axis_direction * ((base_scale.x - target_scale_x) * 0.5)
 	health_bar.transform = Transform3D(target_basis, target_origin)
 
 
