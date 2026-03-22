@@ -6,6 +6,9 @@ const TEST_PLAYER_TEXTURE := preload("res://assets/entity/monsters/test_player.p
 const TEST_MONSTER_DEFINITION := preload("res://content/monsters/definitions/test_monster.tres")
 const COMMON_ATTACK_ABILITY := preload("res://content/abilities/definitions/common_attack.tres")
 const HEAL_ABILITY := preload("res://content/abilities/definitions/heal.tres")
+const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
+const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
+const BattleEffectRuntime = preload("res://content/combat/runtime/battle_effect_runtime.gd")
 
 const PLAYER_SPRITE_POSITION := Vector3(-6.7, 0.41, 0.0)
 const PLAYER_SPRITE_SCALE := Vector3(1.2, 1.2, 1.2)
@@ -226,15 +229,7 @@ func get_monster_ability_entries() -> Array[Dictionary]:
 
 
 func get_required_dice_slots(ability: AbilityDefinition) -> int:
-	if ability == null or ability.cost == null or not ability.cost.requires_dice():
-		return 0
-
-	var total_required := 0
-	for dice_condition in ability.cost.dice_conditions:
-		if dice_condition == null:
-			continue
-		total_required += maxi(dice_condition.required_count, 0)
-	return mini(total_required, 3)
+	return mini(BattleAbilityRuntime.get_required_dice_count(ability), 3)
 
 
 func can_target_player() -> bool:
@@ -268,74 +263,31 @@ func get_monster_turn_order() -> Array[int]:
 
 
 func start_battle() -> Dictionary:
-	_reset_battle_progression()
-	if _update_battle_result_if_finished():
-		return get_current_turn_context()
-	battle_status = &"active"
-	current_turn_owner = &"player"
-	current_monster_turn_index = -1
-	turn_counter = 1
-	return get_current_turn_context()
+	return BattleTurnRuntime.start_battle(self)
 
 
 func get_current_turn_context() -> Dictionary:
-	return {
-		"battle_status": battle_status,
-		"battle_result": battle_result,
-		"turn_counter": turn_counter,
-		"owner": current_turn_owner,
-		"monster_index": current_monster_turn_index,
-		"dice_count": get_current_turn_dice_count(),
-	}
+	return BattleTurnRuntime.get_current_turn_context(self)
 
 
 func get_current_turn_dice_count() -> int:
-	if current_turn_owner == &"player":
-		return player_view.dice_count if player_view != null else 0
-	if current_turn_owner == &"monster" and can_target_monster(current_monster_turn_index):
-		return monster_views[current_monster_turn_index].dice_count
-	return 0
+	return BattleTurnRuntime.get_current_turn_dice_count(self)
 
 
 func is_player_turn() -> bool:
-	return battle_status == &"active" and current_turn_owner == &"player"
+	return BattleTurnRuntime.is_player_turn(self)
 
 
 func is_monster_turn() -> bool:
-	return battle_status == &"active" and current_turn_owner == &"monster"
+	return BattleTurnRuntime.is_monster_turn(self)
 
 
 func is_battle_over() -> bool:
-	return battle_status == &"victory" or battle_status == &"defeat"
+	return BattleTurnRuntime.is_battle_over(self)
 
 
 func advance_turn() -> Dictionary:
-	if _update_battle_result_if_finished():
-		return get_current_turn_context()
-	if battle_status != &"active":
-		return get_current_turn_context()
-
-	if current_turn_owner == &"player":
-		var monster_order := get_monster_turn_order()
-		if monster_order.is_empty():
-			_update_battle_result_if_finished()
-			return get_current_turn_context()
-		current_turn_owner = &"monster"
-		current_monster_turn_index = monster_order[0]
-		return get_current_turn_context()
-
-	if current_turn_owner == &"monster":
-		var current_order := get_monster_turn_order()
-		var next_order_position := current_order.find(current_monster_turn_index) + 1
-		if next_order_position > 0 and next_order_position < current_order.size():
-			current_monster_turn_index = current_order[next_order_position]
-			return get_current_turn_context()
-		current_turn_owner = &"player"
-		current_monster_turn_index = -1
-		turn_counter += 1
-		return get_current_turn_context()
-
-	return start_battle()
+	return BattleTurnRuntime.advance_turn(self)
 
 
 func activate_player_ability(ability: AbilityDefinition, target_descriptor: Dictionary) -> Dictionary:
@@ -343,109 +295,19 @@ func activate_player_ability(ability: AbilityDefinition, target_descriptor: Dict
 
 
 func activate_current_turn_ability(ability: AbilityDefinition, target_descriptor: Dictionary) -> Dictionary:
-	if ability == null or current_turn_owner == &"none" or is_battle_over():
-		return {
-			"success": false,
-			"affected_targets": [],
-			"battle_finished": is_battle_over(),
-		}
-
-	var affected_targets: Array[Dictionary] = []
-	for effect in ability.effects:
-		if effect == null:
-			continue
-		var effect_targets := _resolve_effect_targets(target_descriptor)
-		for effect_target in effect_targets:
-			if _apply_effect_to_target(effect, effect_target):
-				affected_targets.append(effect_target)
-
-	_update_battle_result_if_finished()
-	return {
-		"success": true,
-		"affected_targets": affected_targets,
-		"battle_finished": is_battle_over(),
-		"battle_result": battle_result,
-	}
+	return BattleEffectRuntime.activate_current_turn_ability(self, ability, target_descriptor)
 
 
 func is_valid_room() -> bool:
 	return super.is_valid_room() and room_type == RoomEnums.RoomType.BATTLE
 
 
-func _resolve_effect_targets(target_descriptor: Dictionary) -> Array[Dictionary]:
-	var target_kind := StringName(target_descriptor.get("kind", &""))
-	var resolved_targets: Array[Dictionary] = []
-	if target_kind == &"all_monsters":
-		for monster_index in get_living_monster_indexes():
-			resolved_targets.append({
-				"kind": &"monster",
-				"index": monster_index,
-			})
-		return resolved_targets
-	if target_kind == &"monster":
-		var monster_index := int(target_descriptor.get("index", -1))
-		if can_target_monster(monster_index):
-			resolved_targets.append(target_descriptor)
-		return resolved_targets
-	if target_kind == &"player" and can_target_player():
-		resolved_targets.append(target_descriptor)
-	return resolved_targets
-
-
-func _apply_effect_to_target(effect: AbilityEffectDefinition, target_descriptor: Dictionary) -> bool:
-	var target_kind := StringName(target_descriptor.get("kind", &""))
-	match effect.effect_type:
-		&"damage":
-			if target_kind == &"monster":
-				var monster_index := int(target_descriptor.get("index", -1))
-				if not can_target_monster(monster_index):
-					return false
-				monster_views[monster_index].take_damage(effect.magnitude)
-				return true
-			if target_kind == &"player":
-				if player_instance != null:
-					player_instance.take_damage(effect.magnitude)
-				if player_view != null:
-					player_view.take_damage(effect.magnitude)
-				return true
-		&"healing":
-			if target_kind == &"player":
-				if player_instance != null:
-					player_instance.heal(effect.magnitude)
-				if player_view != null:
-					player_view.heal(effect.magnitude)
-				return true
-			if target_kind == &"monster":
-				var monster_index := int(target_descriptor.get("index", -1))
-				if not can_target_monster(monster_index):
-					return false
-				monster_views[monster_index].heal(effect.magnitude)
-				return true
-	return false
-
-
 func _reset_battle_progression() -> void:
-	battle_status = &"not_started"
-	battle_result = &"none"
-	current_turn_owner = &"none"
-	current_monster_turn_index = -1
-	turn_counter = 0
+	BattleTurnRuntime.reset_battle_progression(self)
 
 
 func _update_battle_result_if_finished() -> bool:
-	if player_view == null or not player_view.is_alive():
-		battle_status = &"defeat"
-		battle_result = &"player_dead"
-		current_turn_owner = &"none"
-		current_monster_turn_index = -1
-		return true
-	if get_living_monster_indexes().is_empty():
-		battle_status = &"victory"
-		battle_result = &"monsters_defeated"
-		current_turn_owner = &"none"
-		current_monster_turn_index = -1
-		return true
-	return false
+	return BattleTurnRuntime.update_battle_result_if_finished(self)
 
 
 static func create_test_battle_room() -> BattleRoom:

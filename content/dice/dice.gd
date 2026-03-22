@@ -23,6 +23,7 @@ const DiceDefinitionBindingScript = preload("res://content/dice/runtime/dice_def
 const DiceDragControllerScript = preload("res://content/dice/runtime/dice_drag_controller.gd")
 const DiceOrientationServiceScript = preload("res://content/dice/runtime/dice_orientation_service.gd")
 const DiceSlotSnapControllerScript = preload("res://content/dice/runtime/dice_slot_snap_controller.gd")
+const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd")
 
 @export var definition: DiceDefinition
 @export var extra_size_multiplier: Vector3 = Vector3.ONE
@@ -216,13 +217,12 @@ func _on_sleeping_state_changed() -> void:
 	if not sleeping:
 		if _has_completed_first_stop:
 			lock_rotation = true
-			angular_velocity = Vector3.ZERO
+			DiceMotionState.stop_motion(self)
 		return
 
 	if not _has_completed_first_stop:
 		_has_completed_first_stop = true
 
 	lock_rotation = true
-	linear_velocity = Vector3.ZERO
-	angular_velocity = Vector3.ZERO
+	DiceMotionState.stop_motion(self)
 	_physics_runtime.disable_bounce(self)
