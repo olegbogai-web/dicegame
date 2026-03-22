@@ -545,7 +545,9 @@ func _should_highlight_slot_for_dice(slot_state: Dictionary, assigned_dice: Dice
 func _set_mesh_tint(mesh_instance: MeshInstance3D, color: Color) -> void:
 	if mesh_instance == null:
 		return
-	var material := mesh_instance.get_meta(TINT_MATERIAL_META_KEY, null) as StandardMaterial3D
+	var material: StandardMaterial3D = null
+	if mesh_instance.has_meta(TINT_MATERIAL_META_KEY):
+		material = mesh_instance.get_meta(TINT_MATERIAL_META_KEY) as StandardMaterial3D
 	if material == null:
 		if mesh_instance.material_override is StandardMaterial3D:
 			material = (mesh_instance.material_override as StandardMaterial3D).duplicate()
