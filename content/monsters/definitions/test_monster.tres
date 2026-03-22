@@ -11,4 +11,5 @@ display_name = "тестовый монстр"
 sprite = ExtResource("2_sprite")
 max_health = 10
 dice_count = 1
+ai_profile_id = &"test_monster_basic"
 abilities = Array[Resource]( [ExtResource("3_ability")] )
