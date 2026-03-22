@@ -170,6 +170,10 @@ func is_being_dragged() -> bool:
 	return _drag_controller.is_dragging()
 
 
+func is_fully_stopped() -> bool:
+	return sleeping and not is_being_dragged() and linear_velocity.length_squared() <= 0.0001 and angular_velocity.length_squared() <= 0.0001
+
+
 func _setup_components() -> void:
 	if _node_graph == null:
 		_node_graph = DiceNodeGraphScript.new()

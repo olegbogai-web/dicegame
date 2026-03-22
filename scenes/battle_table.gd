@@ -3,6 +3,9 @@ extends Node3D
 const BattleRoomScript = preload("res://content/rooms/subclasses/battle_room.gd")
 const Dice = preload("res://content/dice/dice.gd")
 const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd")
+const AbilitySlotRulesScript = preload("res://content/combat/ability_slot_rules.gd")
+const MonsterAiRegistryScript = preload("res://content/monsters/ai/monster_ai_registry.gd")
+const MonsterTurnContextBuilderScript = preload("res://content/monsters/runtime/monster_turn_context_builder.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 
 const SLOT_EMPTY_COLOR := Color(1.0, 1.0, 1.0, 1.0)
@@ -35,11 +38,13 @@ var _generated_player_ability_frames: Array[Node] = []
 var _generated_monster_ability_frames: Array[Node] = []
 var _player_ability_slot_states: Array[Dictionary] = []
 var _player_ability_frame_states: Array[Dictionary] = []
+var _monster_ability_frame_states: Array[Dictionary] = []
 var _monster_sprite_states: Array[Dictionary] = []
 var _selected_ability_state: Dictionary = {}
 var _selected_mouse_anchor := Vector3.ZERO
 var _activation_in_progress := false
 var _turn_transition_in_progress := false
+var _monster_turn_action_in_progress := false
 
 
 func _ready() -> void:
@@ -93,6 +98,7 @@ func _apply_room_data() -> void:
 		return
 	_cancel_selected_ability(true)
 	_player_ability_frame_states.clear()
+	_monster_ability_frame_states.clear()
 	_monster_sprite_states.clear()
 	_apply_floor_textures()
 	_apply_player_sprite()
@@ -104,11 +110,7 @@ func _apply_room_data() -> void:
 		_generated_player_ability_frames,
 		true
 	)
-	_apply_ability_frames(
-		battle_room_data.get_monster_abilities(),
-		_monster_ability_template,
-		_generated_monster_ability_frames
-	)
+	_apply_monster_ability_frames()
 	_refresh_player_ability_snap_state()
 	_update_turn_ui()
 
@@ -184,6 +186,37 @@ func _apply_ability_frames(
 		if track_player_slots:
 			_register_player_ability_frame(frame, ability, index)
 			_register_player_ability_slots(frame, ability, index)
+
+
+func _apply_monster_ability_frames() -> void:
+	_clear_generated_nodes(_generated_monster_ability_frames)
+	_monster_ability_frame_states.clear()
+
+	var ability_entries := battle_room_data.get_monster_ability_entries()
+	if ability_entries.is_empty():
+		_monster_ability_template.visible = false
+		return
+
+	var offsets := _build_centered_offsets(ability_entries.size(), BattleRoomScript.STACK_SPACING_Z)
+	for index in ability_entries.size():
+		var frame := _monster_ability_template if index == 0 else _duplicate_frame_template(_monster_ability_template, _generated_monster_ability_frames)
+		var entry: Dictionary = ability_entries[index]
+		var ability := entry.get("ability") as AbilityDefinition
+		frame.visible = ability != null
+		if ability == null:
+			continue
+		frame.transform = Transform3D(
+			frame.transform.basis,
+			BattleRoomScript.MONSTER_ABILITY_FRAME_POSITION + Vector3(0.0, 0.0, offsets[index])
+		)
+		_apply_ability_icon(frame, ability)
+		_apply_dice_places(frame, battle_room_data.get_required_dice_slots(ability))
+		_register_monster_ability_frame(
+			frame,
+			ability,
+			int(entry.get("monster_index", -1)),
+			int(entry.get("ability_index", -1))
+		)
 
 
 func _apply_ability_icon(frame: MeshInstance3D, ability: AbilityDefinition) -> void:
@@ -330,6 +363,7 @@ func _physics_process(_delta: float) -> void:
 			_cancel_selected_ability()
 		else:
 			_update_selected_ability_follow()
+	_process_monster_turn_ai_step()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -377,7 +411,8 @@ func _refresh_player_ability_snap_state() -> void:
 	var dice_list := _get_board_dice()
 	if battle_room_data == null or not battle_room_data.is_player_turn() or battle_room_data.is_battle_over():
 		for dice in dice_list:
-			if dice.get_assigned_ability_slot_id() != &"":
+			var assigned_slot_id := dice.get_assigned_ability_slot_id()
+			if assigned_slot_id != &"" and String(assigned_slot_id).begins_with("player_"):
 				dice.clear_ability_slot()
 		_update_player_ability_visuals([])
 		return
@@ -424,6 +459,16 @@ func _register_player_ability_frame(frame: MeshInstance3D, ability: AbilityDefin
 	})
 
 
+func _register_monster_ability_frame(frame: MeshInstance3D, ability: AbilityDefinition, monster_index: int, ability_index: int) -> void:
+	_monster_ability_frame_states.append({
+		"frame": frame,
+		"ability": ability,
+		"monster_index": monster_index,
+		"ability_index": ability_index,
+		"base_origin": frame.transform.origin,
+	})
+
+
 func _register_player_ability_slots(frame: MeshInstance3D, ability: AbilityDefinition, ability_index: int) -> void:
 	var dice_places := _get_dice_place_nodes(frame)
 	var slot_conditions := _build_slot_conditions(ability)
@@ -442,15 +487,7 @@ func _register_player_ability_slots(frame: MeshInstance3D, ability: AbilityDefin
 
 
 func _build_slot_conditions(ability: AbilityDefinition) -> Array[AbilityDiceCondition]:
-	var conditions: Array[AbilityDiceCondition] = []
-	if ability == null or ability.cost == null:
-		return conditions
-	for dice_condition in ability.cost.dice_conditions:
-		if dice_condition == null:
-			continue
-		for _count in maxi(dice_condition.required_count, 0):
-			conditions.append(dice_condition)
-	return conditions
+	return AbilitySlotRulesScript.build_slot_conditions(ability)
 
 
 func _get_board_dice() -> Array[Dice]:
@@ -491,45 +528,19 @@ func _find_snap_candidate(slot_state: Dictionary, dice_list: Array[Dice], used_d
 
 func _dice_matches_slot(dice: Dice, slot_state: Dictionary) -> bool:
 	var condition := slot_state.get("condition") as AbilityDiceCondition
-	if dice == null or condition == null:
-		return false
-
-	var top_face_value := dice.get_top_face_value()
-	if top_face_value < 0 or not condition.matches_value(top_face_value):
-		return false
-
-	if condition.requires_face_filter():
-		var top_face := dice.get_top_face()
-		if top_face == null or not condition.accepted_face_ids.has(top_face.text_value):
-			return false
-
-	var dice_tags := dice.get_match_tags()
-	for required_tag in condition.required_tags:
-		if not dice_tags.has(required_tag):
-			return false
-	for forbidden_tag in condition.forbidden_tags:
-		if dice_tags.has(forbidden_tag):
-			return false
-
-	return _dice_satisfies_use_conditions(dice, slot_state.get("ability") as AbilityDefinition)
+	return AbilitySlotRulesScript.dice_matches_ability_slot(
+		dice,
+		condition,
+		slot_state.get("ability") as AbilityDefinition
+	)
 
 
 func _dice_satisfies_use_conditions(dice: Dice, ability: AbilityDefinition) -> bool:
-	if dice == null or ability == null:
-		return false
-
-	for condition in ability.use_conditions:
-		if condition == null:
-			continue
-		if condition.predicate == &"selected_die_top_face_parity":
-			var parity := String(condition.parameters.get("parity", ""))
-			var top_face_value := dice.get_top_face_value()
-			if parity == "even" and top_face_value % 2 != 0:
-				return false
-			if parity == "odd" and top_face_value % 2 == 0:
-				return false
-
-	return true
+	return AbilitySlotRulesScript.dice_matches_ability_slot(
+		dice,
+		AbilityDiceCondition.new(),
+		ability
+	)
 
 
 func _get_slot_target_position(dice_place: MeshInstance3D, dice: Dice) -> Vector3:
@@ -720,10 +731,30 @@ func _activate_selected_ability(target_descriptor: Dictionary) -> void:
 	var ability := _selected_ability_state.get("ability") as AbilityDefinition
 	var base_origin: Vector3 = _selected_ability_state.get("base_origin", frame.transform.origin)
 	var consumed_dice := _collect_ready_dice_for_frame(frame)
+	_selected_ability_state.clear()
+	_play_ability_activation(
+		frame,
+		base_origin,
+		consumed_dice,
+		target_descriptor,
+		func() -> void:
+			battle_room_data.activate_player_ability(ability, target_descriptor)
+	)
+
+
+func _play_ability_activation(
+	frame: MeshInstance3D,
+	base_origin: Vector3,
+	consumed_dice: Array[Dice],
+	target_descriptor: Dictionary,
+	resolve_action: Callable,
+	finished_action: Callable = Callable()
+) -> void:
+	if frame == null:
+		return
+
 	var target_origin := _resolve_activation_target_origin(target_descriptor, base_origin)
 	_activation_in_progress = true
-	_selected_ability_state.clear()
-
 	var lift_origin := Vector3(base_origin.x, base_origin.y + SELECTED_FRAME_LIFT_Y, base_origin.z)
 	var half_duration := ACTIVATION_ANIMATION_DURATION * 0.5
 	var tween := create_tween()
@@ -735,11 +766,12 @@ func _activate_selected_ability(target_descriptor: Dictionary) -> void:
 		for dice in consumed_dice:
 			if is_instance_valid(dice):
 				dice.queue_free()
-		battle_room_data.activate_player_ability(ability, target_descriptor)
+		if resolve_action.is_valid():
+			resolve_action.call()
 		_apply_player_sprite()
 		_apply_monster_sprites()
 		_update_turn_ui()
-		if battle_room_data.is_battle_over():
+		if battle_room_data != null and battle_room_data.is_battle_over():
 			_clear_board_dice()
 	)
 	tween.tween_property(frame, "transform:origin", base_origin, half_duration)
@@ -747,7 +779,74 @@ func _activate_selected_ability(target_descriptor: Dictionary) -> void:
 		_activation_in_progress = false
 		_refresh_player_ability_snap_state()
 		_update_turn_ui()
+		if finished_action.is_valid():
+			finished_action.call()
 	)
+
+
+func _execute_monster_ability_action(action: Dictionary) -> void:
+	if battle_room_data == null or not battle_room_data.is_monster_turn() or battle_room_data.is_battle_over():
+		return
+	if action.is_empty():
+		_advance_to_next_turn()
+		return
+
+	var frame_state := action.get("frame_state", {})
+	var frame := frame_state.get("frame") as MeshInstance3D
+	var ability := action.get("ability") as AbilityDefinition
+	var target_descriptor := action.get("target_descriptor", {})
+	var dice: Array[Dice] = []
+	dice.assign(action.get("dice", []))
+	if frame == null or ability == null or target_descriptor.is_empty():
+		_advance_to_next_turn()
+		return
+
+	_assign_dice_to_frame_slots(frame, ability, dice, "monster")
+	_monster_turn_action_in_progress = true
+	await _wait_until_dice_reach_slots(dice)
+	if battle_room_data == null or not battle_room_data.is_monster_turn() or battle_room_data.is_battle_over():
+		_monster_turn_action_in_progress = false
+		return
+
+	var monster_index := battle_room_data.current_monster_turn_index
+	var base_origin: Vector3 = frame_state.get("base_origin", frame.transform.origin)
+	var resolve_action := func() -> void:
+		battle_room_data.activate_monster_ability(monster_index, ability, target_descriptor)
+	var finished_action := func() -> void:
+		_monster_turn_action_in_progress = false
+	_play_ability_activation(
+		frame,
+		base_origin,
+		dice,
+		target_descriptor,
+		resolve_action,
+		finished_action
+	)
+
+
+func _assign_dice_to_frame_slots(frame: MeshInstance3D, ability: AbilityDefinition, dice_list: Array[Dice], slot_owner: String) -> void:
+	var dice_places := _get_dice_place_nodes(frame)
+	var slot_conditions := AbilitySlotRulesScript.build_slot_conditions(ability)
+	for index in mini(mini(dice_places.size(), slot_conditions.size()), dice_list.size()):
+		var dice := dice_list[index]
+		if dice == null:
+			continue
+		var slot_id := StringName("%s_%s_%d" % [slot_owner, ability.ability_id, index])
+		dice.assign_ability_slot(slot_id, _get_slot_target_position(dice_places[index], dice))
+
+
+func _wait_until_dice_reach_slots(dice_list: Array[Dice]) -> void:
+	while is_inside_tree():
+		var all_ready := true
+		for dice in dice_list:
+			if not is_instance_valid(dice):
+				continue
+			if not dice.is_snapped_to_ability_slot():
+				all_ready = false
+				break
+		if all_ready:
+			return
+		await get_tree().process_frame
 
 
 func _resolve_activation_target_origin(target_descriptor: Dictionary, base_origin: Vector3) -> Vector3:
@@ -788,14 +887,13 @@ func _initialize_battle_state() -> void:
 func _start_current_turn() -> void:
 	if battle_room_data == null:
 		return
+	_monster_turn_action_in_progress = false
 	_clear_board_dice()
 	if battle_room_data.is_battle_over():
 		_update_turn_ui()
 		return
 	_throw_current_turn_dice()
 	_update_turn_ui()
-	if battle_room_data.is_monster_turn():
-		_process_monster_turn_without_ai()
 
 
 func _throw_current_turn_dice() -> void:
@@ -844,19 +942,53 @@ func _on_end_turn_button_pressed() -> void:
 func _advance_to_next_turn() -> void:
 	if battle_room_data == null or _turn_transition_in_progress:
 		return
+	_monster_turn_action_in_progress = false
 	_turn_transition_in_progress = true
 	battle_room_data.advance_turn()
 	_start_current_turn()
 	_turn_transition_in_progress = false
 
 
-func _process_monster_turn_without_ai() -> void:
+func _process_monster_turn_ai_step() -> void:
 	if battle_room_data == null or not battle_room_data.is_monster_turn() or battle_room_data.is_battle_over():
 		return
-	await get_tree().process_frame
-	if battle_room_data == null or not is_inside_tree() or not battle_room_data.is_monster_turn() or battle_room_data.is_battle_over():
+	if _turn_transition_in_progress or _activation_in_progress or _monster_turn_action_in_progress:
 		return
-	_advance_to_next_turn()
+
+	var dice_list := _get_board_dice()
+	if not _are_all_dice_fully_stopped(dice_list):
+		return
+
+	var monster_index := battle_room_data.current_monster_turn_index
+	var context := MonsterTurnContextBuilderScript.build_context(
+		battle_room_data,
+		monster_index,
+		_monster_ability_frame_states,
+		dice_list
+	)
+	var monster_ai := MonsterAiRegistryScript.get_ai(battle_room_data.get_monster_id(monster_index))
+	var decision := monster_ai.decide_next_action(context)
+	var decision_type := StringName(decision.get("type", &"end_turn"))
+	match decision_type:
+		&"wait":
+			return
+		&"use_ability":
+			var action: Dictionary = decision.get("action", {})
+			if action.is_empty():
+				_advance_to_next_turn()
+				return
+			_execute_monster_ability_action(action)
+		&"end_turn":
+			_advance_to_next_turn()
+		_:
+			_advance_to_next_turn()
+
+
+func _are_all_dice_fully_stopped(dice_list: Array[Dice]) -> bool:
+	for dice in dice_list:
+		if dice == null or not dice.is_fully_stopped():
+			return false
+	return true
 
 
 func _update_turn_ui() -> void:
