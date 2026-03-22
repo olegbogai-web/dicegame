@@ -42,6 +42,7 @@ var _drag_controller: DiceDragController
 var _orientation_service: DiceOrientationService
 var _slot_snap_controller: DiceSlotSnapController
 var _has_completed_first_stop := false
+var runtime_metadata: Dictionary = {}
 
 
 func _enter_tree() -> void:
@@ -168,6 +169,14 @@ func is_snapped_to_ability_slot() -> bool:
 func is_being_dragged() -> bool:
 	_setup_components()
 	return _drag_controller.is_dragging()
+
+
+func set_runtime_metadata(metadata: Dictionary) -> void:
+	runtime_metadata = metadata.duplicate(true)
+
+
+func get_runtime_metadata_value(key: Variant, default_value: Variant = null) -> Variant:
+	return runtime_metadata.get(key, default_value)
 
 
 func _setup_components() -> void:
