@@ -294,7 +294,7 @@ func _apply_health_text(combatant_sprite: MeshInstance3D, health_values: Vector2
 	if health_label == null:
 		return
 
-	health_label.text = "(%d/%d)" % [maxi(health_values.x, 0), maxi(health_values.y, 0)]
+	health_label.text = "%d/%d" % [maxi(health_values.x, 0), maxi(health_values.y, 0)]
 	health_label.modulate = Color(1.0, 0.45, 0.75, 1.0)
 	health_label.visible = health_values.y > 0
 
