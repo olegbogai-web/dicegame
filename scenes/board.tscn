@@ -98,3 +98,11 @@ offset_top = 24.0
 offset_right = 174.0
 offset_bottom = 68.0
 text = "Бросить куб"
+
+[node name="TestBattleButton" type="Button" parent="UI" unique_id=1845020081]
+unique_name_in_owner = true
+offset_left = 190.0
+offset_top = 24.0
+offset_right = 390.0
+offset_bottom = 68.0
+text = "Тестовый бой"
