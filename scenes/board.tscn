@@ -98,3 +98,20 @@ offset_top = 24.0
 offset_right = 174.0
 offset_bottom = 68.0
 text = "Бросить куб"
+
+[node name="StartTestBattleButton" type="Button" parent="UI" unique_id=1160000001]
+unique_name_in_owner = true
+offset_left = 190.0
+offset_top = 24.0
+offset_right = 410.0
+offset_bottom = 68.0
+text = "Начать тестовый бой"
+
+[node name="EndTurnButton" type="Button" parent="UI" unique_id=1160000002]
+unique_name_in_owner = true
+offset_left = 426.0
+offset_top = 24.0
+offset_right = 586.0
+offset_bottom = 68.0
+disabled = true
+text = "Закончить ход"
