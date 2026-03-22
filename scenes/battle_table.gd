@@ -16,6 +16,9 @@ const FRAME_READY_COLOR := Color(0.12, 0.55, 1.0, 1.0)
 const FRAME_SELECTED_COLOR := Color(1.0, 0.92, 0.52, 1.0)
 const TINT_MATERIAL_META_KEY := &"runtime_tint_material"
 const HEALTH_BAR_META_KEY := &"health_bar_base_transform"
+const HEALTH_BAR_RATIO_META_KEY := &"health_bar_ratio"
+const HEALTH_BAR_TWEEN_META_KEY := &"health_bar_tween"
+const HEALTH_BAR_ANIMATION_DURATION := 0.5
 const SELECTED_FRAME_LIFT_Y := 0.4
 const SELECTED_FRAME_MOUSE_FOLLOW_FACTOR := 0.2
 const ACTIVATION_ANIMATION_DURATION := 0.5
@@ -305,17 +308,51 @@ func _apply_health_bar(combatant_sprite: MeshInstance3D, health_ratio: float) ->
 	var resolved_ratio := clampf(health_ratio, 0.0, 1.0)
 	if not health_bar.has_meta(HEALTH_BAR_META_KEY):
 		health_bar.set_meta(HEALTH_BAR_META_KEY, health_bar.transform)
+	if not health_bar.has_meta(HEALTH_BAR_RATIO_META_KEY):
+		health_bar.set_meta(HEALTH_BAR_RATIO_META_KEY, resolved_ratio)
+		_set_health_bar_ratio(health_bar, resolved_ratio)
+		return
+
+	var current_ratio := float(health_bar.get_meta(HEALTH_BAR_RATIO_META_KEY))
+	if is_equal_approx(current_ratio, resolved_ratio):
+		return
+
+	var active_tween := health_bar.get_meta(HEALTH_BAR_TWEEN_META_KEY, null) as Tween
+	if active_tween != null and is_instance_valid(active_tween):
+		active_tween.kill()
+
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_SINE)
+	tween.set_ease(Tween.EASE_IN_OUT)
+	tween.tween_method(
+		Callable(self, "_set_health_bar_ratio").bind(health_bar),
+		current_ratio,
+		resolved_ratio,
+		HEALTH_BAR_ANIMATION_DURATION
+	)
+	tween.finished.connect(func() -> void:
+		if is_instance_valid(health_bar):
+			health_bar.remove_meta(HEALTH_BAR_TWEEN_META_KEY)
+	)
+	health_bar.set_meta(HEALTH_BAR_TWEEN_META_KEY, tween)
+
+
+func _set_health_bar_ratio(health_bar: MeshInstance3D, health_ratio: float) -> void:
+	if health_bar == null or not is_instance_valid(health_bar):
+		return
 
 	var base_transform: Transform3D = health_bar.get_meta(HEALTH_BAR_META_KEY)
 	var base_scale := base_transform.basis.get_scale()
+	var resolved_ratio := clampf(health_ratio, 0.0, 1.0)
 	var target_scale_x := base_scale.x * resolved_ratio
+	health_bar.set_meta(HEALTH_BAR_RATIO_META_KEY, resolved_ratio)
 	health_bar.visible = not is_zero_approx(target_scale_x)
 	if not health_bar.visible:
 		return
 
 	var target_basis := Basis.from_scale(Vector3(target_scale_x, base_scale.y, base_scale.z))
 	var target_origin := base_transform.origin
-	target_origin.x = base_transform.origin.x - (base_scale.x - target_scale_x) * 0.5
+	target_origin.x = base_transform.origin.x + (base_scale.x - target_scale_x) * 0.5
 	health_bar.transform = Transform3D(target_basis, target_origin)
 
 
