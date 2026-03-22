@@ -34,6 +34,7 @@ const DiceSlotSnapControllerScript = preload("res://content/dice/runtime/dice_sl
 @export var ability_snap_distance: float = 0.5
 @export var ability_snap_speed: float = 6.5
 
+var runtime_metadata: Dictionary = {}
 var _node_graph: DiceNodeGraph
 var _physics_runtime: DicePhysicsRuntime
 var _visual_runtime: DiceVisualRuntime
@@ -145,6 +146,14 @@ func get_match_tags() -> PackedStringArray:
 	return resolved_tags
 
 
+func get_runtime_metadata() -> Dictionary:
+	return runtime_metadata
+
+
+func set_runtime_metadata(next_metadata: Dictionary) -> void:
+	runtime_metadata = next_metadata.duplicate(true)
+
+
 func assign_ability_slot(slot_id: StringName, target_position: Vector3) -> void:
 	_setup_components()
 	_slot_snap_controller.assign_slot(self, slot_id, target_position)
@@ -168,6 +177,10 @@ func is_snapped_to_ability_slot() -> bool:
 func is_being_dragged() -> bool:
 	_setup_components()
 	return _drag_controller.is_dragging()
+
+
+func is_completely_stopped() -> bool:
+	return sleeping and not is_being_dragged()
 
 
 func _setup_components() -> void:

@@ -65,6 +65,7 @@ func throw_dice(requests: Array[DiceThrowRequest]) -> Array[RigidBody3D]:
 		if dice_body is Dice:
 			var runtime_dice := dice_body as Dice
 			runtime_dice.extra_size_multiplier = request.extra_size_multiplier
+			runtime_dice.set_runtime_metadata(request.metadata)
 			var runtime_definition := request.metadata.get("definition") as DiceDefinition
 			if runtime_definition != null:
 				runtime_dice.definition = runtime_definition
