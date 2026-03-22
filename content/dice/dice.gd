@@ -170,6 +170,10 @@ func is_being_dragged() -> bool:
 	return _drag_controller.is_dragging()
 
 
+func has_completed_first_stop() -> bool:
+	return _has_completed_first_stop
+
+
 func _setup_components() -> void:
 	if _node_graph == null:
 		_node_graph = DiceNodeGraphScript.new()
