@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://content/monsters/resources/monster_definition.gd" id="1_monster"]
 [ext_resource type="Texture2D" path="res://assets/entity/monsters/test_monster.png" id="2_sprite"]
 [ext_resource type="Resource" path="res://content/abilities/definitions/common_attack.tres" id="3_ability"]
+[ext_resource type="Resource" path="res://content/monster_ai/profiles/test_monster_ai_profile.tres" id="4_ai"]
 
 [resource]
 script = ExtResource("1_monster")
@@ -11,4 +12,5 @@ display_name = "тестовый монстр"
 sprite = ExtResource("2_sprite")
 max_health = 10
 dice_count = 1
+ai_profile = ExtResource("4_ai")
 abilities = Array[Resource]( [ExtResource("3_ability")] )

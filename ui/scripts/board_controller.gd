@@ -69,6 +69,9 @@ func throw_dice(requests: Array[DiceThrowRequest]) -> Array[RigidBody3D]:
 			if runtime_definition != null:
 				runtime_dice.definition = runtime_definition
 
+		for metadata_key in request.metadata.keys():
+			dice_body.set_meta(StringName(metadata_key), request.metadata[metadata_key])
+
 		var resolved_size := _resolve_request_size(dice_body, request)
 		var spawn_result := _find_spawn_transform(resolved_size, occupied_areas, board_center, spawn_extents)
 		var spawn_basis := Basis.from_euler(Vector3(

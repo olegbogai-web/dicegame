@@ -26,6 +26,7 @@ class CombatantViewData:
 	var current_hp := 0
 	var max_hp := 0
 	var dice_count := 0
+	var ai_profile: MonsterAiProfile
 
 	func _init(
 		next_sprite: Texture2D = null,
@@ -33,7 +34,8 @@ class CombatantViewData:
 		next_scale: Vector3 = Vector3.ONE,
 		next_current_hp: int = 0,
 		next_max_hp: int = 0,
-		next_dice_count: int = 0
+		next_dice_count: int = 0,
+		next_ai_profile: MonsterAiProfile = null
 	) -> void:
 		sprite = next_sprite
 		abilities = _sanitize_abilities(next_abilities)
@@ -41,6 +43,7 @@ class CombatantViewData:
 		current_hp = maxi(next_current_hp, 0)
 		max_hp = maxi(next_max_hp, 0)
 		dice_count = maxi(next_dice_count, 0)
+		ai_profile = next_ai_profile
 
 	static func _sanitize_abilities(next_abilities: Array[AbilityDefinition]) -> Array[AbilityDefinition]:
 		var sanitized: Array[AbilityDefinition] = []
@@ -123,6 +126,7 @@ func set_player_data(player: Player, sprite: Texture2D) -> void:
 	var current_hp := 0
 	var max_hp := 0
 	var dice_count := 0
+	var ai_profile: MonsterAiProfile
 	if player_instance != null:
 		abilities.assign(player_instance.ability_loadout)
 		current_hp = player_instance.current_hp
@@ -140,9 +144,9 @@ func set_player_data(player: Player, sprite: Texture2D) -> void:
 	_reset_battle_progression()
 
 
-func set_monsters_from_definitions(monster_definitions: Array[MonsterDefinition]) -> void:
+func set_monsters_from_definitions(next_monster_definitions: Array[MonsterDefinition]) -> void:
 	monster_views.clear()
-	for monster_definition in monster_definitions:
+	for monster_definition in next_monster_definitions:
 		if monster_definition == null:
 			continue
 		monster_views.append(
@@ -152,7 +156,8 @@ func set_monsters_from_definitions(monster_definitions: Array[MonsterDefinition]
 				MONSTER_SPRITE_SCALE,
 				monster_definition.max_health,
 				monster_definition.max_health,
-				monster_definition.dice_count
+				monster_definition.dice_count,
+				monster_definition.ai_profile
 			)
 		)
 	_reset_battle_progression()
@@ -189,10 +194,34 @@ func get_player_abilities() -> Array[AbilityDefinition]:
 
 func get_monster_abilities() -> Array[AbilityDefinition]:
 	var resolved: Array[AbilityDefinition] = []
-	for monster_view in monster_views:
-		for ability in monster_view.abilities:
-			if ability != null:
-				resolved.append(ability)
+	for entry in get_monster_ability_entries():
+		var ability := entry.get("ability") as AbilityDefinition
+		if ability != null:
+			resolved.append(ability)
+	return resolved
+
+
+func get_monster_view(index: int) -> CombatantViewData:
+	if index < 0 or index >= monster_views.size():
+		return null
+	return monster_views[index]
+
+
+func get_monster_ability_entries() -> Array[Dictionary]:
+	var resolved: Array[Dictionary] = []
+	for monster_index in monster_views.size():
+		var monster_view := monster_views[monster_index]
+		if monster_view == null:
+			continue
+		for ability_index in monster_view.abilities.size():
+			var ability := monster_view.abilities[ability_index]
+			if ability == null:
+				continue
+			resolved.append({
+				"monster_index": monster_index,
+				"ability_index": ability_index,
+				"ability": ability,
+			})
 	return resolved
 
 
@@ -310,7 +339,11 @@ func advance_turn() -> Dictionary:
 
 
 func activate_player_ability(ability: AbilityDefinition, target_descriptor: Dictionary) -> Dictionary:
-	if ability == null or not is_player_turn() or is_battle_over():
+	return activate_current_turn_ability(ability, target_descriptor)
+
+
+func activate_current_turn_ability(ability: AbilityDefinition, target_descriptor: Dictionary) -> Dictionary:
+	if ability == null or current_turn_owner == &"none" or is_battle_over():
 		return {
 			"success": false,
 			"affected_targets": [],
