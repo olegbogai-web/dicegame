@@ -34,7 +34,6 @@ const DiceSlotSnapControllerScript = preload("res://content/dice/runtime/dice_sl
 @export var ability_snap_distance: float = 0.5
 @export var ability_snap_speed: float = 6.5
 
-var runtime_metadata: Dictionary = {}
 var _node_graph: DiceNodeGraph
 var _physics_runtime: DicePhysicsRuntime
 var _visual_runtime: DiceVisualRuntime
@@ -144,14 +143,6 @@ func get_match_tags() -> PackedStringArray:
 	if top_face != null and not top_face.text_value.is_empty():
 		resolved_tags.append(top_face.text_value)
 	return resolved_tags
-
-
-func get_runtime_metadata() -> Dictionary:
-	return runtime_metadata
-
-
-func set_runtime_metadata(next_metadata: Dictionary) -> void:
-	runtime_metadata = next_metadata.duplicate(true)
 
 
 func assign_ability_slot(slot_id: StringName, target_position: Vector3) -> void:
