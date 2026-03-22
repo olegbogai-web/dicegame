@@ -51,7 +51,7 @@ static func advance_turn(battle_room) -> Dictionary:
 		return get_current_turn_context(battle_room)
 
 	if battle_room.current_turn_owner == &"player":
-		var monster_order := battle_room.get_monster_turn_order()
+		var monster_order = battle_room.get_monster_turn_order()
 		if monster_order.is_empty():
 			update_battle_result_if_finished(battle_room)
 			return get_current_turn_context(battle_room)
@@ -60,8 +60,8 @@ static func advance_turn(battle_room) -> Dictionary:
 		return get_current_turn_context(battle_room)
 
 	if battle_room.current_turn_owner == &"monster":
-		var current_order := battle_room.get_monster_turn_order()
-		var next_order_position := current_order.find(battle_room.current_monster_turn_index) + 1
+		var current_order = battle_room.get_monster_turn_order()
+		var next_order_position = current_order.find(battle_room.current_monster_turn_index) + 1
 		if next_order_position > 0 and next_order_position < current_order.size():
 			battle_room.current_monster_turn_index = current_order[next_order_position]
 			return get_current_turn_context(battle_room)
