@@ -26,8 +26,6 @@ class CombatantViewData:
 	var current_hp := 0
 	var max_hp := 0
 	var dice_count := 0
-	var combatant_id: StringName = &""
-	var ai_profile_id: StringName = &""
 
 	func _init(
 		next_sprite: Texture2D = null,
@@ -35,9 +33,7 @@ class CombatantViewData:
 		next_scale: Vector3 = Vector3.ONE,
 		next_current_hp: int = 0,
 		next_max_hp: int = 0,
-		next_dice_count: int = 0,
-		next_combatant_id: StringName = &"",
-		next_ai_profile_id: StringName = &""
+		next_dice_count: int = 0
 	) -> void:
 		sprite = next_sprite
 		abilities = _sanitize_abilities(next_abilities)
@@ -45,8 +41,6 @@ class CombatantViewData:
 		current_hp = maxi(next_current_hp, 0)
 		max_hp = maxi(next_max_hp, 0)
 		dice_count = maxi(next_dice_count, 0)
-		combatant_id = next_combatant_id
-		ai_profile_id = next_ai_profile_id
 
 	static func _sanitize_abilities(next_abilities: Array[AbilityDefinition]) -> Array[AbilityDefinition]:
 		var sanitized: Array[AbilityDefinition] = []
@@ -141,9 +135,7 @@ func set_player_data(player: Player, sprite: Texture2D) -> void:
 		PLAYER_SPRITE_SCALE,
 		current_hp,
 		max_hp,
-		dice_count,
-		&"player",
-		&""
+		dice_count
 	)
 	_reset_battle_progression()
 
@@ -160,9 +152,7 @@ func set_monsters_from_definitions(monster_definitions: Array[MonsterDefinition]
 				MONSTER_SPRITE_SCALE,
 				monster_definition.max_health,
 				monster_definition.max_health,
-				monster_definition.dice_count,
-				StringName(monster_definition.monster_id),
-				monster_definition.ai_profile_id
+				monster_definition.dice_count
 			)
 		)
 	_reset_battle_progression()
@@ -204,43 +194,6 @@ func get_monster_abilities() -> Array[AbilityDefinition]:
 			if ability != null:
 				resolved.append(ability)
 	return resolved
-
-
-func get_monster_abilities_for(index: int) -> Array[AbilityDefinition]:
-	if index < 0 or index >= monster_views.size() or monster_views[index] == null:
-		return []
-	return monster_views[index].abilities
-
-
-func get_monster_ability_entries() -> Array[Dictionary]:
-	var resolved: Array[Dictionary] = []
-	for monster_index in monster_views.size():
-		var monster_view := monster_views[monster_index]
-		if monster_view == null:
-			continue
-		for ability_index in monster_view.abilities.size():
-			var ability := monster_view.abilities[ability_index]
-			if ability == null:
-				continue
-			resolved.append({
-				"monster_index": monster_index,
-				"ability_index": ability_index,
-				"ability": ability,
-			})
-	return resolved
-
-
-func get_monster_ai_profile_id(index: int) -> StringName:
-	if index < 0 or index >= monster_views.size() or monster_views[index] == null:
-		return &""
-	return monster_views[index].ai_profile_id
-
-
-func find_monster_ability_by_id(index: int, ability_id: StringName) -> AbilityDefinition:
-	for ability in get_monster_abilities_for(index):
-		if ability != null and StringName(ability.ability_id) == ability_id:
-			return ability
-	return null
 
 
 func get_required_dice_slots(ability: AbilityDefinition) -> int:
@@ -358,38 +311,6 @@ func advance_turn() -> Dictionary:
 
 func activate_player_ability(ability: AbilityDefinition, target_descriptor: Dictionary) -> Dictionary:
 	if ability == null or not is_player_turn() or is_battle_over():
-		return {
-			"success": false,
-			"affected_targets": [],
-			"battle_finished": is_battle_over(),
-		}
-
-	var affected_targets: Array[Dictionary] = []
-	for effect in ability.effects:
-		if effect == null:
-			continue
-		var effect_targets := _resolve_effect_targets(target_descriptor)
-		for effect_target in effect_targets:
-			if _apply_effect_to_target(effect, effect_target):
-				affected_targets.append(effect_target)
-
-	_update_battle_result_if_finished()
-	return {
-		"success": true,
-		"affected_targets": affected_targets,
-		"battle_finished": is_battle_over(),
-		"battle_result": battle_result,
-	}
-
-
-func activate_monster_ability(monster_index: int, ability: AbilityDefinition, target_descriptor: Dictionary) -> Dictionary:
-	if ability == null or not is_monster_turn() or is_battle_over():
-		return {
-			"success": false,
-			"affected_targets": [],
-			"battle_finished": is_battle_over(),
-		}
-	if monster_index != current_monster_turn_index or not can_target_monster(monster_index):
 		return {
 			"success": false,
 			"affected_targets": [],

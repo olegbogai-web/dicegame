@@ -12,7 +12,6 @@ class_name MonsterDefinition
 @export_category("Combat")
 @export_range(1, 999, 1) var max_health := 1
 @export_range(0, 99, 1) var dice_count := 0
-@export var ai_profile_id: StringName = &""
 @export var abilities: Array[AbilityDefinition] = []
 
 
