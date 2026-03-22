@@ -88,7 +88,6 @@ var reward_refs: PackedStringArray = PackedStringArray()
 
 var player_instance: Player
 var player_view: CombatantViewData = CombatantViewData.new()
-var monster_definitions: Array[MonsterDefinition] = []
 var monster_views: Array[CombatantViewData] = []
 var left_floor_texture: Texture2D = DEFAULT_FLOOR_TEXTURE
 var right_floor_texture: Texture2D = DEFAULT_FLOOR_TEXTURE
@@ -142,12 +141,10 @@ func set_player_data(player: Player, sprite: Texture2D) -> void:
 
 
 func set_monsters_from_definitions(monster_definitions: Array[MonsterDefinition]) -> void:
-	self.monster_definitions.clear()
 	monster_views.clear()
 	for monster_definition in monster_definitions:
 		if monster_definition == null:
 			continue
-		self.monster_definitions.append(monster_definition)
 		monster_views.append(
 			CombatantViewData.new(
 				monster_definition.sprite,
@@ -197,30 +194,6 @@ func get_monster_abilities() -> Array[AbilityDefinition]:
 			if ability != null:
 				resolved.append(ability)
 	return resolved
-
-
-func get_monster_ability_entries() -> Array[Dictionary]:
-	var resolved: Array[Dictionary] = []
-	for monster_index in monster_views.size():
-		var monster_view := monster_views[monster_index]
-		if monster_view == null:
-			continue
-		for ability_index in monster_view.abilities.size():
-			var ability := monster_view.abilities[ability_index]
-			if ability == null:
-				continue
-			resolved.append({
-				"monster_index": monster_index,
-				"ability_index": ability_index,
-				"ability": ability,
-			})
-	return resolved
-
-
-func get_monster_definition(index: int) -> MonsterDefinition:
-	if index < 0 or index >= monster_definitions.size():
-		return null
-	return monster_definitions[index]
 
 
 func get_required_dice_slots(ability: AbilityDefinition) -> int:
@@ -338,38 +311,6 @@ func advance_turn() -> Dictionary:
 
 func activate_player_ability(ability: AbilityDefinition, target_descriptor: Dictionary) -> Dictionary:
 	if ability == null or not is_player_turn() or is_battle_over():
-		return {
-			"success": false,
-			"affected_targets": [],
-			"battle_finished": is_battle_over(),
-		}
-
-	var affected_targets: Array[Dictionary] = []
-	for effect in ability.effects:
-		if effect == null:
-			continue
-		var effect_targets := _resolve_effect_targets(target_descriptor)
-		for effect_target in effect_targets:
-			if _apply_effect_to_target(effect, effect_target):
-				affected_targets.append(effect_target)
-
-	_update_battle_result_if_finished()
-	return {
-		"success": true,
-		"affected_targets": affected_targets,
-		"battle_finished": is_battle_over(),
-		"battle_result": battle_result,
-	}
-
-
-func activate_monster_ability(monster_index: int, ability: AbilityDefinition, target_descriptor: Dictionary) -> Dictionary:
-	if (
-		ability == null
-		or not is_monster_turn()
-		or is_battle_over()
-		or monster_index != current_monster_turn_index
-		or not can_target_monster(monster_index)
-	):
 		return {
 			"success": false,
 			"affected_targets": [],
