@@ -27,7 +27,6 @@ dice_query_tags = PackedStringArray()
 
 [sub_resource type="Resource" id="AbilityTargetRule_enemy"]
 script = ExtResource("4_target_rule")
-side = 1
 required_tags = null
 forbidden_tags = null
 
@@ -45,26 +44,11 @@ script = ExtResource("1_ability")
 ability_id = "common_attack"
 display_name = "Обычный удар"
 description = "Требует четное значение на верхней грани куба. Наносит 5 урона выбранному существу."
-flavor_text = ""
 icon = ExtResource("7_icon")
-sprite_scale = Vector2(1, 1)
 tags = PackedStringArray("attack")
-kind = 0
 owner_scope = 1
-rarity = 0
-unlock_level = 0
-upgrade_level = 0
-max_upgrade_level = 3
-cooldown_turns = 0
-charges = 0
-starts_on_cooldown = false
-once_per_battle = false
-exhausts_for_battle = false
 cost = SubResource("AbilityCost_main")
 target_rule = SubResource("AbilityTargetRule_enemy")
-cast_conditions = Array[ExtResource("5_condition")]([])
 use_conditions = Array[ExtResource("5_condition")]([SubResource("AbilityCondition_even_top_face")])
 effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_damage")])
 follow_up_ability_ids = PackedStringArray()
-ai_hints = {}
-ui_metadata = {}
