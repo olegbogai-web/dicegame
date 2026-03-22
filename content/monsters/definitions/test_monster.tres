@@ -8,6 +8,7 @@
 script = ExtResource("1_monster")
 monster_id = "test_monster"
 display_name = "тестовый монстр"
+ai_profile_id = &"test_monster"
 sprite = ExtResource("2_sprite")
 max_health = 10
 dice_count = 1
