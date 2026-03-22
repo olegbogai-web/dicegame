@@ -3,7 +3,6 @@ extends Node3D
 const BattleRoomScript = preload("res://content/rooms/subclasses/battle_room.gd")
 const Dice = preload("res://content/dice/dice.gd")
 const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd")
-const TestMonsterAIScript = preload("res://content/monsters/ai/test_monster_ai.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 
 const SLOT_EMPTY_COLOR := Color(1.0, 1.0, 1.0, 1.0)
@@ -835,79 +834,10 @@ func _advance_to_next_turn() -> void:
 func _process_monster_turn_without_ai() -> void:
 	if battle_room_data == null or not battle_room_data.is_monster_turn() or battle_room_data.is_battle_over():
 		return
-	await _wait_for_monster_dice_to_settle()
-	if battle_room_data == null or not is_inside_tree() or not battle_room_data.is_monster_turn() or battle_room_data.is_battle_over():
-		return
-	await _process_monster_turn_with_test_ai()
+	await get_tree().process_frame
 	if battle_room_data == null or not is_inside_tree() or not battle_room_data.is_monster_turn() or battle_room_data.is_battle_over():
 		return
 	_advance_to_next_turn()
-
-
-func _process_monster_turn_with_test_ai() -> void:
-	if battle_room_data == null or not battle_room_data.is_monster_turn() or battle_room_data.is_battle_over():
-		return
-	if not battle_room_data.can_target_monster(battle_room_data.current_monster_turn_index):
-		return
-
-	var monster_view := battle_room_data.monster_views[battle_room_data.current_monster_turn_index]
-	if monster_view == null or monster_view.entity_id != &"test_monster":
-		return
-
-	while battle_room_data != null and is_inside_tree() and battle_room_data.is_monster_turn() and not battle_room_data.is_battle_over():
-		var intent := TestMonsterAIScript.choose_action(monster_view, _get_current_monster_turn_dice())
-		if intent.is_empty():
-			return
-
-		for dice in intent.get("consumed_dice", []):
-			if is_instance_valid(dice):
-				if dice.get_parent() != null:
-					dice.get_parent().remove_child(dice)
-				dice.queue_free()
-
-		battle_room_data.activate_monster_ability(
-			intent.get("ability") as AbilityDefinition,
-			intent.get("target_descriptor", {})
-		)
-		_apply_player_sprite()
-		_apply_monster_sprites()
-		_update_turn_ui()
-		if battle_room_data.is_battle_over():
-			_clear_board_dice()
-			return
-		await get_tree().process_frame
-
-
-func _wait_for_monster_dice_to_settle(max_frames: int = 120) -> void:
-	for _frame in range(max_frames):
-		if not _has_active_monster_turn_dice():
-			return
-		await get_tree().process_frame
-
-
-func _has_active_monster_turn_dice() -> bool:
-	for dice in _get_current_monster_turn_dice():
-		if dice == null or not is_instance_valid(dice):
-			continue
-		if not dice.sleeping or dice.is_being_dragged():
-			return true
-	return false
-
-
-func _get_current_monster_turn_dice() -> Array[Dice]:
-	var monster_dice: Array[Dice] = []
-	if battle_room_data == null:
-		return monster_dice
-
-	for dice in _get_board_dice():
-		if dice == null or not is_instance_valid(dice):
-			continue
-		if String(dice.get_meta("owner", "")) != "monster":
-			continue
-		if int(dice.get_meta("monster_index", -1)) != battle_room_data.current_monster_turn_index:
-			continue
-		monster_dice.append(dice)
-	return monster_dice
 
 
 func _update_turn_ui() -> void:
