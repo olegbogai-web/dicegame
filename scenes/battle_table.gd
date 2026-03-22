@@ -16,6 +16,9 @@ const FRAME_READY_COLOR := Color(0.12, 0.55, 1.0, 1.0)
 const FRAME_SELECTED_COLOR := Color(1.0, 0.92, 0.52, 1.0)
 const TINT_MATERIAL_META_KEY := &"runtime_tint_material"
 const HEALTH_BAR_META_KEY := &"health_bar_base_transform"
+const HEALTH_BAR_CURRENT_RATIO_META_KEY := &"health_bar_current_ratio"
+const HEALTH_BAR_TARGET_RATIO_META_KEY := &"health_bar_target_ratio"
+const HEALTH_BAR_ANIMATION_DURATION := 0.5
 const SELECTED_FRAME_LIFT_Y := 0.4
 const SELECTED_FRAME_MOUSE_FOLLOW_FACTOR := 0.2
 const ACTIVATION_ANIMATION_DURATION := 0.5
@@ -293,19 +296,34 @@ func _clear_generated_nodes(nodes: Array[Node]) -> void:
 
 
 func _apply_health_bar(combatant_sprite: MeshInstance3D, health_ratio: float) -> void:
-	if combatant_sprite == null:
+	var resolved_ratio := clampf(health_ratio, 0.0, 1.0)
+	var health_bar := _resolve_health_bar(combatant_sprite)
+	if health_bar == null:
 		return
+
+	if not health_bar.has_meta(HEALTH_BAR_META_KEY):
+		health_bar.set_meta(HEALTH_BAR_META_KEY, health_bar.transform)
+	if not health_bar.has_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY):
+		health_bar.set_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY, resolved_ratio)
+		_update_health_bar_transform(health_bar, resolved_ratio)
+	health_bar.set_meta(HEALTH_BAR_TARGET_RATIO_META_KEY, resolved_ratio)
+
+
+func _resolve_health_bar(combatant_sprite: MeshInstance3D) -> MeshInstance3D:
+	if combatant_sprite == null:
+		return null
 
 	var health_bar := combatant_sprite.get_node_or_null(^"HP_frame/HP_bar_player") as MeshInstance3D
 	if health_bar == null:
 		health_bar = combatant_sprite.get_node_or_null(^"HP_frame_monster/HP_bar_monster") as MeshInstance3D
-	if health_bar == null:
+	return health_bar
+
+
+func _update_health_bar_transform(health_bar: MeshInstance3D, health_ratio: float) -> void:
+	if health_bar == null or not health_bar.has_meta(HEALTH_BAR_META_KEY):
 		return
 
 	var resolved_ratio := clampf(health_ratio, 0.0, 1.0)
-	if not health_bar.has_meta(HEALTH_BAR_META_KEY):
-		health_bar.set_meta(HEALTH_BAR_META_KEY, health_bar.transform)
-
 	var base_transform: Transform3D = health_bar.get_meta(HEALTH_BAR_META_KEY)
 	var base_scale := base_transform.basis.get_scale()
 	var target_scale_x := base_scale.x * resolved_ratio
@@ -317,6 +335,38 @@ func _apply_health_bar(combatant_sprite: MeshInstance3D, health_ratio: float) ->
 	var target_origin := base_transform.origin
 	target_origin.x = base_transform.origin.x - (base_scale.x - target_scale_x) * 0.5
 	health_bar.transform = Transform3D(target_basis, target_origin)
+
+
+func _animate_health_bar(combatant_sprite: MeshInstance3D, target_ratio: float, delta: float) -> void:
+	var health_bar := _resolve_health_bar(combatant_sprite)
+	if health_bar == null:
+		return
+	if not health_bar.has_meta(HEALTH_BAR_META_KEY):
+		health_bar.set_meta(HEALTH_BAR_META_KEY, health_bar.transform)
+	if not health_bar.has_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY):
+		health_bar.set_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY, clampf(target_ratio, 0.0, 1.0))
+	if not health_bar.has_meta(HEALTH_BAR_TARGET_RATIO_META_KEY):
+		health_bar.set_meta(HEALTH_BAR_TARGET_RATIO_META_KEY, clampf(target_ratio, 0.0, 1.0))
+
+	var current_ratio := float(health_bar.get_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY, target_ratio))
+	var resolved_target_ratio := clampf(float(health_bar.get_meta(HEALTH_BAR_TARGET_RATIO_META_KEY, target_ratio)), 0.0, 1.0)
+	var step := 1.0 if HEALTH_BAR_ANIMATION_DURATION <= 0.0 else minf(delta / HEALTH_BAR_ANIMATION_DURATION, 1.0)
+	var next_ratio := move_toward(current_ratio, resolved_target_ratio, absf(resolved_target_ratio - current_ratio) * step)
+	health_bar.set_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY, next_ratio)
+	_update_health_bar_transform(health_bar, next_ratio)
+
+
+func _update_health_bars(delta: float) -> void:
+	if battle_room_data == null:
+		return
+	if battle_room_data.player_view != null:
+		_animate_health_bar(_player_sprite, battle_room_data.get_player_health_ratio(), delta)
+	for monster_state in _monster_sprite_states:
+		var sprite := monster_state.get("sprite") as MeshInstance3D
+		var monster_index := int(monster_state.get("index", -1))
+		if sprite == null or monster_index < 0:
+			continue
+		_animate_health_bar(sprite, battle_room_data.get_monster_health_ratio(monster_index), delta)
 
 
 func _apply_monster_health_text(combatant_sprite: MeshInstance3D, health_values: Vector2i) -> void:
@@ -359,8 +409,9 @@ func _build_centered_offsets(count: int, spacing: float) -> Array[float]:
 	return offsets
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	_refresh_player_ability_snap_state()
+	_update_health_bars(delta)
 	_update_turn_ui()
 	if not _selected_ability_state.is_empty() and not _activation_in_progress:
 		if not _is_ability_state_ready(_selected_ability_state):
