@@ -104,6 +104,8 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 func _input_event(camera: Camera3D, event: InputEvent, position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
 	_setup_components()
+	if StringName(get_meta(&"owner", &"")) != &"player":
+		return
 	var allow_drag_without_sleep := _slot_snap_controller.prepare_for_manual_drag(self, event)
 	if _has_completed_first_stop:
 		allow_drag_without_sleep = true
