@@ -150,6 +150,7 @@ func _apply_monster_sprites() -> void:
 			BattleRoomScript.MONSTER_SPRITE_POSITION + Vector3(0.0, 0.0, offsets[index])
 		)
 		_apply_health_bar(target_sprite, battle_room_data.get_monster_health_ratio(index))
+		_apply_monster_health_text(target_sprite, battle_room_data.get_monster_health_values(index))
 		_monster_sprite_states.append({
 			"sprite": target_sprite,
 			"index": index,
@@ -278,6 +279,19 @@ func _apply_health_bar(combatant_sprite: MeshInstance3D, health_ratio: float) ->
 	var target_origin := base_transform.origin
 	target_origin.x = base_transform.origin.x - (base_scale.x - target_scale_x) * 0.5
 	health_bar.transform = Transform3D(target_basis, target_origin)
+
+
+func _apply_monster_health_text(combatant_sprite: MeshInstance3D, health_values: Vector2i) -> void:
+	if combatant_sprite == null:
+		return
+
+	var health_label := combatant_sprite.get_node_or_null(^"HP_frame_monster/HP_text_monster") as Label3D
+	if health_label == null:
+		return
+
+	health_label.text = "(%d/%d)" % [maxi(health_values.x, 0), maxi(health_values.y, 0)]
+	health_label.modulate = Color(1.0, 0.45, 0.75, 1.0)
+	health_label.visible = health_values.y > 0
 
 
 func _apply_texture_to_mesh(mesh_instance: MeshInstance3D, texture: Texture2D) -> void:
