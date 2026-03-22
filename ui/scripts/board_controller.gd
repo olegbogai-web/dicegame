@@ -61,6 +61,14 @@ func throw_dice(requests: Array[DiceThrowRequest]) -> Array[RigidBody3D]:
 			continue
 
 		var dice_body := instance as RigidBody3D
+
+		if dice_body is Dice:
+			var runtime_dice := dice_body as Dice
+			runtime_dice.extra_size_multiplier = request.extra_size_multiplier
+			var runtime_definition := request.metadata.get("definition") as DiceDefinition
+			if runtime_definition != null:
+				runtime_dice.definition = runtime_definition
+
 		var resolved_size := _resolve_request_size(dice_body, request)
 		var spawn_result := _find_spawn_transform(resolved_size, occupied_areas, board_center, spawn_extents)
 		var spawn_basis := Basis.from_euler(Vector3(
@@ -69,9 +77,6 @@ func throw_dice(requests: Array[DiceThrowRequest]) -> Array[RigidBody3D]:
 			_rng.randf_range(-PI, PI)
 		))
 		dice_body.mass = max(request.mass, 0.001)
-
-		if dice_body is Dice:
-			(dice_body as Dice).extra_size_multiplier = request.extra_size_multiplier
 
 		add_child(dice_body)
 		dice_body.global_transform = Transform3D(spawn_basis, spawn_result.origin)
