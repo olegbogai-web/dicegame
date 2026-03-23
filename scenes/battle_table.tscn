@@ -1,12 +1,12 @@
 [gd_scene format=3 uid="uid://bpawrnjnwfgdf"]
 
-[ext_resource type="Texture2D" uid="uid://dn66rechaasvk" path="res://assets/material/дерево.png" id="1_7k81e"]
 [ext_resource type="Texture2D" uid="uid://cc0r8hvl0nlh5" path="res://assets/ability/common_attack.png" id="2_o6e7d"]
 [ext_resource type="Script" uid="uid://dasggp047n2cm" path="res://scenes/battle_table.gd" id="2_runtime"]
 [ext_resource type="Texture2D" uid="uid://cd253wjyhe31w" path="res://assets/entity/monsters/ability_frame_bot_bar_v2.png" id="3_dtdu1"]
 [ext_resource type="Texture2D" uid="uid://dsf7r7epuo0bi" path="res://assets/entity/monsters/test_monster.png" id="3_e555c"]
 [ext_resource type="Texture2D" uid="uid://cr5mbqdxoaee3" path="res://assets/entity/monsters/test_player.png" id="4_72q4h"]
 [ext_resource type="PackedScene" uid="uid://0ssqyi084mdh" path="res://scenes/board.tscn" id="5_dtdu1"]
+[ext_resource type="Texture2D" uid="uid://cl72y2q5hq8m1" path="res://assets/material/dangeon_floor_1.png" id="6_dtdu1"]
 [ext_resource type="Texture2D" uid="uid://b6ojmoowtta8k" path="res://assets/ui/base_frame_mid_v2.png" id="6_o6e7d"]
 [ext_resource type="Texture2D" uid="uid://bjpqv8q13kqq7" path="res://assets/ui/base_frame_mid.png" id="7_e555c"]
 
@@ -31,16 +31,16 @@ albedo_color = Color(1, 0.07450981, 0, 1)
 transparency = 1
 albedo_texture = ExtResource("4_72q4h")
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7k81e"]
-albedo_texture = ExtResource("1_7k81e")
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ags8d"]
+albedo_texture = ExtResource("6_dtdu1")
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_4cwgp"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_dtdu1"]
 size = Vector3(2.533205, 1, 2.3716002)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_o6e7d"]
-albedo_texture = ExtResource("1_7k81e")
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_swnlx"]
+albedo_texture = ExtResource("6_dtdu1")
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_fc4uq"]
 size = Vector3(2.4323123, 1, 2.3716002)
@@ -125,7 +125,7 @@ transform = Transform3D(-4.8956753e-08, 0, -1.3, 0, 1.1, 0, 1.12, 0, -5.6824803e
 
 [node name="right_floor" type="MeshInstance3D" parent="." unique_id=45208338]
 transform = Transform3D(2.6, 0, 0, 0, 1, 0, 0, 0, 4.5, 5.3, 0.4, 0)
-material_override = SubResource("StandardMaterial3D_7k81e")
+material_override = SubResource("StandardMaterial3D_ags8d")
 mesh = SubResource("PlaneMesh_4cwgp")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="right_floor" unique_id=1387613728]
@@ -137,7 +137,7 @@ shape = SubResource("BoxShape3D_dtdu1")
 
 [node name="left_floor" type="MeshInstance3D" parent="." unique_id=1635985671]
 transform = Transform3D(2.6, 0, 0, 0, 1, 0, 0, 0, 4.5, -5.3, 0.4, 0)
-material_override = SubResource("StandardMaterial3D_o6e7d")
+material_override = SubResource("StandardMaterial3D_swnlx")
 mesh = SubResource("PlaneMesh_4cwgp")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="left_floor" unique_id=1323234304]
