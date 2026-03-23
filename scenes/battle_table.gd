@@ -24,12 +24,13 @@ const SELECTED_FRAME_MOUSE_FOLLOW_FACTOR := 0.2
 const ACTIVATION_ANIMATION_DURATION := 0.5
 const ACTIVATION_TARGET_LIFT_Y := 0.4
 
-@onready var _camera: Camera3D = $battle_camera
+@onready var _camera: Camera3D = $Camera3D
 @onready var _board: BoardController = $board
-@onready var _battle_floor: MeshInstance3D = $floor
+@onready var _left_floor: MeshInstance3D = $left_floor
+@onready var _right_floor: MeshInstance3D = $right_floor
 @onready var _player_sprite: MeshInstance3D = $player_sprite
 @onready var _monster_sprite_template: MeshInstance3D = $monster_sprite
-@onready var _player_ability_template: MeshInstance3D = $ability_frame3
+@onready var _player_ability_template: MeshInstance3D = $ability_frame
 @onready var _monster_ability_template: MeshInstance3D = $ability_frame2
 @onready var _end_turn_button: Button = $UI/EndTurnButton
 @onready var _turn_status_label: Label = $UI/TurnStatusLabel
@@ -50,8 +51,6 @@ var _turn_transition_in_progress := false
 
 func _ready() -> void:
 	set_physics_process(true)
-	if _camera != null:
-		_camera.current = true
 	if _end_turn_button != null and not _end_turn_button.pressed.is_connected(_on_end_turn_button_pressed):
 		_end_turn_button.pressed.connect(_on_end_turn_button_pressed)
 	if battle_room_data == null:
@@ -119,10 +118,8 @@ func _apply_room_data() -> void:
 
 
 func _apply_floor_textures() -> void:
-	var resolved_floor_texture := battle_room_data.left_floor_texture
-	if resolved_floor_texture == null:
-		resolved_floor_texture = battle_room_data.right_floor_texture
-	_apply_texture_to_mesh(_battle_floor, resolved_floor_texture)
+	_apply_texture_to_mesh(_left_floor, battle_room_data.left_floor_texture)
+	_apply_texture_to_mesh(_right_floor, battle_room_data.right_floor_texture)
 
 
 func _apply_player_sprite() -> void:
@@ -759,7 +756,7 @@ func _resolve_target_descriptor_at_screen_point(ability: AbilityDefinition, scre
 					return {
 						"kind": &"all_monsters",
 					}
-			if _screen_point_hits_mesh(_battle_floor, screen_point):
+			if _screen_point_hits_mesh(_right_floor, screen_point):
 				return {
 					"kind": &"all_monsters",
 				}
