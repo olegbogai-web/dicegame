@@ -15,6 +15,7 @@ const DEFAULT_FRICTION := 0.25
 const DEFAULT_BOUNCE := 0.7
 const DEFAULT_LINEAR_DAMP := 0.25
 const DEFAULT_ANGULAR_DAMP := 0.25
+const POST_FIRST_STOP_GRAVITY_MULTIPLIER := 5.0
 
 const DiceNodeGraphScript = preload("res://content/dice/runtime/dice_node_graph.gd")
 const DicePhysicsRuntimeScript = preload("res://content/dice/runtime/dice_physics_runtime.gd")
@@ -43,10 +44,12 @@ var _drag_controller: DiceDragController
 var _orientation_service: DiceOrientationService
 var _slot_snap_controller: DiceSlotSnapController
 var _has_completed_first_stop := false
+var _base_gravity_scale := 1.0
 
 
 func _enter_tree() -> void:
 	_setup_components()
+	_base_gravity_scale = gravity_scale
 	_node_graph.ensure_nodes(self, FACE_NAMES)
 	_physics_runtime.apply_defaults(
 		self,
@@ -61,6 +64,7 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	_setup_components()
+	_base_gravity_scale = gravity_scale
 	_connect_runtime_signals()
 	_node_graph.ensure_nodes(self, FACE_NAMES)
 	_physics_runtime.apply_defaults(
@@ -219,11 +223,13 @@ func _on_sleeping_state_changed() -> void:
 	if not sleeping:
 		if _has_completed_first_stop:
 			lock_rotation = true
+			gravity_scale = _base_gravity_scale * POST_FIRST_STOP_GRAVITY_MULTIPLIER
 			DiceMotionState.stop_motion(self)
 		return
 
 	if not _has_completed_first_stop:
 		_has_completed_first_stop = true
+		gravity_scale = _base_gravity_scale * POST_FIRST_STOP_GRAVITY_MULTIPLIER
 
 	lock_rotation = true
 	DiceMotionState.stop_motion(self)
