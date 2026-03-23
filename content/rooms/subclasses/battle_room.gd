@@ -10,12 +10,12 @@ const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_abilit
 const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
 const BattleEffectRuntime = preload("res://content/combat/runtime/battle_effect_runtime.gd")
 
-const PLAYER_SPRITE_POSITION := Vector3(-3.0, 0.01, -2.5)
-const PLAYER_SPRITE_SCALE := Vector3(2.0, 2.0, 2.0)
-const MONSTER_SPRITE_POSITION := Vector3(3.0, 0.01, -2.5)
-const MONSTER_SPRITE_SCALE := Vector3(2.0, 2.0, 2.0)
-const PLAYER_ABILITY_FRAME_POSITION := Vector3(7.4, 0.01, 0.0)
-const MONSTER_ABILITY_FRAME_POSITION := Vector3(-7.5, 0.01, 0.0)
+const PLAYER_SPRITE_POSITION := Vector3(-6.7, 0.41, 0.0)
+const PLAYER_SPRITE_SCALE := Vector3(1.2, 1.2, 1.2)
+const MONSTER_SPRITE_POSITION := Vector3(6.7, 0.41, 0.0)
+const MONSTER_SPRITE_SCALE := Vector3(1.25, 1.25, 1.25)
+const PLAYER_ABILITY_FRAME_POSITION := Vector3(-4.25, 0.405, 0.0)
+const MONSTER_ABILITY_FRAME_POSITION := Vector3(4.25, 0.405, 0.0)
 const STACK_SPACING_Z := 1.85
 const DICE_PLACE_Z_POSITIONS := [-0.557, -0.007, 0.55]
 
