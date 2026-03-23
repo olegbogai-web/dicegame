@@ -24,16 +24,23 @@ const SELECTED_FRAME_MOUSE_FOLLOW_FACTOR := 0.2
 const ACTIVATION_ANIMATION_DURATION := 0.5
 const ACTIVATION_TARGET_LIFT_Y := 0.4
 
-@onready var _camera: Camera3D = $Camera3D
-@onready var _board: BoardController = $board
-@onready var _left_floor: MeshInstance3D = $left_floor
-@onready var _right_floor: MeshInstance3D = $right_floor
-@onready var _player_sprite: MeshInstance3D = $player_sprite
-@onready var _monster_sprite_template: MeshInstance3D = $monster_sprite
-@onready var _player_ability_template: MeshInstance3D = $ability_frame
-@onready var _monster_ability_template: MeshInstance3D = $ability_frame2
-@onready var _end_turn_button: Button = $UI/EndTurnButton
-@onready var _turn_status_label: Label = $UI/TurnStatusLabel
+@onready var _camera: Camera3D = get_node_or_null(^"Camera3D") as Camera3D
+@onready var _board: BoardController = get_node_or_null(^"board") as BoardController
+@onready var _battle_floor: MeshInstance3D = get_node_or_null(^"floor") as MeshInstance3D
+@onready var _left_floor: MeshInstance3D = get_node_or_null(^"left_floor") as MeshInstance3D
+@onready var _right_floor: MeshInstance3D = get_node_or_null(^"right_floor") as MeshInstance3D
+@onready var _player_sprite: MeshInstance3D = get_node_or_null(^"player_sprite") as MeshInstance3D
+@onready var _monster_sprite_template: MeshInstance3D = get_node_or_null(^"monster_sprite") as MeshInstance3D
+@onready var _player_ability_template: MeshInstance3D = _resolve_mesh_node([
+	^"ability_frame",
+	^"ability_frame2",
+])
+@onready var _monster_ability_template: MeshInstance3D = _resolve_mesh_node([
+	^"ability_frame3",
+	^"ability_frame2",
+])
+@onready var _end_turn_button: Button = get_node_or_null(^"UI/EndTurnButton") as Button
+@onready var _turn_status_label: Label = get_node_or_null(^"UI/TurnStatusLabel") as Label
 
 var battle_room_data: BattleRoom
 var _generated_monster_sprites: Array[Node] = []
@@ -118,8 +125,16 @@ func _apply_room_data() -> void:
 
 
 func _apply_floor_textures() -> void:
-	_apply_texture_to_mesh(_left_floor, battle_room_data.left_floor_texture)
-	_apply_texture_to_mesh(_right_floor, battle_room_data.right_floor_texture)
+	if _left_floor != null or _right_floor != null:
+		_apply_texture_to_mesh(_left_floor, battle_room_data.left_floor_texture)
+		_apply_texture_to_mesh(_right_floor, battle_room_data.right_floor_texture)
+		return
+	if _battle_floor == null:
+		return
+	var resolved_texture := battle_room_data.right_floor_texture
+	if resolved_texture == null:
+		resolved_texture = battle_room_data.left_floor_texture
+	_apply_texture_to_mesh(_battle_floor, resolved_texture)
 
 
 func _apply_player_sprite() -> void:
@@ -756,7 +771,8 @@ func _resolve_target_descriptor_at_screen_point(ability: AbilityDefinition, scre
 					return {
 						"kind": &"all_monsters",
 					}
-			if _screen_point_hits_mesh(_right_floor, screen_point):
+			var enemy_floor := _right_floor if _right_floor != null else _battle_floor
+			if _screen_point_hits_mesh(enemy_floor, screen_point):
 				return {
 					"kind": &"all_monsters",
 				}
@@ -1034,6 +1050,8 @@ func _update_turn_ui() -> void:
 
 
 func _project_mouse_to_horizontal_plane(plane_y: float) -> Vector3:
+	if _camera == null:
+		return Vector3.ZERO
 	var mouse_position := get_viewport().get_mouse_position()
 	var ray_origin := _camera.project_ray_origin(mouse_position)
 	var ray_direction := _camera.project_ray_normal(mouse_position)
@@ -1058,6 +1076,8 @@ func _screen_point_hits_mesh(mesh_instance: MeshInstance3D, screen_point: Vector
 
 
 func _project_mesh_screen_rect(mesh_instance: MeshInstance3D) -> Rect2:
+	if _camera == null:
+		return Rect2()
 	var aabb := mesh_instance.mesh.get_aabb()
 	var corners := [
 		Vector3(aabb.position.x, aabb.position.y, aabb.position.z),
@@ -1078,3 +1098,11 @@ func _project_mesh_screen_rect(mesh_instance: MeshInstance3D) -> Rect2:
 		max_point.x = maxf(max_point.x, projected.x)
 		max_point.y = maxf(max_point.y, projected.y)
 	return Rect2(min_point, max_point - min_point)
+
+
+func _resolve_mesh_node(paths: Array[NodePath]) -> MeshInstance3D:
+	for path in paths:
+		var node := get_node_or_null(path)
+		if node is MeshInstance3D:
+			return node as MeshInstance3D
+	return null
