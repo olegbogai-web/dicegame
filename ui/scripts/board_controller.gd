@@ -7,8 +7,7 @@ const Dice = preload("res://content/dice/dice.gd")
 @export_category("Board References")
 @export var floor_path: NodePath = ^"floor"
 @export var default_dice_scene: PackedScene
-@export_file("*.tscn") var test_battle_scene_path := "res://scenes/new_battle_table.tscn"
-@export var show_debug_buttons := true
+@export_file("*.tscn") var test_battle_scene_path := "res://scenes/battle_table.tscn"
 
 @export_category("Spawn Bounds")
 @export var spawn_bounds_margin: Vector2 = Vector2(0.15, 0.15)
@@ -37,14 +36,10 @@ var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	_rng.randomize()
-	if _throw_button != null:
-		_throw_button.visible = show_debug_buttons
-		if show_debug_buttons and not _throw_button.pressed.is_connected(_on_throw_button_pressed):
-			_throw_button.pressed.connect(_on_throw_button_pressed)
-	if _test_battle_button != null:
-		_test_battle_button.visible = show_debug_buttons
-		if show_debug_buttons and not _test_battle_button.pressed.is_connected(_on_test_battle_button_pressed):
-			_test_battle_button.pressed.connect(_on_test_battle_button_pressed)
+	if _throw_button != null and not _throw_button.pressed.is_connected(_on_throw_button_pressed):
+		_throw_button.pressed.connect(_on_throw_button_pressed)
+	if _test_battle_button != null and not _test_battle_button.pressed.is_connected(_on_test_battle_button_pressed):
+		_test_battle_button.pressed.connect(_on_test_battle_button_pressed)
 
 
 func throw_dice(requests: Array[DiceThrowRequest]) -> Array[RigidBody3D]:
