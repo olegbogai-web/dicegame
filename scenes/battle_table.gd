@@ -26,8 +26,9 @@ const ACTIVATION_TARGET_LIFT_Y := 0.4
 
 @onready var _camera: Camera3D = $Camera3D
 @onready var _board: BoardController = $board
-@onready var _left_floor: MeshInstance3D = $left_floor
-@onready var _right_floor: MeshInstance3D = $right_floor
+@onready var _floor: MeshInstance3D = get_node_or_null(^"floor") as MeshInstance3D
+@onready var _left_floor: MeshInstance3D = get_node_or_null(^"left_floor") as MeshInstance3D
+@onready var _right_floor: MeshInstance3D = get_node_or_null(^"right_floor") as MeshInstance3D
 @onready var _player_sprite: MeshInstance3D = $player_sprite
 @onready var _monster_sprite_template: MeshInstance3D = $monster_sprite
 @onready var _player_ability_template: MeshInstance3D = $ability_frame
@@ -118,8 +119,16 @@ func _apply_room_data() -> void:
 
 
 func _apply_floor_textures() -> void:
-	_apply_texture_to_mesh(_left_floor, battle_room_data.left_floor_texture)
-	_apply_texture_to_mesh(_right_floor, battle_room_data.right_floor_texture)
+	if _left_floor != null or _right_floor != null:
+		_apply_texture_to_mesh(_left_floor, battle_room_data.left_floor_texture)
+		_apply_texture_to_mesh(_right_floor, battle_room_data.right_floor_texture)
+		return
+	if _floor == null:
+		return
+	var resolved_texture := battle_room_data.right_floor_texture
+	if resolved_texture == null:
+		resolved_texture = battle_room_data.left_floor_texture
+	_apply_texture_to_mesh(_floor, resolved_texture)
 
 
 func _apply_player_sprite() -> void:
@@ -756,7 +765,8 @@ func _resolve_target_descriptor_at_screen_point(ability: AbilityDefinition, scre
 					return {
 						"kind": &"all_monsters",
 					}
-			if _screen_point_hits_mesh(_right_floor, screen_point):
+			var target_floor := _right_floor if _right_floor != null else (_floor if _floor != null else _left_floor)
+			if _screen_point_hits_mesh(target_floor, screen_point):
 				return {
 					"kind": &"all_monsters",
 				}
