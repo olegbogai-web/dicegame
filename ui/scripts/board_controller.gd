@@ -7,7 +7,7 @@ const Dice = preload("res://content/dice/dice.gd")
 @export_category("Board References")
 @export var floor_path: NodePath = ^"floor"
 @export var default_dice_scene: PackedScene
-@export_file("*.tscn") var test_battle_scene_path := "res://scenes/new_battle_table.tscn"
+@export_file("*.tscn") var test_battle_scene_path := "res://scenes/battle_table.tscn"
 
 @export_category("Spawn Bounds")
 @export var spawn_bounds_margin: Vector2 = Vector2(0.15, 0.15)

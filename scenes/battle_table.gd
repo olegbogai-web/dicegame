@@ -24,14 +24,14 @@ const SELECTED_FRAME_MOUSE_FOLLOW_FACTOR := 0.2
 const ACTIVATION_ANIMATION_DURATION := 0.5
 const ACTIVATION_TARGET_LIFT_Y := 0.4
 
-@onready var _camera: Camera3D = $battle_camera
+@onready var _camera: Camera3D = $Camera3D
 @onready var _board: BoardController = $board
 @onready var _left_floor: MeshInstance3D = $left_floor
 @onready var _right_floor: MeshInstance3D = $right_floor
 @onready var _player_sprite: MeshInstance3D = $player_sprite
 @onready var _monster_sprite_template: MeshInstance3D = $monster_sprite
-@onready var _player_ability_template: MeshInstance3D = $ability_frame2
-@onready var _monster_ability_template: MeshInstance3D = $ability_frame3
+@onready var _player_ability_template: MeshInstance3D = $ability_frame
+@onready var _monster_ability_template: MeshInstance3D = $ability_frame2
 @onready var _end_turn_button: Button = $UI/EndTurnButton
 @onready var _turn_status_label: Label = $UI/TurnStatusLabel
 
