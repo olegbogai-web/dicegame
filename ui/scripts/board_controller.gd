@@ -19,13 +19,13 @@ const Dice = preload("res://content/dice/dice.gd")
 @export var fallback_expand_step: Vector2 = Vector2(0.2, 0.2)
 
 @export_category("Throw")
-@export var throw_speed_min: float = 4.56
-@export var throw_speed_max: float = 9.68
+@export var throw_speed_min: float = 5.93
+@export var throw_speed_max: float = 12.58
 @export var throw_direction_spread: float = 1.25
 @export var throw_vertical_velocity_min: float = 0.18
 @export var throw_vertical_velocity_max: float = 0.25
-@export var angular_velocity_min: Vector3 = Vector3(-14.0, -18.0, -14.0)
-@export var angular_velocity_max: Vector3 = Vector3(14.0, 18.0, 14.0)
+@export var angular_velocity_min: Vector3 = Vector3(-21.0, -27.0, -21.0)
+@export var angular_velocity_max: Vector3 = Vector3(21.0, 27.0, 21.0)
 
 @onready var _floor: Node3D = get_node_or_null(floor_path)
 @onready var _throw_button: Button = %ThrowDiceButton
