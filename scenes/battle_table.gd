@@ -24,17 +24,16 @@ const SELECTED_FRAME_MOUSE_FOLLOW_FACTOR := 0.2
 const ACTIVATION_ANIMATION_DURATION := 0.5
 const ACTIVATION_TARGET_LIFT_Y := 0.4
 
-@onready var _camera: Camera3D = _resolve_camera()
-@onready var _board: BoardController = get_node_or_null(^"board") as BoardController
-@onready var _floor: MeshInstance3D = _resolve_floor_mesh()
-@onready var _left_floor: MeshInstance3D = get_node_or_null(^"left_floor") as MeshInstance3D
-@onready var _right_floor: MeshInstance3D = get_node_or_null(^"right_floor") as MeshInstance3D
-@onready var _player_sprite: MeshInstance3D = get_node_or_null(^"player_sprite") as MeshInstance3D
-@onready var _monster_sprite_template: MeshInstance3D = get_node_or_null(^"monster_sprite") as MeshInstance3D
-@onready var _player_ability_template: MeshInstance3D = _resolve_player_ability_template()
-@onready var _monster_ability_template: MeshInstance3D = _resolve_monster_ability_template()
-@onready var _end_turn_button: Button = _resolve_end_turn_button()
-@onready var _turn_status_label: Label = _resolve_turn_status_label()
+@onready var _camera: Camera3D = $Camera3D
+@onready var _board: BoardController = $board
+@onready var _left_floor: MeshInstance3D = $left_floor
+@onready var _right_floor: MeshInstance3D = $right_floor
+@onready var _player_sprite: MeshInstance3D = $player_sprite
+@onready var _monster_sprite_template: MeshInstance3D = $monster_sprite
+@onready var _player_ability_template: MeshInstance3D = $ability_frame
+@onready var _monster_ability_template: MeshInstance3D = $ability_frame2
+@onready var _end_turn_button: Button = $UI/EndTurnButton
+@onready var _turn_status_label: Label = $UI/TurnStatusLabel
 
 var battle_room_data: BattleRoom
 var _generated_monster_sprites: Array[Node] = []
@@ -48,78 +47,6 @@ var _selected_ability_state: Dictionary = {}
 var _selected_mouse_anchor := Vector3.ZERO
 var _activation_in_progress := false
 var _turn_transition_in_progress := false
-
-
-func _resolve_camera() -> Camera3D:
-	var camera := get_node_or_null(^"battle_camera") as Camera3D
-	if camera == null:
-		camera = get_node_or_null(^"Camera3D") as Camera3D
-	return camera
-
-
-func _resolve_floor_mesh() -> MeshInstance3D:
-	var floor := get_node_or_null(^"floor") as MeshInstance3D
-	if floor != null:
-		return floor
-	return _left_floor if _left_floor != null else _right_floor
-
-
-func _resolve_end_turn_button() -> Button:
-	var button := get_node_or_null(^"UI/EndTurnButton") as Button
-	if button == null and _board != null:
-		button = _board.get_node_or_null(^"UI/EndTurnButton") as Button
-	return button
-
-
-func _resolve_turn_status_label() -> Label:
-	var label := get_node_or_null(^"UI/TurnStatusLabel") as Label
-	if label == null and _board != null:
-		label = _board.get_node_or_null(^"UI/TurnStatusLabel") as Label
-	return label
-
-
-func _resolve_player_ability_template() -> MeshInstance3D:
-	var frames := _collect_ability_frame_templates()
-	if frames.is_empty():
-		return null
-	frames.sort_custom(func(a: MeshInstance3D, b: MeshInstance3D) -> bool:
-		return a.transform.origin.x < b.transform.origin.x
-	)
-	return frames[0]
-
-
-func _resolve_monster_ability_template() -> MeshInstance3D:
-	var frames := _collect_ability_frame_templates()
-	if frames.is_empty():
-		return null
-	frames.sort_custom(func(a: MeshInstance3D, b: MeshInstance3D) -> bool:
-		return a.transform.origin.x < b.transform.origin.x
-	)
-	return frames[frames.size() - 1]
-
-
-func _collect_ability_frame_templates() -> Array[MeshInstance3D]:
-	var frames: Array[MeshInstance3D] = []
-	for child in get_children():
-		if not child is MeshInstance3D:
-			continue
-		var mesh_child := child as MeshInstance3D
-		if not String(mesh_child.name).begins_with("ability_frame"):
-			continue
-		frames.append(mesh_child)
-	return frames
-
-
-func _get_stack_anchor(template: MeshInstance3D, fallback: Vector3) -> Vector3:
-	if template != null:
-		return template.transform.origin
-	return fallback
-
-
-func _get_sprite_anchor(template: MeshInstance3D, fallback: Vector3) -> Vector3:
-	if template != null:
-		return template.transform.origin
-	return fallback
 
 
 func _ready() -> void:
@@ -191,23 +118,17 @@ func _apply_room_data() -> void:
 
 
 func _apply_floor_textures() -> void:
-	if _left_floor != null or _right_floor != null:
-		_apply_texture_to_mesh(_left_floor, battle_room_data.left_floor_texture)
-		_apply_texture_to_mesh(_right_floor, battle_room_data.right_floor_texture)
-	elif _floor != null:
-		var floor_texture := battle_room_data.left_floor_texture if battle_room_data.left_floor_texture != null else battle_room_data.right_floor_texture
-		_apply_texture_to_mesh(_floor, floor_texture)
+	_apply_texture_to_mesh(_left_floor, battle_room_data.left_floor_texture)
+	_apply_texture_to_mesh(_right_floor, battle_room_data.right_floor_texture)
 
 
 func _apply_player_sprite() -> void:
 	var player_view := battle_room_data.player_view
-	if _player_sprite == null:
-		return
 	_player_sprite.visible = player_view != null and player_view.sprite != null
 	if not _player_sprite.visible:
 		return
 	_apply_texture_to_mesh(_player_sprite, player_view.sprite)
-	_player_sprite.transform = Transform3D(Basis.from_scale(player_view.base_scale), _get_sprite_anchor(_player_sprite, BattleRoomScript.PLAYER_SPRITE_POSITION))
+	_player_sprite.transform = Transform3D(Basis.from_scale(player_view.base_scale), BattleRoomScript.PLAYER_SPRITE_POSITION)
 	_apply_health_bar(_player_sprite, battle_room_data.get_player_health_ratio())
 	_apply_health_text(_player_sprite, battle_room_data.get_player_health_values(), ^"HP_frame/HP_text_player")
 
@@ -217,14 +138,11 @@ func _apply_monster_sprites() -> void:
 	_monster_sprite_states.clear()
 
 	var monster_views := battle_room_data.monster_views
-	if _monster_sprite_template == null:
-		return
 	if monster_views.is_empty():
 		_monster_sprite_template.visible = false
 		return
 
 	var offsets := _build_centered_offsets(monster_views.size(), BattleRoomScript.STACK_SPACING_Z)
-	var sprite_anchor := _get_sprite_anchor(_monster_sprite_template, BattleRoomScript.MONSTER_SPRITE_POSITION)
 	for index in monster_views.size():
 		var target_sprite := _monster_sprite_template if index == 0 else _duplicate_sprite_template(_monster_sprite_template, _generated_monster_sprites)
 		var monster_view = monster_views[index]
@@ -234,7 +152,7 @@ func _apply_monster_sprites() -> void:
 		_apply_texture_to_mesh(target_sprite, monster_view.sprite)
 		target_sprite.transform = Transform3D(
 			Basis.from_scale(monster_view.base_scale),
-			sprite_anchor + Vector3(0.0, 0.0, offsets[index])
+			BattleRoomScript.MONSTER_SPRITE_POSITION + Vector3(0.0, 0.0, offsets[index])
 		)
 		_apply_health_bar(target_sprite, battle_room_data.get_monster_health_ratio(index))
 		_apply_monster_health_text(target_sprite, battle_room_data.get_monster_health_values(index))
@@ -252,17 +170,11 @@ func _apply_ability_frames(
 ) -> void:
 	_clear_generated_nodes(generated_nodes)
 
-	if template == null:
-		return
-
 	if abilities.is_empty():
 		template.visible = false
 		return
 
-	var anchor := _get_stack_anchor(
-		template,
-		BattleRoomScript.PLAYER_ABILITY_FRAME_POSITION if template == _player_ability_template else BattleRoomScript.MONSTER_ABILITY_FRAME_POSITION
-	)
+	var anchor := BattleRoomScript.PLAYER_ABILITY_FRAME_POSITION if template == _player_ability_template else BattleRoomScript.MONSTER_ABILITY_FRAME_POSITION
 	var offsets := _build_centered_offsets(abilities.size(), BattleRoomScript.STACK_SPACING_Z)
 	for index in abilities.size():
 		var frame := template if index == 0 else _duplicate_frame_template(template, generated_nodes)
@@ -282,8 +194,6 @@ func _apply_monster_ability_frames() -> void:
 	_clear_generated_nodes(_generated_monster_ability_frames)
 	_monster_ability_frame_states.clear()
 	var monster_entries := battle_room_data.get_monster_ability_entries()
-	if _monster_ability_template == null:
-		return
 	if monster_entries.is_empty():
 		_monster_ability_template.visible = false
 		return
@@ -298,7 +208,7 @@ func _apply_monster_ability_frames() -> void:
 			continue
 		frame.transform = Transform3D(
 			frame.transform.basis,
-			_get_stack_anchor(_monster_ability_template, BattleRoomScript.MONSTER_ABILITY_FRAME_POSITION) + Vector3(0.0, 0.0, offsets[index])
+			BattleRoomScript.MONSTER_ABILITY_FRAME_POSITION + Vector3(0.0, 0.0, offsets[index])
 		)
 		_apply_ability_icon(frame, ability)
 		_apply_dice_places(frame, battle_room_data.get_required_dice_slots(ability))
@@ -846,8 +756,7 @@ func _resolve_target_descriptor_at_screen_point(ability: AbilityDefinition, scre
 					return {
 						"kind": &"all_monsters",
 					}
-			var enemy_floor := _right_floor if _right_floor != null else _floor
-			if _screen_point_hits_mesh(enemy_floor, screen_point):
+			if _screen_point_hits_mesh(_right_floor, screen_point):
 				return {
 					"kind": &"all_monsters",
 				}
