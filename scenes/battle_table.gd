@@ -24,14 +24,15 @@ const SELECTED_FRAME_MOUSE_FOLLOW_FACTOR := 0.2
 const ACTIVATION_ANIMATION_DURATION := 0.5
 const ACTIVATION_TARGET_LIFT_Y := 0.4
 
-@onready var _camera: Camera3D = $Camera3D
+@onready var _camera: Camera3D = get_node_or_null(^"battle_camera") as Camera3D
 @onready var _board: BoardController = $board
-@onready var _left_floor: MeshInstance3D = $left_floor
-@onready var _right_floor: MeshInstance3D = $right_floor
+@onready var _battle_floor: MeshInstance3D = get_node_or_null(^"floor") as MeshInstance3D
+@onready var _left_floor: MeshInstance3D = get_node_or_null(^"left_floor") as MeshInstance3D
+@onready var _right_floor: MeshInstance3D = get_node_or_null(^"right_floor") as MeshInstance3D
 @onready var _player_sprite: MeshInstance3D = $player_sprite
 @onready var _monster_sprite_template: MeshInstance3D = $monster_sprite
-@onready var _player_ability_template: MeshInstance3D = $ability_frame
-@onready var _monster_ability_template: MeshInstance3D = $ability_frame2
+@onready var _player_ability_template: MeshInstance3D = get_node_or_null(^"ability_frame") as MeshInstance3D
+@onready var _monster_ability_template: MeshInstance3D = get_node_or_null(^"ability_frame2") as MeshInstance3D
 @onready var _end_turn_button: Button = $UI/EndTurnButton
 @onready var _turn_status_label: Label = $UI/TurnStatusLabel
 
@@ -51,6 +52,9 @@ var _turn_transition_in_progress := false
 
 func _ready() -> void:
 	set_physics_process(true)
+	if _camera != null:
+		_camera.current = true
+	_hide_board_debug_controls()
 	if _end_turn_button != null and not _end_turn_button.pressed.is_connected(_on_end_turn_button_pressed):
 		_end_turn_button.pressed.connect(_on_end_turn_button_pressed)
 	if battle_room_data == null:
@@ -118,8 +122,12 @@ func _apply_room_data() -> void:
 
 
 func _apply_floor_textures() -> void:
-	_apply_texture_to_mesh(_left_floor, battle_room_data.left_floor_texture)
-	_apply_texture_to_mesh(_right_floor, battle_room_data.right_floor_texture)
+	if _left_floor != null and _right_floor != null and _left_floor != _right_floor:
+		_apply_texture_to_mesh(_left_floor, battle_room_data.left_floor_texture)
+		_apply_texture_to_mesh(_right_floor, battle_room_data.right_floor_texture)
+		return
+	var resolved_floor := _battle_floor if _battle_floor != null else (_right_floor if _right_floor != null else _left_floor)
+	_apply_texture_to_mesh(resolved_floor, battle_room_data.right_floor_texture if battle_room_data.right_floor_texture != null else battle_room_data.left_floor_texture)
 
 
 func _apply_player_sprite() -> void:
@@ -756,7 +764,8 @@ func _resolve_target_descriptor_at_screen_point(ability: AbilityDefinition, scre
 					return {
 						"kind": &"all_monsters",
 					}
-			if _screen_point_hits_mesh(_right_floor, screen_point):
+			var target_floor := _get_enemy_target_floor()
+			if _screen_point_hits_mesh(target_floor, screen_point):
 				return {
 					"kind": &"all_monsters",
 				}
@@ -1031,6 +1040,27 @@ func _update_turn_ui() -> void:
 		_turn_status_label.text = "Ход %d · Ход монстра %d%s" % [battle_room_data.turn_counter, battle_room_data.current_monster_turn_index + 1, suffix]
 		return
 	_turn_status_label.text = "Ожидание боя"
+
+
+
+
+func _hide_board_debug_controls() -> void:
+	if _board == null:
+		return
+	var throw_button := _board.get_node_or_null(^"UI/ThrowDiceButton") as Button
+	if throw_button != null:
+		throw_button.visible = false
+	var test_battle_button := _board.get_node_or_null(^"UI/TestBattleButton") as Button
+	if test_battle_button != null:
+		test_battle_button.visible = false
+
+
+func _get_enemy_target_floor() -> MeshInstance3D:
+	if _right_floor != null:
+		return _right_floor
+	if _battle_floor != null:
+		return _battle_floor
+	return _left_floor
 
 
 func _project_mouse_to_horizontal_plane(plane_y: float) -> Vector3:
