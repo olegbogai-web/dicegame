@@ -29,7 +29,7 @@ const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd
 @export var extra_size_multiplier: Vector3 = Vector3.ONE
 
 @export_category("Drag")
-@export var drag_lift_height: float = 0.7
+@export var drag_lift_height: float = 1.5
 
 @export_category("Ability Slot Snap")
 @export var ability_snap_distance: float = 0.5
