@@ -108,7 +108,7 @@ material_override = SubResource("StandardMaterial3D_35yja")
 mesh = SubResource("PlaneMesh_dkycd")
 
 [node name="HP_text_monster" type="Label3D" parent="monster_sprite/HP_frame_monster" unique_id=1463909296]
-transform = Transform3D(0.06, 0, 0, 0, 0.045, 0, 0, 0, 0.045, 0, 0.08637661, 0)
+transform = Transform3D(0.06, 0, 0, 0, 0.045, 0, 0, 0, 0.045, 0, 0.040013324, 0)
 pixel_size = 0.08
 billboard = 1
 modulate = Color(0.80784315, 0.53333336, 1, 1)
