@@ -24,9 +24,10 @@ const SELECTED_FRAME_MOUSE_FOLLOW_FACTOR := 0.2
 const ACTIVATION_ANIMATION_DURATION := 0.5
 const ACTIVATION_TARGET_LIFT_Y := 0.4
 
-@onready var _camera: Camera3D = $battle_camera
+@onready var _camera: Camera3D = $Camera3D
 @onready var _board: BoardController = $board
-@onready var _floor: MeshInstance3D = $floor
+@onready var _left_floor: MeshInstance3D = $left_floor
+@onready var _right_floor: MeshInstance3D = $right_floor
 @onready var _player_sprite: MeshInstance3D = $player_sprite
 @onready var _monster_sprite_template: MeshInstance3D = $monster_sprite
 @onready var _player_ability_template: MeshInstance3D = $ability_frame
@@ -117,12 +118,8 @@ func _apply_room_data() -> void:
 
 
 func _apply_floor_textures() -> void:
-	if _floor == null:
-		return
-	var floor_texture := battle_room_data.left_floor_texture
-	if floor_texture == null:
-		floor_texture = battle_room_data.right_floor_texture
-	_apply_texture_to_mesh(_floor, floor_texture)
+	_apply_texture_to_mesh(_left_floor, battle_room_data.left_floor_texture)
+	_apply_texture_to_mesh(_right_floor, battle_room_data.right_floor_texture)
 
 
 func _apply_player_sprite() -> void:
@@ -759,7 +756,7 @@ func _resolve_target_descriptor_at_screen_point(ability: AbilityDefinition, scre
 					return {
 						"kind": &"all_monsters",
 					}
-			if _screen_point_hits_mesh(_floor, screen_point):
+			if _screen_point_hits_mesh(_right_floor, screen_point):
 				return {
 					"kind": &"all_monsters",
 				}
