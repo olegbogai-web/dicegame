@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://bmhmm75b4swd3"]
 
 [ext_resource type="PackedScene" uid="uid://0ssqyi084mdh" path="res://scenes/board.tscn" id="1_47dlb"]
-[ext_resource type="Script" uid="uid://dasggp047n2cm" path="res://scenes/battle_table.gd" id="2_runtime"]
 [ext_resource type="Texture2D" uid="uid://dxoj7vm840xgf" path="res://assets/material/dangeon_floor_2.png" id="3_5yklm"]
 [ext_resource type="Texture2D" uid="uid://b6ojmoowtta8k" path="res://assets/ui/base_frame_mid_v2.png" id="4_euvx7"]
 [ext_resource type="Texture2D" uid="uid://bjpqv8q13kqq7" path="res://assets/ui/base_frame_mid.png" id="5_ovkts"]
@@ -69,8 +68,7 @@ albedo_texture = ExtResource("6_4mdnn")
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_v2h1w"]
 
-[node name="battle_table" type="Node3D" unique_id=2051974326]
-script = ExtResource("2_runtime")
+[node name="Node3D" type="Node3D" unique_id=2051974326]
 
 [node name="board" parent="." unique_id=1670483730 instance=ExtResource("1_47dlb")]
 transform = Transform3D(1.3, 0, 0, 0, 1.3, 0, 0, 0, 1.3, 0, 0.11484551, 4.2813234)
@@ -188,19 +186,3 @@ mesh = SubResource("PlaneMesh_n02mj")
 transform = Transform3D(-3.156934e-08, 0, -0.48148146, 0, 0.7222223, 0, 0.7222223, 0, -2.1046223e-08, -0.25925922, 0.0055555403, 0)
 material_override = SubResource("StandardMaterial3D_y5gjq")
 mesh = SubResource("PlaneMesh_v2h1w")
-
-[node name="UI" type="CanvasLayer" parent="." unique_id=151234001]
-
-[node name="EndTurnButton" type="Button" parent="UI" unique_id=151234002]
-offset_left = 406.0
-offset_top = 24.0
-offset_right = 596.0
-offset_bottom = 68.0
-text = "Закончить ход"
-
-[node name="TurnStatusLabel" type="Label" parent="UI" unique_id=151234003]
-offset_left = 24.0
-offset_top = 80.0
-offset_right = 420.0
-offset_bottom = 116.0
-text = "Ожидание боя"
