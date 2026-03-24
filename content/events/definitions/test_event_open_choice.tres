@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="EventChoiceDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/events/resources/event_choice_definition.gd" id="1_choice"]
+[ext_resource type="Script" path="res://content/events/resources/event_outcome_definition.gd" id="2_outcome"]
+
+[sub_resource type="Resource" id="OutcomeGreen"]
+script = ExtResource("2_outcome")
+color = 0
+text = "получите сокровище"
+
+[sub_resource type="Resource" id="OutcomeYellow"]
+script = ExtResource("2_outcome")
+color = 1
+text = "сундук пуст"
+
+[sub_resource type="Resource" id="OutcomeRed"]
+script = ExtResource("2_outcome")
+color = 2
+text = "это мимик!"
+
+[resource]
+script = ExtResource("1_choice")
+choice_id = &"open"
+choice_text = "Открыть"
+green_faces = 4
+yellow_faces = 1
+red_faces = 1
+green_outcome = SubResource("OutcomeGreen")
+yellow_outcome = SubResource("OutcomeYellow")
+red_outcome = SubResource("OutcomeRed")

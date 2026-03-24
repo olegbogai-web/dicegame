@@ -32,6 +32,7 @@ const ACTIVATION_TARGET_LIFT_Y := 0.4
 @onready var _player_ability_template: MeshInstance3D = $ability_frame
 @onready var _monster_ability_template: MeshInstance3D = $ability_frame2
 @onready var _end_turn_button: Button = $UI/EndTurnButton
+@onready var _event_button: Button = $UI/EventButton
 @onready var _turn_status_label: Label = $UI/TurnStatusLabel
 
 var battle_room_data: BattleRoom
@@ -52,6 +53,8 @@ func _ready() -> void:
 	set_physics_process(true)
 	if _end_turn_button != null and not _end_turn_button.pressed.is_connected(_on_end_turn_button_pressed):
 		_end_turn_button.pressed.connect(_on_end_turn_button_pressed)
+	if _event_button != null and not _event_button.pressed.is_connected(_on_event_button_pressed):
+		_event_button.pressed.connect(_on_event_button_pressed)
 	if battle_room_data == null:
 		configure_from_battle_room(BattleRoomScript.create_test_battle_room())
 	else:
@@ -984,6 +987,12 @@ func _on_end_turn_button_pressed() -> void:
 	_advance_to_next_turn()
 
 
+func _on_event_button_pressed() -> void:
+	var result := get_tree().change_scene_to_file("res://scenes/event_room.tscn")
+	if result != OK:
+		push_warning("Не удалось открыть сцену события.")
+
+
 func _advance_to_next_turn() -> void:
 	if battle_room_data == null or _turn_transition_in_progress:
 		return
@@ -1015,6 +1024,8 @@ func _run_current_monster_turn() -> void:
 func _update_turn_ui() -> void:
 	if _end_turn_button != null:
 		_end_turn_button.disabled = battle_room_data == null or not battle_room_data.is_player_turn() or _activation_in_progress or battle_room_data.is_battle_over()
+	if _event_button != null:
+		_event_button.disabled = _activation_in_progress
 	if _turn_status_label == null:
 		return
 	if battle_room_data == null:
