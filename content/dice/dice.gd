@@ -33,7 +33,7 @@ const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd
 @export var drag_lift_height: float = 1.5
 
 @export_category("Ability Slot Snap")
-@export var ability_snap_distance: float = 0.5
+@export var ability_snap_distance: float = 2.0
 @export var ability_snap_speed: float = 6.5
 
 var _node_graph: DiceNodeGraph
@@ -113,6 +113,8 @@ func _input_event(camera: Camera3D, event: InputEvent, position: Vector3, _norma
 	var allow_drag_without_sleep := _slot_snap_controller.prepare_for_manual_drag(self, event)
 	if _has_completed_first_stop:
 		allow_drag_without_sleep = true
+	if allow_drag_without_sleep:
+		get_viewport().set_input_as_handled()
 	_drag_controller.handle_input_event(self, camera, event, position, drag_lift_height, allow_drag_without_sleep)
 
 
