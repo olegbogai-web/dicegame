@@ -1,0 +1,88 @@
+[gd_scene format=3 uid="uid://bb6a8kk2pp2ja"]
+
+[ext_resource type="Texture2D" uid="uid://bxpuei70wl7q3" path="res://assets/events/chess-govnes.png" id="1_kamxp"]
+[ext_resource type="Shader" uid="uid://bepfpefwcwx4g" path="res://assets/shaders/50dark_shader.gdshader" id="2_mkcba"]
+[ext_resource type="Texture2D" uid="uid://dpwh234bhflvp" path="res://assets/events/chess_closed.png" id="3_ydant"]
+[ext_resource type="Texture2D" uid="uid://bs43v1w57ox6i" path="res://assets/ui/base_frame_ability.png" id="4_fwljx"]
+[ext_resource type="Texture2D" uid="uid://coe5l7wdi0lxo" path="res://assets/ui/big_frame_text.png" id="5_pob4m"]
+[ext_resource type="Texture2D" uid="uid://bds31uk7kq4l6" path="res://assets/ui/base_frame_text.png" id="6_bcusq"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1wx16"]
+albedo_texture = ExtResource("1_kamxp")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_6yyso"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_x62gx"]
+render_priority = 0
+shader = ExtResource("2_mkcba")
+shader_parameter/background = ExtResource("1_kamxp")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_840ub"]
+albedo_texture = ExtResource("3_ydant")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cqtf4"]
+transparency = 1
+albedo_texture = ExtResource("4_fwljx")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4hh2r"]
+transparency = 1
+albedo_texture = ExtResource("5_pob4m")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jjt6x"]
+transparency = 1
+albedo_texture = ExtResource("6_bcusq")
+
+[node name="Node3D" type="Node3D" unique_id=778593240]
+
+[node name="camera_event" type="Camera3D" parent="." unique_id=1892206870]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 10, 0)
+fov = 53.6
+
+[node name="background" type="MeshInstance3D" parent="." unique_id=5895766]
+transform = Transform3D(9, 0, 0, 0, 0.563, 0, 0, 0, 5.063, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_1wx16")
+mesh = SubResource("PlaneMesh_6yyso")
+
+[node name="background2" type="MeshInstance3D" parent="background" unique_id=697154374]
+transform = Transform3D(1.0056384, 0, 0, 0, 1.1308017, 0, 0, 0, 1, -0.013393968, 0.001, 0)
+material_override = SubResource("ShaderMaterial_x62gx")
+mesh = SubResource("PlaneMesh_6yyso")
+
+[node name="image_event" type="MeshInstance3D" parent="." unique_id=1727177405]
+transform = Transform3D(2, 0, 0, 0, 0.97, 0, 0, 0, 3, -4.380181, 0.120799065, 0)
+material_override = SubResource("StandardMaterial3D_840ub")
+mesh = SubResource("PlaneMesh_6yyso")
+
+[node name="frame_event" type="MeshInstance3D" parent="image_event" unique_id=851311589]
+transform = Transform3D(1.289401, 0, 0, 0, 0.104448944, 0, 0, 0, 1.1723242, 0, 0.01, 0)
+material_override = SubResource("StandardMaterial3D_cqtf4")
+mesh = SubResource("PlaneMesh_6yyso")
+
+[node name="frame_text_event" type="MeshInstance3D" parent="." unique_id=1649783801]
+transform = Transform3D(4.001585, 0, 0, 0, 0.9136986, 0, 0, 0, 2.5149963, 3.775, 0.01, -1.527)
+material_override = SubResource("StandardMaterial3D_4hh2r")
+mesh = SubResource("PlaneMesh_6yyso")
+
+[node name="text_event" type="Label3D" parent="frame_text_event" unique_id=2082327553]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0.01, 0)
+pixel_size = 0.0025
+text = "В пыльном помещении вас повстречался сундук. Что вы сделаете?"
+width = 100.0
+
+[node name="MeshInstance3D4" type="MeshInstance3D" parent="." unique_id=1558136270]
+transform = Transform3D(3.6794171, 0, 0, 0, 0.9810838, 0, 0, 0, 0.5908343, 3.796, 0.01, 1.65)
+material_override = SubResource("StandardMaterial3D_jjt6x")
+mesh = SubResource("PlaneMesh_6yyso")
+
+[node name="MeshInstance3D5" type="MeshInstance3D" parent="." unique_id=151318094]
+transform = Transform3D(3.6794171, 0, 0, 0, 0.9810838, 0, 0, 0, 0.5908343, 3.796, 0.01, 2.85)
+material_override = SubResource("StandardMaterial3D_jjt6x")
+mesh = SubResource("PlaneMesh_6yyso")
+
+[node name="MeshInstance3D6" type="MeshInstance3D" parent="." unique_id=1040301261]
+transform = Transform3D(3.6794171, 0, 0, 0, 0.9810838, 0, 0, 0, 0.5908343, 3.796, 0.01, 4.05)
+material_override = SubResource("StandardMaterial3D_jjt6x")
+mesh = SubResource("PlaneMesh_6yyso")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=2112890296]
+transform = Transform3D(1, 0, 0, 0, 0.087155804, 0.9961947, 0, -0.9961947, 0.087155804, 0, 0, 0)
