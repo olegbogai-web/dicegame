@@ -25,6 +25,7 @@ const DiceDragControllerScript = preload("res://content/dice/runtime/dice_drag_c
 const DiceOrientationServiceScript = preload("res://content/dice/runtime/dice_orientation_service.gd")
 const DiceSlotSnapControllerScript = preload("res://content/dice/runtime/dice_slot_snap_controller.gd")
 const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd")
+const BoardController = preload("res://ui/scripts/board_controller.gd")
 
 @export var definition: DiceDefinition
 @export var extra_size_multiplier: Vector3 = Vector3.ONE
@@ -45,6 +46,8 @@ var _orientation_service: DiceOrientationService
 var _slot_snap_controller: DiceSlotSnapController
 var _has_completed_first_stop := false
 var _base_gravity_scale := 1.0
+var _was_dragging_on_previous_physics_frame := false
+var _is_returning_to_board := false
 
 
 func _enter_tree() -> void:
@@ -121,8 +124,12 @@ func _input_event(camera: Camera3D, event: InputEvent, position: Vector3, _norma
 func _physics_process(delta: float) -> void:
 	_setup_components()
 	_drag_controller.physics_process(self)
-	_slot_snap_controller.physics_process(self, delta, _drag_controller.is_dragging())
-	if _has_completed_first_stop and not _drag_controller.is_dragging():
+	var is_dragging := _drag_controller.is_dragging()
+	_slot_snap_controller.physics_process(self, delta, is_dragging)
+	if _was_dragging_on_previous_physics_frame and not is_dragging:
+		_try_return_to_board_if_outside()
+	_was_dragging_on_previous_physics_frame = is_dragging
+	if _has_completed_first_stop and not is_dragging:
 		lock_rotation = true
 
 
@@ -236,3 +243,44 @@ func _on_sleeping_state_changed() -> void:
 	lock_rotation = true
 	DiceMotionState.stop_motion(self)
 	_physics_runtime.disable_bounce(self)
+
+
+func _try_return_to_board_if_outside() -> void:
+	if _is_returning_to_board:
+		return
+	if _slot_snap_controller != null and _slot_snap_controller.has_assigned_slot():
+		return
+	if not _has_completed_first_stop:
+		return
+
+	var board := _find_board_controller()
+	if board == null:
+		return
+	if board.is_position_over_floor(global_position):
+		return
+
+	_is_returning_to_board = true
+	await _animate_return_to_board(board)
+	_is_returning_to_board = false
+
+
+func _animate_return_to_board(board: BoardController) -> void:
+	var saved_gravity_scale := DiceMotionState.begin_kinematic_control(self, true, false, 0.0)
+	var start_position := global_position
+	var lifted_position := start_position + Vector3.UP
+	var target_position := board.get_random_floor_position() + Vector3.UP
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_SINE)
+	tween.tween_property(self, "global_position", lifted_position, 0.15).set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, "global_position", target_position, 0.35).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_IN)
+	await tween.finished
+	DiceMotionState.restore_dynamic_control(self, saved_gravity_scale, true, true)
+
+
+func _find_board_controller() -> BoardController:
+	var node := get_parent()
+	while node != null:
+		if node is BoardController:
+			return node as BoardController
+		node = node.get_parent()
+	return null
