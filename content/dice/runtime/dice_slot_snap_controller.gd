@@ -5,7 +5,7 @@ const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd
 
 var _assigned_slot_id: StringName = &""
 var _target_position := Vector3.ZERO
-var _snap_distance := 0.5
+var _snap_distance := 2.0
 var _snap_speed := 6.5
 var _is_snapped := false
 var _is_attracting := false
@@ -60,7 +60,7 @@ func prepare_for_manual_drag(dice: RigidBody3D, event: InputEvent) -> bool:
 	if mouse_event.button_index != MOUSE_BUTTON_LEFT or not mouse_event.pressed:
 		return false
 
-	var was_attached := _is_snapped or _is_attracting
+	var was_attached := has_assigned_slot() or _is_snapped or _is_attracting
 	if was_attached:
 		clear_slot(dice)
 	return was_attached

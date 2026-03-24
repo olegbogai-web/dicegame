@@ -33,7 +33,7 @@ const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd
 @export var drag_lift_height: float = 1.5
 
 @export_category("Ability Slot Snap")
-@export var ability_snap_distance: float = 0.5
+@export var ability_snap_distance: float = 2.0
 @export var ability_snap_speed: float = 6.5
 
 var _node_graph: DiceNodeGraph
