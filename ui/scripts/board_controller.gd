@@ -227,6 +227,29 @@ func _get_spawn_extents() -> Vector2:
 	return Vector2.ONE
 
 
+func is_world_point_on_floor(world_point: Vector3) -> bool:
+	if _floor == null:
+		return false
+
+	var collision := _floor.get_node_or_null(^"collision") as CollisionShape3D
+	if collision == null or not collision.shape is BoxShape3D:
+		return false
+
+	var local_point := collision.to_local(world_point)
+	var half_size := (collision.shape as BoxShape3D).size * 0.5
+	return absf(local_point.x) <= half_size.x and absf(local_point.z) <= half_size.z
+
+
+func get_random_floor_world_point() -> Vector3:
+	var board_center := _get_board_center()
+	var spawn_extents := _get_spawn_extents()
+	return Vector3(
+		board_center.x + _rng.randf_range(-spawn_extents.x, spawn_extents.x),
+		board_center.y,
+		board_center.z + _rng.randf_range(-spawn_extents.y, spawn_extents.y)
+	)
+
+
 func _random_vector3(min_value: Vector3, max_value: Vector3) -> Vector3:
 	return Vector3(
 		_rng.randf_range(min_value.x, max_value.x),
