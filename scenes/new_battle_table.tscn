@@ -199,13 +199,6 @@ offset_right = 596.0
 offset_bottom = 68.0
 text = "Закончить ход"
 
-[node name="EventButton" type="Button" parent="UI" unique_id=151234004]
-offset_left = 406.0
-offset_top = 76.0
-offset_right = 596.0
-offset_bottom = 120.0
-text = "Событие"
-
 [node name="TurnStatusLabel" type="Label" parent="UI" unique_id=151234003]
 offset_left = 24.0
 offset_top = 80.0
