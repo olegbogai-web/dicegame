@@ -157,6 +157,25 @@ func _random_spawn_position(resolved_size: Vector3, board_center: Vector3, spawn
 	)
 
 
+func get_random_floor_position() -> Vector3:
+	var center := _get_board_center()
+	var extents := _get_floor_extents()
+	return Vector3(
+		center.x + _rng.randf_range(-extents.x, extents.x),
+		center.y,
+		center.z + _rng.randf_range(-extents.y, extents.y)
+	)
+
+
+func is_position_over_floor(world_position: Vector3) -> bool:
+	var center := _get_board_center()
+	var extents := _get_floor_extents()
+	return (
+		absf(world_position.x - center.x) <= extents.x
+		and absf(world_position.z - center.z) <= extents.y
+	)
+
+
 func _build_spawn_aabb(origin: Vector3, resolved_size: Vector3) -> AABB:
 	var expanded_size := resolved_size + Vector3.ONE * spawn_spacing
 	return AABB(origin - expanded_size * 0.5, expanded_size)
@@ -222,6 +241,22 @@ func _get_spawn_extents() -> Vector2:
 		return Vector2(
 			max(extents.x - spawn_bounds_margin.x, 0.1),
 			max(extents.y - spawn_bounds_margin.y, 0.1)
+		)
+
+	return Vector2.ONE
+
+
+func _get_floor_extents() -> Vector2:
+	if _floor == null:
+		return Vector2.ONE
+
+	var collision := _floor.get_node_or_null(^"collision") as CollisionShape3D
+	if collision != null and collision.shape is BoxShape3D:
+		var half_size := (collision.shape as BoxShape3D).size * 0.5
+		var basis := collision.global_transform.basis
+		return Vector2(
+			absf(basis.x.x) * half_size.x + absf(basis.y.x) * half_size.y + absf(basis.z.x) * half_size.z,
+			absf(basis.x.z) * half_size.x + absf(basis.y.z) * half_size.y + absf(basis.z.z) * half_size.z
 		)
 
 	return Vector2.ONE
