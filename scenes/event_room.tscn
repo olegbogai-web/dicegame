@@ -2,15 +2,8 @@
 
 [ext_resource type="Shader" uid="uid://bepfpefwcwx4g" path="res://assets/shaders/50dark_shader.gdshader" id="1_k00fv"]
 [ext_resource type="Texture2D" uid="uid://bxpuei70wl7q3" path="res://assets/events/chess-govnes.png" id="2_qvg7m"]
-[ext_resource type="Shader" uid="uid://bd34jl5c1gnfk" path="res://scenes/orange_shader.gdshader" id="3_spmpp"]
+[ext_resource type="Shader" uid="uid://bd34jl5c1gnfk" path="res://assets/shaders/orange_shader.gdshader" id="3_spmpp"]
 [ext_resource type="PackedScene" uid="uid://0ssqyi084mdh" path="res://scenes/board.tscn" id="4_m2rf8"]
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_x62gx"]
-render_priority = 0
-shader = ExtResource("1_k00fv")
-shader_parameter/background = ExtResource("2_qvg7m")
-
-[sub_resource type="PlaneMesh" id="PlaneMesh_6yyso"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_6yyso"]
 render_priority = 0
@@ -20,6 +13,13 @@ shader = ExtResource("3_spmpp")
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_x62gx"]
 size = Vector3(3.7541618, 1, 2.386538)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_x62gx"]
+render_priority = 0
+shader = ExtResource("1_k00fv")
+shader_parameter/background = ExtResource("2_qvg7m")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_6yyso"]
 
 [node name="Node3D" type="Node3D" unique_id=978277730]
 
@@ -39,11 +39,6 @@ text = "текст события текст события текст собы�
 horizontal_alignment = 3
 autowrap_mode = 3
 width = 700.0
-
-[node name="background" type="MeshInstance3D" parent="." unique_id=775026020]
-transform = Transform3D(9.050745, 0, 0, 0, 0.6366414, 0, 0, 0, 5.063, 0.030438095, 0.00056300004, 0)
-material_override = SubResource("ShaderMaterial_x62gx")
-mesh = SubResource("PlaneMesh_6yyso")
 
 [node name="choice_background" type="MeshInstance3D" parent="." unique_id=120191202]
 transform = Transform3D(3.5, 0, 0, 0, 1, 0, 0, 0, 0.4, -5.45, 0.563, 1.5)
@@ -70,3 +65,8 @@ shape = SubResource("BoxShape3D_x62gx")
 
 [node name="board" parent="." unique_id=1670483730 instance=ExtResource("4_m2rf8")]
 transform = Transform3D(2.282237, 0, 0, 0, 4.428, 0, 0, 0, 2.2755446, 0, -2.6873088, 0)
+
+[node name="background" type="MeshInstance3D" parent="." unique_id=14472455]
+transform = Transform3D(9.050745, 0, 0, 0, 0.6366414, 0, 0, 0, 5.063, 0.030438095, 0.00056300004, 0)
+material_override = SubResource("ShaderMaterial_x62gx")
+mesh = SubResource("PlaneMesh_6yyso")
