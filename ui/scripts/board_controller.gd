@@ -11,21 +11,21 @@ const Dice = preload("res://content/dice/dice.gd")
 
 @export_category("Spawn Bounds")
 @export var spawn_bounds_margin: Vector2 = Vector2(0.15, 0.15)
-@export var base_spawn_height: float = 0.4
-@export var spawn_height_variation: float = 0.08
+@export var base_spawn_height: float = 0.5
+@export var spawn_height_variation: float = 0.1
 @export var spawn_spacing: float = 0.05
 @export_range(1, 100, 1) var max_spawn_attempts: int = 24
 @export var fallback_height_step: float = 0.3
 @export var fallback_expand_step: Vector2 = Vector2(0.2, 0.2)
 
 @export_category("Throw")
-@export var throw_speed_min: float = 5.93
-@export var throw_speed_max: float = 12.58
+@export var throw_speed_min: float = 5
+@export var throw_speed_max: float = 15
 @export var throw_direction_spread: float = 1.25
-@export var throw_vertical_velocity_min: float = 0.18
-@export var throw_vertical_velocity_max: float = 0.25
-@export var angular_velocity_min: Vector3 = Vector3(-21.0, -27.0, -21.0)
-@export var angular_velocity_max: Vector3 = Vector3(21.0, 27.0, 21.0)
+@export var throw_vertical_velocity_min: float = 0.01
+@export var throw_vertical_velocity_max: float = 0.4
+@export var angular_velocity_min: Vector3 = Vector3(-35.0, -5.0, -35.0)
+@export var angular_velocity_max: Vector3 = Vector3(35.0, 5.0, 35.0)
 
 @onready var _floor: Node3D = get_node_or_null(floor_path)
 @onready var _throw_button: Button = %ThrowDiceButton

@@ -12,7 +12,7 @@ const FACE_NORMALS: Array[Vector3] = [
 	Vector3.DOWN,
 ]
 const DEFAULT_FRICTION := 0.25
-const DEFAULT_BOUNCE := 0.7
+const DEFAULT_BOUNCE := 0.75
 const DEFAULT_LINEAR_DAMP := 0.25
 const DEFAULT_ANGULAR_DAMP := 0.25
 const POST_FIRST_STOP_GRAVITY_MULTIPLIER := 5.0
@@ -30,10 +30,10 @@ const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd
 @export var extra_size_multiplier: Vector3 = Vector3.ONE
 
 @export_category("Drag")
-@export var drag_lift_height: float = 1.5
+@export var drag_lift_height: float = 0.9
 
 @export_category("Ability Slot Snap")
-@export var ability_snap_distance: float = 2.0
+@export var ability_snap_distance: float = 1.5
 @export var ability_snap_speed: float = 6.5
 
 var _node_graph: DiceNodeGraph
