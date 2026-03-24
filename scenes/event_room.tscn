@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://bxpuei70wl7q3" path="res://assets/events/chess-govnes.png" id="2_qvg7m"]
 [ext_resource type="Shader" uid="uid://bd34jl5c1gnfk" path="res://scenes/orange_shader.gdshader" id="3_spmpp"]
 [ext_resource type="PackedScene" uid="uid://0ssqyi084mdh" path="res://scenes/board.tscn" id="4_m2rf8"]
+[ext_resource type="Script" path="res://scenes/event_room.gd" id="5_event"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_x62gx"]
 render_priority = 0
@@ -22,9 +23,11 @@ shader = ExtResource("3_spmpp")
 size = Vector3(3.7541618, 1, 2.386538)
 
 [node name="Node3D" type="Node3D" unique_id=978277730]
+script = ExtResource("5_event")
 
 [node name="camera_event" type="Camera3D" parent="." unique_id=1850936957]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 100, 0)
+current = true
 fov = 5.8
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1305639632]
