@@ -16,6 +16,9 @@ const DEFAULT_BOUNCE := 0.7
 const DEFAULT_LINEAR_DAMP := 0.25
 const DEFAULT_ANGULAR_DAMP := 0.25
 const POST_FIRST_STOP_GRAVITY_MULTIPLIER := 5.0
+const RETURN_TO_BOARD_TOTAL_DURATION := 0.5
+const RETURN_TO_BOARD_LIFT_HEIGHT := 1.0
+const RETURN_TO_BOARD_LIFT_DURATION := 0.12
 
 const DiceNodeGraphScript = preload("res://content/dice/runtime/dice_node_graph.gd")
 const DicePhysicsRuntimeScript = preload("res://content/dice/runtime/dice_physics_runtime.gd")
@@ -25,6 +28,7 @@ const DiceDragControllerScript = preload("res://content/dice/runtime/dice_drag_c
 const DiceOrientationServiceScript = preload("res://content/dice/runtime/dice_orientation_service.gd")
 const DiceSlotSnapControllerScript = preload("res://content/dice/runtime/dice_slot_snap_controller.gd")
 const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd")
+const BoardController = preload("res://ui/scripts/board_controller.gd")
 
 @export var definition: DiceDefinition
 @export var extra_size_multiplier: Vector3 = Vector3.ONE
@@ -45,6 +49,8 @@ var _orientation_service: DiceOrientationService
 var _slot_snap_controller: DiceSlotSnapController
 var _has_completed_first_stop := false
 var _base_gravity_scale := 1.0
+var _was_dragging_last_frame := false
+var _return_to_board_tween: Tween
 
 
 func _enter_tree() -> void:
@@ -124,6 +130,9 @@ func _physics_process(delta: float) -> void:
 	_slot_snap_controller.physics_process(self, delta, _drag_controller.is_dragging())
 	if _has_completed_first_stop and not _drag_controller.is_dragging():
 		lock_rotation = true
+	if _was_dragging_last_frame and not _drag_controller.is_dragging():
+		_try_return_to_board()
+	_was_dragging_last_frame = _drag_controller.is_dragging()
 
 
 func get_top_face_index() -> int:
@@ -236,3 +245,44 @@ func _on_sleeping_state_changed() -> void:
 	lock_rotation = true
 	DiceMotionState.stop_motion(self)
 	_physics_runtime.disable_bounce(self)
+
+
+func _try_return_to_board() -> void:
+	if get_assigned_ability_slot_id() != &"":
+		return
+
+	var board := get_parent() as BoardController
+	if board == null:
+		return
+	if board.is_world_point_on_floor(global_position):
+		return
+
+	var target_point := board.get_random_floor_world_point()
+	target_point.y += _get_half_height()
+	_play_return_to_board_animation(target_point)
+
+
+func _play_return_to_board_animation(target_position: Vector3) -> void:
+	if _return_to_board_tween != null and _return_to_board_tween.is_running():
+		_return_to_board_tween.kill()
+
+	DiceMotionState.begin_kinematic_control(self, true, false, 0.0)
+	var lift_target := global_position + Vector3.UP * RETURN_TO_BOARD_LIFT_HEIGHT
+	var fly_duration := max(RETURN_TO_BOARD_TOTAL_DURATION - RETURN_TO_BOARD_LIFT_DURATION, 0.01)
+	_return_to_board_tween = create_tween()
+	_return_to_board_tween.tween_property(self, "global_position", lift_target, RETURN_TO_BOARD_LIFT_DURATION)\
+		.set_trans(Tween.TRANS_SINE)\
+		.set_ease(Tween.EASE_OUT)
+	_return_to_board_tween.tween_property(self, "global_position", target_position, fly_duration)\
+		.set_trans(Tween.TRANS_QUART)\
+		.set_ease(Tween.EASE_IN)
+	_return_to_board_tween.finished.connect(func() -> void:
+		DiceMotionState.restore_dynamic_control(self, _base_gravity_scale * POST_FIRST_STOP_GRAVITY_MULTIPLIER, true, true)
+	)
+
+
+func _get_half_height() -> float:
+	var resolved_height := 0.2
+	if definition != null:
+		resolved_height = definition.get_resolved_size().y * extra_size_multiplier.y
+	return max(resolved_height * 0.5, 0.05)
