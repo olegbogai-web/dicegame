@@ -1,0 +1,48 @@
+[gd_resource type="Resource" script_class="EventChoiceDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/events/resources/event_choice_definition.gd" id="1"]
+[ext_resource type="Script" path="res://content/events/resources/event_outcome_definition.gd" id="2"]
+[ext_resource type="Resource" path="res://content/events/definitions/test_event/ignore_choice_dice.tres" id="3"]
+
+[sub_resource type="Resource" id="1"]
+script = ExtResource("2")
+outcome_id = &"ignore_nothing_1"
+outcome_color = 1
+outcome_text = "ничего не произошло"
+
+[sub_resource type="Resource" id="2"]
+script = ExtResource("2")
+outcome_id = &"ignore_nothing_2"
+outcome_color = 1
+outcome_text = "ничего не произошло"
+
+[sub_resource type="Resource" id="3"]
+script = ExtResource("2")
+outcome_id = &"ignore_nothing_3"
+outcome_color = 1
+outcome_text = "ничего не произошло"
+
+[sub_resource type="Resource" id="4"]
+script = ExtResource("2")
+outcome_id = &"ignore_nothing_4"
+outcome_color = 1
+outcome_text = "ничего не произошло"
+
+[sub_resource type="Resource" id="5"]
+script = ExtResource("2")
+outcome_id = &"ignore_nothing_5"
+outcome_color = 1
+outcome_text = "ничего не произошло"
+
+[sub_resource type="Resource" id="6"]
+script = ExtResource("2")
+outcome_id = &"ignore_luck"
+outcome_color = 0
+outcome_text = "вам улыбнулась удача"
+
+[resource]
+script = ExtResource("1")
+choice_id = &"ignore"
+choice_text = "Пройти мимо"
+event_dice_definition = ExtResource("3")
+outcomes = Array[ExtResource("2")]([SubResource("1"), SubResource("2"), SubResource("3"), SubResource("4"), SubResource("5"), SubResource("6")])
