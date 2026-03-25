@@ -10,12 +10,12 @@ void fragment() {
     float mask = smoothstep(0.0, 1.0, gradient);
 
     float min_alpha = 0.04;
-    float max_alpha = 0.4;
+    float max_alpha = 0.45;
 
     float final_alpha = mix(min_alpha, max_alpha, mask);
 
     // оранжевый цвет (можно настроить)
-    vec3 orange = vec3(1.0, 0.35, 0.0);
+    vec3 orange = vec3(1.0, 0.35, 0.05);
 
     ALBEDO = mix(orange, hover_color, hover_strength);
     ALPHA = final_alpha;
