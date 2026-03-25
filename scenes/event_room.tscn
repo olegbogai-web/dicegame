@@ -1,17 +1,22 @@
-[gd_scene load_steps=12 format=3 uid="uid://eeobcwwda1af"]
+[gd_scene format=3 uid="uid://eeobcwwda1af"]
 
 [ext_resource type="Shader" uid="uid://bepfpefwcwx4g" path="res://assets/shaders/50dark_shader.gdshader" id="1_k00fv"]
 [ext_resource type="Texture2D" uid="uid://bxpuei70wl7q3" path="res://assets/events/chess-govnes.png" id="2_qvg7m"]
 [ext_resource type="Shader" uid="uid://bd34jl5c1gnfk" path="res://assets/shaders/orange_shader.gdshader" id="3_spmpp"]
 [ext_resource type="PackedScene" uid="uid://0ssqyi084mdh" path="res://scenes/board.tscn" id="4_m2rf8"]
-[ext_resource type="Script" path="res://scenes/scripts/event_room_controller.gd" id="5_controller"]
+[ext_resource type="Script" uid="uid://cin4ncie8xw8v" path="res://scenes/scripts/event_room_controller.gd" id="5_controller"]
 [ext_resource type="Resource" path="res://content/events/definitions/test_event.tres" id="6_event"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_6yyso"]
 render_priority = 0
 shader = ExtResource("3_spmpp")
+shader_parameter/hover_color = Color(1, 0.92, 0.45, 1)
+shader_parameter/hover_strength = 0.0
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_rnshl"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_choice"]
+size = Vector3(2.0286255, 0.4, 0.4)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_x62gx"]
 size = Vector3(3.7541618, 1, 2.386538)
@@ -22,9 +27,6 @@ shader = ExtResource("1_k00fv")
 shader_parameter/background = ExtResource("2_qvg7m")
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_6yyso"]
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_choice"]
-size = Vector3(3.5, 0.4, 0.4)
 
 [node name="Node3D" type="Node3D" unique_id=978277730]
 script = ExtResource("5_controller")
@@ -47,7 +49,7 @@ horizontal_alignment = 3
 autowrap_mode = 3
 width = 700.0
 
-[node name="choices" type="Node3D" parent="."]
+[node name="choices" type="Node3D" parent="." unique_id=1041508221]
 
 [node name="choice_background_1" type="MeshInstance3D" parent="choices" unique_id=120191202]
 transform = Transform3D(3.5, 0, 0, 0, 1, 0, 0, 0, 0.4, -5.45, 0.563, 1.6)
@@ -64,17 +66,18 @@ outline_size = 4
 autowrap_mode = 3
 width = 600.0
 
-[node name="choice_body" type="StaticBody3D" parent="choices/choice_background_1"]
+[node name="choice_body" type="StaticBody3D" parent="choices/choice_background_1" unique_id=2118860489]
 
-[node name="shape" type="CollisionShape3D" parent="choices/choice_background_1/choice_body"]
+[node name="shape" type="CollisionShape3D" parent="choices/choice_background_1/choice_body" unique_id=349832676]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 5.014425, 0, 0, 0)
 shape = SubResource("BoxShape3D_choice")
 
-[node name="choice_background_2" type="MeshInstance3D" parent="choices"]
+[node name="choice_background_2" type="MeshInstance3D" parent="choices" unique_id=13905109]
 transform = Transform3D(3.5, 0, 0, 0, 1, 0, 0, 0, 0.4, -5.45, 0.563, 0.7)
 material_override = SubResource("ShaderMaterial_6yyso")
 mesh = SubResource("PlaneMesh_rnshl")
 
-[node name="text_choice" type="Label3D" parent="choices/choice_background_2"]
+[node name="text_choice" type="Label3D" parent="choices/choice_background_2" unique_id=552133819]
 transform = Transform3D(0.43400523, 0, 0, 0, 1, 0, 0, 0, 0.47554713, 0, 0, 0)
 pixel_size = 0.007
 billboard = 1
@@ -84,17 +87,18 @@ outline_size = 4
 autowrap_mode = 3
 width = 600.0
 
-[node name="choice_body" type="StaticBody3D" parent="choices/choice_background_2"]
+[node name="choice_body" type="StaticBody3D" parent="choices/choice_background_2" unique_id=42140641]
 
-[node name="shape" type="CollisionShape3D" parent="choices/choice_background_2/choice_body"]
+[node name="shape" type="CollisionShape3D" parent="choices/choice_background_2/choice_body" unique_id=1624672779]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 5.1855764, 0, 0, 0)
 shape = SubResource("BoxShape3D_choice")
 
-[node name="choice_background_3" type="MeshInstance3D" parent="choices"]
+[node name="choice_background_3" type="MeshInstance3D" parent="choices" unique_id=1376577279]
 transform = Transform3D(3.5, 0, 0, 0, 1, 0, 0, 0, 0.4, -5.45, 0.563, -0.2)
 material_override = SubResource("ShaderMaterial_6yyso")
 mesh = SubResource("PlaneMesh_rnshl")
 
-[node name="text_choice" type="Label3D" parent="choices/choice_background_3"]
+[node name="text_choice" type="Label3D" parent="choices/choice_background_3" unique_id=1882179620]
 transform = Transform3D(0.43400523, 0, 0, 0, 1, 0, 0, 0, 0.47554713, 0, 0, 0)
 pixel_size = 0.007
 billboard = 1
@@ -104,9 +108,10 @@ outline_size = 4
 autowrap_mode = 3
 width = 600.0
 
-[node name="choice_body" type="StaticBody3D" parent="choices/choice_background_3"]
+[node name="choice_body" type="StaticBody3D" parent="choices/choice_background_3" unique_id=2098125902]
 
-[node name="shape" type="CollisionShape3D" parent="choices/choice_background_3/choice_body"]
+[node name="shape" type="CollisionShape3D" parent="choices/choice_background_3/choice_body" unique_id=741983247]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 4.9607477, -0.002960205, 0, 0)
 shape = SubResource("BoxShape3D_choice")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=734117236]

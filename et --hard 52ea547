@@ -1,0 +1,178 @@
+[33mcfc0350[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Merge pull request #185 from olegbogai-web/codex/update-event-choice-interaction-and-visuals-vvm62z
+[33mc9e0c8a[m Improve event choice hover hit area and dice face icon fit
+[33mc14e364[m Merge pull request #184 from olegbogai-web/revert-183-codex/update-event-choice-interaction-and-visuals-4gqyio
+[33m086539f[m Revert "Клики и hover по всей площади варианта события; подгонка иконок на грани куба"
+[33m1a8ff15[m Merge pull request #183 from olegbogai-web/codex/update-event-choice-interaction-and-visuals-4gqyio
+[33me11620f[m Improve event choice hover/click and fit dice face icons
+[33m9c1a2a8[m Merge pull request #182 from olegbogai-web/revert-181-codex/update-event-choice-interaction-and-visuals
+[33m11e6294[m Revert "Improve event choice interaction and fit dice icons to cube faces"
+[33m541fa20[m Merge pull request #181 from olegbogai-web/codex/update-event-choice-interaction-and-visuals
+[33m9ccad8c[m Improve event choice hover/click area and dice icon sizing
+[33m9a207e0[m Merge pull request #180 from olegbogai-web/revert-178-codex/fix-event-choice-interactions-and-styles-3xjbdi
+[33m2855eda[m Revert "Refine event choice hit target & hover; constrain dice face icon sizing"
+[33mb83c0d4[m Merge pull request #178 from olegbogai-web/codex/fix-event-choice-interactions-and-styles-3xjbdi
+[33m6fbf7a3[m Merge pull request #179 from olegbogai-web/revert-177-codex/fix-event-choice-interactions-and-styles
+[33m6773229[m Revert "Event choices: hover & click on background, fix dice face icon sizing, lower choices block"
+[33m4ff262b[m Refine event choice hit targets and hover visuals
+[33m2f03cff[m Merge pull request #177 from olegbogai-web/codex/fix-event-choice-interactions-and-styles
+[33mdf1192f[m Improve event choice hover/click and fix event dice icon sizing
+[33m52ea547[m Merge pull request #176 from olegbogai-web/codex/update-cube-event-colors-and-layout
+[33m3b80418[m Tune event room choice UI and event dice face visuals
+[33mce359f7[m добавил коече
+[33mf9a1a6d[m Merge pull request #175 from olegbogai-web/codex/implement-event-room-with-event-handling-60bl85
+[33ma810817[m Implement standalone event room with test event flow
+[33m4b26f77[m Merge pull request #174 from olegbogai-web/revert-173-codex/implement-event-room-with-event-handling
+[33mc9f69a4[m Revert "Добавлена независимая Event Room с тестовым событием и запуском из battle table"
+[33m9308b8c[m Merge pull request #173 from olegbogai-web/codex/implement-event-room-with-event-handling
+[33m1614cc0[m Add standalone event room flow with test chest event
+[33mbf4097b[m добавил коече
+[33m24e8fbb[m Merge pull request #172 from olegbogai-web/revert-171-codex/implement-event-room-functionality-l6hyzq
+[33mdf3fd0a[m Revert "Add standalone Event Room scene and test chest event flow"
+[33m65caafb[m Merge pull request #171 from olegbogai-web/codex/implement-event-room-functionality-l6hyzq
+[33m896bb77[m Add standalone event room flow with test event content
+[33md9f8e10[m Merge pull request #170 from olegbogai-web/revert-169-codex/implement-event-room-functionality-a7qf6g
+[33m51a5086[m Revert "Add independent Event Room scene and test event resources"
+[33mb528fef[m Merge pull request #169 from olegbogai-web/codex/implement-event-room-functionality-a7qf6g
+[33m7345918[m Add scalable event room scene with test event flow
+[33m417b5d5[m Merge pull request #168 from olegbogai-web/revert-167-codex/implement-event-room-functionality-lotpzn
+[33mb105fa7[m Revert "feat: add independent EventRoom scene and data-driven test event"
+[33m3214caa[m Merge pull request #167 from olegbogai-web/codex/implement-event-room-functionality-lotpzn
+[33m19f408c[m feat: add independent event room flow with test event content
+[33md014ee8[m Merge pull request #166 from olegbogai-web/revert-165-codex/implement-event-room-functionality
+[33m0e3aba7[m Revert "Add standalone EventRoom scene and test event flow"
+[33mc1211f8[m Merge pull request #165 from olegbogai-web/codex/implement-event-room-functionality
+[33maee15ac[m Add standalone event room flow with test event resources
+[33m576ee14[m добавил коече
+[33m65e3517[m Merge pull request #164 from olegbogai-web/revert-163-codex/implement-event-room-feature-t7rtlf
+[33mb994f69[m Revert "Добавить тестовую EventRoom, data-driven модель событий и бросок куба"
+[33m516e157[m Merge pull request #163 from olegbogai-web/codex/implement-event-room-feature-t7rtlf
+[33mb22f6fa[m Добавить тестовую комнату события с броском куба
+[33m483db2e[m Merge pull request #162 from olegbogai-web/revert-161-codex/implement-event-room-feature
+[33mcbce977[m Revert "Add event room prototype with data-driven event resources and event button"
+[33me6cec27[m Merge pull request #161 from olegbogai-web/codex/implement-event-room-feature
+[33m91037c9[m Implement test event room flow with event dice and launcher button
+[33m613f2ce[m Merge pull request #160 from olegbogai-web/codex/create-architecture-for-event-room-subclass
+[33m5cbea2b[m docs: add EventRoom architecture standard
+[33mf34d21e[m добавил коече
+[33mb2067cc[m[33m ([m[1;33mtag: [m[1;33mv0.002[m[33m)[m Save current version as v0.002
+[33m89002f1[m Merge pull request #159 from olegbogai-web/codex/animate-cube-return-to-board-4itpwu
+[33ma36d959[m Return dragged dice to board when released outside floor
+[33m7144e9d[m Merge pull request #158 from olegbogai-web/revert-157-revert-156-revert-155-codex/animate-cube-return-to-board
+[33m61afa73[m Revert "Revert "Revert "Return off-board dice to board with fast lift-and-fly animation"""
+[33mf218f83[m Merge pull request #157 from olegbogai-web/revert-156-revert-155-codex/animate-cube-return-to-board
+[33mf0cec08[m Revert "Revert "Return off-board dice to board with fast lift-and-fly animation""
+[33md3b4f84[m Merge branch 'main' of https://github.com/olegbogai-web/dicegame # Please enter a commit message to explain why this merge is necessary, # especially if it merges an updated upstream into a topic branch. # # Lines starting with '#' will be ignored, and an empty message aborts # the commit.
+[33m42ff8f1[m Merge pull request #156 from olegbogai-web/revert-155-codex/animate-cube-return-to-board
+[33m5ada910[m Revert "Return off-board dice to board with fast lift-and-fly animation"
+[33mb7c9675[m добавил коече
+[33m0bd76c7[m Merge pull request #155 from olegbogai-web/codex/animate-cube-return-to-board
+[33m3320427[m Return dragged dice to board with quick lift-and-fly animation
+[33mb5297b9[m Merge pull request #154 from olegbogai-web/codex/update-cube-attraction-range-and-ability-removal-m2vciv
+[33mcb83b22[m Adjust dice snap interaction
+[33m58e361a[m Merge pull request #153 from olegbogai-web/revert-152-codex/update-cube-attraction-range-and-ability-removal
+[33m9f06f47[m Revert "Increase ability slot snap radius and allow removing assigned dice from ability slot"
+[33mf88c98d[m Merge pull request #152 from olegbogai-web/codex/update-cube-attraction-range-and-ability-removal
+[33ma7b4cda[m Adjust dice ability slot drag behavior
+[33m96f770b[m Merge pull request #151 from olegbogai-web/codex/increase-cube-fall-speed-after-stop-by-5x
+[33m9ea4ead[m Increase post-stop dice fall speed
+[33m68096f0[m Merge pull request #150 from olegbogai-web/codex/fix-monster-hp-display-and-adjust-dice-speed
+[33mfdd5acd[m Adjust battle HP label and dice throw tuning
+[33m7fd7290[m Merge pull request #149 from olegbogai-web/codex/modify-cube-height-and-spacing
+[33m8e02d36[m Adjust dice lift, spacing, and scale
+[33m5522f9a[m добавил коече
+[33mc86c667[m Merge pull request #148 from olegbogai-web/revert-135-revert-134-revert-131-revert-130-codex/adapt-battle-logic-to-new-table-template
+[33mb31070e[m Revert "Revert "Revert "Revert "Adapt battle room to new battle table scene""""
+[33m3f5ec9a[m Merge pull request #147 from olegbogai-web/revert-146-codex/adapt-scene-to-new-battle_table-template-wrc311
+[33mf9e020b[m Revert "Adapt battle visuals and logic to new_battle_table template"
+[33mb8876d5[m Merge pull request #146 from olegbogai-web/codex/adapt-scene-to-new-battle_table-template-wrc311
+[33m9dc4fc5[m Adapt battle room to new battle table scene
+[33mc428de3[m Merge pull request #145 from olegbogai-web/revert-144-codex/adapt-scene-to-new-battle_table-template-82cri0
+[33m43c61bd[m Revert "Адаптация логики боя под res://scenes/new_battle_table.tscn"
+[33m19ea7cd[m Merge pull request #144 from olegbogai-web/codex/adapt-scene-to-new-battle_table-template-82cri0
+[33ma6c9225[m Adapt battle room to new battle table scene
+[33mda49fb2[m Merge pull request #143 from olegbogai-web/revert-142-codex/adapt-scene-to-new-battle_table-template-5ykxgx
+[33m10e69bb[m Revert "Adapt battle room to new_battle_table scene"
+[33m79d423b[m Merge pull request #142 from olegbogai-web/codex/adapt-scene-to-new-battle_table-template-5ykxgx
+[33mca29214[m Adapt battle room to new battle table scene
+[33m990d503[m Merge pull request #141 from olegbogai-web/revert-140-codex/adapt-scene-to-new-battle_table-template
+[33me877d47[m Revert "Adapt battle room to new_battle_table scene"
+[33m95cd510[m Merge pull request #140 from olegbogai-web/codex/adapt-scene-to-new-battle_table-template
+[33mc2a0f4d[m Adapt battle room to new battle table scene
+[33mc21323c[m Merge pull request #139 from olegbogai-web/revert-138-codex/adapt-battle-logic-to-new-table-template-tpnuui
+[33m5a0f885[m Revert "Адаптация логики боя под новый шаблон стола (new_battle_table.tscn)"
+[33m871ec89[m Merge pull request #138 from olegbogai-web/codex/adapt-battle-logic-to-new-table-template-tpnuui
+[33m65c9a5b[m Adapt battle room to new battle table scene
+[33m8476474[m Merge pull request #137 from olegbogai-web/revert-136-codex/adapt-battle-logic-to-new-table-template-felefo
+[33mb20e814[m Revert "Adapt battle runtime to new_battle_table.tscn and restore UI/camera bindings"
+[33m051db65[m Merge pull request #136 from olegbogai-web/codex/adapt-battle-logic-to-new-table-template-felefo
+[33mb4565e2[m Adapt battle room to new table scene
+[33mee533d8[m Merge pull request #135 from olegbogai-web/revert-134-revert-131-revert-130-codex/adapt-battle-logic-to-new-table-template
+[33m1a406a3[m Revert "Revert "Revert "Adapt battle room to new battle table scene"""
+[33m75e0b22[m Merge pull request #134 from olegbogai-web/revert-131-revert-130-codex/adapt-battle-logic-to-new-table-template
+[33me8f9efc[m Revert "Revert "Adapt battle room to new battle table scene""
+[33me409489[m Merge pull request #133 from olegbogai-web/revert-132-codex/adapt-battle-logic-to-new-table-template-b17pdp
+[33mb77a9f6[m Revert "Adapt battle room to use new_battle_table.tscn and retarget scene bindings"
+[33m258bbd8[m Merge pull request #132 from olegbogai-web/codex/adapt-battle-logic-to-new-table-template-b17pdp
+[33mc32d3cb[m Adapt battle room to new battle table scene
+[33m09e8e56[m Merge pull request #131 from olegbogai-web/revert-130-codex/adapt-battle-logic-to-new-table-template
+[33me56afe6[m Revert "Adapt battle room to new battle table scene"
+[33m13f3ddc[m Merge pull request #130 from olegbogai-web/codex/adapt-battle-logic-to-new-table-template
+[33mc2f4055[m Adapt battle room to new battle table scene
+[33mac2627e[m добавил коече
+[33m3fe74c5[m Merge pull request #129 from olegbogai-web/revert-128-codex/implement-new-battle-table-template-204l1b
+[33mdc41fcf[m Revert "Migrate battle room to new_battle_table.tscn and adapt runtime"
+[33m7bf863b[m Merge pull request #128 from olegbogai-web/codex/implement-new-battle-table-template-204l1b
+[33m26dff90[m Migrate battle room to new table scene
+[33m84be551[m Merge pull request #127 from olegbogai-web/revert-126-codex/implement-new-battle-table-template
+[33m9a97144[m Revert "Switch battle presentation to new_battle_table scene and adapt battle logic"
+[33m4f3da6a[m Merge pull request #126 from olegbogai-web/codex/implement-new-battle-table-template
+[33mddb6cc3[m Refactor battle room to use new table scene
+[33m502cb81[m добавил коече
+[33mf29bbab[m Merge pull request #125 from olegbogai-web/revert-124-codex/update-battle_room-visual-layout-ez0osp
+[33mfa07944[m Revert "Update battle room visual layout"
+[33m866db07[m Merge pull request #124 from olegbogai-web/codex/update-battle_room-visual-layout-ez0osp
+[33m2ff214a[m Update battle room visual layout
+[33m721e900[m Merge pull request #123 from olegbogai-web/revert-122-codex/update-battle_room-visual-layout
+[33maf4fe1c[m Revert "Update battle room visual layout to match test mockup"
+[33md321072[m Merge pull request #122 from olegbogai-web/codex/update-battle_room-visual-layout
+[33m2224817[m Update battle room visual layout
+[33m769a26c[m[33m ([m[1;33mtag: [m[1;33mv0.001[m[33m)[m добавил коече
+[33mde3e57f[m добавил коече
+[33m64b8279[m Merge pull request #121 from olegbogai-web/revert-120-codex/fix-health-bar-shrinking-behavior-t7ow93
+[33m4053506[m Revert "Fix health bar shrink direction"
+[33m81bc1b5[m Merge pull request #120 from olegbogai-web/codex/fix-health-bar-shrinking-behavior-t7ow93
+[33mf2ad915[m Fix health bar shrink direction
+[33m6a3caa1[m Merge pull request #119 from olegbogai-web/revert-118-codex/fix-health-bar-shrinking-behavior-bfp3xx
+[33mc9c99a2[m Revert "Fix health bar shrink alignment"
+[33m64cc4c8[m Merge pull request #118 from olegbogai-web/codex/fix-health-bar-shrinking-behavior-bfp3xx
+[33m3b04212[m Fix health bar shrink alignment
+[33mc5349f9[m Merge pull request #117 from olegbogai-web/revert-116-codex/fix-health-bar-shrinking-behavior
+[33m77d188c[m Revert "Исправить укорачивание полосы здоровья (только справа)"
+[33m54d16b8[m Merge pull request #116 from olegbogai-web/codex/fix-health-bar-shrinking-behavior
+[33mb6d8ea4[m Fix health bar shrink direction
+[33mb7ab7e0[m Merge pull request #115 from olegbogai-web/codex/disable-player-cube-movement-during-monster-turn-vauq9d
+[33md89d586[m Disable dragging non-player dice
+[33mc47ee2f[m Merge pull request #114 from olegbogai-web/codex-jt0z74
+[33m509885f[m Fix health bar depletion animation
+[33mffbce7a[m Merge pull request #113 from olegbogai-web/revert-112-codex-490k3f
+[33m7f414b4[m Revert "Fix health bar shrink animation"
+[33m2508437[m Merge pull request #112 from olegbogai-web/codex-490k3f
+[33m257281c[m Fix health bar shrink animation
+[33m465438b[m Merge pull request #111 from olegbogai-web/revert-110-codex-frzj3s
+[33m11c636a[m Revert "Fix health bar to shrink from right with 0.5s tweened animation"
+[33mb2c368f[m Merge pull request #110 from olegbogai-web/codex-frzj3s
+[33m763edb0[m Fix health bar shrink animation
+[33mbbbc280[m Merge pull request #109 from olegbogai-web/codex/refactor-and-remove-duplicate-functions
+[33m20ed492[m Refactor dice motion and battle room runtimes
+[33m8a96caf[m Merge pull request #108 from olegbogai-web/codex/design-architecture-for-monster-ai-system
+[33m9068e8a[m Add monster AI architecture design docs
+[33m9f53af2[m Merge pull request #107 from olegbogai-web/codex-g0z336
+[33mbb606c5[m Fix monster AI dice stop detection
+[33m8061159[m Merge pull request #106 from olegbogai-web/codex/implement-basic-ai-rules-for-monsters-v9m7hk
+[33mbadf826[m Add reusable monster turn AI runtime
+[33m8a10021[m Merge pull request #105 from olegbogai-web/revert-102-codex/disable-player-cube-movement-during-monster-turn
+[33m081b6f8[m Revert "Запретить перетаскивание кубиков вне хода игрока"
+[33m9f32ee3[m Merge pull request #104 from olegbogai-web/revert-103-codex/implement-basic-ai-rules-for-monsters-ng5q92
+[33m87fe72c[m Revert "Add modular monster AI turn execution"
+[33m3163883[m Merge pull request #103 from olegbogai-web/codex/implement-basic-ai-rules-for-monsters-ng5q92
+[33mc886880[m Merge branch 'main' into codex/implement-basic-ai-rules-for-monsters-ng5q92
