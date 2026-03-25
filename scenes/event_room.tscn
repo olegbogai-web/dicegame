@@ -50,7 +50,7 @@ width = 700.0
 [node name="choices" type="Node3D" parent="."]
 
 [node name="choice_background_1" type="MeshInstance3D" parent="choices" unique_id=120191202]
-transform = Transform3D(3.5, 0, 0, 0, 1, 0, 0, 0, 0.4, -5.45, 0.563, 1.6)
+transform = Transform3D(3.5, 0, 0, 0, 1, 0, 0, 0, 0.4, -5.45, -0.437, 1.6)
 material_override = SubResource("ShaderMaterial_6yyso")
 mesh = SubResource("PlaneMesh_rnshl")
 
@@ -70,7 +70,7 @@ width = 600.0
 shape = SubResource("BoxShape3D_choice")
 
 [node name="choice_background_2" type="MeshInstance3D" parent="choices"]
-transform = Transform3D(3.5, 0, 0, 0, 1, 0, 0, 0, 0.4, -5.45, 0.563, 0.7)
+transform = Transform3D(3.5, 0, 0, 0, 1, 0, 0, 0, 0.4, -5.45, -0.437, 0.7)
 material_override = SubResource("ShaderMaterial_6yyso")
 mesh = SubResource("PlaneMesh_rnshl")
 
@@ -90,7 +90,7 @@ width = 600.0
 shape = SubResource("BoxShape3D_choice")
 
 [node name="choice_background_3" type="MeshInstance3D" parent="choices"]
-transform = Transform3D(3.5, 0, 0, 0, 1, 0, 0, 0, 0.4, -5.45, 0.563, -0.2)
+transform = Transform3D(3.5, 0, 0, 0, 1, 0, 0, 0, 0.4, -5.45, -0.437, -0.2)
 material_override = SubResource("ShaderMaterial_6yyso")
 mesh = SubResource("PlaneMesh_rnshl")
 
