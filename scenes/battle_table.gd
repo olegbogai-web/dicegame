@@ -32,7 +32,6 @@ const ACTIVATION_TARGET_LIFT_Y := 0.4
 @onready var _player_ability_template: MeshInstance3D = $ability_frame
 @onready var _monster_ability_template: MeshInstance3D = $ability_frame2
 @onready var _end_turn_button: Button = $UI/EndTurnButton
-@onready var _event_button: Button = $UI/EventButton
 @onready var _turn_status_label: Label = $UI/TurnStatusLabel
 
 var battle_room_data: BattleRoom
@@ -47,15 +46,12 @@ var _selected_ability_state: Dictionary = {}
 var _selected_mouse_anchor := Vector3.ZERO
 var _activation_in_progress := false
 var _turn_transition_in_progress := false
-@export_file("*.tscn") var event_room_scene_path := "res://scenes/event_room.tscn"
 
 
 func _ready() -> void:
 	set_physics_process(true)
 	if _end_turn_button != null and not _end_turn_button.pressed.is_connected(_on_end_turn_button_pressed):
 		_end_turn_button.pressed.connect(_on_end_turn_button_pressed)
-	if _event_button != null and not _event_button.pressed.is_connected(_on_event_button_pressed):
-		_event_button.pressed.connect(_on_event_button_pressed)
 	if battle_room_data == null:
 		configure_from_battle_room(BattleRoomScript.create_test_battle_room())
 	else:
@@ -96,16 +92,6 @@ func set_monsters(monster_definitions: Array[MonsterDefinition]) -> void:
 func _ensure_battle_room_data() -> void:
 	if battle_room_data == null:
 		battle_room_data = BattleRoomScript.new()
-
-
-func _on_event_button_pressed() -> void:
-	if event_room_scene_path.is_empty():
-		push_warning("Event room scene path is not assigned.")
-		return
-
-	var result := get_tree().change_scene_to_file(event_room_scene_path)
-	if result != OK:
-		push_warning("Failed to open event room scene: %s" % event_room_scene_path)
 
 
 func _apply_room_data() -> void:

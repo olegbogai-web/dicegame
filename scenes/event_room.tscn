@@ -1,11 +1,9 @@
-[gd_scene load_steps=10 format=3 uid="uid://eeobcwwda1af"]
+[gd_scene format=3 uid="uid://eeobcwwda1af"]
 
 [ext_resource type="Shader" uid="uid://bepfpefwcwx4g" path="res://assets/shaders/50dark_shader.gdshader" id="1_k00fv"]
 [ext_resource type="Texture2D" uid="uid://bxpuei70wl7q3" path="res://assets/events/chess-govnes.png" id="2_qvg7m"]
 [ext_resource type="Shader" uid="uid://bd34jl5c1gnfk" path="res://assets/shaders/orange_shader.gdshader" id="3_spmpp"]
 [ext_resource type="PackedScene" uid="uid://0ssqyi084mdh" path="res://scenes/board.tscn" id="4_m2rf8"]
-[ext_resource type="Script" path="res://scenes/event_room.gd" id="5_runtime"]
-[ext_resource type="Resource" path="res://content/events/definitions/test_event/test_event_definition.tres" id="6_definition"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_6yyso"]
 render_priority = 0
@@ -24,12 +22,9 @@ shader_parameter/background = ExtResource("2_qvg7m")
 [sub_resource type="PlaneMesh" id="PlaneMesh_6yyso"]
 
 [node name="Node3D" type="Node3D" unique_id=978277730]
-script = ExtResource("5_runtime")
-event_definition = ExtResource("6_definition")
 
 [node name="camera_event" type="Camera3D" parent="." unique_id=1850936957]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 100, 0)
-current = true
 fov = 5.8
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1305639632]
@@ -40,35 +35,22 @@ transform = Transform3D(3.354, 0, 0, 0, 3.354, 0, 0, 0, 4, -5.497243, 1, -2.3994
 pixel_size = 0.0025
 billboard = 1
 modulate = Color(0.72533303, 0.7739847, 0.93409675, 1)
-text = "текст события"
+text = "текст события текст события текст события текст события текст события текст события текст события текст события текст события текст события текст события текст события текст события текст события текст события текст события текст события текст события текст события текст события "
 horizontal_alignment = 3
 autowrap_mode = 3
 width = 700.0
 
-[node name="text_result" type="Label3D" parent="." unique_id=1967178213]
-transform = Transform3D(3.354, 0, 0, 0, 3.354, 0, 0, 0, 4, -5.497243, 1, -2.399448)
-visible = false
-pixel_size = 0.0025
-billboard = 1
-modulate = Color(0.72533303, 0.7739847, 0.93409675, 1)
-text = ""
-horizontal_alignment = 3
-autowrap_mode = 3
-width = 700.0
-
-[node name="choices" type="Node3D" parent="."]
-
-[node name="choice_background" type="MeshInstance3D" parent="choices" unique_id=120191202]
+[node name="choice_background" type="MeshInstance3D" parent="." unique_id=120191202]
 transform = Transform3D(3.5, 0, 0, 0, 1, 0, 0, 0, 0.4, -5.45, 0.563, 1.5)
 material_override = SubResource("ShaderMaterial_6yyso")
 mesh = SubResource("PlaneMesh_rnshl")
 
-[node name="text_choice" type="Label3D" parent="choices/choice_background" unique_id=95503765]
+[node name="text_choice" type="Label3D" parent="choice_background" unique_id=95503765]
 transform = Transform3D(0.4, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 pixel_size = 0.007
 billboard = 1
 modulate = Color(1, 0.8039216, 0.48235294, 1)
-text = "текст выбора события"
+text = "текст выбора события текст выбора события текст выбора события"
 outline_size = 4
 horizontal_alignment = 3
 autowrap_mode = 3
