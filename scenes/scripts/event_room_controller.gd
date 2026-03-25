@@ -17,6 +17,8 @@ const EVENT_DICE_MASS := 2.0
 const EVENT_DICE_TIMEOUT := 8.0
 const EVENT_DICE_THROW_SPEED_MULTIPLIER := 1.6
 const EVENT_DICE_ROTATION_SPEED_MULTIPLIER := 1.2
+const EVENT_DICE_THROW_HEIGHT_MULTIPLIER := 2.5
+const EVENT_DICE_SKIN := preload("res://assets/dice_edges/bones_dice_skin.png")
 const POSITIVE_FACE_ICON := preload("res://assets/dice_edges/green_O.png")
 const NEGATIVE_FACE_ICON := preload("res://assets/dice_edges/red_X.png")
 const CHOICE_HOVER_STRENGTH := 0.45
@@ -254,6 +256,7 @@ func _spawn_event_dice(choice: EventChoiceDefinition) -> void:
 	_event_dice = dice_nodes[0] as Dice
 	if _event_dice != null:
 		_event_dice.linear_velocity *= EVENT_DICE_THROW_SPEED_MULTIPLIER
+		_event_dice.linear_velocity.y *= EVENT_DICE_THROW_HEIGHT_MULTIPLIER
 		_event_dice.angular_velocity *= EVENT_DICE_ROTATION_SPEED_MULTIPLIER
 
 
@@ -297,6 +300,7 @@ func _build_dice_definition(choice: EventChoiceDefinition) -> DiceDefinition:
 	definition.dice_name = "event_dice_%s" % choice.choice_id
 	definition.size_multiplier = Vector3(1.2, 1.2, 1.2)
 	definition.base_color = Color(0.96, 0.96, 0.96, 1.0)
+	definition.texture = EVENT_DICE_SKIN
 	definition.faces = _build_dice_faces(choice)
 	return definition
 
