@@ -36,17 +36,9 @@ func apply_face(face_definition: DiceFaceDefinition, face_size: Vector2) -> void
 	match face_definition.content_type:
 		DiceFaceDefinition.ContentType.ICON:
 			if face_definition.icon != null:
-				var icon_texture_size := face_definition.icon.get_size()
-				var texture_width := max(icon_texture_size.x, 1.0)
-				var texture_height := max(icon_texture_size.y, 1.0)
 				_icon_sprite.texture = face_definition.icon
 				_icon_sprite.modulate = face_definition.overlay_tint
-				_icon_sprite.pixel_size = 1.0
-				_icon_sprite.scale = Vector3(
-					max(face_size.x / texture_width, 0.0001),
-					max(face_size.y / texture_height, 0.0001),
-					1.0
-				)
+				_icon_sprite.pixel_size = max(min_size / 128.0, 0.0001)
 				_icon_sprite.visible = true
 		DiceFaceDefinition.ContentType.TEXT:
 			_label.text = face_definition.text_value
