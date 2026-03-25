@@ -38,7 +38,7 @@ func apply_face(face_definition: DiceFaceDefinition, face_size: Vector2) -> void
 			if face_definition.icon != null:
 				_icon_sprite.texture = face_definition.icon
 				_icon_sprite.modulate = face_definition.overlay_tint
-				_fit_sprite_to_face(_icon_sprite, face_definition.icon, face_size)
+				_icon_sprite.pixel_size = max(min_size / 128.0, 0.0001)
 				_icon_sprite.visible = true
 		DiceFaceDefinition.ContentType.TEXT:
 			_label.text = face_definition.text_value
@@ -94,11 +94,3 @@ func _build_aura_texture(aura_color: Color) -> GradientTexture2D:
 	texture.width = 128
 	texture.height = 128
 	return texture
-
-
-func _fit_sprite_to_face(sprite: Sprite3D, texture: Texture2D, face_size: Vector2) -> void:
-	var texture_size := texture.get_size()
-	var texture_width := max(texture_size.x, 1.0)
-	var texture_height := max(texture_size.y, 1.0)
-	sprite.pixel_size = 1.0
-	sprite.scale = Vector3(face_size.x / texture_width, face_size.y / texture_height, 1.0)
