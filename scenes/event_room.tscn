@@ -24,7 +24,7 @@ shader_parameter/background = ExtResource("2_qvg7m")
 [sub_resource type="PlaneMesh" id="PlaneMesh_6yyso"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_choice"]
-size = Vector3(3.5, 0.4, 0.4)
+size = Vector3(7, 0.4, 0.8)
 
 [node name="Node3D" type="Node3D" unique_id=978277730]
 script = ExtResource("5_controller")
