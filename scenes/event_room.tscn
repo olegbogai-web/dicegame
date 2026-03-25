@@ -46,13 +46,12 @@ material_override = SubResource("ShaderMaterial_6yyso")
 mesh = SubResource("PlaneMesh_rnshl")
 
 [node name="text_choice" type="Label3D" parent="choice_background" unique_id=95503765]
-transform = Transform3D(0.4, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+transform = Transform3D(0.43400523, 0, 0, 0, 1, 0, 0, 0, 0.47554713, 0, 0, 0)
 pixel_size = 0.007
 billboard = 1
 modulate = Color(1, 0.8039216, 0.48235294, 1)
 text = "текст выбора события текст выбора события текст выбора события"
 outline_size = 4
-horizontal_alignment = 3
 autowrap_mode = 3
 width = 600.0
 
