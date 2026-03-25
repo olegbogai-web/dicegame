@@ -5,6 +5,7 @@ class_name DiceFaceView
 var _aura_sprite: Sprite3D
 var _icon_sprite: Sprite3D
 var _label: Label3D
+var _color_plane: MeshInstance3D
 
 
 func _ready() -> void:
@@ -22,6 +23,7 @@ func apply_face(face_definition: DiceFaceDefinition, face_size: Vector2) -> void
 	_label.visible = false
 	_icon_sprite.visible = false
 	_aura_sprite.visible = false
+	_color_plane.visible = false
 
 	var max_size = max(face_size.x, face_size.y)
 	var min_size = min(face_size.x, face_size.y)
@@ -34,6 +36,22 @@ func apply_face(face_definition: DiceFaceDefinition, face_size: Vector2) -> void
 		_aura_sprite.visible = true
 
 	match face_definition.content_type:
+		DiceFaceDefinition.ContentType.FACE_COLOR:
+			var quad_mesh := _color_plane.mesh as QuadMesh
+			if quad_mesh == null:
+				quad_mesh = QuadMesh.new()
+				_color_plane.mesh = quad_mesh
+			quad_mesh.size = face_size * 0.96
+			var material := _color_plane.material_override as StandardMaterial3D
+			if material == null:
+				material = StandardMaterial3D.new()
+				material.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
+				material.cull_mode = BaseMaterial3D.CULL_BACK
+				material.roughness = 0.9
+				material.metallic = 0.0
+				_color_plane.material_override = material
+			material.albedo_color = face_definition.face_color
+			_color_plane.visible = true
 		DiceFaceDefinition.ContentType.ICON:
 			if face_definition.icon != null:
 				_icon_sprite.texture = face_definition.icon
@@ -77,6 +95,13 @@ func _ensure_nodes() -> void:
 		_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		add_child(_label)
 		_label.owner = get_tree().edited_scene_root if Engine.is_editor_hint() else null
+
+	if _color_plane == null:
+		_color_plane = MeshInstance3D.new()
+		_color_plane.name = "FaceColor"
+		_color_plane.position = Vector3(0.0, 0.0, 0.0005)
+		add_child(_color_plane)
+		_color_plane.owner = get_tree().edited_scene_root if Engine.is_editor_hint() else null
 
 
 func _build_aura_texture(aura_color: Color) -> GradientTexture2D:
