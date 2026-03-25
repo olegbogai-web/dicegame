@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="EventChoiceDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/events/resources/event_choice_definition.gd" id="1_choice"]
+[ext_resource type="Script" path="res://content/events/resources/event_outcome_definition.gd" id="2_outcome"]
+[ext_resource type="Resource" path="res://content/events/definitions/choices/dice_hit_first.tres" id="3_dice"]
+
+[sub_resource type="Resource" id="OutcomeGreen"]
+script = ExtResource("2_outcome")
+color_id = "green"
+result_text = "получите сокровище"
+
+[sub_resource type="Resource" id="OutcomeYellow"]
+script = ExtResource("2_outcome")
+color_id = "yellow"
+result_text = "сундук разбит. И содержимое вместе с ним. Возможно, до конца своих дней вы не узнаете, был ли это мимик или вам просто померещилось."
+
+[sub_resource type="Resource" id="OutcomeRed"]
+script = ExtResource("2_outcome")
+color_id = "red"
+result_text = "ничего не произошло"
+
+[resource]
+script = ExtResource("1_choice")
+choice_id = "hit_first"
+choice_text = "Сначала ударить по нему"
+dice_definition = ExtResource("3_dice")
+positive_outcome = SubResource("OutcomeGreen")
+neutral_outcome = SubResource("OutcomeYellow")
+negative_outcome = SubResource("OutcomeRed")

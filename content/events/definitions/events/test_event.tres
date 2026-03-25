@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EventDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/events/resources/event_definition.gd" id="1_event"]
+[ext_resource type="Texture2D" path="res://assets/events/chess-govnes.png" id="2_bg"]
+[ext_resource type="Resource" path="res://content/events/definitions/choices/test_open_choice.tres" id="3_choice"]
+[ext_resource type="Resource" path="res://content/events/definitions/choices/test_hit_choice.tres" id="4_choice"]
+[ext_resource type="Resource" path="res://content/events/definitions/choices/test_walk_choice.tres" id="5_choice"]
+
+[resource]
+script = ExtResource("1_event")
+event_id = "test_event"
+display_name = "Тестовое событие"
+background_texture = ExtResource("2_bg")
+event_text = "текст события текст события текст события текст события текст события текст события текст события Открыть сундук?"
+choices = Array[ExtResource("3_choice"), ExtResource("4_choice"), ExtResource("5_choice")]
