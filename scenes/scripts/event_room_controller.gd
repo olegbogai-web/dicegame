@@ -15,9 +15,9 @@ const COLLAPSE_DURATION := 0.3
 const STOP_CHECK_INTERVAL := 0.1
 const EVENT_DICE_MASS := 2.0
 const EVENT_DICE_TIMEOUT := 8.0
-const POSITIVE_FACE_ICON := preload("res://assets/material/green.png")
-const NEUTRAL_FACE_ICON := preload("res://assets/material/yelow.png")
-const NEGATIVE_FACE_ICON := preload("res://assets/material/red.png")
+const POSITIVE_FACE_COLOR := Color(0.21, 0.78, 0.35, 1.0)
+const NEUTRAL_FACE_COLOR := Color(0.95, 0.78, 0.21, 1.0)
+const NEGATIVE_FACE_COLOR := Color(0.86, 0.24, 0.24, 1.0)
 const CHOICE_HOVER_STRENGTH := 0.45
 const CHOICE_NORMAL_HOVER_STRENGTH := 0.0
 
@@ -302,16 +302,14 @@ func _build_dice_faces(choice: EventChoiceDefinition) -> Array[DiceFaceDefinitio
 	for kind in choice.build_face_pool():
 		var face := DiceFaceDefinitionScript.new()
 		face.text_value = _get_kind_text_value(kind)
-		face.content_type = DiceFaceDefinitionScript.ContentType.ICON
-		face.icon = _get_kind_icon(kind)
-		face.overlay_tint = Color(1.0, 1.0, 1.0, 1.0)
+		face.content_type = DiceFaceDefinitionScript.ContentType.FACE_COLOR
+		face.face_color = _get_kind_face_color(kind)
 		faces.append(face)
 	while faces.size() < DiceDefinitionScript.FACE_COUNT:
 		var neutral_face := DiceFaceDefinitionScript.new()
 		neutral_face.text_value = "neutral"
-		neutral_face.content_type = DiceFaceDefinitionScript.ContentType.ICON
-		neutral_face.icon = NEUTRAL_FACE_ICON
-		neutral_face.overlay_tint = Color(1.0, 1.0, 1.0, 1.0)
+		neutral_face.content_type = DiceFaceDefinitionScript.ContentType.FACE_COLOR
+		neutral_face.face_color = NEUTRAL_FACE_COLOR
 		faces.append(neutral_face)
 	return faces
 
@@ -326,11 +324,11 @@ func _get_kind_text_value(kind: EventOutcomeDefinitionScript.OutcomeKind) -> Str
 			return "neutral"
 
 
-func _get_kind_icon(kind: EventOutcomeDefinitionScript.OutcomeKind) -> Texture2D:
+func _get_kind_face_color(kind: EventOutcomeDefinitionScript.OutcomeKind) -> Color:
 	match kind:
 		EventOutcomeDefinitionScript.OutcomeKind.POSITIVE:
-			return POSITIVE_FACE_ICON
+			return POSITIVE_FACE_COLOR
 		EventOutcomeDefinitionScript.OutcomeKind.NEGATIVE:
-			return NEGATIVE_FACE_ICON
+			return NEGATIVE_FACE_COLOR
 		_:
-			return NEUTRAL_FACE_ICON
+			return NEUTRAL_FACE_COLOR
