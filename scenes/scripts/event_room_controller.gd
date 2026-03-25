@@ -11,13 +11,13 @@ const EventOutcomeDefinitionScript = preload("res://content/events/resources/eve
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 
 const EVENT_DICE_SIZE_MULTIPLIER := Vector3(5.0, 5.0, 5.0)
-const COLLAPSE_DURATION := 0.5
+const COLLAPSE_DURATION := 0.3
 const STOP_CHECK_INTERVAL := 0.1
 const EVENT_DICE_MASS := 2.0
 const EVENT_DICE_TIMEOUT := 8.0
-const POSITIVE_COLOR := Color(0.20, 0.80, 0.32, 1.0)
-const NEUTRAL_COLOR := Color(0.95, 0.84, 0.22, 1.0)
-const NEGATIVE_COLOR := Color(0.93, 0.23, 0.20, 1.0)
+const POSITIVE_FACE_ICON := preload("res://assets/material/green.png")
+const NEUTRAL_FACE_ICON := preload("res://assets/material/yelow.png")
+const NEGATIVE_FACE_ICON := preload("res://assets/material/red.png")
 
 @export var event_definition: EventDefinition
 
@@ -233,7 +233,6 @@ func _show_result(outcome: EventOutcomeDefinition) -> void:
 		return
 	_event_text.visible = true
 	_event_text.transform = _result_anchor_transform
-	_event_text.scale = Vector3.ONE
 	_event_text.text = outcome.result_text
 
 
@@ -251,16 +250,16 @@ func _build_dice_faces(choice: EventChoiceDefinition) -> Array[DiceFaceDefinitio
 	for kind in choice.build_face_pool():
 		var face := DiceFaceDefinitionScript.new()
 		face.text_value = _get_kind_text_value(kind)
-		face.overlay_tint = _get_kind_color(kind)
-		face.text_color = Color.BLACK
-		face.font_size = 72
+		face.content_type = DiceFaceDefinitionScript.ContentType.ICON
+		face.icon = _get_kind_icon(kind)
+		face.overlay_tint = Color(1.0, 1.0, 1.0, 1.0)
 		faces.append(face)
 	while faces.size() < DiceDefinitionScript.FACE_COUNT:
 		var neutral_face := DiceFaceDefinitionScript.new()
 		neutral_face.text_value = "neutral"
-		neutral_face.overlay_tint = NEUTRAL_COLOR
-		neutral_face.text_color = Color.BLACK
-		neutral_face.font_size = 72
+		neutral_face.content_type = DiceFaceDefinitionScript.ContentType.ICON
+		neutral_face.icon = NEUTRAL_FACE_ICON
+		neutral_face.overlay_tint = Color(1.0, 1.0, 1.0, 1.0)
 		faces.append(neutral_face)
 	return faces
 
@@ -275,11 +274,11 @@ func _get_kind_text_value(kind: EventOutcomeDefinitionScript.OutcomeKind) -> Str
 			return "neutral"
 
 
-func _get_kind_color(kind: EventOutcomeDefinitionScript.OutcomeKind) -> Color:
+func _get_kind_icon(kind: EventOutcomeDefinitionScript.OutcomeKind) -> Texture2D:
 	match kind:
 		EventOutcomeDefinitionScript.OutcomeKind.POSITIVE:
-			return POSITIVE_COLOR
+			return POSITIVE_FACE_ICON
 		EventOutcomeDefinitionScript.OutcomeKind.NEGATIVE:
-			return NEGATIVE_COLOR
+			return NEGATIVE_FACE_ICON
 		_:
-			return NEUTRAL_COLOR
+			return NEUTRAL_FACE_ICON
