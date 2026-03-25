@@ -21,6 +21,7 @@ const EVENT_DICE_THROW_HEIGHT_MULTIPLIER := 2.5
 const EVENT_DICE_SKIN := preload("res://assets/dice_edges/bones_dice_skin.png")
 const POSITIVE_FACE_ICON := preload("res://assets/dice_edges/green_O.png")
 const NEGATIVE_FACE_ICON := preload("res://assets/dice_edges/red_X.png")
+const NEUTRAL_FACE_ICON := preload("res://assets/dice_edges/yellow_-.png")
 const CHOICE_HOVER_STRENGTH := 0.45
 const CHOICE_NORMAL_HOVER_STRENGTH := 0.0
 
@@ -316,8 +317,9 @@ func _build_dice_faces(choice: EventChoiceDefinition) -> Array[DiceFaceDefinitio
 		faces.append(face)
 	while faces.size() < DiceDefinitionScript.FACE_COUNT:
 		var neutral_face := DiceFaceDefinitionScript.new()
-		neutral_face.content_type = DiceFaceDefinitionScript.ContentType.TEXT
-		neutral_face.text_value = ""
+		neutral_face.text_value = "neutral"
+		neutral_face.content_type = DiceFaceDefinitionScript.ContentType.ICON
+		neutral_face.icon = NEUTRAL_FACE_ICON
 		neutral_face.overlay_tint = Color(1.0, 1.0, 1.0, 1.0)
 		faces.append(neutral_face)
 	return faces
@@ -340,4 +342,4 @@ func _get_kind_icon(kind: EventOutcomeDefinitionScript.OutcomeKind) -> Texture2D
 		EventOutcomeDefinitionScript.OutcomeKind.NEGATIVE:
 			return NEGATIVE_FACE_ICON
 		_:
-			return null
+			return NEUTRAL_FACE_ICON
