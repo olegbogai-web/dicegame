@@ -18,8 +18,6 @@ const EVENT_DICE_TIMEOUT := 8.0
 const POSITIVE_FACE_ICON := preload("res://assets/material/green.png")
 const NEUTRAL_FACE_ICON := preload("res://assets/material/yelow.png")
 const NEGATIVE_FACE_ICON := preload("res://assets/material/red.png")
-const DEFAULT_CHOICE_MODULATE := Color(1.0, 1.0, 1.0, 1.0)
-const HOVER_CHOICE_MODULATE := Color(1.0, 0.96, 0.72, 1.0)
 
 @export var event_definition: EventDefinition
 
@@ -34,7 +32,6 @@ var _selected_choice: EventChoiceDefinition
 var _result_anchor_transform := Transform3D.IDENTITY
 var _event_dice: Dice
 var _is_resolving := false
-var _hovered_choice_background: MeshInstance3D
 
 
 func _ready() -> void:
@@ -49,7 +46,6 @@ func _ready() -> void:
 		_camera.current = true
 	_collect_choice_entries()
 	_apply_event_definition()
-	set_process(true)
 
 
 func _collect_choice_entries() -> void:
@@ -59,14 +55,11 @@ func _collect_choice_entries() -> void:
 	for choice_background in _choices_root.get_children():
 		if not choice_background is MeshInstance3D:
 			continue
-		var body := choice_background.get_node_or_null(^"choice_body") as StaticBody3D
 		var label := choice_background.get_node_or_null(^"text_choice") as Label3D
-		if body == null or label == null:
+		if label == null:
 			continue
-		choice_background.modulate = DEFAULT_CHOICE_MODULATE
 		_choice_entries.append({
 			"background": choice_background,
-			"body": body,
 			"label": label,
 			"base_scale": choice_background.scale,
 			"base_label_scale": label.scale,
@@ -121,52 +114,26 @@ func _unhandled_input(event: InputEvent) -> void:
 			_try_pick_choice(mouse_button.position)
 
 
-func _process(_delta: float) -> void:
-	if _is_resolving:
-		_set_hovered_choice(null)
-		return
-	var mouse_position := get_viewport().get_mouse_position()
-	var hovered_entry := _pick_choice_entry(mouse_position)
-	_set_hovered_choice(hovered_entry.get("background") as MeshInstance3D if not hovered_entry.is_empty() else null)
-
-
 func _try_pick_choice(mouse_position: Vector2) -> void:
-	var entry := _pick_choice_entry(mouse_position)
-	if entry.is_empty():
-		return
-	_on_choice_selected(entry.get("choice") as EventChoiceDefinition)
-
-
-func _pick_choice_entry(mouse_position: Vector2) -> Dictionary:
 	if _camera == null:
-		return {}
+		return
 	var space_state := get_world_3d().direct_space_state
 	var ray_origin := _camera.project_ray_origin(mouse_position)
 	var ray_direction := _camera.project_ray_normal(mouse_position)
 	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_origin + ray_direction * 200.0)
 	var hit := space_state.intersect_ray(query)
 	if hit.is_empty():
-		return {}
+		return
 	var collider := hit.get("collider") as Node
 	if collider == null:
-		return {}
-	for entry in _choice_entries:
-		var body := entry.get("body") as StaticBody3D
-		if body == null:
-			continue
-		if collider == body:
-			return entry
-	return {}
-
-
-func _set_hovered_choice(background: MeshInstance3D) -> void:
-	if _hovered_choice_background == background:
 		return
-	if is_instance_valid(_hovered_choice_background):
-		_hovered_choice_background.modulate = DEFAULT_CHOICE_MODULATE
-	_hovered_choice_background = background
-	if is_instance_valid(_hovered_choice_background):
-		_hovered_choice_background.modulate = HOVER_CHOICE_MODULATE
+	for entry in _choice_entries:
+		var background := entry.get("background") as MeshInstance3D
+		if background == null:
+			continue
+		if collider == background or collider.get_parent() == background:
+			_on_choice_selected(entry.get("choice") as EventChoiceDefinition)
+			return
 
 
 func _on_choice_selected(choice: EventChoiceDefinition) -> void:
