@@ -18,6 +18,9 @@ const EVENT_DICE_TIMEOUT := 8.0
 const POSITIVE_FACE_ICON := preload("res://assets/material/green.png")
 const NEUTRAL_FACE_ICON := preload("res://assets/material/yelow.png")
 const NEGATIVE_FACE_ICON := preload("res://assets/material/red.png")
+const CHOICE_HOVER_PARAM := "hover_strength"
+const CHOICE_HOVER_VALUE := 1.0
+const CHOICE_IDLE_VALUE := 0.0
 
 @export var event_definition: EventDefinition
 
@@ -32,6 +35,7 @@ var _selected_choice: EventChoiceDefinition
 var _result_anchor_transform := Transform3D.IDENTITY
 var _event_dice: Dice
 var _is_resolving := false
+var _hovered_choice_index := -1
 
 
 func _ready() -> void:
@@ -65,6 +69,11 @@ func _collect_choice_entries() -> void:
 			"base_label_scale": label.scale,
 			"choice": null,
 		})
+		var shared_material := choice_background.material_override as ShaderMaterial
+		if shared_material != null:
+			var unique_material := shared_material.duplicate() as ShaderMaterial
+			choice_background.material_override = unique_material
+			unique_material.set_shader_parameter(CHOICE_HOVER_PARAM, CHOICE_IDLE_VALUE)
 
 
 func _apply_event_definition() -> void:
@@ -108,6 +117,9 @@ func _apply_choices(choices: Array[EventChoiceDefinition]) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _is_resolving:
 		return
+	if event is InputEventMouseMotion:
+		var mouse_motion := event as InputEventMouseMotion
+		_update_choice_hover(mouse_motion.position)
 	if event is InputEventMouseButton:
 		var mouse_button := event as InputEventMouseButton
 		if mouse_button.pressed and mouse_button.button_index == MOUSE_BUTTON_LEFT:
@@ -115,25 +127,49 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _try_pick_choice(mouse_position: Vector2) -> void:
-	if _camera == null:
+	var hovered_index := _pick_choice_index(mouse_position)
+	if hovered_index < 0:
 		return
+	_on_choice_selected(_choice_entries[hovered_index].get("choice") as EventChoiceDefinition)
+
+
+func _pick_choice_index(mouse_position: Vector2) -> int:
+	if _camera == null:
+		return -1
 	var space_state := get_world_3d().direct_space_state
 	var ray_origin := _camera.project_ray_origin(mouse_position)
 	var ray_direction := _camera.project_ray_normal(mouse_position)
 	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_origin + ray_direction * 200.0)
 	var hit := space_state.intersect_ray(query)
 	if hit.is_empty():
-		return
+		return -1
 	var collider := hit.get("collider") as Node
 	if collider == null:
-		return
-	for entry in _choice_entries:
+		return -1
+	for index in _choice_entries.size():
+		var entry := _choice_entries[index]
 		var background := entry.get("background") as MeshInstance3D
 		if background == null:
 			continue
-		if collider == background or collider.get_parent() == background:
-			_on_choice_selected(entry.get("choice") as EventChoiceDefinition)
-			return
+		if collider.get_parent() == background:
+			return index
+	return -1
+
+
+func _update_choice_hover(mouse_position: Vector2) -> void:
+	var hovered_index := _pick_choice_index(mouse_position)
+	if hovered_index == _hovered_choice_index:
+		return
+	_hovered_choice_index = hovered_index
+	for index in _choice_entries.size():
+		var background := _choice_entries[index].get("background") as MeshInstance3D
+		if background == null:
+			continue
+		var material := background.material_override as ShaderMaterial
+		if material == null:
+			continue
+		var hover_strength := CHOICE_HOVER_VALUE if index == _hovered_choice_index else CHOICE_IDLE_VALUE
+		material.set_shader_parameter(CHOICE_HOVER_PARAM, hover_strength)
 
 
 func _on_choice_selected(choice: EventChoiceDefinition) -> void:
