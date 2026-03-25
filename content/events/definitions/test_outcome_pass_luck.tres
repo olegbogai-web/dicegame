@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="EventOutcomeDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/events/resources/event_outcome_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+outcome_id = &"pass_luck"
+outcome_color = 0
+outcome_text = "вам улыбнулась удача"

@@ -205,3 +205,10 @@ offset_top = 80.0
 offset_right = 360.0
 offset_bottom = 116.0
 text = "Ожидание боя"
+
+[node name="EventButton" type="Button" parent="UI" unique_id=151234004]
+offset_left = 406.0
+offset_top = 74.0
+offset_right = 596.0
+offset_bottom = 118.0
+text = "Событие"
