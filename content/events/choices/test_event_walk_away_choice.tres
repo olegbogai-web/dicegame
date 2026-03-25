@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="EventChoiceDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/events/resources/event_choice_definition.gd" id="1_choice"]
+[ext_resource type="Resource" path="res://content/events/outcomes/test_event_lucky_smile.tres" id="2_positive"]
+[ext_resource type="Resource" path="res://content/events/outcomes/test_event_nothing_happened.tres" id="3_neutral"]
+[ext_resource type="Resource" path="res://content/events/outcomes/test_event_mimic.tres" id="4_negative"]
+
+[resource]
+script = ExtResource("1_choice")
+choice_id = "walk_away"
+choice_text = "Пройти мимо"
+positive_faces = 1
+neutral_faces = 5
+negative_faces = 0
+positive_outcome = ExtResource("2_positive")
+neutral_outcome = ExtResource("3_neutral")
+negative_outcome = ExtResource("4_negative")

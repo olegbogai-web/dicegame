@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="EventOutcomeDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/events/resources/event_outcome_definition.gd" id="1_outcome"]
+
+[resource]
+script = ExtResource("1_outcome")
+outcome_id = "test_event_lucky_smile"
+display_name = "Улыбнулась удача"
+result_text = "вам улыбнулась удача"
+kind = 0
+consequence_refs = PackedStringArray()
