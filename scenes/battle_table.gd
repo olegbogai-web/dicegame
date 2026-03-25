@@ -7,6 +7,7 @@ const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_abilit
 const BattleActivationAnimationRuntime = preload("res://content/combat/runtime/battle_activation_animation_runtime.gd")
 const MonsterTurnRuntime = preload("res://content/monster_ai/monster_turn_runtime.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
+const EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
 
 const SLOT_EMPTY_COLOR := Color(1.0, 1.0, 1.0, 1.0)
 const SLOT_ASSIGNED_COLOR := Color(0.82, 0.9, 1.0, 1.0)
@@ -33,6 +34,7 @@ const ACTIVATION_TARGET_LIFT_Y := 0.4
 @onready var _monster_ability_template: MeshInstance3D = $ability_frame2
 @onready var _end_turn_button: Button = $UI/EndTurnButton
 @onready var _turn_status_label: Label = $UI/TurnStatusLabel
+@onready var _event_button: Button = $UI/EventButton
 
 var battle_room_data: BattleRoom
 var _generated_monster_sprites: Array[Node] = []
@@ -52,6 +54,8 @@ func _ready() -> void:
 	set_physics_process(true)
 	if _end_turn_button != null and not _end_turn_button.pressed.is_connected(_on_end_turn_button_pressed):
 		_end_turn_button.pressed.connect(_on_end_turn_button_pressed)
+	if _event_button != null and not _event_button.pressed.is_connected(_on_event_button_pressed):
+		_event_button.pressed.connect(_on_event_button_pressed)
 	if battle_room_data == null:
 		configure_from_battle_room(BattleRoomScript.create_test_battle_room())
 	else:
@@ -975,6 +979,12 @@ func _are_current_monster_turn_dice_stopped() -> bool:
 		if not BattleAbilityRuntime.is_die_fully_stopped(dice):
 			return false
 	return true
+
+
+func _on_event_button_pressed() -> void:
+	var result := get_tree().change_scene_to_file(EVENT_ROOM_SCENE_PATH)
+	if result != OK:
+		push_warning("Failed to open event room scene: %s" % EVENT_ROOM_SCENE_PATH)
 
 
 func _on_end_turn_button_pressed() -> void:

@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="EventOutcomeDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/events/resources/event_outcome_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+outcome_id = &"hit_broken"
+outcome_color = 1
+outcome_text = "сундук разбит. И содержимое вместе с ним. Возможно, до конца своих дней вы не узнаете, был ли это мимик или вам просто померещилось."
