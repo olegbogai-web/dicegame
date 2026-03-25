@@ -18,8 +18,6 @@ const EVENT_DICE_TIMEOUT := 8.0
 const POSITIVE_FACE_ICON := preload("res://assets/material/green.png")
 const NEUTRAL_FACE_ICON := preload("res://assets/material/yelow.png")
 const NEGATIVE_FACE_ICON := preload("res://assets/material/red.png")
-const CHOICE_HOVER_TINT := Color(1.0, 0.95, 0.65, 1.0)
-const CHOICE_NORMAL_TINT := Color(1.0, 1.0, 1.0, 1.0)
 
 @export var event_definition: EventDefinition
 
@@ -34,7 +32,6 @@ var _selected_choice: EventChoiceDefinition
 var _result_anchor_transform := Transform3D.IDENTITY
 var _event_dice: Dice
 var _is_resolving := false
-var _hovered_background: MeshInstance3D
 
 
 func _ready() -> void:
@@ -48,7 +45,6 @@ func _ready() -> void:
 	if _camera != null:
 		_camera.current = true
 	_collect_choice_entries()
-	_apply_choice_highlight(null)
 	_apply_event_definition()
 
 
@@ -109,16 +105,6 @@ func _apply_choices(choices: Array[EventChoiceDefinition]) -> void:
 		_choice_entries[index] = entry
 
 
-func _process(_delta: float) -> void:
-	if _is_resolving:
-		if _hovered_background != null:
-			_apply_choice_highlight(null)
-		return
-	if _camera == null:
-		return
-	_apply_choice_highlight(_pick_choice_background(get_viewport().get_mouse_position()))
-
-
 func _unhandled_input(event: InputEvent) -> void:
 	if _is_resolving:
 		return
@@ -129,51 +115,25 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _try_pick_choice(mouse_position: Vector2) -> void:
-	var background := _pick_choice_background(mouse_position)
-	if background == null:
-		return
-	for entry in _choice_entries:
-		if entry.get("background") == background:
-			_on_choice_selected(entry.get("choice") as EventChoiceDefinition)
-			return
-
-
-func _pick_choice_background(mouse_position: Vector2) -> MeshInstance3D:
 	if _camera == null:
-		return null
+		return
 	var space_state := get_world_3d().direct_space_state
 	var ray_origin := _camera.project_ray_origin(mouse_position)
 	var ray_direction := _camera.project_ray_normal(mouse_position)
 	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_origin + ray_direction * 200.0)
 	var hit := space_state.intersect_ray(query)
 	if hit.is_empty():
-		return null
+		return
 	var collider := hit.get("collider") as Node
 	if collider == null:
-		return null
-	if collider is Label3D and collider.name == "text_choice":
-		return null
-	return _find_choice_background_from(collider)
-
-
-func _find_choice_background_from(node: Node) -> MeshInstance3D:
-	var current := node
-	while current != null:
-		if current is MeshInstance3D and current.name.begins_with("choice_background"):
-			return current as MeshInstance3D
-		current = current.get_parent()
-	return null
-
-
-func _apply_choice_highlight(background: MeshInstance3D) -> void:
-	if _hovered_background == background:
 		return
-	_hovered_background = background
 	for entry in _choice_entries:
-		var choice_background := entry.get("background") as MeshInstance3D
-		if choice_background == null or not choice_background.visible:
+		var background := entry.get("background") as MeshInstance3D
+		if background == null:
 			continue
-		choice_background.modulate = CHOICE_HOVER_TINT if choice_background == _hovered_background else CHOICE_NORMAL_TINT
+		if collider == background or collider.get_parent() == background:
+			_on_choice_selected(entry.get("choice") as EventChoiceDefinition)
+			return
 
 
 func _on_choice_selected(choice: EventChoiceDefinition) -> void:
@@ -181,7 +141,6 @@ func _on_choice_selected(choice: EventChoiceDefinition) -> void:
 		return
 	_selected_choice = choice
 	_is_resolving = true
-	_apply_choice_highlight(null)
 	await _play_selection_collapse_animation()
 	await _roll_and_resolve()
 	_is_resolving = false
