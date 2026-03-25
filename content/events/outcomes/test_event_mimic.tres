@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="EventOutcomeDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/events/resources/event_outcome_definition.gd" id="1_outcome"]
+
+[resource]
+script = ExtResource("1_outcome")
+outcome_id = "test_event_mimic"
+display_name = "Это мимик!"
+result_text = "это мимик!"
+kind = 2
+consequence_refs = PackedStringArray()
