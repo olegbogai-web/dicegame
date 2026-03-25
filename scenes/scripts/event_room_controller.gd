@@ -10,13 +10,14 @@ const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd
 const EventOutcomeDefinitionScript = preload("res://content/events/resources/event_outcome_definition.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 
-const EVENT_DICE_SIZE_MULTIPLIER := Vector3(2.5, 2.5, 2.5)
+const EVENT_DICE_SIZE_MULTIPLIER := Vector3(5.0, 5.0, 5.0)
 const COLLAPSE_DURATION := 0.3
 const STOP_CHECK_INTERVAL := 0.1
 const EVENT_DICE_MASS := 2.0
 const EVENT_DICE_TIMEOUT := 8.0
-const POSITIVE_FACE_ICON := preload("res://assets/dice_edges/green_O.png")
-const NEGATIVE_FACE_ICON := preload("res://assets/dice_edges/red_X.png")
+const POSITIVE_FACE_ICON := preload("res://assets/material/green.png")
+const NEUTRAL_FACE_ICON := preload("res://assets/material/yelow.png")
+const NEGATIVE_FACE_ICON := preload("res://assets/material/red.png")
 const CHOICE_HOVER_STRENGTH := 0.45
 const CHOICE_NORMAL_HOVER_STRENGTH := 0.0
 
@@ -250,8 +251,6 @@ func _spawn_event_dice(choice: EventChoiceDefinition) -> void:
 	if dice_nodes.is_empty():
 		return
 	_event_dice = dice_nodes[0] as Dice
-	if _event_dice != null:
-		_event_dice.linear_velocity *= 2.0
 
 
 func _wait_for_roll_outcome(_choice: EventChoiceDefinition) -> EventOutcomeDefinitionScript.OutcomeKind:
@@ -309,8 +308,9 @@ func _build_dice_faces(choice: EventChoiceDefinition) -> Array[DiceFaceDefinitio
 		faces.append(face)
 	while faces.size() < DiceDefinitionScript.FACE_COUNT:
 		var neutral_face := DiceFaceDefinitionScript.new()
-		neutral_face.content_type = DiceFaceDefinitionScript.ContentType.TEXT
-		neutral_face.text_value = ""
+		neutral_face.text_value = "neutral"
+		neutral_face.content_type = DiceFaceDefinitionScript.ContentType.ICON
+		neutral_face.icon = NEUTRAL_FACE_ICON
 		neutral_face.overlay_tint = Color(1.0, 1.0, 1.0, 1.0)
 		faces.append(neutral_face)
 	return faces
@@ -333,4 +333,4 @@ func _get_kind_icon(kind: EventOutcomeDefinitionScript.OutcomeKind) -> Texture2D
 		EventOutcomeDefinitionScript.OutcomeKind.NEGATIVE:
 			return NEGATIVE_FACE_ICON
 		_:
-			return null
+			return NEUTRAL_FACE_ICON
