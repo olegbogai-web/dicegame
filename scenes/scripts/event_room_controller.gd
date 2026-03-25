@@ -15,6 +15,8 @@ const COLLAPSE_DURATION := 0.3
 const STOP_CHECK_INTERVAL := 0.1
 const EVENT_DICE_MASS := 2.0
 const EVENT_DICE_TIMEOUT := 8.0
+const EVENT_DICE_THROW_SPEED_MULTIPLIER := 1.6
+const EVENT_DICE_ROTATION_SPEED_MULTIPLIER := 1.2
 const POSITIVE_FACE_ICON := preload("res://assets/dice_edges/green_O.png")
 const NEGATIVE_FACE_ICON := preload("res://assets/dice_edges/red_X.png")
 const CHOICE_HOVER_STRENGTH := 0.45
@@ -251,7 +253,8 @@ func _spawn_event_dice(choice: EventChoiceDefinition) -> void:
 		return
 	_event_dice = dice_nodes[0] as Dice
 	if _event_dice != null:
-		_event_dice.linear_velocity *= 2.0
+		_event_dice.linear_velocity *= EVENT_DICE_THROW_SPEED_MULTIPLIER
+		_event_dice.angular_velocity *= EVENT_DICE_ROTATION_SPEED_MULTIPLIER
 
 
 func _wait_for_roll_outcome(_choice: EventChoiceDefinition) -> EventOutcomeDefinitionScript.OutcomeKind:
