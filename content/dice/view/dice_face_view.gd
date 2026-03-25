@@ -62,7 +62,6 @@ func _ensure_nodes() -> void:
 		_icon_sprite = Sprite3D.new()
 		_icon_sprite.name = "Icon"
 		_icon_sprite.billboard = BaseMaterial3D.BILLBOARD_DISABLED
-		_icon_sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_DISABLED
 		_icon_sprite.no_depth_test = false
 		_icon_sprite.position = Vector3(0.0, 0.0, 0.0005)
 		add_child(_icon_sprite)
