@@ -240,6 +240,7 @@ func _on_sleeping_state_changed() -> void:
 		_has_completed_first_stop = true
 		gravity_scale = _base_gravity_scale * POST_FIRST_STOP_GRAVITY_MULTIPLIER
 
+	_align_top_face_to_camera()
 	lock_rotation = true
 	DiceMotionState.stop_motion(self)
 	_physics_runtime.disable_bounce(self)
@@ -262,6 +263,37 @@ func _try_return_to_board_if_outside() -> void:
 	_is_returning_to_board = true
 	await _animate_return_to_board(board)
 	_is_returning_to_board = false
+
+
+func _align_top_face_to_camera() -> void:
+	var active_camera := _resolve_alignment_camera()
+	if active_camera == null:
+		return
+	_orientation_service.align_top_face_to_camera_bottom(self, FACE_NORMALS, active_camera)
+	call_deferred("_align_top_face_to_camera_deferred")
+
+
+func _align_top_face_to_camera_deferred() -> void:
+	var active_camera := _resolve_alignment_camera()
+	if active_camera == null:
+		return
+	_orientation_service.align_top_face_to_camera_bottom(self, FACE_NORMALS, active_camera)
+
+
+func _resolve_alignment_camera() -> Camera3D:
+	var viewport_camera := get_viewport().get_camera_3d()
+	if viewport_camera != null:
+		return viewport_camera
+
+	var scene_root := get_tree().current_scene
+	if scene_root == null:
+		return null
+
+	for candidate in scene_root.find_children("*", "Camera3D", true, false):
+		var camera := candidate as Camera3D
+		if camera != null and camera.current:
+			return camera
+	return null
 
 
 func _animate_return_to_board(board: BoardController) -> void:
