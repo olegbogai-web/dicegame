@@ -7,7 +7,7 @@ const GlobalMapEventIconPresenter = preload("res://content/global_map/presentati
 const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
 
 const EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
-const HERO_MOVE_SPEED := 9.5
+const HERO_MOVE_SPEED := 4.75
 const EVENT_PICK_RADIUS := 55.0
 
 var _owner: Node3D

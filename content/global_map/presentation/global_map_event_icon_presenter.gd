@@ -33,7 +33,7 @@ func set_hovered(is_hovered: bool) -> void:
 func _set_highlight(is_hovered: bool) -> void:
 	if _material == null:
 		return
-	_material.albedo_color = Color(1.0, 1.0, 1.0, 1.0) if is_hovered else _base_color
+	_material.albedo_color = Color(1.0, 1.0, 1.0, 0.55) if is_hovered else _base_color
 	_material.emission_enabled = is_hovered
 	_material.emission = Color(1.0, 1.0, 1.0, 1.0)
 	_material.emission_energy_multiplier = 0.35 if is_hovered else 0.0
