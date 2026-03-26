@@ -9,67 +9,47 @@ const Player = preload("res://content/entities/player.gd")
 const PlayerBaseStat = preload("res://content/entities/player_base_stat.gd")
 const BoardController = preload("res://ui/scripts/board_controller.gd")
 const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd")
-const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd")
-const Dice = preload("res://content/dice/dice.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 
 const EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
-const BATTLE_ROOM_SCENE_PATH := "res://scenes/new_battle_table.tscn"
 const HERO_MOVE_SPEED := 4.75
 const EVENT_PICK_RADIUS := 55.0
 const GLOBAL_MAP_DICE_SIZE_MULTIPLIER := Vector3(5.0, 5.0, 5.0)
 const GLOBAL_MAP_DICE_THROW_HEIGHT_MULTIPLIER := 4.0
 const GLOBAL_MAP_DICE_LOG_PREFIX := "[GlobalMapDice]"
-const MAP_WALL_MARGIN := 1.5
-const MIN_MARKER_DISTANCE := 3.0
-const MARKER_DELTA_X_MIN := 0.0
-const MARKER_DELTA_X_MAX := 3.0
-const MARKER_DELTA_Z_MIN := -5.0
-const MARKER_DELTA_Z_MAX := 5.0
-const MAX_MARKER_POSITION_ATTEMPTS := 64
-
-class MarkerEntry:
-	extends RefCounted
-
-	var node: MeshInstance3D
-	var presenter := GlobalMapEventIconPresenter.new()
-	var room_scene_path := ""
-
 
 var _owner: Node3D
 var _camera: Camera3D
-var _background: MeshInstance3D
-var _marker_template: MeshInstance3D
+var _event_icon: MeshInstance3D
 var _board: BoardController
+var _road_nodes: Array[Node3D] = []
 var _hero_movement := HeroIconMovementController.new()
 var _fade_presenter := GlobalMapFadeTransitionPresenter.new()
+var _event_presenter := GlobalMapEventIconPresenter.new()
 var _state := GlobalMapRuntimeState.new()
+var _path_points: Array[Vector3] = []
+var _path_index := 0
+var _is_event_hovered := false
 var _is_global_map_roll_pending := false
-var _is_waiting_global_map_dice_stop := false
-var _global_map_dice: Array[Dice] = []
-var _markers: Array[MarkerEntry] = []
-var _hovered_marker: MarkerEntry
-var _target_marker: MarkerEntry
-var _transition_target_scene_path := ""
-var _rng := RandomNumberGenerator.new()
 
 
 func configure(
 	owner: Node3D,
 	camera: Camera3D,
-	background: MeshInstance3D,
 	hero_icon: MeshInstance3D,
-	marker_template: MeshInstance3D,
+	event_icon: MeshInstance3D,
+	road_nodes: Array[Node3D],
 	board: BoardController
 ) -> void:
 	_owner = owner
 	_camera = camera
-	_background = background
-	_marker_template = marker_template
+	_event_icon = event_icon
 	_board = board
+	_road_nodes = road_nodes.duplicate()
 	_hero_movement.configure(hero_icon)
 	_fade_presenter.configure(owner)
-	_rng.randomize()
+	_event_presenter.configure(event_icon)
+	_build_path_points()
 	_restore_persisted_state()
 	_schedule_global_map_dice_roll_if_needed()
 
@@ -78,34 +58,41 @@ func process(delta: float) -> void:
 	if _is_global_map_roll_pending:
 		_is_global_map_roll_pending = false
 		_deferred_roll_global_map_dice()
-	if _is_waiting_global_map_dice_stop and _are_global_map_dice_stopped():
-		_is_waiting_global_map_dice_stop = false
-		_spawn_markers_from_global_map_dice()
 	if _state.is_transition_in_progress:
 		return
-	if _target_marker == null:
+	if not _state.hero_move_started:
+		return
+	if _path_index >= _path_points.size():
 		return
 
-	var current_position := _hero_movement.get_ground_position()
-	var target_position := _target_marker.node.global_position
-	_hero_movement.update_direction(current_position, target_position)
-	var next_position := current_position.move_toward(target_position, HERO_MOVE_SPEED * delta)
-	_hero_movement.set_world_position(next_position)
-	if next_position.distance_to(target_position) > 0.02:
-		return
-	_on_marker_reached(_target_marker)
+	var remaining_step := HERO_MOVE_SPEED * delta
+	while remaining_step > 0.0 and _path_index < _path_points.size():
+		var current_position := _hero_movement.get_ground_position()
+		var target_position := _path_points[_path_index]
+		_hero_movement.update_direction(current_position, target_position)
+
+		var next_position := current_position.move_toward(target_position, remaining_step)
+		var moved_distance := current_position.distance_to(next_position)
+		remaining_step -= moved_distance
+		_hero_movement.set_world_position(next_position)
+		if next_position.distance_to(target_position) > 0.02:
+			break
+		_hide_passed_road_dash(_path_index)
+		_path_index += 1
+	if _path_index >= _path_points.size():
+		_on_event_reached()
 
 
 func handle_input(event: InputEvent) -> void:
 	if _state.is_transition_in_progress:
 		return
-	if _is_waiting_global_map_dice_stop:
+	if _state.event_reached:
 		return
-	if _markers.is_empty():
+	if _path_points.is_empty():
 		return
 	if event is InputEventMouseMotion:
 		var mouse_motion := event as InputEventMouseMotion
-		_update_marker_hover(mouse_motion.position)
+		_update_event_hover(mouse_motion.position)
 		return
 	if not event is InputEventMouseButton:
 		return
@@ -114,66 +101,98 @@ func handle_input(event: InputEvent) -> void:
 	if not mouse_event.pressed or mouse_event.button_index != MOUSE_BUTTON_LEFT:
 		return
 
-	var clicked_marker := _pick_marker(mouse_event.position)
-	if clicked_marker == null:
+	if not _is_event_icon_clicked(mouse_event.position):
 		return
-	_target_marker = clicked_marker
+
+	_state.hero_move_started = true
+	_path_index = 0
 
 
-func _update_marker_hover(mouse_position: Vector2) -> void:
-	var hovered_marker := _pick_marker(mouse_position)
-	if hovered_marker == _hovered_marker:
-		return
-	if _hovered_marker != null:
-		_hovered_marker.presenter.set_hovered(false)
-	_hovered_marker = hovered_marker
-	if _hovered_marker != null:
-		_hovered_marker.presenter.set_hovered(true)
+func _is_event_icon_clicked(mouse_position: Vector2) -> bool:
+	if _camera == null or _event_icon == null:
+		return false
+	if not _event_icon.visible:
+		return false
+	var projected := _camera.unproject_position(_event_icon.global_position)
+	return projected.distance_to(mouse_position) <= EVENT_PICK_RADIUS
 
 
-func _pick_marker(mouse_position: Vector2) -> MarkerEntry:
-	if _camera == null:
-		return null
-	for marker in _markers:
-		if marker == null or marker.node == null or not marker.node.visible:
+func _build_path_points() -> void:
+	_path_points.clear()
+	for road_node in _road_nodes:
+		if road_node == null:
 			continue
-		var projected := _camera.unproject_position(marker.node.global_position)
-		if projected.distance_to(mouse_position) <= EVENT_PICK_RADIUS:
-			return marker
-	return null
+		road_node.visible = true
+		_path_points.append(road_node.global_position)
+	if _event_icon != null:
+		_path_points.append(_event_icon.global_position)
 
 
-func _on_marker_reached(marker: MarkerEntry) -> void:
-	if marker == null:
+func _on_event_reached() -> void:
+	if _state.event_reached:
 		return
+	_state.event_reached = true
 	_state.is_transition_in_progress = true
-	_transition_target_scene_path = marker.room_scene_path
-	for entry in _markers:
-		if entry == null:
-			continue
-		entry.presenter.set_hovered(false)
-		entry.node.visible = false
-	await _fade_presenter.play_fade_out()
+	await _play_enter_room_animation()
 	_persist_current_state()
-	var target_scene_path := _transition_target_scene_path
-	if target_scene_path.is_empty():
-		target_scene_path = EVENT_ROOM_SCENE_PATH
-	_owner.get_tree().change_scene_to_file(target_scene_path)
+	_owner.get_tree().change_scene_to_file(EVENT_ROOM_SCENE_PATH)
+
+
+func _play_enter_room_animation() -> void:
+	_event_presenter.set_hovered(false)
+	_hero_movement.snap_to_idle()
+	_event_presenter.hide()
+	await _fade_presenter.play_fade_out()
+
+
+func _hide_passed_road_dash(reached_path_index: int) -> void:
+	if reached_path_index < 0 or reached_path_index >= _road_nodes.size():
+		return
+	var road_node := _road_nodes[reached_path_index]
+	if road_node == null:
+		return
+	road_node.visible = false
+
+
+func _update_event_hover(mouse_position: Vector2) -> void:
+	var should_be_hovered := _is_event_icon_clicked(mouse_position)
+	if should_be_hovered == _is_event_hovered:
+		return
+	_is_event_hovered = should_be_hovered
+	_event_presenter.set_hovered(_is_event_hovered)
 
 
 func _restore_persisted_state() -> void:
 	if not GlobalMapRuntimeState.has_snapshot():
 		return
 	var snapshot := GlobalMapRuntimeState.load_snapshot()
+	_path_index = int(snapshot.get("path_index", 0))
+	_state.hero_move_started = bool(snapshot.get("hero_move_started", false))
+	_state.event_reached = bool(snapshot.get("event_reached", false))
 	_state.is_transition_in_progress = false
 	var saved_position = snapshot.get("hero_world_position", null)
 	if saved_position is Vector3:
 		_hero_movement.set_world_position(saved_position as Vector3)
+	var dash_visibility := snapshot.get("road_visibility", []) as Array
+	for index in range(min(_road_nodes.size(), dash_visibility.size())):
+		var road_node := _road_nodes[index]
+		if road_node == null:
+			continue
+		road_node.visible = bool(dash_visibility[index])
+	if _state.event_reached:
+		_event_presenter.hide()
 
 
 func _persist_current_state() -> void:
+	var dash_visibility: Array[bool] = []
+	for road_node in _road_nodes:
+		dash_visibility.append(road_node != null and road_node.visible)
 	GlobalMapRuntimeState.save_snapshot({
+		"path_index": _path_index,
+		"hero_move_started": _state.hero_move_started,
+		"event_reached": _state.event_reached,
 		"hero_world_position": _hero_movement.get_ground_position(),
+		"road_visibility": dash_visibility,
 	})
 
 
@@ -197,14 +216,6 @@ func _deferred_roll_global_map_dice() -> void:
 		push_warning("%s Игра попыталась бросить кубы глобальной карты, но у игрока нет runtime_cube_global_map." % GLOBAL_MAP_DICE_LOG_PREFIX)
 		return
 
-	for marker in _markers:
-		if marker != null and marker.node != null and is_instance_valid(marker.node):
-			marker.node.queue_free()
-	_markers.clear()
-	_hovered_marker = null
-	_target_marker = null
-	_global_map_dice.clear()
-
 	var requests: Array[DiceThrowRequest] = []
 	for definition in player.runtime_cube_global_map:
 		if definition == null:
@@ -222,140 +233,9 @@ func _deferred_roll_global_map_dice() -> void:
 		push_warning("%s Игра попыталась бросить кубы глобальной карты, но бросок не создал ни одного куба." % GLOBAL_MAP_DICE_LOG_PREFIX)
 		return
 	for dice_body in spawned_dice:
-		if not dice_body is Dice:
+		if dice_body == null:
 			continue
-		var dice := dice_body as Dice
-		dice.linear_velocity.y *= GLOBAL_MAP_DICE_THROW_HEIGHT_MULTIPLIER
-		_global_map_dice.append(dice)
-	if _global_map_dice.is_empty():
-		push_warning("%s На глобальной карте не найдено ни одного валидного куба Dice после броска." % GLOBAL_MAP_DICE_LOG_PREFIX)
-		return
-	_is_waiting_global_map_dice_stop = true
-
-
-func _are_global_map_dice_stopped() -> bool:
-	for dice in _global_map_dice:
-		if dice == null or not is_instance_valid(dice):
-			continue
-		if not DiceMotionState.is_fully_stopped(dice):
-			return false
-	return true
-
-
-func _spawn_markers_from_global_map_dice() -> void:
-	if _marker_template == null:
-		push_warning("%s Шаблон метки не найден, генерация меток пропущена." % GLOBAL_MAP_DICE_LOG_PREFIX)
-		return
-	var current_anchor := _hero_movement.get_ground_position()
-	var occupied_positions: Array[Vector3] = [current_anchor]
-	for dice in _global_map_dice:
-		if dice == null or not is_instance_valid(dice):
-			continue
-		var marker_position := _find_marker_position(current_anchor, occupied_positions)
-		if marker_position == null:
-			push_warning("%s Не удалось подобрать позицию метки по правилам размещения." % GLOBAL_MAP_DICE_LOG_PREFIX)
-			continue
-		occupied_positions.append(marker_position as Vector3)
-		var marker := _create_marker(marker_position as Vector3, _resolve_room_for_dice(dice))
-		if marker != null:
-			_markers.append(marker)
-	for dice in _global_map_dice:
-		if dice != null and is_instance_valid(dice):
-			dice.queue_free()
-	_global_map_dice.clear()
-
-
-func _find_marker_position(current_anchor: Vector3, occupied_positions: Array[Vector3]) -> Variant:
-	var map_bounds := _resolve_map_bounds()
-	var min_x := float(map_bounds.get("min_x", current_anchor.x))
-	var max_x := float(map_bounds.get("max_x", current_anchor.x + MARKER_DELTA_X_MAX))
-	var min_z := float(map_bounds.get("min_z", current_anchor.z + MARKER_DELTA_Z_MIN))
-	var max_z := float(map_bounds.get("max_z", current_anchor.z + MARKER_DELTA_Z_MAX))
-
-	for _attempt in MAX_MARKER_POSITION_ATTEMPTS:
-		var delta_x := _rng.randf_range(MARKER_DELTA_X_MIN, MARKER_DELTA_X_MAX)
-		var delta_z := _rng.randf_range(MARKER_DELTA_Z_MIN, MARKER_DELTA_Z_MAX)
-		var candidate := Vector3(current_anchor.x + delta_x, current_anchor.y, current_anchor.z + delta_z)
-		candidate.x = clampf(candidate.x, min_x, max_x)
-		candidate.z = clampf(candidate.z, min_z, max_z)
-		if candidate.x < current_anchor.x:
-			continue
-		if absf(candidate.z - current_anchor.z) > absf(MARKER_DELTA_Z_MAX):
-			continue
-		if candidate.x - current_anchor.x < MARKER_DELTA_X_MIN or candidate.x - current_anchor.x > MARKER_DELTA_X_MAX:
-			continue
-		if not _is_position_far_enough(candidate, occupied_positions):
-			continue
-		return candidate
-	return null
-
-
-func _resolve_map_bounds() -> Dictionary:
-	var fallback_center := _hero_movement.get_ground_position()
-	if _background == null or _background.mesh == null:
-		return {
-			"min_x": fallback_center.x - 100.0,
-			"max_x": fallback_center.x + 100.0,
-			"min_z": fallback_center.z - 100.0,
-			"max_z": fallback_center.z + 100.0,
-		}
-
-	var aabb := _background.mesh.get_aabb()
-	var corners := [
-		Vector3(aabb.position.x, 0.0, aabb.position.z),
-		Vector3(aabb.position.x + aabb.size.x, 0.0, aabb.position.z),
-		Vector3(aabb.position.x, 0.0, aabb.position.z + aabb.size.z),
-		Vector3(aabb.position.x + aabb.size.x, 0.0, aabb.position.z + aabb.size.z),
-	]
-	var min_x := INF
-	var max_x := -INF
-	var min_z := INF
-	var max_z := -INF
-	for corner in corners:
-		var world_corner := _background.to_global(corner)
-		min_x = minf(min_x, world_corner.x)
-		max_x = maxf(max_x, world_corner.x)
-		min_z = minf(min_z, world_corner.z)
-		max_z = maxf(max_z, world_corner.z)
-	return {
-		"min_x": min_x + MAP_WALL_MARGIN,
-		"max_x": max_x - MAP_WALL_MARGIN,
-		"min_z": min_z + MAP_WALL_MARGIN,
-		"max_z": max_z - MAP_WALL_MARGIN,
-	}
-
-
-func _is_position_far_enough(candidate: Vector3, occupied_positions: Array[Vector3]) -> bool:
-	for occupied in occupied_positions:
-		if candidate.distance_to(occupied) < MIN_MARKER_DISTANCE:
-			return false
-	return true
-
-
-func _create_marker(world_position: Vector3, room_scene_path: String) -> MarkerEntry:
-	if _owner == null or _marker_template == null:
-		return null
-	var marker_node := _marker_template.duplicate() as MeshInstance3D
-	if marker_node == null:
-		return null
-	marker_node.visible = true
-	marker_node.global_position = world_position
-	_owner.add_child(marker_node)
-	var marker := MarkerEntry.new()
-	marker.node = marker_node
-	marker.room_scene_path = room_scene_path
-	marker.presenter.configure(marker_node)
-	return marker
-
-
-func _resolve_room_for_dice(dice: Dice) -> String:
-	var top_face := dice.get_top_face()
-	if top_face == null:
-		return EVENT_ROOM_SCENE_PATH
-	var value := top_face.text_value.to_lower()
-	if value == "swords":
-		return BATTLE_ROOM_SCENE_PATH
-	return EVENT_ROOM_SCENE_PATH
+		dice_body.linear_velocity.y *= GLOBAL_MAP_DICE_THROW_HEIGHT_MULTIPLIER
 
 
 func _build_global_map_throw_request(definition: DiceDefinition) -> DiceThrowRequest:
@@ -380,12 +260,11 @@ func _resolve_or_create_runtime_player() -> Player:
 
 func _format_faces_for_debug(definition: DiceDefinition) -> String:
 	if definition == null:
-		return "empty"
-	var face_values: Array[String] = []
+		return "unknown"
+	var face_values: PackedStringArray = PackedStringArray()
 	for face in definition.faces:
 		if face == null:
-			continue
-		face_values.append(face.text_value)
-	if face_values.is_empty():
-		return "no_faces"
+			face_values.append("null")
+		else:
+			face_values.append(face.text_value)
 	return ", ".join(face_values)
