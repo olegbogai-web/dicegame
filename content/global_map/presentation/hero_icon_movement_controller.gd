@@ -6,6 +6,7 @@ const HERO_RIGHT_TEXTURE := preload("res://assets/global_map/hero_right.png")
 const HERO_BACK_TEXTURE := preload("res://assets/global_map/hero_back.png")
 
 const FORWARD_EPSILON := 0.02
+const HERO_HEIGHT_OFFSET := 0.05
 
 var _hero_icon: MeshInstance3D
 var _base_scale: Vector3
@@ -50,7 +51,7 @@ func snap_to_idle() -> void:
 func set_world_position(world_position: Vector3) -> void:
 	if _hero_icon == null:
 		return
-	_hero_icon.global_position = world_position
+	_hero_icon.global_position = world_position + Vector3(0.0, HERO_HEIGHT_OFFSET, 0.0)
 
 
 func get_world_position() -> Vector3:
