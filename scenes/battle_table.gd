@@ -6,6 +6,7 @@ const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 const BattleActivationAnimationRuntime = preload("res://content/combat/runtime/battle_activation_animation_runtime.gd")
 const MonsterTurnRuntime = preload("res://content/monster_ai/monster_turn_runtime.gd")
+const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 const EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
 
@@ -57,7 +58,8 @@ func _ready() -> void:
 	if _event_button != null and not _event_button.pressed.is_connected(_on_event_button_pressed):
 		_event_button.pressed.connect(_on_event_button_pressed)
 	if battle_room_data == null:
-		configure_from_battle_room(BattleRoomScript.create_test_battle_room())
+		var global_map_player := GlobalMapRuntimeState.get_player_instance()
+		configure_from_battle_room(BattleRoomScript.create_test_battle_room(global_map_player))
 	else:
 		_apply_room_data()
 	_initialize_battle_state()
