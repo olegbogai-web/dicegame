@@ -45,7 +45,7 @@ func process(delta: float) -> void:
 
 	var remaining_step := HERO_MOVE_SPEED * delta
 	while remaining_step > 0.0 and _path_index < _path_points.size():
-		var current_position := _hero_movement.get_world_position()
+		var current_position := _hero_movement.get_ground_position()
 		var target_position := _path_points[_path_index]
 		_hero_movement.update_direction(current_position, target_position)
 
