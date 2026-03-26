@@ -5,7 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://d3dobsnryhi6d" path="res://assets/global_map/dash.png" id="3_aqsb5"]
 [ext_resource type="Texture2D" uid="uid://pmb07bl5pnlo" path="res://assets/global_map/question_mark.png" id="4_f4nsl"]
 [ext_resource type="PackedScene" uid="uid://0ssqyi084mdh" path="res://scenes/board.tscn" id="5_isgup"]
-[ext_resource type="Script" path="res://content/global_map/global_map_room.gd" id="6_map_controller"]
+[ext_resource type="Script" uid="uid://8eck2f2ar140" path="res://content/global_map/global_map_room.gd" id="6_map_controller"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vux7t"]
 albedo_texture = ExtResource("1_7nkcx")
@@ -63,3 +63,8 @@ mesh = SubResource("PlaneMesh_5qcje")
 transform = Transform3D(0.38014323, 0, -0.09663122, 0, 0.85, 0, 0.11388212, 0, 0.322559, -10.914911, 0.01, 0.46630302)
 material_override = SubResource("StandardMaterial3D_oecmp")
 mesh = SubResource("PlaneMesh_5qcje")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=643715586]
+transform = Transform3D(1, 0, 0, 0, 0.10353902, 0.9946254, 0, -0.9946254, 0.10353902, 0, 0, 0)
+light_color = Color(1, 1, 0.5686275, 1)
+light_energy = 0.5
