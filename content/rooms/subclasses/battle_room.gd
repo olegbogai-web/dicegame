@@ -125,6 +125,7 @@ func set_floor_textures(left_texture: Texture2D, right_texture: Texture2D) -> vo
 
 func set_player_data(player: Player, sprite: Texture2D) -> void:
 	player_instance = player
+	Player.set_active_player(player_instance)
 	var abilities: Array[AbilityDefinition] = []
 	var current_hp := 0
 	var max_hp := 0
@@ -331,5 +332,9 @@ static func _build_test_player() -> Player:
 		preload("res://content/resources/base_cube.tres"),
 		preload("res://content/resources/base_cube.tres"),
 		preload("res://content/resources/base_cube.tres"),
+	]
+	base_stat.base_cube_global_map = [
+		preload("res://content/resources/base_cube_global_map.tres"),
+		preload("res://content/resources/base_cube_global_map.tres"),
 	]
 	return Player.new(base_stat)

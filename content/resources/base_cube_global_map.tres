@@ -1,0 +1,57 @@
+[gd_resource type="Resource" script_class="DiceDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/dice/resources/dice_definition.gd" id="1_def"]
+[ext_resource type="Script" path="res://content/dice/resources/dice_face_definition.gd" id="2_face"]
+[ext_resource type="Texture2D" path="res://assets/dice_edges/bones_dice_skin.png" id="3_skin"]
+[ext_resource type="Texture2D" path="res://assets/global_map/swords.png" id="4_swords"]
+[ext_resource type="Texture2D" path="res://assets/global_map/question_mark.png" id="5_question"]
+
+[sub_resource type="Resource" id="FaceSwords1"]
+script = ExtResource("2_face")
+content_type = 1
+text_value = "mob"
+icon = ExtResource("4_swords")
+overlay_tint = Color(1, 1, 1, 1)
+
+[sub_resource type="Resource" id="FaceSwords2"]
+script = ExtResource("2_face")
+content_type = 1
+text_value = "mob"
+icon = ExtResource("4_swords")
+overlay_tint = Color(1, 1, 1, 1)
+
+[sub_resource type="Resource" id="FaceSwords3"]
+script = ExtResource("2_face")
+content_type = 1
+text_value = "mob"
+icon = ExtResource("4_swords")
+overlay_tint = Color(1, 1, 1, 1)
+
+[sub_resource type="Resource" id="FaceSwords4"]
+script = ExtResource("2_face")
+content_type = 1
+text_value = "mob"
+icon = ExtResource("4_swords")
+overlay_tint = Color(1, 1, 1, 1)
+
+[sub_resource type="Resource" id="FaceSwords5"]
+script = ExtResource("2_face")
+content_type = 1
+text_value = "mob"
+icon = ExtResource("4_swords")
+overlay_tint = Color(1, 1, 1, 1)
+
+[sub_resource type="Resource" id="FaceEvent"]
+script = ExtResource("2_face")
+content_type = 1
+text_value = "event"
+icon = ExtResource("5_question")
+overlay_tint = Color(1, 1, 1, 1)
+
+[resource]
+script = ExtResource("1_def")
+dice_name = "base_cube_global_map"
+size_multiplier = Vector3(2.52, 2.52, 2.52)
+base_color = Color(0.99495333, 0.854602, 0.83693045, 1)
+texture = ExtResource("3_skin")
+faces = Array[ExtResource("2_face")]([SubResource("FaceSwords1"), SubResource("FaceSwords2"), SubResource("FaceSwords3"), SubResource("FaceSwords4"), SubResource("FaceSwords5"), SubResource("FaceEvent")])

@@ -1,12 +1,15 @@
 extends RefCounted
 class_name Player
 
+static var _active_player: Player
+
 var player_id := ""
 var base_stat: PlayerBaseStat
 var current_hp := 0
 var current_armor := 0
 var dice_loadout: Array[DiceDefinition] = []
 var ability_loadout: Array[AbilityDefinition] = []
+var runtime_cube_global_map: Array[DiceDefinition] = []
 var run_flags: Dictionary = {}
 var metadata: Dictionary = {}
 
@@ -31,12 +34,14 @@ func reset_for_run() -> void:
 		current_armor = 0
 		dice_loadout.clear()
 		ability_loadout.clear()
+		runtime_cube_global_map.clear()
 		run_flags.clear()
 		return
 	current_hp = base_stat.get_resolved_starting_hp()
 	current_armor = base_stat.starting_armor
 	dice_loadout = base_stat.starting_dice.duplicate()
 	ability_loadout = base_stat.starting_abilities.duplicate()
+	runtime_cube_global_map = base_stat.base_cube_global_map.duplicate(true)
 	run_flags.clear()
 
 
@@ -60,3 +65,11 @@ func heal(amount: int) -> int:
 	var previous_hp := current_hp
 	current_hp = mini(current_hp + resolved_amount, base_stat.max_hp)
 	return current_hp - previous_hp
+
+
+static func set_active_player(player: Player) -> void:
+	_active_player = player
+
+
+static func get_active_player() -> Player:
+	return _active_player
