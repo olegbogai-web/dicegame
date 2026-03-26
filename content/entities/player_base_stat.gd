@@ -3,6 +3,7 @@ extends Resource
 class_name PlayerBaseStat
 
 const DEFAULT_MAX_HP := 30
+const GlobalMapCubeDefinition = preload("res://content/entities/resources/global_map_cube_definition.gd")
 
 @export_category("Identity")
 @export var player_id := ""
@@ -14,8 +15,17 @@ const DEFAULT_MAX_HP := 30
 @export_range(0, 999, 1) var starting_hp := DEFAULT_MAX_HP
 @export_range(0, 999, 1) var starting_armor := 0
 @export var starting_dice: Array[DiceDefinition] = []
+@export var base_cube_global_map: Array[GlobalMapCubeDefinition] = []
 @export var starting_abilities: Array[AbilityDefinition] = []
 @export var metadata: Dictionary = {}
+
+
+func _init() -> void:
+	if base_cube_global_map.is_empty():
+		base_cube_global_map = [
+			GlobalMapCubeDefinition.new(),
+			GlobalMapCubeDefinition.new(),
+		]
 
 
 func get_resolved_starting_hp() -> int:
@@ -27,6 +37,9 @@ func is_valid_definition() -> bool:
 		return false
 	for dice_definition in starting_dice:
 		if dice_definition == null:
+			return false
+	for cube_definition in base_cube_global_map:
+		if cube_definition == null:
 			return false
 	for ability_definition in starting_abilities:
 		if ability_definition == null or not ability_definition.supports_owner(true):

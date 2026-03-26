@@ -8,6 +8,7 @@ const DiceDefinitionScript = preload("res://content/dice/resources/dice_definiti
 const DiceFaceDefinitionScript = preload("res://content/dice/resources/dice_face_definition.gd")
 const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd")
 const EventOutcomeDefinitionScript = preload("res://content/events/resources/event_outcome_definition.gd")
+const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 const GLOBAL_MAP_SCENE_PATH := "res://scenes/global_map_room.tscn"
 
@@ -341,6 +342,7 @@ func _show_continue_button() -> void:
 
 func _open_global_map() -> void:
 	_is_waiting_for_continue = false
+	GlobalMapRuntimeState.queue_global_map_dice_roll_on_enter()
 	var result := get_tree().change_scene_to_file(GLOBAL_MAP_SCENE_PATH)
 	if result != OK:
 		push_warning("Failed to open global map scene: %s" % GLOBAL_MAP_SCENE_PATH)

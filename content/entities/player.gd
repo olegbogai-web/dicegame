@@ -1,11 +1,14 @@
 extends RefCounted
 class_name Player
 
+const GlobalMapCubeDefinition = preload("res://content/entities/resources/global_map_cube_definition.gd")
+
 var player_id := ""
 var base_stat: PlayerBaseStat
 var current_hp := 0
 var current_armor := 0
 var dice_loadout: Array[DiceDefinition] = []
+var runtime_cube_global_map: Array[GlobalMapCubeDefinition] = []
 var ability_loadout: Array[AbilityDefinition] = []
 var run_flags: Dictionary = {}
 var metadata: Dictionary = {}
@@ -30,12 +33,24 @@ func reset_for_run() -> void:
 		current_hp = 0
 		current_armor = 0
 		dice_loadout.clear()
+		runtime_cube_global_map.clear()
 		ability_loadout.clear()
 		run_flags.clear()
 		return
 	current_hp = base_stat.get_resolved_starting_hp()
 	current_armor = base_stat.starting_armor
 	dice_loadout = base_stat.starting_dice.duplicate()
+	runtime_cube_global_map.clear()
+	var source_global_map_cubes := base_stat.base_cube_global_map
+	if source_global_map_cubes.is_empty():
+		source_global_map_cubes = [
+			GlobalMapCubeDefinition.new(),
+			GlobalMapCubeDefinition.new(),
+		]
+	for cube_definition in source_global_map_cubes:
+		if cube_definition == null:
+			continue
+		runtime_cube_global_map.append(cube_definition.duplicate_for_runtime())
 	ability_loadout = base_stat.starting_abilities.duplicate()
 	run_flags.clear()
 
