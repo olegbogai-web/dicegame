@@ -5,14 +5,19 @@ const HeroIconMovementController = preload("res://content/global_map/presentatio
 const GlobalMapFadeTransitionPresenter = preload("res://content/global_map/presentation/global_map_fade_transition_presenter.gd")
 const GlobalMapEventIconPresenter = preload("res://content/global_map/presentation/global_map_event_icon_presenter.gd")
 const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
+const BoardController = preload("res://ui/scripts/board_controller.gd")
+const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd")
+const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 
 const EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
 const HERO_MOVE_SPEED := 4.75
 const EVENT_PICK_RADIUS := 55.0
+const GLOBAL_MAP_DICE_SIZE_MULTIPLIER := Vector3.ONE / 3.0
 
 var _owner: Node3D
 var _camera: Camera3D
 var _event_icon: MeshInstance3D
+var _board: BoardController
 var _road_nodes: Array[Node3D] = []
 var _hero_movement := HeroIconMovementController.new()
 var _fade_presenter := GlobalMapFadeTransitionPresenter.new()
@@ -23,16 +28,18 @@ var _path_index := 0
 var _is_event_hovered := false
 
 
-func configure(owner: Node3D, camera: Camera3D, hero_icon: MeshInstance3D, event_icon: MeshInstance3D, road_nodes: Array[Node3D]) -> void:
+func configure(owner: Node3D, camera: Camera3D, hero_icon: MeshInstance3D, event_icon: MeshInstance3D, board: BoardController, road_nodes: Array[Node3D]) -> void:
 	_owner = owner
 	_camera = camera
 	_event_icon = event_icon
+	_board = board
 	_road_nodes = road_nodes.duplicate()
 	_hero_movement.configure(hero_icon)
 	_fade_presenter.configure(owner)
 	_event_presenter.configure(event_icon)
 	_build_path_points()
 	_restore_persisted_state()
+	_roll_global_map_dice_if_needed()
 
 
 func process(delta: float) -> void:
@@ -172,3 +179,25 @@ func _persist_current_state() -> void:
 		"hero_world_position": _hero_movement.get_ground_position(),
 		"road_visibility": dash_visibility,
 	})
+
+
+func _roll_global_map_dice_if_needed() -> void:
+	if _board == null:
+		return
+	if not GlobalMapRuntimeState.consume_should_roll_global_map_dice():
+		return
+	var player := GlobalMapRuntimeState.get_player_instance()
+	if player == null or player.global_map_dice_loadout.is_empty():
+		return
+	var requests: Array[DiceThrowRequest] = []
+	for dice_definition in player.global_map_dice_loadout:
+		if dice_definition == null:
+			continue
+		var request := DiceThrowRequestScript.create(BASE_DICE_SCENE)
+		request.extra_size_multiplier = GLOBAL_MAP_DICE_SIZE_MULTIPLIER
+		request.metadata["owner"] = &"global_map"
+		request.metadata["definition"] = dice_definition
+		requests.append(request)
+	if requests.is_empty():
+		return
+	_board.throw_dice(requests)
