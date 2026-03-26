@@ -6,7 +6,6 @@ const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 const BattleActivationAnimationRuntime = preload("res://content/combat/runtime/battle_activation_animation_runtime.gd")
 const MonsterTurnRuntime = preload("res://content/monster_ai/monster_turn_runtime.gd")
-const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 const EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
 
@@ -66,8 +65,6 @@ func _ready() -> void:
 
 func configure_from_battle_room(next_battle_room: BattleRoom) -> void:
 	battle_room_data = next_battle_room
-	if battle_room_data != null:
-		GlobalMapRuntimeState.set_runtime_player(battle_room_data.player_instance)
 	if is_node_ready():
 		_apply_room_data()
 		_initialize_battle_state()
@@ -83,7 +80,6 @@ func set_floor_textures(left_texture: Texture2D, right_texture: Texture2D) -> vo
 func set_player_data(player: Player, sprite: Texture2D) -> void:
 	_ensure_battle_room_data()
 	battle_room_data.set_player_data(player, sprite)
-	GlobalMapRuntimeState.set_runtime_player(player)
 	if is_node_ready():
 		_apply_room_data()
 		_initialize_battle_state()
