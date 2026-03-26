@@ -1,6 +1,9 @@
 extends RefCounted
 class_name DiceOrientationService
 
+const ALIGN_ANIMATION_DURATION := 0.5
+const ALIGN_TWEEN_META_KEY := "align_top_face_tween"
+
 
 func get_top_face_index(dice: Node3D, face_normals: Array[Vector3]) -> int:
 	var resolved_basis := dice.global_transform.basis.orthonormalized()
@@ -39,8 +42,23 @@ func align_top_face_to_camera_bottom(dice: Node3D, face_normals: Array[Vector3],
 		return false
 
 	var angle := projected_face_down.normalized().signed_angle_to(projected_camera_down.normalized(), world_top_normal)
-	dice.global_rotate(world_top_normal, angle)
-	dice.global_transform = Transform3D(dice.global_transform.basis.orthonormalized(), dice.global_position)
+	if is_zero_approx(angle):
+		return true
+
+	var existing_tween: Tween = dice.get_meta(ALIGN_TWEEN_META_KEY, null)
+	if existing_tween != null and existing_tween.is_valid():
+		existing_tween.kill()
+
+	var initial_basis := dice.global_transform.basis.orthonormalized()
+	var target_basis := initial_basis.rotated(world_top_normal, angle).orthonormalized()
+
+	var tween := dice.create_tween()
+	dice.set_meta(ALIGN_TWEEN_META_KEY, tween)
+	tween.tween_method(_set_dice_global_basis.bind(dice), initial_basis, target_basis, ALIGN_ANIMATION_DURATION)
+	tween.finished.connect(func() -> void:
+		dice.global_transform = Transform3D(dice.global_transform.basis.orthonormalized(), dice.global_position)
+		dice.remove_meta(ALIGN_TWEEN_META_KEY)
+	)
 	return true
 
 
@@ -52,3 +70,9 @@ func _get_face_local_down(normal: Vector3) -> Vector3:
 
 func _project_to_plane(direction: Vector3, plane_normal: Vector3) -> Vector3:
 	return direction - plane_normal * direction.dot(plane_normal)
+
+
+func _set_dice_global_basis(basis_value: Basis, dice: Node3D) -> void:
+	if dice == null:
+		return
+	dice.global_transform = Transform3D(basis_value.orthonormalized(), dice.global_position)
