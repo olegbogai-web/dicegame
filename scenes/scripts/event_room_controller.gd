@@ -8,10 +8,8 @@ const DiceDefinitionScript = preload("res://content/dice/resources/dice_definiti
 const DiceFaceDefinitionScript = preload("res://content/dice/resources/dice_face_definition.gd")
 const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd")
 const EventOutcomeDefinitionScript = preload("res://content/events/resources/event_outcome_definition.gd")
-const GlobalMapRoomScript = preload("res://content/global_map/global_map_room.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 const GLOBAL_MAP_SCENE_PATH := "res://scenes/global_map_room.tscn"
-const GLOBAL_MAP_DICE_THROW_DELAY := 0.75
 
 const EVENT_DICE_SIZE_MULTIPLIER := Vector3(2.5, 2.5, 2.5)
 const COLLAPSE_DURATION := 0.3
@@ -346,11 +344,6 @@ func _open_global_map() -> void:
 	var result := get_tree().change_scene_to_file(GLOBAL_MAP_SCENE_PATH)
 	if result != OK:
 		push_warning("Failed to open global map scene: %s" % GLOBAL_MAP_SCENE_PATH)
-		return
-	await get_tree().create_timer(GLOBAL_MAP_DICE_THROW_DELAY).timeout
-	var global_map_room := get_tree().current_scene as GlobalMapRoomScript
-	if global_map_room != null:
-		global_map_room.throw_global_map_dice()
 
 
 func _build_dice_definition(choice: EventChoiceDefinition) -> DiceDefinition:
