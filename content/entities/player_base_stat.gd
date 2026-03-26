@@ -15,7 +15,6 @@ const DEFAULT_MAX_HP := 30
 @export_range(0, 999, 1) var starting_armor := 0
 @export var starting_dice: Array[DiceDefinition] = []
 @export var starting_abilities: Array[AbilityDefinition] = []
-@export_range(0, 12, 1) var base_cube_global_map := 2
 @export var metadata: Dictionary = {}
 
 
