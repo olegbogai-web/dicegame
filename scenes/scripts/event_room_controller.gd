@@ -8,6 +8,7 @@ const DiceDefinitionScript = preload("res://content/dice/resources/dice_definiti
 const DiceFaceDefinitionScript = preload("res://content/dice/resources/dice_face_definition.gd")
 const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd")
 const EventOutcomeDefinitionScript = preload("res://content/events/resources/event_outcome_definition.gd")
+const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 const GLOBAL_MAP_SCENE_PATH := "res://scenes/global_map_room.tscn"
 
@@ -341,9 +342,23 @@ func _show_continue_button() -> void:
 
 func _open_global_map() -> void:
 	_is_waiting_for_continue = false
+	_queue_global_map_roll_from_player()
 	var result := get_tree().change_scene_to_file(GLOBAL_MAP_SCENE_PATH)
 	if result != OK:
 		push_warning("Failed to open global map scene: %s" % GLOBAL_MAP_SCENE_PATH)
+
+
+func _queue_global_map_roll_from_player() -> void:
+	var player := GlobalMapRuntimeState.get_runtime_player()
+	if player == null:
+		return
+	if player.runtime_cube_global_map.is_empty():
+		player.runtime_cube_global_map = player.base_stat.build_base_cube_global_map_descriptions() if player.base_stat != null else []
+	if player.runtime_cube_global_map.is_empty():
+		return
+	GlobalMapRuntimeState.queue_pending_global_map_roll({
+		"definitions": player.runtime_cube_global_map.duplicate(true),
+	})
 
 
 func _build_dice_definition(choice: EventChoiceDefinition) -> DiceDefinition:
