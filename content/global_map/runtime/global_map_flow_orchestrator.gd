@@ -5,6 +5,9 @@ const HeroIconMovementController = preload("res://content/global_map/presentatio
 const GlobalMapFadeTransitionPresenter = preload("res://content/global_map/presentation/global_map_fade_transition_presenter.gd")
 const GlobalMapEventIconPresenter = preload("res://content/global_map/presentation/global_map_event_icon_presenter.gd")
 const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
+const GlobalMapDiceRollService = preload("res://content/global_map/dice/global_map_dice_roll_service.gd")
+const Player = preload("res://content/entities/player.gd")
+const BoardController = preload("res://ui/scripts/board_controller.gd")
 
 const EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
 const HERO_MOVE_SPEED := 4.75
@@ -17,22 +20,26 @@ var _road_nodes: Array[Node3D] = []
 var _hero_movement := HeroIconMovementController.new()
 var _fade_presenter := GlobalMapFadeTransitionPresenter.new()
 var _event_presenter := GlobalMapEventIconPresenter.new()
+var _global_map_dice_roll_service := GlobalMapDiceRollService.new()
 var _state := GlobalMapRuntimeState.new()
+var _board: BoardController
 var _path_points: Array[Vector3] = []
 var _path_index := 0
 var _is_event_hovered := false
 
 
-func configure(owner: Node3D, camera: Camera3D, hero_icon: MeshInstance3D, event_icon: MeshInstance3D, road_nodes: Array[Node3D]) -> void:
+func configure(owner: Node3D, camera: Camera3D, hero_icon: MeshInstance3D, event_icon: MeshInstance3D, road_nodes: Array[Node3D], board: BoardController) -> void:
 	_owner = owner
 	_camera = camera
 	_event_icon = event_icon
+	_board = board
 	_road_nodes = road_nodes.duplicate()
 	_hero_movement.configure(hero_icon)
 	_fade_presenter.configure(owner)
 	_event_presenter.configure(event_icon)
 	_build_path_points()
 	_restore_persisted_state()
+	_trigger_pending_global_map_roll()
 
 
 func process(delta: float) -> void:
@@ -172,3 +179,23 @@ func _persist_current_state() -> void:
 		"hero_world_position": _hero_movement.get_ground_position(),
 		"road_visibility": dash_visibility,
 	})
+
+
+func _trigger_pending_global_map_roll() -> void:
+	var payload := GlobalMapRuntimeState.consume_pending_roll_on_enter()
+	if not bool(payload.get("should_roll", false)):
+		return
+	if _owner == null or not _owner.is_inside_tree():
+		return
+	var delay_seconds := float(payload.get("delay_seconds", 0.0))
+	_roll_global_map_dice_async(delay_seconds)
+
+
+func _roll_global_map_dice_async(delay_seconds: float) -> void:
+	await _owner.get_tree().create_timer(maxf(delay_seconds, 0.0)).timeout
+	if _board == null:
+		return
+	var active_player := Player.get_active_player()
+	if active_player == null:
+		return
+	_global_map_dice_roll_service.roll_from_player(_board, active_player)
