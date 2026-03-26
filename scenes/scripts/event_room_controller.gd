@@ -8,7 +8,6 @@ const DiceDefinitionScript = preload("res://content/dice/resources/dice_definiti
 const DiceFaceDefinitionScript = preload("res://content/dice/resources/dice_face_definition.gd")
 const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd")
 const EventOutcomeDefinitionScript = preload("res://content/events/resources/event_outcome_definition.gd")
-const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 const GLOBAL_MAP_SCENE_PATH := "res://scenes/global_map_room.tscn"
 
@@ -27,7 +26,6 @@ const NEUTRAL_FACE_ICON := preload("res://assets/dice_edges/yellow_-.png")
 const CHOICE_HOVER_STRENGTH := 0.45
 const CHOICE_NORMAL_HOVER_STRENGTH := 0.0
 const CONTINUE_BUTTON_TEXT := "Идти дальше"
-const GLOBAL_MAP_DICE_ROLL_DELAY := 0.75
 
 @export var event_definition: EventDefinition
 
@@ -343,7 +341,6 @@ func _show_continue_button() -> void:
 
 func _open_global_map() -> void:
 	_is_waiting_for_continue = false
-	GlobalMapRuntimeState.schedule_roll_on_next_enter(GLOBAL_MAP_DICE_ROLL_DELAY)
 	var result := get_tree().change_scene_to_file(GLOBAL_MAP_SCENE_PATH)
 	if result != OK:
 		push_warning("Failed to open global map scene: %s" % GLOBAL_MAP_SCENE_PATH)
