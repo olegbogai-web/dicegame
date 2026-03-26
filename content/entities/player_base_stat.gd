@@ -14,7 +14,6 @@ const DEFAULT_MAX_HP := 30
 @export_range(0, 999, 1) var starting_hp := DEFAULT_MAX_HP
 @export_range(0, 999, 1) var starting_armor := 0
 @export var starting_dice: Array[DiceDefinition] = []
-@export var base_cube_global_map: Array[DiceDefinition] = []
 @export var starting_abilities: Array[AbilityDefinition] = []
 @export var metadata: Dictionary = {}
 
@@ -27,9 +26,6 @@ func is_valid_definition() -> bool:
 	if player_id.is_empty() or display_name.is_empty() or max_hp <= 0:
 		return false
 	for dice_definition in starting_dice:
-		if dice_definition == null:
-			return false
-	for dice_definition in base_cube_global_map:
 		if dice_definition == null:
 			return false
 	for ability_definition in starting_abilities:
