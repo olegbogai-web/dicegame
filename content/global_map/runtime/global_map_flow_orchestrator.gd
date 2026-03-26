@@ -43,6 +43,7 @@ var _is_global_map_roll_pending := false
 var _is_waiting_for_roll_results := false
 var _rolled_global_map_dice: Array[Dice] = []
 var _pending_room_scene_path := ""
+var _crossed_positions: Array[Vector3] = []
 
 
 func configure(
@@ -103,7 +104,7 @@ func handle_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseMotion:
 		var mouse_motion := event as InputEventMouseMotion
-		_update_event_hover(mouse_motion.position)
+		_update_hover_states(mouse_motion.position)
 		return
 	if not event is InputEventMouseButton:
 		return
@@ -131,6 +132,10 @@ func _try_pick_dynamic_marker(mouse_position: Vector2) -> bool:
 	if marker_node == null:
 		return false
 	_pending_room_scene_path = String(picked_marker.get("scene_path", ""))
+	_cross_current_location()
+	var crossed_unselected := _marker_presenter.disable_unselected_markers(marker_node)
+	for crossed_position in crossed_unselected:
+		_add_crossed_position(crossed_position)
 	_path_points = [marker_node.global_position]
 	_path_index = 0
 	_state.hero_move_started = true
@@ -184,7 +189,9 @@ func _hide_passed_road_dash(reached_path_index: int) -> void:
 	road_node.visible = false
 
 
-func _update_event_hover(mouse_position: Vector2) -> void:
+func _update_hover_states(mouse_position: Vector2) -> void:
+	_marker_presenter.update_hover(mouse_position)
+
 	var should_be_hovered := _is_event_icon_clicked(mouse_position)
 	if should_be_hovered == _is_event_hovered:
 		return
@@ -198,9 +205,16 @@ func _restore_persisted_state() -> void:
 	var snapshot := GlobalMapRuntimeState.load_snapshot()
 	_state.hero_move_started = false
 	_state.is_transition_in_progress = false
+	_crossed_positions.clear()
 	var saved_position = snapshot.get("hero_world_position", null)
 	if saved_position is Vector3:
 		_hero_movement.set_world_position(saved_position as Vector3)
+	var saved_crossed_positions = snapshot.get("crossed_positions", [])
+	if saved_crossed_positions is Array:
+		for position in saved_crossed_positions:
+			if position is Vector3:
+				_crossed_positions.append(position as Vector3)
+	_marker_presenter.show_cross_marks(_crossed_positions)
 	for road_node in _road_nodes:
 		if road_node == null:
 			continue
@@ -212,6 +226,7 @@ func _restore_persisted_state() -> void:
 func _persist_current_state() -> void:
 	GlobalMapRuntimeState.save_snapshot({
 		"hero_world_position": _hero_movement.get_ground_position(),
+		"crossed_positions": _crossed_positions.duplicate(),
 	})
 
 
@@ -295,6 +310,18 @@ func _spawn_markers_for_roll_result() -> void:
 		marker_data["position"] = marker_points[index]
 		marker_specs.append(marker_data)
 	_marker_presenter.show_markers(marker_specs)
+
+
+func _cross_current_location() -> void:
+	_add_crossed_position(_hero_movement.get_ground_position())
+	_marker_presenter.add_cross_mark(_hero_movement.get_ground_position())
+
+
+func _add_crossed_position(position: Vector3) -> void:
+	for existing_position in _crossed_positions:
+		if existing_position.distance_to(position) <= 0.05:
+			return
+	_crossed_positions.append(position)
 
 
 func _build_global_map_throw_request(definition: DiceDefinition) -> DiceThrowRequest:
