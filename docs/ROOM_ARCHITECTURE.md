@@ -135,6 +135,7 @@
 - [docs/BATTLE_ROOM_LOGIC.md](./BATTLE_ROOM_LOGIC.md) — прикладная логика `BattleRoom`, lifecycle боевой комнаты и интеграция комнаты с результатом боя.
 - [docs/MONSTER_AI_ARCHITECTURE.md](./MONSTER_AI_ARCHITECTURE.md) — архитектура monster-specific AI, границы decision logic монстров и правило выноса общих боевых правил из AI-профилей.
 - [docs/EVENT_ROOM_ARCHITECTURE.md](./EVENT_ROOM_ARCHITECTURE.md) — архитектура `EventRoom`, модель вариантов события, кубика события и контракта последствий.
+- [docs/GLOBAL_MAP_ARCHITECTURE.md](./GLOBAL_MAP_ARCHITECTURE.md) — архитектура `GlobalMapRoom`, правила выбора следующей комнаты через кубики карты, вынос логики в отдельные файлы и связь с тиром сложности.
 
 ---
 
