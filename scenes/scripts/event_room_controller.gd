@@ -10,6 +10,7 @@ const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd
 const EventOutcomeDefinitionScript = preload("res://content/events/resources/event_outcome_definition.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 const GLOBAL_MAP_SCENE_PATH := "res://scenes/global_map_room.tscn"
+const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
 
 const EVENT_DICE_SIZE_MULTIPLIER := Vector3(2.5, 2.5, 2.5)
 const COLLAPSE_DURATION := 0.3
@@ -341,6 +342,7 @@ func _show_continue_button() -> void:
 
 func _open_global_map() -> void:
 	_is_waiting_for_continue = false
+	GlobalMapRuntimeState.mark_room_completed_before_global_map_enter()
 	var result := get_tree().change_scene_to_file(GLOBAL_MAP_SCENE_PATH)
 	if result != OK:
 		push_warning("Failed to open global map scene: %s" % GLOBAL_MAP_SCENE_PATH)
