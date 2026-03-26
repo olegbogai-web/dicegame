@@ -1,12 +1,12 @@
 [gd_scene format=3 uid="uid://d1xwk7vyjm8tr"]
 
-[ext_resource type="Texture2D" path="res://assets/material/map_old.png" id="1_7nkcx"]
+[ext_resource type="Texture2D" uid="uid://e5sjhqg7x57d" path="res://assets/global_map/map_old.png" id="1_7nkcx"]
 [ext_resource type="Texture2D" uid="uid://0m7mfrhrntk3" path="res://assets/global_map/hero_right.png" id="2_vux7t"]
 [ext_resource type="Texture2D" uid="uid://d3dobsnryhi6d" path="res://assets/global_map/dash.png" id="3_aqsb5"]
 [ext_resource type="Texture2D" uid="uid://pmb07bl5pnlo" path="res://assets/global_map/question_mark.png" id="4_f4nsl"]
 [ext_resource type="PackedScene" uid="uid://0ssqyi084mdh" path="res://scenes/board.tscn" id="5_isgup"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ed6m2"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vux7t"]
 albedo_texture = ExtResource("1_7nkcx")
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_5qcje"]
@@ -27,7 +27,7 @@ albedo_texture = ExtResource("4_f4nsl")
 
 [node name="background" type="MeshInstance3D" parent="." unique_id=1259952756]
 transform = Transform3D(16, 0, 0, 0, 1, 0, 0, 0, 9, -0.023618698, 0, 0)
-material_override = SubResource("StandardMaterial3D_ed6m2")
+material_override = SubResource("StandardMaterial3D_vux7t")
 mesh = SubResource("PlaneMesh_5qcje")
 
 [node name="hero_icon" type="MeshInstance3D" parent="." unique_id=1289612994]
