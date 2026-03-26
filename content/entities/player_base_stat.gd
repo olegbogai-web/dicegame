@@ -3,6 +3,7 @@ extends Resource
 class_name PlayerBaseStat
 
 const DEFAULT_MAX_HP := 30
+const GlobalMapDiceProfile = preload("res://content/global_map/dice/global_map_dice_profile.gd")
 
 @export_category("Identity")
 @export var player_id := ""
@@ -14,6 +15,7 @@ const DEFAULT_MAX_HP := 30
 @export_range(0, 999, 1) var starting_hp := DEFAULT_MAX_HP
 @export_range(0, 999, 1) var starting_armor := 0
 @export var starting_dice: Array[DiceDefinition] = []
+@export var base_cube_global_map: GlobalMapDiceProfile = GlobalMapDiceProfile.new()
 @export var starting_abilities: Array[AbilityDefinition] = []
 @export var metadata: Dictionary = {}
 
@@ -31,4 +33,6 @@ func is_valid_definition() -> bool:
 	for ability_definition in starting_abilities:
 		if ability_definition == null or not ability_definition.supports_owner(true):
 			return false
+	if base_cube_global_map == null or not base_cube_global_map.is_valid_profile():
+		return false
 	return true
