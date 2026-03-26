@@ -9,6 +9,11 @@ const HEAL_ABILITY := preload("res://content/abilities/definitions/heal.tres")
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
 const BattleEffectRuntime = preload("res://content/combat/runtime/battle_effect_runtime.gd")
+const DiceDefinitionScript = preload("res://content/dice/resources/dice_definition.gd")
+const DiceFaceDefinitionScript = preload("res://content/dice/resources/dice_face_definition.gd")
+const BONES_DICE_SKIN := preload("res://assets/dice_edges/bones_dice_skin.png")
+const SWORDS_ICON := preload("res://assets/global_map/swords.png")
+const QUESTION_MARK_ICON := preload("res://assets/global_map/question_mark.png")
 
 const PLAYER_SPRITE_POSITION := Vector3(-3.0, 0.01, -2.5)
 const PLAYER_SPRITE_SCALE := Vector3(2.0, 2.0, 2.0)
@@ -332,4 +337,31 @@ static func _build_test_player() -> Player:
 		preload("res://content/resources/base_cube.tres"),
 		preload("res://content/resources/base_cube.tres"),
 	]
+	base_stat.base_cube_global_map = [
+		_build_base_global_map_dice(),
+		_build_base_global_map_dice(),
+	]
 	return Player.new(base_stat)
+
+
+static func _build_base_global_map_dice() -> DiceDefinition:
+	var definition := DiceDefinitionScript.new()
+	definition.dice_name = "base_cube_global_map"
+	definition.base_color = Color(0.96, 0.96, 0.96, 1.0)
+	definition.texture = BONES_DICE_SKIN
+	var faces: Array[DiceFaceDefinition] = []
+	for _index in range(5):
+		var swords_face := DiceFaceDefinitionScript.new()
+		swords_face.text_value = "swords"
+		swords_face.content_type = DiceFaceDefinitionScript.ContentType.ICON
+		swords_face.icon = SWORDS_ICON
+		swords_face.overlay_tint = Color(1.0, 1.0, 1.0, 1.0)
+		faces.append(swords_face)
+	var event_face := DiceFaceDefinitionScript.new()
+	event_face.text_value = "question_mark"
+	event_face.content_type = DiceFaceDefinitionScript.ContentType.ICON
+	event_face.icon = QUESTION_MARK_ICON
+	event_face.overlay_tint = Color(1.0, 1.0, 1.0, 1.0)
+	faces.append(event_face)
+	definition.faces = faces
+	return definition
