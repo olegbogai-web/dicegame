@@ -40,7 +40,7 @@ func build_spawn_points(
 		return spawned_points
 
 	for _index in marker_count:
-		var candidate := _find_candidate_position(
+		var candidate = _find_candidate_position(
 			origin_position,
 			spawned_points,
 			safe_min_x,
