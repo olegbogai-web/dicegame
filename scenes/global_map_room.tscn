@@ -5,6 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://d3dobsnryhi6d" path="res://assets/global_map/dash.png" id="3_aqsb5"]
 [ext_resource type="Texture2D" uid="uid://pmb07bl5pnlo" path="res://assets/global_map/question_mark.png" id="4_f4nsl"]
 [ext_resource type="PackedScene" uid="uid://0ssqyi084mdh" path="res://scenes/board.tscn" id="5_isgup"]
+[ext_resource type="Script" path="res://content/global_map/global_map_room.gd" id="6_map_controller"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vux7t"]
 albedo_texture = ExtResource("1_7nkcx")
@@ -24,6 +25,7 @@ transparency = 1
 albedo_texture = ExtResource("4_f4nsl")
 
 [node name="Node3D" type="Node3D" unique_id=1188740420]
+script = ExtResource("6_map_controller")
 
 [node name="background" type="MeshInstance3D" parent="." unique_id=1259952756]
 transform = Transform3D(16, 0, 0, 0, 1, 0, 0, 0, 9, -0.023618698, 0, 0)
