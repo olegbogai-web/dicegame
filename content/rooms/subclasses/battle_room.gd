@@ -4,13 +4,7 @@ class_name BattleRoom
 const DEFAULT_FLOOR_TEXTURE := preload("res://assets/material/дерево.png")
 const TEST_PLAYER_TEXTURE := preload("res://assets/entity/monsters/test_player.png")
 const TEST_MONSTER_DEFINITION := preload("res://content/monsters/definitions/test_monster.tres")
-const COMMON_ATTACK_ABILITY := preload("res://content/abilities/definitions/common_attack.tres")
-const HEAL_ABILITY := preload("res://content/abilities/definitions/heal.tres")
-const GLOBAL_MAP_DICE_SKIN := preload("res://assets/dice_edges/bones_dice_skin.png")
-const GLOBAL_MAP_MOB_ICON := preload("res://assets/global_map/swords.png")
-const GLOBAL_MAP_EVENT_ICON := preload("res://assets/global_map/question_mark.png")
-const DiceDefinitionScript = preload("res://content/dice/resources/dice_definition.gd")
-const DiceFaceDefinitionScript = preload("res://content/dice/resources/dice_face_definition.gd")
+const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
 const BattleEffectRuntime = preload("res://content/combat/runtime/battle_effect_runtime.gd")
@@ -315,52 +309,11 @@ func _update_battle_result_if_finished() -> bool:
 	return BattleTurnRuntime.update_battle_result_if_finished(self)
 
 
-static func create_test_battle_room() -> BattleRoom:
+static func create_test_battle_room(player: Player = null) -> BattleRoom:
 	var room := BattleRoom.new()
 	room.room_id = "test_battle_room"
 	room.set_floor_textures(DEFAULT_FLOOR_TEXTURE, DEFAULT_FLOOR_TEXTURE)
-	room.set_player_data(_build_test_player(), TEST_PLAYER_TEXTURE)
+	var player_instance := player if player != null else GlobalMapRuntimeState.get_player_instance()
+	room.set_player_data(player_instance, TEST_PLAYER_TEXTURE)
 	room.set_monsters_from_definitions([TEST_MONSTER_DEFINITION])
 	return room
-
-
-static func _build_test_player() -> Player:
-	var base_stat := PlayerBaseStat.new()
-	base_stat.player_id = "test_player"
-	base_stat.display_name = "Тестовый игрок"
-	base_stat.max_hp = 30
-	base_stat.starting_hp = 30
-	base_stat.starting_armor = 0
-	base_stat.starting_abilities = [COMMON_ATTACK_ABILITY, HEAL_ABILITY]
-	base_stat.starting_dice = [
-		preload("res://content/resources/base_cube.tres"),
-		preload("res://content/resources/base_cube.tres"),
-		preload("res://content/resources/base_cube.tres"),
-	]
-	base_stat.base_cube_global_map = [
-		_build_base_cube_global_map(),
-		_build_base_cube_global_map(),
-	]
-	return Player.new(base_stat)
-
-
-static func _build_base_cube_global_map() -> DiceDefinition:
-	var definition := DiceDefinitionScript.new()
-	definition.dice_name = "base_cube_global_map"
-	definition.size_multiplier = Vector3.ONE
-	definition.base_color = Color(1.0, 1.0, 1.0, 1.0)
-	definition.texture = GLOBAL_MAP_DICE_SKIN
-	definition.faces = []
-	for _index in range(5):
-		definition.faces.append(_build_global_map_face("swords", GLOBAL_MAP_MOB_ICON))
-	definition.faces.append(_build_global_map_face("question_mark", GLOBAL_MAP_EVENT_ICON))
-	return definition
-
-
-static func _build_global_map_face(face_text: String, icon: Texture2D) -> DiceFaceDefinition:
-	var face := DiceFaceDefinitionScript.new()
-	face.text_value = face_text
-	face.content_type = DiceFaceDefinitionScript.ContentType.ICON
-	face.icon = icon
-	face.overlay_tint = Color(1.0, 1.0, 1.0, 1.0)
-	return face

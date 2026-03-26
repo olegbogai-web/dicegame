@@ -184,8 +184,6 @@ func _persist_current_state() -> void:
 func _roll_global_map_dice_if_needed() -> void:
 	if _board == null:
 		return
-	if not GlobalMapRuntimeState.has_snapshot():
-		return
 	var player := GlobalMapRuntimeState.get_player_instance()
 	if player == null or player.global_map_dice_loadout.is_empty():
 		return
