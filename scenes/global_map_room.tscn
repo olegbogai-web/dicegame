@@ -6,7 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://d3dobsnryhi6d" path="res://assets/global_map/dash.png" id="3_aqsb5"]
 [ext_resource type="Texture2D" uid="uid://pmb07bl5pnlo" path="res://assets/global_map/question_mark.png" id="4_f4nsl"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ed6m2"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vux7t"]
 albedo_texture = ExtResource("1_7nkcx")
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_5qcje"]
@@ -31,7 +31,7 @@ script = ExtResource("1_70h8o")
 
 [node name="background" type="MeshInstance3D" parent="." unique_id=1259952756]
 transform = Transform3D(16, 0, 0, 0, 1, 0, 0, 0, 9, -0.023618698, 0, 0)
-material_override = SubResource("StandardMaterial3D_ed6m2")
+material_override = SubResource("StandardMaterial3D_vux7t")
 mesh = SubResource("PlaneMesh_5qcje")
 
 [node name="hero_icon" type="MeshInstance3D" parent="." unique_id=1289612994]
