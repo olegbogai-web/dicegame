@@ -60,6 +60,10 @@ func get_world_position() -> Vector3:
 	return _hero_icon.global_position
 
 
+func get_ground_position() -> Vector3:
+	return get_world_position() - Vector3(0.0, HERO_HEIGHT_OFFSET, 0.0)
+
+
 func _set_straight_sprite() -> void:
 	if _material == null:
 		return
