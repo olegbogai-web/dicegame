@@ -148,7 +148,7 @@ func _restore_persisted_state() -> void:
 	_state.hero_move_started = bool(snapshot.get("hero_move_started", false))
 	_state.event_reached = bool(snapshot.get("event_reached", false))
 	_state.is_transition_in_progress = false
-	var saved_position := snapshot.get("hero_world_position", null)
+	var saved_position = snapshot.get("hero_world_position", null)
 	if saved_position is Vector3:
 		_hero_movement.set_world_position(saved_position as Vector3)
 	var dash_visibility := snapshot.get("road_visibility", []) as Array
