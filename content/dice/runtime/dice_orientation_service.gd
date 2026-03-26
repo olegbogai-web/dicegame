@@ -45,7 +45,9 @@ func align_top_face_to_camera_bottom(dice: Node3D, face_normals: Array[Vector3],
 	if is_zero_approx(angle):
 		return true
 
-	var existing_tween: Tween = dice.get_meta(ALIGN_TWEEN_META_KEY, null)
+	var existing_tween: Tween = null
+	if dice.has_meta(ALIGN_TWEEN_META_KEY):
+		existing_tween = dice.get_meta(ALIGN_TWEEN_META_KEY) as Tween
 	if existing_tween != null and existing_tween.is_valid():
 		existing_tween.kill()
 

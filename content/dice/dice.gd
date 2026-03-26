@@ -281,11 +281,22 @@ func _align_top_face_to_camera_deferred() -> void:
 
 
 func _resolve_alignment_camera() -> Camera3D:
-	var viewport_camera := get_viewport().get_camera_3d()
+	if not is_inside_tree():
+		return null
+
+	var viewport := get_viewport()
+	if viewport == null:
+		return null
+
+	var viewport_camera := viewport.get_camera_3d()
 	if viewport_camera != null:
 		return viewport_camera
 
-	var scene_root := get_tree().current_scene
+	var tree := get_tree()
+	if tree == null:
+		return null
+
+	var scene_root := tree.current_scene
 	if scene_root == null:
 		return null
 
