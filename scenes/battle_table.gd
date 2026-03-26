@@ -6,6 +6,7 @@ const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 const BattleActivationAnimationRuntime = preload("res://content/combat/runtime/battle_activation_animation_runtime.gd")
 const MonsterTurnRuntime = preload("res://content/monster_ai/monster_turn_runtime.gd")
+const PlayerRuntimeRegistry = preload("res://content/run/player_runtime_registry.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 const EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
 
@@ -60,11 +61,13 @@ func _ready() -> void:
 		configure_from_battle_room(BattleRoomScript.create_test_battle_room())
 	else:
 		_apply_room_data()
-	_initialize_battle_state()
+		_initialize_battle_state()
+	_sync_active_player()
 
 
 func configure_from_battle_room(next_battle_room: BattleRoom) -> void:
 	battle_room_data = next_battle_room
+	_sync_active_player()
 	if is_node_ready():
 		_apply_room_data()
 		_initialize_battle_state()
@@ -989,9 +992,16 @@ func _on_end_turn_button_pressed() -> void:
 
 
 func _on_event_button_pressed() -> void:
+	_sync_active_player()
 	var result := get_tree().change_scene_to_file(EVENT_ROOM_SCENE_PATH)
 	if result != OK:
 		push_warning("Failed to open event room scene: %s" % EVENT_ROOM_SCENE_PATH)
+
+
+func _sync_active_player() -> void:
+	if battle_room_data == null:
+		return
+	PlayerRuntimeRegistry.set_active_player(battle_room_data.player_instance)
 
 
 func _advance_to_next_turn() -> void:
