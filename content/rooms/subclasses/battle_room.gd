@@ -6,6 +6,11 @@ const TEST_PLAYER_TEXTURE := preload("res://assets/entity/monsters/test_player.p
 const TEST_MONSTER_DEFINITION := preload("res://content/monsters/definitions/test_monster.tres")
 const COMMON_ATTACK_ABILITY := preload("res://content/abilities/definitions/common_attack.tres")
 const HEAL_ABILITY := preload("res://content/abilities/definitions/heal.tres")
+const GLOBAL_MAP_DICE_SKIN := preload("res://assets/dice_edges/bones_dice_skin.png")
+const GLOBAL_MAP_MOB_ICON := preload("res://assets/global_map/swords.png")
+const GLOBAL_MAP_EVENT_ICON := preload("res://assets/global_map/question_mark.png")
+const DiceDefinitionScript = preload("res://content/dice/resources/dice_definition.gd")
+const DiceFaceDefinitionScript = preload("res://content/dice/resources/dice_face_definition.gd")
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
 const BattleEffectRuntime = preload("res://content/combat/runtime/battle_effect_runtime.gd")
@@ -332,4 +337,30 @@ static func _build_test_player() -> Player:
 		preload("res://content/resources/base_cube.tres"),
 		preload("res://content/resources/base_cube.tres"),
 	]
+	base_stat.base_cube_global_map = [
+		_build_base_cube_global_map(),
+		_build_base_cube_global_map(),
+	]
 	return Player.new(base_stat)
+
+
+static func _build_base_cube_global_map() -> DiceDefinition:
+	var definition := DiceDefinitionScript.new()
+	definition.dice_name = "base_cube_global_map"
+	definition.size_multiplier = Vector3.ONE
+	definition.base_color = Color(1.0, 1.0, 1.0, 1.0)
+	definition.texture = GLOBAL_MAP_DICE_SKIN
+	definition.faces = []
+	for _index in range(5):
+		definition.faces.append(_build_global_map_face("swords", GLOBAL_MAP_MOB_ICON))
+	definition.faces.append(_build_global_map_face("question_mark", GLOBAL_MAP_EVENT_ICON))
+	return definition
+
+
+static func _build_global_map_face(face_text: String, icon: Texture2D) -> DiceFaceDefinition:
+	var face := DiceFaceDefinitionScript.new()
+	face.text_value = face_text
+	face.content_type = DiceFaceDefinitionScript.ContentType.ICON
+	face.icon = icon
+	face.overlay_tint = Color(1.0, 1.0, 1.0, 1.0)
+	return face
