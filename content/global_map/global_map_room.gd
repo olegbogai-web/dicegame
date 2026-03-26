@@ -23,5 +23,5 @@ func _process(delta: float) -> void:
 	_flow_orchestrator.process(delta)
 
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	_flow_orchestrator.handle_input(event)
