@@ -1,10 +1,10 @@
-[gd_scene format=3 uid="uid://d1xwk7vyjm8tr"]
+[gd_scene load_steps=8 format=3 uid="uid://d1xwk7vyjm8tr"]
 
+[ext_resource type="Script" path="res://content/global_map/global_map_room.gd" id="1_70h8o"]
 [ext_resource type="Texture2D" path="res://assets/material/map_old.png" id="1_7nkcx"]
 [ext_resource type="Texture2D" uid="uid://0m7mfrhrntk3" path="res://assets/global_map/hero_right.png" id="2_vux7t"]
 [ext_resource type="Texture2D" uid="uid://d3dobsnryhi6d" path="res://assets/global_map/dash.png" id="3_aqsb5"]
 [ext_resource type="Texture2D" uid="uid://pmb07bl5pnlo" path="res://assets/global_map/question_mark.png" id="4_f4nsl"]
-[ext_resource type="PackedScene" uid="uid://0ssqyi084mdh" path="res://scenes/board.tscn" id="5_isgup"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ed6m2"]
 albedo_texture = ExtResource("1_7nkcx")
@@ -23,7 +23,11 @@ albedo_texture = ExtResource("3_aqsb5")
 transparency = 1
 albedo_texture = ExtResource("4_f4nsl")
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_event_click"]
+size = Vector3(1.1, 0.3, 1.1)
+
 [node name="Node3D" type="Node3D" unique_id=1188740420]
+script = ExtResource("1_70h8o")
 
 [node name="background" type="MeshInstance3D" parent="." unique_id=1259952756]
 transform = Transform3D(16, 0, 0, 0, 1, 0, 0, 0, 9, -0.023618698, 0, 0)
@@ -49,8 +53,12 @@ transform = Transform3D(0.85, 0, 0, 0, 0.85, 0, 0, 0, 0.85, -10.044104, 0.01, 0.
 material_override = SubResource("StandardMaterial3D_uqttp")
 mesh = SubResource("PlaneMesh_5qcje")
 
-[node name="board" parent="." unique_id=1670483730 instance=ExtResource("5_isgup")]
-transform = Transform3D(4.1566563, 0, 0, 0, 10.717996, 0, 0, 0, 4.4277115, 0, -0.15004885, 0)
+[node name="event_click_area" type="StaticBody3D" parent="event_icon"]
+collision_layer = 1
+collision_mask = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="event_icon/event_click_area"]
+shape = SubResource("BoxShape3D_event_click")
 
 [node name="dash2" type="MeshInstance3D" parent="." unique_id=2006677491]
 transform = Transform3D(0.38952416, 0, 0.06433617, 0, 0.85, 0, -0.07582166, 0, 0.33051893, -12.105691, 0.01, 0.59302443)
@@ -61,3 +69,14 @@ mesh = SubResource("PlaneMesh_5qcje")
 transform = Transform3D(0.38014323, 0, -0.09663122, 0, 0.85, 0, 0.11388212, 0, 0.322559, -10.914911, 0.01, 0.46630302)
 material_override = SubResource("StandardMaterial3D_oecmp")
 mesh = SubResource("PlaneMesh_5qcje")
+
+[node name="fade_layer" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="fade_rect" type="ColorRect" parent="fade_layer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0)
