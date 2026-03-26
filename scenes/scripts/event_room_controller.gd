@@ -9,6 +9,7 @@ const DiceFaceDefinitionScript = preload("res://content/dice/resources/dice_face
 const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd")
 const EventOutcomeDefinitionScript = preload("res://content/events/resources/event_outcome_definition.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
+const GLOBAL_MAP_SCENE_PATH := "res://scenes/global_map_room.tscn"
 
 const EVENT_DICE_SIZE_MULTIPLIER := Vector3(2.5, 2.5, 2.5)
 const COLLAPSE_DURATION := 0.3
@@ -24,6 +25,7 @@ const NEGATIVE_FACE_ICON := preload("res://assets/dice_edges/red_X.png")
 const NEUTRAL_FACE_ICON := preload("res://assets/dice_edges/yellow_-.png")
 const CHOICE_HOVER_STRENGTH := 0.45
 const CHOICE_NORMAL_HOVER_STRENGTH := 0.0
+const CONTINUE_BUTTON_TEXT := "Идти дальше"
 
 @export var event_definition: EventDefinition
 
@@ -39,6 +41,8 @@ var _selected_choice: EventChoiceDefinition
 var _result_anchor_transform := Transform3D.IDENTITY
 var _event_dice: Dice
 var _is_resolving := false
+var _is_waiting_for_continue := false
+var _continue_button_background: MeshInstance3D
 
 
 func _ready() -> void:
@@ -147,6 +151,9 @@ func _try_pick_choice(mouse_position: Vector2) -> void:
 	var hovered_background := _pick_choice_background(mouse_position)
 	if hovered_background == null:
 		return
+	if _is_waiting_for_continue and hovered_background == _continue_button_background:
+		_open_global_map()
+		return
 	for entry in _choice_entries:
 		var background := entry.get("background") as MeshInstance3D
 		if background != hovered_background:
@@ -193,6 +200,8 @@ func _set_choice_hover_state(background: MeshInstance3D, is_hovered: bool) -> vo
 func _on_choice_selected(choice: EventChoiceDefinition) -> void:
 	if choice == null:
 		return
+	_is_waiting_for_continue = false
+	_continue_button_background = null
 	_selected_choice = choice
 	_is_resolving = true
 	await _play_selection_collapse_animation()
@@ -294,6 +303,47 @@ func _show_result(outcome: EventOutcomeDefinition) -> void:
 	_event_text.visible = true
 	_event_text.transform = _result_anchor_transform
 	_event_text.text = outcome.result_text
+	_show_continue_button()
+
+
+func _show_continue_button() -> void:
+	if _choice_entries.is_empty():
+		return
+	_set_choice_hover_state(_hovered_choice_background, false)
+	_hovered_choice_background = null
+	_is_waiting_for_continue = true
+
+	var continue_entry := _choice_entries[0]
+	var continue_background := continue_entry.get("background") as MeshInstance3D
+	var continue_label := continue_entry.get("label") as Label3D
+	if continue_background == null or continue_label == null:
+		return
+	var base_scale: Vector3 = continue_entry.get("base_scale", continue_background.scale)
+	var base_label_scale: Vector3 = continue_entry.get("base_label_scale", continue_label.scale)
+	continue_background.scale = base_scale
+	continue_label.scale = base_label_scale
+	continue_background.visible = true
+	continue_label.visible = true
+	continue_label.text = CONTINUE_BUTTON_TEXT
+	continue_entry["choice"] = null
+	_choice_entries[0] = continue_entry
+	_continue_button_background = continue_background
+
+	for index in range(1, _choice_entries.size()):
+		var entry := _choice_entries[index]
+		var background := entry.get("background") as MeshInstance3D
+		var label := entry.get("label") as Label3D
+		if background != null:
+			background.visible = false
+		if label != null:
+			label.visible = false
+
+
+func _open_global_map() -> void:
+	_is_waiting_for_continue = false
+	var result := get_tree().change_scene_to_file(GLOBAL_MAP_SCENE_PATH)
+	if result != OK:
+		push_warning("Failed to open global map scene: %s" % GLOBAL_MAP_SCENE_PATH)
 
 
 func _build_dice_definition(choice: EventChoiceDefinition) -> DiceDefinition:
