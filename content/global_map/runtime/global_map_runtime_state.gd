@@ -1,8 +1,11 @@
 extends RefCounted
 class_name GlobalMapRuntimeState
 
+const Player = preload("res://content/entities/player.gd")
+
 static var _has_persisted_snapshot := false
 static var _persisted_snapshot: Dictionary = {}
+static var _runtime_player: Player
 
 var is_transition_in_progress := false
 var event_reached := false
@@ -25,3 +28,11 @@ static func load_snapshot() -> Dictionary:
 static func clear_snapshot() -> void:
 	_persisted_snapshot.clear()
 	_has_persisted_snapshot = false
+
+
+static func save_runtime_player(player: Player) -> void:
+	_runtime_player = player
+
+
+static func load_runtime_player() -> Player:
+	return _runtime_player

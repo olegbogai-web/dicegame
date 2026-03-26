@@ -5,14 +5,23 @@ const HeroIconMovementController = preload("res://content/global_map/presentatio
 const GlobalMapFadeTransitionPresenter = preload("res://content/global_map/presentation/global_map_fade_transition_presenter.gd")
 const GlobalMapEventIconPresenter = preload("res://content/global_map/presentation/global_map_event_icon_presenter.gd")
 const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
+const Player = preload("res://content/entities/player.gd")
+const PlayerBaseStat = preload("res://content/entities/player_base_stat.gd")
+const BoardController = preload("res://ui/scripts/board_controller.gd")
+const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd")
+const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 
 const EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
 const HERO_MOVE_SPEED := 4.75
 const EVENT_PICK_RADIUS := 55.0
+const GLOBAL_MAP_DICE_SIZE_MULTIPLIER := Vector3(5.0, 5.0, 5.0)
+const GLOBAL_MAP_DICE_THROW_HEIGHT_MULTIPLIER := 4.0
+const GLOBAL_MAP_DICE_LOG_PREFIX := "[GlobalMapDice]"
 
 var _owner: Node3D
 var _camera: Camera3D
 var _event_icon: MeshInstance3D
+var _board: BoardController
 var _road_nodes: Array[Node3D] = []
 var _hero_movement := HeroIconMovementController.new()
 var _fade_presenter := GlobalMapFadeTransitionPresenter.new()
@@ -21,21 +30,34 @@ var _state := GlobalMapRuntimeState.new()
 var _path_points: Array[Vector3] = []
 var _path_index := 0
 var _is_event_hovered := false
+var _is_global_map_roll_pending := false
 
 
-func configure(owner: Node3D, camera: Camera3D, hero_icon: MeshInstance3D, event_icon: MeshInstance3D, road_nodes: Array[Node3D]) -> void:
+func configure(
+	owner: Node3D,
+	camera: Camera3D,
+	hero_icon: MeshInstance3D,
+	event_icon: MeshInstance3D,
+	road_nodes: Array[Node3D],
+	board: BoardController
+) -> void:
 	_owner = owner
 	_camera = camera
 	_event_icon = event_icon
+	_board = board
 	_road_nodes = road_nodes.duplicate()
 	_hero_movement.configure(hero_icon)
 	_fade_presenter.configure(owner)
 	_event_presenter.configure(event_icon)
 	_build_path_points()
 	_restore_persisted_state()
+	_schedule_global_map_dice_roll_if_needed()
 
 
 func process(delta: float) -> void:
+	if _is_global_map_roll_pending:
+		_is_global_map_roll_pending = false
+		_deferred_roll_global_map_dice()
 	if _state.is_transition_in_progress:
 		return
 	if not _state.hero_move_started:
@@ -172,3 +194,77 @@ func _persist_current_state() -> void:
 		"hero_world_position": _hero_movement.get_ground_position(),
 		"road_visibility": dash_visibility,
 	})
+
+
+func _schedule_global_map_dice_roll_if_needed() -> void:
+	var should_roll := GlobalMapRuntimeState.has_snapshot()
+	if not should_roll:
+		print("%s Первый вход на глобальную карту: бросок кубов пропущен." % GLOBAL_MAP_DICE_LOG_PREFIX)
+		return
+	_is_global_map_roll_pending = true
+
+
+func _deferred_roll_global_map_dice() -> void:
+	if _board == null:
+		push_warning("%s Игра попыталась бросить кубы глобальной карты, но board не найден." % GLOBAL_MAP_DICE_LOG_PREFIX)
+		return
+	var player := _resolve_or_create_runtime_player()
+	if player == null:
+		push_warning("%s Игра попыталась бросить кубы глобальной карты, но игрок не инициализирован." % GLOBAL_MAP_DICE_LOG_PREFIX)
+		return
+	if player.runtime_cube_global_map.is_empty():
+		push_warning("%s Игра попыталась бросить кубы глобальной карты, но у игрока нет runtime_cube_global_map." % GLOBAL_MAP_DICE_LOG_PREFIX)
+		return
+
+	var requests: Array[DiceThrowRequest] = []
+	for definition in player.runtime_cube_global_map:
+		if definition == null:
+			push_warning("%s Игра попыталась бросить куб, но определение куба пустое." % GLOBAL_MAP_DICE_LOG_PREFIX)
+			continue
+		requests.append(_build_global_map_throw_request(definition))
+		print("%s брошен куб (%s)." % [GLOBAL_MAP_DICE_LOG_PREFIX, _format_faces_for_debug(definition)])
+
+	if requests.is_empty():
+		push_warning("%s Игра попыталась бросить кубы глобальной карты, но валидных запросов нет." % GLOBAL_MAP_DICE_LOG_PREFIX)
+		return
+
+	var spawned_dice := _board.throw_dice(requests)
+	if spawned_dice.is_empty():
+		push_warning("%s Игра попыталась бросить кубы глобальной карты, но бросок не создал ни одного куба." % GLOBAL_MAP_DICE_LOG_PREFIX)
+		return
+	for dice_body in spawned_dice:
+		if dice_body == null:
+			continue
+		dice_body.linear_velocity.y *= GLOBAL_MAP_DICE_THROW_HEIGHT_MULTIPLIER
+
+
+func _build_global_map_throw_request(definition: DiceDefinition) -> DiceThrowRequest:
+	var request := DiceThrowRequestScript.create(BASE_DICE_SCENE)
+	request.extra_size_multiplier = GLOBAL_MAP_DICE_SIZE_MULTIPLIER
+	request.metadata["owner"] = "global_map"
+	request.metadata["definition"] = definition
+	return request
+
+
+func _resolve_or_create_runtime_player() -> Player:
+	var saved_player = GlobalMapRuntimeState.load_runtime_player()
+	if saved_player != null:
+		return saved_player
+	var base_stat := PlayerBaseStat.new()
+	base_stat.player_id = "global_map_runtime_player"
+	base_stat.display_name = "GlobalMapRuntimePlayer"
+	var player := Player.new(base_stat)
+	GlobalMapRuntimeState.save_runtime_player(player)
+	return player
+
+
+func _format_faces_for_debug(definition: DiceDefinition) -> String:
+	if definition == null:
+		return "unknown"
+	var face_values: PackedStringArray = PackedStringArray()
+	for face in definition.faces:
+		if face == null:
+			face_values.append("null")
+		else:
+			face_values.append(face.text_value)
+	return ", ".join(face_values)
