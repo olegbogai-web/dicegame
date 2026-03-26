@@ -1,14 +1,11 @@
 extends RefCounted
 class_name Player
 
-const GlobalMapDiceProfile = preload("res://content/global_map/dice/global_map_dice_profile.gd")
-
 var player_id := ""
 var base_stat: PlayerBaseStat
 var current_hp := 0
 var current_armor := 0
 var dice_loadout: Array[DiceDefinition] = []
-var runtime_cube_global_map: GlobalMapDiceProfile
 var ability_loadout: Array[AbilityDefinition] = []
 var run_flags: Dictionary = {}
 var metadata: Dictionary = {}
@@ -33,14 +30,12 @@ func reset_for_run() -> void:
 		current_hp = 0
 		current_armor = 0
 		dice_loadout.clear()
-		runtime_cube_global_map = null
 		ability_loadout.clear()
 		run_flags.clear()
 		return
 	current_hp = base_stat.get_resolved_starting_hp()
 	current_armor = base_stat.starting_armor
 	dice_loadout = base_stat.starting_dice.duplicate()
-	runtime_cube_global_map = _clone_global_map_profile(base_stat.base_cube_global_map)
 	ability_loadout = base_stat.starting_abilities.duplicate()
 	run_flags.clear()
 
@@ -65,9 +60,3 @@ func heal(amount: int) -> int:
 	var previous_hp := current_hp
 	current_hp = mini(current_hp + resolved_amount, base_stat.max_hp)
 	return current_hp - previous_hp
-
-
-func _clone_global_map_profile(profile: GlobalMapDiceProfile) -> GlobalMapDiceProfile:
-	if profile == null:
-		return GlobalMapDiceProfile.new()
-	return profile.duplicate_profile()
