@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/global_map_room.tscn" id="1_global_map"]
+[ext_resource type="PackedScene" path="res://scenes/event_room.tscn" id="2_event_room"]
+[ext_resource type="Script" path="res://content/global_map/global_map_room.gd" id="3_controller"]
+
+[node name="GlobalMapRoot" type="Node3D"]
+script = ExtResource("3_controller")
+
+[node name="global_map" parent="." instance=ExtResource("1_global_map")]
+
+[node name="event_room" parent="." instance=ExtResource("2_event_room")]
+
+[node name="ui_transition" type="CanvasLayer" parent="."]
+
+[node name="fade_rect" type="ColorRect" parent="ui_transition"]
+offset_right = 1920.0
+offset_bottom = 1080.0
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
