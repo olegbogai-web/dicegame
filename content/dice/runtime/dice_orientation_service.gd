@@ -15,3 +15,39 @@ func get_top_face_index(dice: Node3D, face_normals: Array[Vector3]) -> int:
 			top_face_index = index
 
 	return top_face_index
+
+
+func align_top_face_to_camera_bottom(dice: Node3D, face_normals: Array[Vector3], camera: Camera3D) -> void:
+	if dice == null or camera == null:
+		return
+
+	var top_face_index := get_top_face_index(dice, face_normals)
+	if top_face_index < 0 or top_face_index >= face_normals.size():
+		return
+
+	var resolved_basis := dice.global_transform.basis.orthonormalized()
+	var local_top_normal: Vector3 = face_normals[top_face_index].normalized()
+	var world_top_normal := (resolved_basis * local_top_normal).normalized()
+
+	var local_face_down := _get_face_local_down(face_normals[top_face_index])
+	var world_face_down := (resolved_basis * local_face_down).normalized()
+	var world_camera_down := (-camera.global_transform.basis.y).normalized()
+
+	var projected_face_down := _project_to_plane(world_face_down, world_top_normal)
+	var projected_camera_down := _project_to_plane(world_camera_down, world_top_normal)
+	if projected_face_down.length_squared() < 0.000001 or projected_camera_down.length_squared() < 0.000001:
+		return
+
+	var angle := projected_face_down.signed_angle_to(projected_camera_down, world_top_normal)
+	dice.global_rotate(world_top_normal, angle)
+	dice.global_transform = Transform3D(dice.global_transform.basis.orthonormalized(), dice.global_position)
+
+
+func _get_face_local_down(normal: Vector3) -> Vector3:
+	var local_up := Vector3.UP if abs(normal.dot(Vector3.UP)) < 0.999 else Vector3.FORWARD
+	var face_basis := Basis.looking_at(normal, local_up, true)
+	return (face_basis * Vector3.DOWN).normalized()
+
+
+func _project_to_plane(direction: Vector3, plane_normal: Vector3) -> Vector3:
+	return (direction - plane_normal * direction.dot(plane_normal)).normalized()

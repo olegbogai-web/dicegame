@@ -240,6 +240,7 @@ func _on_sleeping_state_changed() -> void:
 		_has_completed_first_stop = true
 		gravity_scale = _base_gravity_scale * POST_FIRST_STOP_GRAVITY_MULTIPLIER
 
+	_align_top_face_to_camera()
 	lock_rotation = true
 	DiceMotionState.stop_motion(self)
 	_physics_runtime.disable_bounce(self)
@@ -262,6 +263,13 @@ func _try_return_to_board_if_outside() -> void:
 	_is_returning_to_board = true
 	await _animate_return_to_board(board)
 	_is_returning_to_board = false
+
+
+func _align_top_face_to_camera() -> void:
+	var active_camera := get_viewport().get_camera_3d()
+	if active_camera == null:
+		return
+	_orientation_service.align_top_face_to_camera_bottom(self, FACE_NORMALS, active_camera)
 
 
 func _animate_return_to_board(board: BoardController) -> void:
