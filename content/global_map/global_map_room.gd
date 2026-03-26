@@ -2,6 +2,13 @@ extends Node3D
 class_name GlobalMapRoom
 
 const GlobalMapFlowOrchestrator = preload("res://content/global_map/runtime/global_map_flow_orchestrator.gd")
+const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
+const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd")
+const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
+const BoardController = preload("res://ui/scripts/board_controller.gd")
+
+const GLOBAL_MAP_DICE_SIZE_MULTIPLIER := Vector3.ONE / 3.0
+const GLOBAL_MAP_DICE_MASS := 1.2
 
 @onready var _camera: Camera3D = $camera_map
 @onready var _hero_icon: MeshInstance3D = $hero_icon
@@ -9,6 +16,7 @@ const GlobalMapFlowOrchestrator = preload("res://content/global_map/runtime/glob
 @onready var _dash: MeshInstance3D = $dash
 @onready var _dash2: MeshInstance3D = $dash2
 @onready var _dash3: MeshInstance3D = $dash3
+@onready var _board: BoardController = $board
 
 var _flow_orchestrator := GlobalMapFlowOrchestrator.new()
 
@@ -17,6 +25,7 @@ func _ready() -> void:
 	if _camera != null:
 		_camera.current = true
 	_flow_orchestrator.configure(self, _camera, _hero_icon, _event_icon, [_dash, _dash2, _dash3])
+	_try_roll_global_map_dice()
 
 
 func _process(delta: float) -> void:
@@ -25,3 +34,27 @@ func _process(delta: float) -> void:
 
 func _input(event: InputEvent) -> void:
 	_flow_orchestrator.handle_input(event)
+
+
+func _try_roll_global_map_dice() -> void:
+	if _board == null:
+		return
+	if not GlobalMapRuntimeState.should_roll_global_map_dice_on_enter():
+		GlobalMapRuntimeState.get_or_create_player()
+		return
+	var player := GlobalMapRuntimeState.get_or_create_player()
+	if player == null:
+		return
+	var requests: Array = []
+	for dice_definition in player.get_global_map_dice_loadout():
+		if dice_definition == null:
+			continue
+		var request := DiceThrowRequestScript.create(BASE_DICE_SCENE)
+		request.extra_size_multiplier = GLOBAL_MAP_DICE_SIZE_MULTIPLIER
+		request.mass = GLOBAL_MAP_DICE_MASS
+		request.metadata["owner"] = "global_map"
+		request.metadata["definition"] = dice_definition
+		requests.append(request)
+	if requests.is_empty():
+		return
+	_board.throw_dice(requests)
