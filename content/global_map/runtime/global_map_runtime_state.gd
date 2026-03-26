@@ -1,11 +1,8 @@
 extends RefCounted
 class_name GlobalMapRuntimeState
 
-const BattleRoomScript = preload("res://content/rooms/subclasses/battle_room.gd")
-
 static var _has_persisted_snapshot := false
 static var _persisted_snapshot: Dictionary = {}
-static var _player_instance: Player
 
 var is_transition_in_progress := false
 var event_reached := false
@@ -28,11 +25,3 @@ static func load_snapshot() -> Dictionary:
 static func clear_snapshot() -> void:
 	_persisted_snapshot.clear()
 	_has_persisted_snapshot = false
-
-
-static func get_player_instance() -> Player:
-	if _player_instance == null:
-		var battle_room := BattleRoomScript.create_test_battle_room()
-		if battle_room != null:
-			_player_instance = battle_room.player_instance
-	return _player_instance
