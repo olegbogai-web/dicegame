@@ -5,6 +5,7 @@ const HeroIconMovementController = preload("res://content/global_map/presentatio
 const GlobalMapFadeTransitionPresenter = preload("res://content/global_map/presentation/global_map_fade_transition_presenter.gd")
 const GlobalMapEventIconPresenter = preload("res://content/global_map/presentation/global_map_event_icon_presenter.gd")
 const GlobalMapMarkerPresenter = preload("res://content/global_map/presentation/global_map_marker_presenter.gd")
+const GlobalMapPathPresenter = preload("res://content/global_map/presentation/global_map_path_presenter.gd")
 const GlobalMapMarkerSpawnService = preload("res://content/global_map/runtime/global_map_marker_spawn_service.gd")
 const GlobalMapMarkerRoomLinkResolver = preload("res://content/global_map/routing/global_map_marker_room_link_resolver.gd")
 const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
@@ -35,6 +36,7 @@ var _hero_movement := HeroIconMovementController.new()
 var _fade_presenter := GlobalMapFadeTransitionPresenter.new()
 var _event_presenter := GlobalMapEventIconPresenter.new()
 var _marker_presenter := GlobalMapMarkerPresenter.new()
+var _path_presenter := GlobalMapPathPresenter.new()
 var _marker_spawn_service := GlobalMapMarkerSpawnService.new()
 var _marker_link_resolver := GlobalMapMarkerRoomLinkResolver.new()
 var _state := GlobalMapRuntimeState.new()
@@ -68,8 +70,13 @@ func configure(
 	_fade_presenter.configure(owner)
 	_event_presenter.configure(event_icon)
 	_marker_presenter.configure(owner, event_icon, camera)
+	var dash_template: MeshInstance3D
+	if not _road_nodes.is_empty():
+		dash_template = _road_nodes[0] as MeshInstance3D
+	_path_presenter.configure(owner, dash_template, background)
 	_ensure_event_unavailable_mark()
 	_build_start_path_points()
+	_path_presenter.set_reserved_path(_start_path_points)
 	_restore_persisted_state()
 	_schedule_global_map_dice_roll_if_needed()
 
@@ -201,12 +208,22 @@ func _restore_persisted_state() -> void:
 	var saved_markers = snapshot.get("markers", [])
 	if saved_markers is Array and not saved_markers.is_empty():
 		var marker_specs: Array[Dictionary] = []
+		var marker_positions: Array[Vector3] = []
 		for marker_data in saved_markers:
 			if marker_data is Dictionary:
-				marker_specs.append(marker_data)
+				var marker_dictionary := marker_data as Dictionary
+				marker_specs.append(marker_dictionary)
+				var marker_position = marker_dictionary.get("position", null)
+				if marker_position is Vector3:
+					marker_positions.append(marker_position as Vector3)
 		_marker_presenter.show_markers(marker_specs)
+		var blocked_positions: Array[Vector3] = []
+		if _event_icon != null:
+			blocked_positions.append(_event_icon.global_position)
+		_path_presenter.rebuild_paths(_hero_movement.get_ground_position(), marker_positions, blocked_positions)
 	else:
 		_marker_presenter.clear_dynamic_markers()
+		_path_presenter.clear_dynamic_paths()
 	var saved_event_reached = snapshot.get("event_reached", false)
 	_state.event_reached = bool(saved_event_reached)
 	_set_event_unavailable(_state.event_reached)
@@ -307,13 +324,19 @@ func _spawn_markers_for_roll_result() -> void:
 		push_warning("%s Не удалось разместить новые метки на карте." % GLOBAL_MAP_DICE_LOG_PREFIX)
 		return
 	var marker_specs: Array[Dictionary] = []
+	var marker_positions: Array[Vector3] = []
 	for index in range(min(_rolled_global_map_dice.size(), marker_points.size())):
 		var dice := _rolled_global_map_dice[index]
 		var marker_data := _marker_link_resolver.resolve_marker_for_face(dice.get_top_face())
 		marker_data["position"] = marker_points[index]
 		marker_data["visible"] = true
 		marker_specs.append(marker_data)
+		marker_positions.append(marker_points[index])
 	_marker_presenter.show_markers(marker_specs, false)
+	var blocked_positions: Array[Vector3] = []
+	if _event_icon != null:
+		blocked_positions.append(_event_icon.global_position)
+	_path_presenter.rebuild_paths(_hero_movement.get_ground_position(), marker_positions, blocked_positions)
 
 
 func _build_global_map_throw_request(definition: DiceDefinition) -> DiceThrowRequest:
