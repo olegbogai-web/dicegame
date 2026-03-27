@@ -67,11 +67,17 @@ func configure(
 	_hero_movement.configure(hero_icon)
 	_fade_presenter.configure(owner)
 	_event_presenter.configure(event_icon)
-	_marker_presenter.configure(owner, event_icon, camera)
+	_marker_presenter.configure(owner, _resolve_path_dash_template(event_icon), camera)
 	_ensure_event_unavailable_mark()
 	_build_start_path_points()
 	_restore_persisted_state()
 	_schedule_global_map_dice_roll_if_needed()
+
+
+func _resolve_path_dash_template(fallback_icon: MeshInstance3D) -> MeshInstance3D:
+	if _road_nodes.size() > 2 and _road_nodes[2] is MeshInstance3D:
+		return _road_nodes[2] as MeshInstance3D
+	return fallback_icon
 
 
 func process(delta: float) -> void:

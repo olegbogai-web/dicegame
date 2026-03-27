@@ -114,11 +114,10 @@ func clear_hovered_marker() -> void:
 func _build_marker_node(marker_spec: Dictionary) -> MeshInstance3D:
 	if _template_icon == null:
 		return null
-	var marker := MeshInstance3D.new()
-	marker.mesh = _template_icon.mesh
-	marker.transform = _template_icon.transform
+	var marker := _template_icon.duplicate() as MeshInstance3D
+	if marker == null:
+		return null
 	marker.global_position = marker_spec.get("position", _template_icon.global_position)
-	marker.scale = _template_icon.scale
 	marker.visible = true
 	var material := _build_marker_material(marker_spec.get("icon") as Texture2D)
 	if material != null:
