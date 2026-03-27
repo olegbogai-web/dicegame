@@ -25,13 +25,15 @@ const GLOBAL_MAP_DICE_LOG_PREFIX := "[GlobalMapDice]"
 const UNAVAILABLE_MARK_SCALE_MULTIPLIER := 1.3
 const UNAVAILABLE_MARK_OFFSET_Y := 0.001
 const DASH_PATH_SPAWN_Y := 0.005
-const DASH_PATH_POINT_SPACING := 0.95
+const DASH_PATH_POINT_SPACING := 0.9
 const DASH_PATH_MARGIN_FROM_BOUNDS := 0.45
 const DASH_PATH_MIN_MARKER_CLEARANCE := 0.6
 const DASH_PATH_OFFSET_AMPLITUDE := 0.35
 const DASH_PATH_JITTER_POSITION := 0.1
 const DASH_PATH_JITTER_ROTATION_DEGREES := 10.0
 const DASH_PATH_BUILD_ATTEMPTS := 10
+const DASH_PATH_DASH_GAP_MIN := 0.3
+const DASH_PATH_DASH_GAP_MAX := 0.5
 
 var _owner: Node3D
 var _camera: Camera3D
@@ -475,24 +477,74 @@ func _spawn_dash_path(path_points: Array[Vector3]) -> void:
 	if not _path_dash_template is MeshInstance3D:
 		return
 	var template := _path_dash_template as MeshInstance3D
-	for index in range(1, path_points.size() - 1):
-		var base_position := path_points[index]
-		var target_position := path_points[index + 1]
+	if template.mesh == null:
+		return
+	var dash_size := _resolve_template_dash_size(template)
+	var sampled_path := _sample_path_for_dash_spawn(path_points, dash_size.x)
+	if sampled_path.size() < 2:
+		return
+	var bounds := _resolve_background_bounds()
+	for index in range(sampled_path.size() - 1):
+		var base_position := sampled_path[index]
+		var target_position := sampled_path[index + 1]
 		var dash := MeshInstance3D.new()
 		dash.mesh = template.mesh
 		dash.scale = template.scale
 		dash.material_override = template.material_override
+		dash.cast_shadow = template.cast_shadow
 		var jittered_position := Vector3(
 			base_position.x + randf_range(-DASH_PATH_JITTER_POSITION, DASH_PATH_JITTER_POSITION),
 			DASH_PATH_SPAWN_Y,
 			base_position.z + randf_range(-DASH_PATH_JITTER_POSITION, DASH_PATH_JITTER_POSITION)
 		)
+		if not bounds.is_empty():
+			jittered_position = _clamp_point_to_bounds(jittered_position, bounds)
 		var yaw := _resolve_dash_yaw(jittered_position, target_position)
 		yaw += deg_to_rad(randf_range(-DASH_PATH_JITTER_ROTATION_DEGREES, DASH_PATH_JITTER_ROTATION_DEGREES))
 		dash.global_position = jittered_position
 		dash.rotation = Vector3(0.0, yaw, 0.0)
 		_owner.add_child(dash)
 		_dynamic_path_dashes.append(dash)
+
+
+func _sample_path_for_dash_spawn(path_points: Array[Vector3], dash_length: float) -> Array[Vector3]:
+	var sampled: Array[Vector3] = []
+	if path_points.size() < 2:
+		return sampled
+	var minimum_length := maxf(dash_length, 0.01)
+	var distance_until_next_spawn := minimum_length * 0.5
+	var previous_point := path_points[0]
+	for point_index in range(1, path_points.size()):
+		var current_point := path_points[point_index]
+		var segment := current_point - previous_point
+		segment.y = 0.0
+		var segment_length := segment.length()
+		if segment_length <= 0.000001:
+			previous_point = current_point
+			continue
+		var direction := segment / segment_length
+		var travelled := 0.0
+		while travelled + distance_until_next_spawn <= segment_length:
+			travelled += distance_until_next_spawn
+			var sampled_point := previous_point + direction * travelled
+			sampled_point.y = DASH_PATH_SPAWN_Y
+			sampled.append(sampled_point)
+			distance_until_next_spawn = minimum_length + randf_range(DASH_PATH_DASH_GAP_MIN, DASH_PATH_DASH_GAP_MAX)
+		distance_until_next_spawn -= maxf(0.0, segment_length - travelled)
+		previous_point = current_point
+	return sampled
+
+
+func _resolve_template_dash_size(template: MeshInstance3D) -> Vector3:
+	if template == null or template.mesh == null:
+		return Vector3.ONE
+	var mesh_size := template.mesh.get_aabb().size
+	var template_scale := template.scale.abs()
+	return Vector3(
+		mesh_size.x * template_scale.x,
+		mesh_size.y * template_scale.y,
+		mesh_size.z * template_scale.z
+	)
 
 
 func _resolve_dash_yaw(from_position: Vector3, to_position: Vector3) -> float:
