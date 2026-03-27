@@ -5,6 +5,7 @@ const HeroIconMovementController = preload("res://content/global_map/presentatio
 const GlobalMapFadeTransitionPresenter = preload("res://content/global_map/presentation/global_map_fade_transition_presenter.gd")
 const GlobalMapEventIconPresenter = preload("res://content/global_map/presentation/global_map_event_icon_presenter.gd")
 const GlobalMapMarkerPresenter = preload("res://content/global_map/presentation/global_map_marker_presenter.gd")
+const GlobalMapPathPresenter = preload("res://content/global_map/presentation/global_map_path_presenter.gd")
 const GlobalMapMarkerSpawnService = preload("res://content/global_map/runtime/global_map_marker_spawn_service.gd")
 const GlobalMapMarkerRoomLinkResolver = preload("res://content/global_map/routing/global_map_marker_room_link_resolver.gd")
 const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
@@ -35,6 +36,7 @@ var _hero_movement := HeroIconMovementController.new()
 var _fade_presenter := GlobalMapFadeTransitionPresenter.new()
 var _event_presenter := GlobalMapEventIconPresenter.new()
 var _marker_presenter := GlobalMapMarkerPresenter.new()
+var _path_presenter := GlobalMapPathPresenter.new()
 var _marker_spawn_service := GlobalMapMarkerSpawnService.new()
 var _marker_link_resolver := GlobalMapMarkerRoomLinkResolver.new()
 var _state := GlobalMapRuntimeState.new()
@@ -68,6 +70,7 @@ func configure(
 	_fade_presenter.configure(owner)
 	_event_presenter.configure(event_icon)
 	_marker_presenter.configure(owner, event_icon, camera)
+	_path_presenter.configure(owner, background, road_nodes)
 	_ensure_event_unavailable_mark()
 	_build_start_path_points()
 	_restore_persisted_state()
@@ -205,8 +208,10 @@ func _restore_persisted_state() -> void:
 			if marker_data is Dictionary:
 				marker_specs.append(marker_data)
 		_marker_presenter.show_markers(marker_specs)
+		_rebuild_dynamic_paths(marker_specs)
 	else:
 		_marker_presenter.clear_dynamic_markers()
+		_path_presenter.clear_paths()
 	var saved_event_reached = snapshot.get("event_reached", false)
 	_state.event_reached = bool(saved_event_reached)
 	_set_event_unavailable(_state.event_reached)
@@ -314,6 +319,7 @@ func _spawn_markers_for_roll_result() -> void:
 		marker_data["visible"] = true
 		marker_specs.append(marker_data)
 	_marker_presenter.show_markers(marker_specs, false)
+	_rebuild_dynamic_paths(marker_specs)
 
 
 func _build_global_map_throw_request(definition: DiceDefinition) -> DiceThrowRequest:
@@ -381,3 +387,23 @@ func _has_available_markers(saved_markers: Array) -> bool:
 			continue
 		return true
 	return false
+
+
+func _rebuild_dynamic_paths(marker_specs: Array[Dictionary]) -> void:
+	var marker_positions: Array[Vector3] = []
+	for marker_data in marker_specs:
+		if not marker_data is Dictionary:
+			continue
+		if not bool((marker_data as Dictionary).get("visible", true)):
+			continue
+		var marker_position = (marker_data as Dictionary).get("position", null)
+		if marker_position is Vector3:
+			marker_positions.append(marker_position as Vector3)
+			continue
+		var marker_node := (marker_data as Dictionary).get("node") as Node3D
+		if marker_node != null and is_instance_valid(marker_node):
+			marker_positions.append(marker_node.global_position)
+	if marker_positions.is_empty():
+		_path_presenter.clear_paths()
+		return
+	_path_presenter.build_paths(_hero_movement.get_ground_position(), marker_positions)
