@@ -469,7 +469,7 @@ func _generate_wavy_points(start: Vector3, target: Vector3) -> Array[Vector3]:
 	if total_distance < 0.25:
 		points.append(Vector3(target.x, PATH_DASH_Y, target.z))
 		return points
-	var segment_count := max(4, int(ceil(total_distance / 1.1)))
+	var segment_count = max(4, int(ceil(total_distance / 1.1)))
 	var direction := (target_xz - start_xz).normalized()
 	var perpendicular := Vector2(-direction.y, direction.x)
 	var wave_amplitude := clampf(total_distance * 0.08, 0.15, 0.5)
@@ -494,7 +494,7 @@ func _spawn_dash_path(path_points: Array[Vector3]) -> void:
 		if segment_length <= 0.01:
 			continue
 		var direction := (segment_end - segment_start).normalized()
-		var dash_count := max(1, int(floor(segment_length / PATH_DASH_STEP)))
+		var dash_count = max(1, int(floor(segment_length / PATH_DASH_STEP)))
 		for dash_index in range(dash_count):
 			var t := (float(dash_index) + 0.5) / float(dash_count)
 			var position := segment_start.lerp(segment_end, t)
