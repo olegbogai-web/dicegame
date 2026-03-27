@@ -2,7 +2,7 @@ extends RefCounted
 class_name GlobalMapMarkerSpawnService
 
 const DEFAULT_WALL_MARGIN := 1.0
-const DEFAULT_MIN_DISTANCE := 2
+const DEFAULT_MIN_DISTANCE := 1.5
 const DEFAULT_MAX_ATTEMPTS := 60
 
 var _rng := RandomNumberGenerator.new()
@@ -68,13 +68,13 @@ func _find_candidate_position(
 	max_attempts: int
 ) -> Variant:
 	for _attempt in max_attempts:
-		var x_delta := _rng.randf_range(1.0, 3.0)
+		var x_delta := _rng.randf_range(2.0, 2.0)
 		var candidate_x := origin_position.x + x_delta
 		candidate_x = clampf(candidate_x, safe_min_x, safe_max_x)
 		if candidate_x < origin_position.x:
 			continue
 
-		var z_delta := _rng.randf_range(-4.0, 4.0)
+		var z_delta := _rng.randf_range(-6.0, 6.0)
 		var candidate_z := clampf(origin_position.z + z_delta, safe_min_z, safe_max_z)
 		var candidate := Vector3(candidate_x, origin_position.y, candidate_z)
 		if candidate.distance_to(origin_position) < min_distance:
