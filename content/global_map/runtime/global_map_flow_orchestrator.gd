@@ -25,13 +25,15 @@ const GLOBAL_MAP_DICE_LOG_PREFIX := "[GlobalMapDice]"
 const UNAVAILABLE_MARK_SCALE_MULTIPLIER := 1.3
 const UNAVAILABLE_MARK_OFFSET_Y := 0.001
 const DASH_PATH_SPAWN_Y := 0.005
-const DASH_PATH_POINT_SPACING := 0.95
+const DASH_PATH_POINT_SPACING := 0.9
 const DASH_PATH_MARGIN_FROM_BOUNDS := 0.45
 const DASH_PATH_MIN_MARKER_CLEARANCE := 0.6
 const DASH_PATH_OFFSET_AMPLITUDE := 0.35
 const DASH_PATH_JITTER_POSITION := 0.1
 const DASH_PATH_JITTER_ROTATION_DEGREES := 10.0
 const DASH_PATH_BUILD_ATTEMPTS := 10
+const DASH_PATH_EDGE_GAP_MIN := 0.3
+const DASH_PATH_EDGE_GAP_MAX := 0.5
 
 var _owner: Node3D
 var _camera: Camera3D
@@ -474,10 +476,22 @@ func _spawn_dash_path(path_points: Array[Vector3]) -> void:
 		return
 	if not _path_dash_template is MeshInstance3D:
 		return
+	if path_points.size() < 2:
+		return
 	var template := _path_dash_template as MeshInstance3D
-	for index in range(1, path_points.size() - 1):
-		var base_position := path_points[index]
-		var target_position := path_points[index + 1]
+	var dash_length := _resolve_dash_length(template)
+	var path_length := _compute_path_length(path_points)
+	if dash_length <= 0.001 or path_length <= dash_length:
+		return
+	var distance_cursor := dash_length * 0.5
+	while distance_cursor < path_length - (dash_length * 0.5):
+		var segment_sample := _sample_path_position(path_points, distance_cursor)
+		var next_sample := _sample_path_position(path_points, minf(distance_cursor + 0.25, path_length))
+		var base_position := segment_sample
+		var target_position := next_sample
+		if target_position.distance_to(base_position) <= 0.0001:
+			distance_cursor += dash_length + randf_range(DASH_PATH_EDGE_GAP_MIN, DASH_PATH_EDGE_GAP_MAX)
+			continue
 		var dash := MeshInstance3D.new()
 		dash.mesh = template.mesh
 		dash.scale = template.scale
@@ -493,6 +507,44 @@ func _spawn_dash_path(path_points: Array[Vector3]) -> void:
 		dash.rotation = Vector3(0.0, yaw, 0.0)
 		_owner.add_child(dash)
 		_dynamic_path_dashes.append(dash)
+		distance_cursor += dash_length + randf_range(DASH_PATH_EDGE_GAP_MIN, DASH_PATH_EDGE_GAP_MAX)
+
+
+func _resolve_dash_length(template: MeshInstance3D) -> float:
+	if template == null:
+		return 0.0
+	if template.mesh == null:
+		return maxf(absf(template.scale.x), absf(template.scale.z))
+	var mesh_size := template.mesh.get_aabb().size
+	var size_x := mesh_size.x * absf(template.scale.x)
+	var size_z := mesh_size.z * absf(template.scale.z)
+	return maxf(size_x, size_z)
+
+
+func _compute_path_length(path_points: Array[Vector3]) -> float:
+	var total := 0.0
+	for index in range(path_points.size() - 1):
+		total += path_points[index].distance_to(path_points[index + 1])
+	return total
+
+
+func _sample_path_position(path_points: Array[Vector3], distance_along_path: float) -> Vector3:
+	if path_points.is_empty():
+		return Vector3.ZERO
+	if path_points.size() == 1:
+		return path_points[0]
+	var remaining := maxf(0.0, distance_along_path)
+	for index in range(path_points.size() - 1):
+		var start := path_points[index]
+		var finish := path_points[index + 1]
+		var segment_length := start.distance_to(finish)
+		if segment_length <= 0.0001:
+			continue
+		if remaining <= segment_length:
+			var t := remaining / segment_length
+			return start.lerp(finish, t)
+		remaining -= segment_length
+	return path_points[path_points.size() - 1]
 
 
 func _resolve_dash_yaw(from_position: Vector3, to_position: Vector3) -> float:
