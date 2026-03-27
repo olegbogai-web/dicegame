@@ -90,7 +90,6 @@ func process(delta: float) -> void:
 		_hero_movement.set_world_position(next_position)
 		if next_position.distance_to(target_position) > 0.02:
 			break
-		_hide_passed_road_dash(_path_index)
 		_path_index += 1
 	if _path_index >= _path_points.size():
 		_on_target_marker_reached()
@@ -180,17 +179,6 @@ func _play_enter_room_animation() -> void:
 	await _fade_presenter.play_fade_out()
 
 
-func _hide_passed_road_dash(reached_path_index: int) -> void:
-	if reached_path_index < 0 or reached_path_index >= _road_nodes.size():
-		return
-	if _path_points.size() != _start_path_points.size():
-		return
-	var road_node := _road_nodes[reached_path_index]
-	if road_node == null:
-		return
-	road_node.visible = false
-
-
 func _update_event_hover(mouse_position: Vector2) -> void:
 	var should_be_hovered := _is_event_icon_clicked(mouse_position)
 	if should_be_hovered == _is_event_hovered:
@@ -208,15 +196,6 @@ func _restore_persisted_state() -> void:
 	var saved_position = snapshot.get("hero_world_position", null)
 	if saved_position is Vector3:
 		_hero_movement.set_world_position(saved_position as Vector3)
-	var saved_road_visibility = snapshot.get("road_visibility", [])
-	for index in range(_road_nodes.size()):
-		var road_node := _road_nodes[index]
-		if road_node == null:
-			continue
-		if saved_road_visibility is Array and index < saved_road_visibility.size():
-			road_node.visible = bool(saved_road_visibility[index])
-		else:
-			road_node.visible = true
 	var saved_markers = snapshot.get("markers", [])
 	if saved_markers is Array and not saved_markers.is_empty():
 		var marker_specs: Array[Dictionary] = []
@@ -235,12 +214,8 @@ func _restore_persisted_state() -> void:
 
 
 func _persist_current_state() -> void:
-	var road_visibility: Array[bool] = []
-	for road_node in _road_nodes:
-		road_visibility.append(road_node != null and road_node.visible)
 	GlobalMapRuntimeState.save_snapshot({
 		"hero_world_position": _hero_movement.get_ground_position(),
-		"road_visibility": road_visibility,
 		"markers": _marker_presenter.export_markers_state(),
 		"event_reached": _state.event_reached,
 	})
