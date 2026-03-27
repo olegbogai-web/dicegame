@@ -28,8 +28,9 @@ func clear_dynamic_markers() -> void:
 	_hovered_marker = null
 
 
-func show_markers(marker_specs: Array[Dictionary]) -> void:
-	clear_dynamic_markers()
+func show_markers(marker_specs: Array[Dictionary], clear_existing: bool = true) -> void:
+	if clear_existing:
+		clear_dynamic_markers()
 	if _owner == null or _template_icon == null:
 		return
 	for marker_spec in marker_specs:

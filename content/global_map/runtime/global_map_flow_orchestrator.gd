@@ -313,7 +313,7 @@ func _spawn_markers_for_roll_result() -> void:
 		marker_data["position"] = marker_points[index]
 		marker_data["visible"] = true
 		marker_specs.append(marker_data)
-	_marker_presenter.show_markers(marker_specs)
+	_marker_presenter.show_markers(marker_specs, false)
 
 
 func _build_global_map_throw_request(definition: DiceDefinition) -> DiceThrowRequest:
