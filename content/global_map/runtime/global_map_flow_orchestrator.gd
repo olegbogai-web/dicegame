@@ -104,6 +104,7 @@ func handle_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
 		var mouse_motion := event as InputEventMouseMotion
 		_update_event_hover(mouse_motion.position)
+		_marker_presenter.set_hovered_marker(mouse_motion.position)
 		return
 	if not event is InputEventMouseButton:
 		return
@@ -169,6 +170,7 @@ func _on_target_marker_reached() -> void:
 
 func _play_enter_room_animation() -> void:
 	_event_presenter.set_hovered(false)
+	_marker_presenter.clear_hovered_marker()
 	_hero_movement.snap_to_idle()
 	await _fade_presenter.play_fade_out()
 

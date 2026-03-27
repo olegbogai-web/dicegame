@@ -7,6 +7,7 @@ var _owner: Node3D
 var _template_icon: MeshInstance3D
 var _camera: Camera3D
 var _markers: Array[Dictionary] = []
+var _hovered_marker: MeshInstance3D
 
 
 func configure(owner: Node3D, template_icon: MeshInstance3D, camera: Camera3D) -> void:
@@ -21,6 +22,7 @@ func clear_dynamic_markers() -> void:
 		if node != null and is_instance_valid(node):
 			node.queue_free()
 	_markers.clear()
+	_hovered_marker = null
 
 
 func show_markers(marker_specs: Array[Dictionary]) -> void:
@@ -34,6 +36,8 @@ func show_markers(marker_specs: Array[Dictionary]) -> void:
 		_owner.add_child(node)
 		_markers.append({
 			"node": node,
+			"material": node.material_override,
+			"base_color": (node.material_override as StandardMaterial3D).albedo_color if node.material_override is StandardMaterial3D else Color.WHITE,
 			"scene_path": marker_spec.get("scene_path", ""),
 			"type": marker_spec.get("type", ""),
 		})
@@ -50,6 +54,24 @@ func pick_marker(mouse_position: Vector2) -> Dictionary:
 		if projected.distance_to(mouse_position) <= PICK_RADIUS:
 			return marker_data
 	return {}
+
+
+func set_hovered_marker(mouse_position: Vector2) -> void:
+	var hovered_data := pick_marker(mouse_position)
+	var marker_to_hover := hovered_data.get("node") as MeshInstance3D
+	if marker_to_hover == _hovered_marker:
+		return
+	if _hovered_marker != null and is_instance_valid(_hovered_marker):
+		_set_highlight(_hovered_marker, false)
+	_hovered_marker = marker_to_hover
+	if _hovered_marker != null and is_instance_valid(_hovered_marker):
+		_set_highlight(_hovered_marker, true)
+
+
+func clear_hovered_marker() -> void:
+	if _hovered_marker != null and is_instance_valid(_hovered_marker):
+		_set_highlight(_hovered_marker, false)
+	_hovered_marker = null
 
 
 func _build_marker_node(marker_spec: Dictionary) -> MeshInstance3D:
@@ -74,3 +96,20 @@ func _build_marker_material(icon: Texture2D) -> StandardMaterial3D:
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.albedo_texture = icon
 	return material
+
+
+func _set_highlight(marker: MeshInstance3D, is_hovered: bool) -> void:
+	if marker == null:
+		return
+	for marker_data in _markers:
+		if marker_data.get("node") != marker:
+			continue
+		var material := marker_data.get("material") as StandardMaterial3D
+		if material == null:
+			return
+		var base_color := marker_data.get("base_color", Color.WHITE) as Color
+		material.albedo_color = Color(0.7, 0.7, 0.7, 1.0) if is_hovered else base_color
+		material.emission_enabled = is_hovered
+		material.emission = Color(1.0, 1.0, 1.0, 1.0)
+		material.emission_energy_multiplier = 0.03 if is_hovered else 0.0
+		return
