@@ -59,6 +59,7 @@ func _build_marker_node(marker_spec: Dictionary) -> MeshInstance3D:
 	marker.mesh = _template_icon.mesh
 	marker.transform = _template_icon.transform
 	marker.global_position = marker_spec.get("position", _template_icon.global_position)
+	marker.scale = _template_icon.scale
 	marker.visible = true
 	var material := _build_marker_material(marker_spec.get("icon") as Texture2D)
 	if material != null:
