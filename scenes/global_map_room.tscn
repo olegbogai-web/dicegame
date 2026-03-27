@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://pmb07bl5pnlo" path="res://assets/global_map/question_mark.png" id="4_f4nsl"]
 [ext_resource type="PackedScene" uid="uid://0ssqyi084mdh" path="res://scenes/board.tscn" id="5_isgup"]
 [ext_resource type="Script" uid="uid://8eck2f2ar140" path="res://content/global_map/global_map_room.gd" id="6_map_controller"]
+[ext_resource type="Texture2D" uid="uid://fc0r3npu6dl1" path="res://assets/global_map/point.png" id="7_aqsb5"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vux7t"]
 albedo_texture = ExtResource("1_7nkcx")
@@ -23,6 +24,10 @@ albedo_texture = ExtResource("3_aqsb5")
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uqttp"]
 transparency = 1
 albedo_texture = ExtResource("4_f4nsl")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_f4nsl"]
+transparency = 1
+albedo_texture = ExtResource("7_aqsb5")
 
 [node name="Node3D" type="Node3D" unique_id=1188740420]
 script = ExtResource("6_map_controller")
@@ -47,7 +52,7 @@ material_override = SubResource("StandardMaterial3D_oecmp")
 mesh = SubResource("PlaneMesh_5qcje")
 
 [node name="event_icon" type="MeshInstance3D" parent="." unique_id=870975301]
-transform = Transform3D(0.85, 0, 0, 0, 0.85, 0, 0, 0, 0.85, -10.044104, 0.01, 0.017569304)
+transform = Transform3D(0.19819084, 0, 0, 0, 0.85, 0, 0, 0, 0.095808975, -10.044104, 0.01, 0.017569304)
 material_override = SubResource("StandardMaterial3D_uqttp")
 mesh = SubResource("PlaneMesh_5qcje")
 
@@ -68,3 +73,8 @@ mesh = SubResource("PlaneMesh_5qcje")
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0)
 light_color = Color(1, 1, 0.5686275, 1)
 light_energy = 0.5
+
+[node name="point" type="MeshInstance3D" parent="." unique_id=419576968]
+transform = Transform3D(0.85, 0, 0, 0, 0.85, 0, 0, 0, 0.85, -14.513, 0.02, 0.41672575)
+material_override = SubResource("StandardMaterial3D_f4nsl")
+mesh = SubResource("PlaneMesh_5qcje")
