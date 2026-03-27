@@ -40,7 +40,26 @@ func show_markers(marker_specs: Array[Dictionary]) -> void:
 			"base_color": (node.material_override as StandardMaterial3D).albedo_color if node.material_override is StandardMaterial3D else Color.WHITE,
 			"scene_path": marker_spec.get("scene_path", ""),
 			"type": marker_spec.get("type", ""),
+			"icon": marker_spec.get("icon", null),
+			"visible": marker_spec.get("visible", true),
 		})
+		node.visible = bool(marker_spec.get("visible", true))
+
+
+func export_markers_state() -> Array[Dictionary]:
+	var serialized_markers: Array[Dictionary] = []
+	for marker_data in _markers:
+		var marker_node := marker_data.get("node") as Node3D
+		if marker_node == null or not is_instance_valid(marker_node):
+			continue
+		serialized_markers.append({
+			"position": marker_node.global_position,
+			"scene_path": marker_data.get("scene_path", ""),
+			"type": marker_data.get("type", ""),
+			"icon": marker_data.get("icon", null),
+			"visible": marker_node.visible,
+		})
+	return serialized_markers
 
 
 func pick_marker(mouse_position: Vector2) -> Dictionary:

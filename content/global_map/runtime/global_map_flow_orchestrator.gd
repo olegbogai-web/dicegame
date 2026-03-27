@@ -132,6 +132,7 @@ func _try_pick_dynamic_marker(mouse_position: Vector2) -> bool:
 	if marker_node == null:
 		return false
 	_pending_room_scene_path = String(picked_marker.get("scene_path", ""))
+	marker_node.visible = false
 	_path_points = [marker_node.global_position]
 	_path_index = 0
 	_state.hero_move_started = true
@@ -162,6 +163,10 @@ func _on_target_marker_reached() -> void:
 	if _state.is_transition_in_progress:
 		return
 	_state.is_transition_in_progress = true
+	if _pending_room_scene_path == START_EVENT_ROOM_SCENE_PATH and _path_points.size() == _start_path_points.size():
+		_state.event_reached = true
+		if _event_icon != null:
+			_event_icon.visible = false
 	await _play_enter_room_animation()
 	_persist_current_state()
 	var next_scene_path := _pending_room_scene_path if not _pending_room_scene_path.is_empty() else START_EVENT_ROOM_SCENE_PATH
@@ -203,17 +208,41 @@ func _restore_persisted_state() -> void:
 	var saved_position = snapshot.get("hero_world_position", null)
 	if saved_position is Vector3:
 		_hero_movement.set_world_position(saved_position as Vector3)
-	for road_node in _road_nodes:
+	var saved_road_visibility = snapshot.get("road_visibility", [])
+	for index in range(_road_nodes.size()):
+		var road_node := _road_nodes[index]
 		if road_node == null:
 			continue
-		road_node.visible = true
+		if saved_road_visibility is Array and index < saved_road_visibility.size():
+			road_node.visible = bool(saved_road_visibility[index])
+		else:
+			road_node.visible = true
+	var saved_markers = snapshot.get("markers", [])
+	if saved_markers is Array and not saved_markers.is_empty():
+		var marker_specs: Array[Dictionary] = []
+		for marker_data in saved_markers:
+			if marker_data is Dictionary:
+				marker_specs.append(marker_data)
+		_marker_presenter.show_markers(marker_specs)
+	else:
+		_marker_presenter.clear_dynamic_markers()
+	var saved_event_reached = snapshot.get("event_reached", false)
+	_state.event_reached = bool(saved_event_reached)
+	if _event_icon != null:
+		_event_icon.visible = not _state.event_reached
 	_path_points.clear()
 	_path_index = 0
 
 
 func _persist_current_state() -> void:
+	var road_visibility: Array[bool] = []
+	for road_node in _road_nodes:
+		road_visibility.append(road_node != null and road_node.visible)
 	GlobalMapRuntimeState.save_snapshot({
 		"hero_world_position": _hero_movement.get_ground_position(),
+		"road_visibility": road_visibility,
+		"markers": _marker_presenter.export_markers_state(),
+		"event_reached": _state.event_reached,
 	})
 
 
@@ -221,6 +250,11 @@ func _schedule_global_map_dice_roll_if_needed() -> void:
 	var should_roll := GlobalMapRuntimeState.has_snapshot()
 	if not should_roll:
 		print("%s Первый вход на глобальную карту: бросок кубов пропущен." % GLOBAL_MAP_DICE_LOG_PREFIX)
+		return
+	var snapshot := GlobalMapRuntimeState.load_snapshot()
+	var saved_markers = snapshot.get("markers", [])
+	if saved_markers is Array and not saved_markers.is_empty():
+		print("%s Найдено сохраненное состояние глобальной карты: бросок кубов пропущен." % GLOBAL_MAP_DICE_LOG_PREFIX)
 		return
 	_is_global_map_roll_pending = true
 
@@ -295,6 +329,7 @@ func _spawn_markers_for_roll_result() -> void:
 		var dice := _rolled_global_map_dice[index]
 		var marker_data := _marker_link_resolver.resolve_marker_for_face(dice.get_top_face())
 		marker_data["position"] = marker_points[index]
+		marker_data["visible"] = true
 		marker_specs.append(marker_data)
 	_marker_presenter.show_markers(marker_specs)
 
