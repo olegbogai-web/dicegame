@@ -25,7 +25,7 @@ const GLOBAL_MAP_DICE_LOG_PREFIX := "[GlobalMapDice]"
 const UNAVAILABLE_MARK_SCALE_MULTIPLIER := 1.3
 const UNAVAILABLE_MARK_OFFSET_Y := 0.001
 const PATH_DASH_Y := 0.005
-const PATH_DASH_STEP := 0.7
+const PATH_DASH_STEP := 0.95
 const PATH_JITTER_XZ := 0.1
 const PATH_JITTER_ROTATION_DEGREES := 10.0
 const PATH_MARKER_CLEARANCE := 0.65
@@ -513,7 +513,7 @@ func _create_dash_node(position: Vector3, direction: Vector3) -> void:
 		return
 	new_dash.visible = true
 	new_dash.global_position = position
-	var yaw := atan2(direction.x, direction.z) + deg_to_rad(_rng.randf_range(-PATH_JITTER_ROTATION_DEGREES, PATH_JITTER_ROTATION_DEGREES))
+	var yaw := atan2(direction.x, direction.z) + (PI * 0.5) + deg_to_rad(_rng.randf_range(-PATH_JITTER_ROTATION_DEGREES, PATH_JITTER_ROTATION_DEGREES))
 	new_dash.basis = Basis.from_euler(Vector3(0.0, yaw, 0.0)).scaled(dash_template.scale)
 	_owner.add_child(new_dash)
 	_dynamic_path_dashes.append(new_dash)
