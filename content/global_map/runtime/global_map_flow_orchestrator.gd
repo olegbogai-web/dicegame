@@ -74,7 +74,10 @@ func configure(
 	_background = background
 	_board = board
 	_road_nodes = road_nodes.duplicate()
-	_path_dash_template = _road_nodes[0] as MeshInstance3D if not _road_nodes.is_empty() else null
+	if _road_nodes.size() > 2 and _road_nodes[2] is MeshInstance3D:
+		_path_dash_template = _road_nodes[2] as MeshInstance3D
+	else:
+		_path_dash_template = _road_nodes[0] as MeshInstance3D if not _road_nodes.is_empty() else null
 	_hero_movement.configure(hero_icon)
 	_fade_presenter.configure(owner)
 	_event_presenter.configure(event_icon)
@@ -478,10 +481,9 @@ func _spawn_dash_path(path_points: Array[Vector3]) -> void:
 	for index in range(1, path_points.size() - 1):
 		var base_position := path_points[index]
 		var target_position := path_points[index + 1]
-		var dash := MeshInstance3D.new()
-		dash.mesh = template.mesh
-		dash.scale = template.scale
-		dash.material_override = template.material_override
+		var dash := template.duplicate() as MeshInstance3D
+		if dash == null:
+			continue
 		var jittered_position := Vector3(
 			base_position.x + randf_range(-DASH_PATH_JITTER_POSITION, DASH_PATH_JITTER_POSITION),
 			DASH_PATH_SPAWN_Y,
