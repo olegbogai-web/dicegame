@@ -168,8 +168,6 @@ func _on_target_marker_reached() -> void:
 	_state.is_transition_in_progress = true
 	if _pending_room_scene_path == START_EVENT_ROOM_SCENE_PATH and _path_points.size() == _start_path_points.size():
 		_state.event_reached = true
-		_set_event_unavailable(true)
-	_marker_presenter.mark_all_markers_unavailable()
 	await _play_enter_room_animation()
 	_persist_current_state()
 	var next_scene_path := _pending_room_scene_path if not _pending_room_scene_path.is_empty() else START_EVENT_ROOM_SCENE_PATH
@@ -217,9 +215,15 @@ func _restore_persisted_state() -> void:
 
 
 func _persist_current_state() -> void:
+	var marker_snapshot := _marker_presenter.export_markers_state()
+	if _state.is_transition_in_progress:
+		for marker_data in marker_snapshot:
+			if not marker_data is Dictionary:
+				continue
+			(marker_data as Dictionary)["unavailable"] = true
 	GlobalMapRuntimeState.save_snapshot({
 		"hero_world_position": _hero_movement.get_ground_position(),
-		"markers": _marker_presenter.export_markers_state(),
+		"markers": marker_snapshot,
 		"event_reached": _state.event_reached,
 	})
 
