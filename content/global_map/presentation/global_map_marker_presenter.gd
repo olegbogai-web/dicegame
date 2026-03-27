@@ -28,18 +28,17 @@ func clear_dynamic_markers() -> void:
 	_hovered_marker = null
 
 
-func show_markers(marker_specs: Array[Dictionary], clear_existing: bool = true) -> Array[Dictionary]:
-	var created_markers: Array[Dictionary] = []
+func show_markers(marker_specs: Array[Dictionary], clear_existing: bool = true) -> void:
 	if clear_existing:
 		clear_dynamic_markers()
 	if _owner == null or _template_icon == null:
-		return created_markers
+		return
 	for marker_spec in marker_specs:
 		var node := _build_marker_node(marker_spec)
 		if node == null:
 			continue
 		_owner.add_child(node)
-		var marker_data := {
+		_markers.append({
 			"node": node,
 			"material": node.material_override,
 			"base_color": (node.material_override as StandardMaterial3D).albedo_color if node.material_override is StandardMaterial3D else Color.WHITE,
@@ -49,13 +48,9 @@ func show_markers(marker_specs: Array[Dictionary], clear_existing: bool = true) 
 			"visible": marker_spec.get("visible", true),
 			"unavailable": marker_spec.get("unavailable", false),
 			"unavailable_mark": null,
-			"path_points": marker_spec.get("path_points", []),
-		}
-		_markers.append(marker_data)
-		created_markers.append(marker_data)
+		})
 		node.visible = bool(marker_spec.get("visible", true))
 		_set_marker_unavailable(node, bool(marker_spec.get("unavailable", false)))
-	return created_markers
 
 
 func export_markers_state() -> Array[Dictionary]:
@@ -71,7 +66,6 @@ func export_markers_state() -> Array[Dictionary]:
 			"icon": marker_data.get("icon", null),
 			"visible": marker_node.visible,
 			"unavailable": marker_data.get("unavailable", false),
-			"path_points": marker_data.get("path_points", []),
 		})
 	return serialized_markers
 
@@ -89,26 +83,6 @@ func pick_marker(mouse_position: Vector2) -> Dictionary:
 		if projected.distance_to(mouse_position) <= PICK_RADIUS:
 			return marker_data
 	return {}
-
-
-func set_marker_path_points(marker_node: Node3D, path_points: Array[Vector3]) -> void:
-	for marker_data in _markers:
-		if marker_data.get("node") != marker_node:
-			continue
-		marker_data["path_points"] = path_points.duplicate()
-		return
-
-
-func get_all_marker_positions() -> Array[Vector3]:
-	var marker_positions: Array[Vector3] = []
-	for marker_data in _markers:
-		var marker_node := marker_data.get("node") as Node3D
-		if marker_node == null or not is_instance_valid(marker_node):
-			continue
-		if not marker_node.visible:
-			continue
-		marker_positions.append(marker_node.global_position)
-	return marker_positions
 
 
 func mark_all_markers_unavailable() -> void:
