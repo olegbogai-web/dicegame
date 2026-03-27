@@ -403,7 +403,6 @@ func _has_available_markers(saved_markers: Array) -> bool:
 func _build_paths_for_markers(markers: Array[Dictionary]) -> void:
 	if markers.is_empty():
 		return
-	_clear_dynamic_paths()
 	var marker_positions := _collect_marker_positions(markers)
 	var background_bounds := _resolve_background_bounds()
 	if background_bounds.is_empty():
