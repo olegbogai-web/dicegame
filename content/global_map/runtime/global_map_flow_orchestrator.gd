@@ -54,7 +54,6 @@ func configure(
 	camera: Camera3D,
 	hero_icon: MeshInstance3D,
 	event_icon: MeshInstance3D,
-	marker_template: MeshInstance3D,
 	background: MeshInstance3D,
 	road_nodes: Array[Node3D],
 	board: BoardController
@@ -68,7 +67,7 @@ func configure(
 	_hero_movement.configure(hero_icon)
 	_fade_presenter.configure(owner)
 	_event_presenter.configure(event_icon)
-	_marker_presenter.configure(owner, marker_template, camera)
+	_marker_presenter.configure(owner, event_icon, camera)
 	_ensure_event_unavailable_mark()
 	_build_start_path_points()
 	_restore_persisted_state()

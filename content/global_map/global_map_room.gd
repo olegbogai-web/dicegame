@@ -19,7 +19,7 @@ var _flow_orchestrator := GlobalMapFlowOrchestrator.new()
 func _ready() -> void:
 	if _camera != null:
 		_camera.current = true
-	_flow_orchestrator.configure(self, _camera, _hero_icon, _event_icon, _dash3, _background, [_dash, _dash2, _dash3], _board)
+	_flow_orchestrator.configure(self, _camera, _hero_icon, _event_icon, _background, [_dash, _dash2, _dash3], _board)
 
 
 func _process(delta: float) -> void:
