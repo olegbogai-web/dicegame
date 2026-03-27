@@ -14,6 +14,7 @@ const BoardController = preload("res://ui/scripts/board_controller.gd")
 const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 const Dice = preload("res://content/dice/dice.gd")
+const UNAVAILABLE_MARK_TEXTURE = preload("res://assets/global_map/Х_mark.png")
 
 const START_EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
 const HERO_MOVE_SPEED := 4.75
@@ -21,6 +22,8 @@ const EVENT_PICK_RADIUS := 55.0
 const GLOBAL_MAP_DICE_SIZE_MULTIPLIER := Vector3(5.0, 5.0, 5.0)
 const GLOBAL_MAP_DICE_THROW_HEIGHT_MULTIPLIER := 4.0
 const GLOBAL_MAP_DICE_LOG_PREFIX := "[GlobalMapDice]"
+const UNAVAILABLE_MARK_SCALE_MULTIPLIER := 1.3
+const UNAVAILABLE_MARK_OFFSET_Y := 0.001
 
 var _owner: Node3D
 var _camera: Camera3D
@@ -43,6 +46,7 @@ var _is_global_map_roll_pending := false
 var _is_waiting_for_roll_results := false
 var _rolled_global_map_dice: Array[Dice] = []
 var _pending_room_scene_path := ""
+var _event_unavailable_mark: MeshInstance3D
 
 
 func configure(
@@ -64,6 +68,7 @@ func configure(
 	_fade_presenter.configure(owner)
 	_event_presenter.configure(event_icon)
 	_marker_presenter.configure(owner, event_icon, camera)
+	_ensure_event_unavailable_mark()
 	_build_start_path_points()
 	_restore_persisted_state()
 	_schedule_global_map_dice_roll_if_needed()
@@ -114,6 +119,8 @@ func handle_input(event: InputEvent) -> void:
 
 	if _try_pick_dynamic_marker(mouse_event.position):
 		return
+	if _state.event_reached:
+		return
 	if not _is_event_icon_clicked(mouse_event.position):
 		return
 
@@ -131,7 +138,6 @@ func _try_pick_dynamic_marker(mouse_position: Vector2) -> bool:
 	if marker_node == null:
 		return false
 	_pending_room_scene_path = String(picked_marker.get("scene_path", ""))
-	marker_node.visible = false
 	_path_points = [marker_node.global_position]
 	_path_index = 0
 	_state.hero_move_started = true
@@ -140,8 +146,6 @@ func _try_pick_dynamic_marker(mouse_position: Vector2) -> bool:
 
 func _is_event_icon_clicked(mouse_position: Vector2) -> bool:
 	if _camera == null or _event_icon == null:
-		return false
-	if not _event_icon.visible:
 		return false
 	var projected := _camera.unproject_position(_event_icon.global_position)
 	return projected.distance_to(mouse_position) <= EVENT_PICK_RADIUS
@@ -164,8 +168,8 @@ func _on_target_marker_reached() -> void:
 	_state.is_transition_in_progress = true
 	if _pending_room_scene_path == START_EVENT_ROOM_SCENE_PATH and _path_points.size() == _start_path_points.size():
 		_state.event_reached = true
-		if _event_icon != null:
-			_event_icon.visible = false
+		_set_event_unavailable(true)
+	_marker_presenter.mark_all_markers_unavailable()
 	await _play_enter_room_animation()
 	_persist_current_state()
 	var next_scene_path := _pending_room_scene_path if not _pending_room_scene_path.is_empty() else START_EVENT_ROOM_SCENE_PATH
@@ -180,7 +184,7 @@ func _play_enter_room_animation() -> void:
 
 
 func _update_event_hover(mouse_position: Vector2) -> void:
-	var should_be_hovered := _is_event_icon_clicked(mouse_position)
+	var should_be_hovered := not _state.event_reached and _is_event_icon_clicked(mouse_position)
 	if should_be_hovered == _is_event_hovered:
 		return
 	_is_event_hovered = should_be_hovered
@@ -207,8 +211,7 @@ func _restore_persisted_state() -> void:
 		_marker_presenter.clear_dynamic_markers()
 	var saved_event_reached = snapshot.get("event_reached", false)
 	_state.event_reached = bool(saved_event_reached)
-	if _event_icon != null:
-		_event_icon.visible = not _state.event_reached
+	_set_event_unavailable(_state.event_reached)
 	_path_points.clear()
 	_path_index = 0
 
@@ -228,7 +231,7 @@ func _schedule_global_map_dice_roll_if_needed() -> void:
 		return
 	var snapshot := GlobalMapRuntimeState.load_snapshot()
 	var saved_markers = snapshot.get("markers", [])
-	if saved_markers is Array and not saved_markers.is_empty():
+	if saved_markers is Array and _has_available_markers(saved_markers):
 		print("%s Найдено сохраненное состояние глобальной карты: бросок кубов пропущен." % GLOBAL_MAP_DICE_LOG_PREFIX)
 		return
 	_is_global_map_roll_pending = true
@@ -339,3 +342,38 @@ func _format_faces_for_debug(definition: DiceDefinition) -> String:
 			continue
 		values.append(face.text_value)
 	return ", ".join(values)
+
+
+func _ensure_event_unavailable_mark() -> void:
+	if _event_icon == null:
+		return
+	if _event_unavailable_mark != null and is_instance_valid(_event_unavailable_mark):
+		return
+	_event_unavailable_mark = MeshInstance3D.new()
+	_event_unavailable_mark.mesh = _event_icon.mesh
+	_event_unavailable_mark.position = Vector3(0.0, UNAVAILABLE_MARK_OFFSET_Y, 0.0)
+	_event_unavailable_mark.scale = Vector3.ONE * UNAVAILABLE_MARK_SCALE_MULTIPLIER
+	var material := StandardMaterial3D.new()
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.albedo_texture = UNAVAILABLE_MARK_TEXTURE
+	_event_unavailable_mark.material_override = material
+	_event_unavailable_mark.visible = false
+	_event_icon.add_child(_event_unavailable_mark)
+
+
+func _set_event_unavailable(is_unavailable: bool) -> void:
+	_ensure_event_unavailable_mark()
+	if _event_unavailable_mark != null and is_instance_valid(_event_unavailable_mark):
+		_event_unavailable_mark.visible = is_unavailable
+
+
+func _has_available_markers(saved_markers: Array) -> bool:
+	for marker_data in saved_markers:
+		if not marker_data is Dictionary:
+			continue
+		if bool((marker_data as Dictionary).get("unavailable", false)):
+			continue
+		if not bool((marker_data as Dictionary).get("visible", true)):
+			continue
+		return true
+	return false
