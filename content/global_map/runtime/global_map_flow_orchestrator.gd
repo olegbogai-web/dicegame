@@ -56,7 +56,6 @@ var _pending_room_scene_path := ""
 var _event_unavailable_mark: MeshInstance3D
 var _dynamic_path_dashes: Array[Node3D] = []
 var _path_segments: Array[Dictionary] = []
-var _path_anchor: Vector3 = Vector3.ZERO
 
 
 func configure(
@@ -81,7 +80,6 @@ func configure(
 	_marker_presenter.configure(owner, event_icon, camera)
 	_ensure_event_unavailable_mark()
 	_build_start_path_points()
-	_path_anchor = _resolve_path_anchor()
 	_restore_persisted_state()
 	_schedule_global_map_dice_roll_if_needed()
 
@@ -446,8 +444,9 @@ func _clear_dynamic_paths() -> void:
 
 
 func _build_wavy_path_to_marker(target: Vector3, marker_positions: Array[Vector3], background_bounds: Dictionary) -> Array[Vector3]:
+	var path_anchor := _resolve_path_anchor()
 	for _attempt in PATH_MAX_BUILD_ATTEMPTS:
-		var path_points := _generate_wavy_points(_path_anchor, target)
+		var path_points := _generate_wavy_points(path_anchor, target)
 		if path_points.size() < 2:
 			continue
 		if not _is_path_inside_background(path_points, background_bounds):
@@ -527,12 +526,7 @@ func _resolve_dash_template() -> MeshInstance3D:
 
 
 func _resolve_path_anchor() -> Vector3:
-	if _road_nodes.is_empty():
-		return _hero_movement.get_ground_position()
-	var anchor_node := _road_nodes[_road_nodes.size() - 1]
-	if anchor_node == null:
-		return _hero_movement.get_ground_position()
-	var anchor := anchor_node.global_position
+	var anchor := _hero_movement.get_ground_position()
 	anchor.y = PATH_DASH_Y
 	return anchor
 
