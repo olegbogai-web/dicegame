@@ -31,6 +31,7 @@ var _event_icon: MeshInstance3D
 var _background: MeshInstance3D
 var _board: BoardController
 var _road_nodes: Array[Node3D] = []
+var _path_dash_template: MeshInstance3D
 var _hero_movement := HeroIconMovementController.new()
 var _fade_presenter := GlobalMapFadeTransitionPresenter.new()
 var _event_presenter := GlobalMapEventIconPresenter.new()
@@ -64,14 +65,22 @@ func configure(
 	_background = background
 	_board = board
 	_road_nodes = road_nodes.duplicate()
+	_path_dash_template = _resolve_path_dash_template()
 	_hero_movement.configure(hero_icon)
 	_fade_presenter.configure(owner)
 	_event_presenter.configure(event_icon)
-	_marker_presenter.configure(owner, event_icon, camera)
+	_marker_presenter.configure(owner, _path_dash_template, camera)
 	_ensure_event_unavailable_mark()
 	_build_start_path_points()
 	_restore_persisted_state()
 	_schedule_global_map_dice_roll_if_needed()
+
+
+func _resolve_path_dash_template() -> MeshInstance3D:
+	for road_node in _road_nodes:
+		if road_node is MeshInstance3D:
+			return road_node as MeshInstance3D
+	return _event_icon
 
 
 func process(delta: float) -> void:
