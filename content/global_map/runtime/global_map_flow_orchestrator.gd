@@ -24,15 +24,6 @@ const GLOBAL_MAP_DICE_THROW_HEIGHT_MULTIPLIER := 4.0
 const GLOBAL_MAP_DICE_LOG_PREFIX := "[GlobalMapDice]"
 const UNAVAILABLE_MARK_SCALE_MULTIPLIER := 1.3
 const UNAVAILABLE_MARK_OFFSET_Y := 0.001
-const DASH_PATH_SPAWN_Y := 0.005
-const DASH_PATH_POINT_SPACING := 0.95
-const DASH_PATH_MARGIN_FROM_BOUNDS := 0.45
-const DASH_PATH_MIN_MARKER_CLEARANCE := 0.6
-const DASH_PATH_OFFSET_AMPLITUDE := 0.35
-const DASH_PATH_JITTER_POSITION := 0.1
-const DASH_PATH_JITTER_ROTATION_DEGREES := 10.0
-const DASH_PATH_BUILD_ATTEMPTS := 10
-const DASH_PATH_SCALE_MULTIPLIER := 0.82
 
 var _owner: Node3D
 var _camera: Camera3D
@@ -56,8 +47,6 @@ var _is_waiting_for_roll_results := false
 var _rolled_global_map_dice: Array[Dice] = []
 var _pending_room_scene_path := ""
 var _event_unavailable_mark: MeshInstance3D
-var _path_dash_template: MeshInstance3D
-var _dynamic_path_dashes: Array[MeshInstance3D] = []
 
 
 func configure(
@@ -75,7 +64,6 @@ func configure(
 	_background = background
 	_board = board
 	_road_nodes = road_nodes.duplicate()
-	_path_dash_template = _road_nodes[0] as MeshInstance3D if not _road_nodes.is_empty() else null
 	_hero_movement.configure(hero_icon)
 	_fade_presenter.configure(owner)
 	_event_presenter.configure(event_icon)
@@ -222,11 +210,6 @@ func _restore_persisted_state() -> void:
 	var saved_event_reached = snapshot.get("event_reached", false)
 	_state.event_reached = bool(saved_event_reached)
 	_set_event_unavailable(_state.event_reached)
-	var saved_dash_paths = snapshot.get("dash_paths", [])
-	if saved_dash_paths is Array and not saved_dash_paths.is_empty():
-		_restore_dynamic_paths_from_state(saved_dash_paths)
-	else:
-		_rebuild_dynamic_marker_paths()
 	_path_points.clear()
 	_path_index = 0
 
@@ -242,7 +225,6 @@ func _persist_current_state() -> void:
 		"hero_world_position": _hero_movement.get_ground_position(),
 		"markers": marker_snapshot,
 		"event_reached": _state.event_reached,
-		"dash_paths": _export_dynamic_paths_state(),
 	})
 
 
@@ -332,7 +314,6 @@ func _spawn_markers_for_roll_result() -> void:
 		marker_data["visible"] = true
 		marker_specs.append(marker_data)
 	_marker_presenter.show_markers(marker_specs, false)
-	_rebuild_dynamic_marker_paths()
 
 
 func _build_global_map_throw_request(definition: DiceDefinition) -> DiceThrowRequest:
@@ -400,220 +381,3 @@ func _has_available_markers(saved_markers: Array) -> bool:
 			continue
 		return true
 	return false
-
-
-func _rebuild_dynamic_marker_paths() -> void:
-	_clear_dynamic_marker_paths()
-	var start_position := _hero_movement.get_ground_position()
-	var marker_points := _marker_presenter.get_active_marker_points(true)
-	if marker_points.is_empty():
-		return
-	var bounds := _resolve_background_bounds()
-	if bounds.is_empty():
-		return
-	var occupied_segments: Array[Dictionary] = []
-	for marker_point in marker_points:
-		var waypoints := _build_non_intersecting_path_points(start_position, marker_point, marker_points, occupied_segments, bounds)
-		if waypoints.size() < 2:
-			continue
-		_spawn_dash_path(waypoints)
-		for index in range(waypoints.size() - 1):
-			occupied_segments.append({
-				"from": waypoints[index],
-				"to": waypoints[index + 1],
-			})
-
-
-func _clear_dynamic_marker_paths() -> void:
-	for dash in _dynamic_path_dashes:
-		if dash == null or not is_instance_valid(dash):
-			continue
-		dash.queue_free()
-	_dynamic_path_dashes.clear()
-
-
-func _build_non_intersecting_path_points(
-	start_position: Vector3,
-	target_position: Vector3,
-	all_markers: Array[Vector3],
-	occupied_segments: Array[Dictionary],
-	bounds: Dictionary
-) -> Array[Vector3]:
-	var direction := target_position - start_position
-	var distance := direction.length()
-	if distance < 0.2:
-		return [start_position, target_position]
-	var waypoint_count := maxi(2, int(distance / DASH_PATH_POINT_SPACING))
-	var safe_start := Vector3(start_position.x, DASH_PATH_SPAWN_Y, start_position.z)
-	var safe_target := Vector3(target_position.x, DASH_PATH_SPAWN_Y, target_position.z)
-	for _attempt in DASH_PATH_BUILD_ATTEMPTS:
-		var points: Array[Vector3] = [safe_start]
-		var previous_point := safe_start
-		var can_build := true
-		var perpendicular := Vector3(-direction.z, 0.0, direction.x).normalized()
-		var wave_phase := randf_range(0.0, PI * 2.0)
-		var wave_multiplier := randf_range(0.65, 1.35)
-		for index in range(1, waypoint_count):
-			var t := float(index) / float(waypoint_count)
-			var base_point := safe_start.lerp(safe_target, t)
-			var wave := sin((t * PI * 2.0 * wave_multiplier) + wave_phase) * DASH_PATH_OFFSET_AMPLITUDE
-			var candidate := base_point + perpendicular * wave
-			candidate = _clamp_point_to_bounds(candidate, bounds)
-			if _segment_is_blocked(previous_point, candidate, target_position, all_markers, occupied_segments):
-				can_build = false
-				break
-			points.append(candidate)
-			previous_point = candidate
-		if not can_build:
-			continue
-		if _segment_is_blocked(previous_point, safe_target, target_position, all_markers, occupied_segments):
-			continue
-		points.append(safe_target)
-		return points
-	return [safe_start, safe_target]
-
-
-func _spawn_dash_path(path_points: Array[Vector3]) -> void:
-	if _owner == null:
-		return
-	if _path_dash_template == null or not is_instance_valid(_path_dash_template):
-		return
-	if not _path_dash_template is MeshInstance3D:
-		return
-	var template := _path_dash_template as MeshInstance3D
-	for index in range(1, path_points.size() - 1):
-		var base_position := path_points[index]
-		var target_position := path_points[index + 1]
-		var dash := MeshInstance3D.new()
-		dash.mesh = template.mesh
-		dash.scale = template.scale * DASH_PATH_SCALE_MULTIPLIER
-		dash.material_override = template.material_override
-		var jittered_position := Vector3(
-			base_position.x + randf_range(-DASH_PATH_JITTER_POSITION, DASH_PATH_JITTER_POSITION),
-			DASH_PATH_SPAWN_Y,
-			base_position.z + randf_range(-DASH_PATH_JITTER_POSITION, DASH_PATH_JITTER_POSITION)
-		)
-		var yaw := _resolve_dash_yaw(jittered_position, target_position)
-		yaw += deg_to_rad(randf_range(-DASH_PATH_JITTER_ROTATION_DEGREES, DASH_PATH_JITTER_ROTATION_DEGREES))
-		dash.global_position = jittered_position
-		dash.rotation = Vector3(0.0, yaw, 0.0)
-		_owner.add_child(dash)
-		_dynamic_path_dashes.append(dash)
-
-
-func _export_dynamic_paths_state() -> Array[Dictionary]:
-	var serialized_paths: Array[Dictionary] = []
-	for dash in _dynamic_path_dashes:
-		if dash == null or not is_instance_valid(dash):
-			continue
-		serialized_paths.append({
-			"position": dash.global_position,
-			"rotation": dash.rotation,
-			"scale": dash.scale,
-		})
-	return serialized_paths
-
-
-func _restore_dynamic_paths_from_state(saved_dash_paths: Array) -> void:
-	_clear_dynamic_marker_paths()
-	if _owner == null:
-		return
-	if _path_dash_template == null or not is_instance_valid(_path_dash_template):
-		return
-	var template := _path_dash_template as MeshInstance3D
-	for dash_data in saved_dash_paths:
-		if not dash_data is Dictionary:
-			continue
-		var position := (dash_data as Dictionary).get("position", null)
-		var rotation := (dash_data as Dictionary).get("rotation", null)
-		var scale := (dash_data as Dictionary).get("scale", null)
-		if not position is Vector3 or not rotation is Vector3:
-			continue
-		var dash := MeshInstance3D.new()
-		dash.mesh = template.mesh
-		dash.material_override = template.material_override
-		dash.global_position = position as Vector3
-		dash.rotation = rotation as Vector3
-		if scale is Vector3:
-			dash.scale = scale as Vector3
-		else:
-			dash.scale = template.scale * DASH_PATH_SCALE_MULTIPLIER
-		_owner.add_child(dash)
-		_dynamic_path_dashes.append(dash)
-
-
-func _resolve_dash_yaw(from_position: Vector3, to_position: Vector3) -> float:
-	var direction := to_position - from_position
-	direction.y = 0.0
-	if direction.length_squared() <= 0.000001:
-		return 0.0
-	return -atan2(direction.z, direction.x)
-
-
-func _segment_is_blocked(
-	segment_start: Vector3,
-	segment_end: Vector3,
-	target_marker: Vector3,
-	all_markers: Array[Vector3],
-	occupied_segments: Array[Dictionary]
-) -> bool:
-	for marker_point in all_markers:
-		if marker_point == target_marker:
-			continue
-		if _distance_point_to_segment_xz(marker_point, segment_start, segment_end) < DASH_PATH_MIN_MARKER_CLEARANCE:
-			return true
-	for segment_data in occupied_segments:
-		var occupied_start = segment_data.get("from", null)
-		var occupied_end = segment_data.get("to", null)
-		if not occupied_start is Vector3 or not occupied_end is Vector3:
-			continue
-		if _segments_intersect_xz(segment_start, segment_end, occupied_start as Vector3, occupied_end as Vector3):
-			return true
-	return false
-
-
-func _resolve_background_bounds() -> Dictionary:
-	if _background == null or not _background is MeshInstance3D:
-		return {}
-	var mesh_instance := _background as MeshInstance3D
-	if mesh_instance.mesh == null:
-		return {}
-	var local_aabb := mesh_instance.mesh.get_aabb()
-	var half_size_x := local_aabb.size.x * 0.5 * absf(mesh_instance.scale.x)
-	var half_size_z := local_aabb.size.z * 0.5 * absf(mesh_instance.scale.z)
-	var center := mesh_instance.global_position
-	return {
-		"min_x": center.x - half_size_x + DASH_PATH_MARGIN_FROM_BOUNDS,
-		"max_x": center.x + half_size_x - DASH_PATH_MARGIN_FROM_BOUNDS,
-		"min_z": center.z - half_size_z + DASH_PATH_MARGIN_FROM_BOUNDS,
-		"max_z": center.z + half_size_z - DASH_PATH_MARGIN_FROM_BOUNDS,
-	}
-
-
-func _clamp_point_to_bounds(point: Vector3, bounds: Dictionary) -> Vector3:
-	var clamped := point
-	clamped.x = clampf(clamped.x, float(bounds.get("min_x", clamped.x)), float(bounds.get("max_x", clamped.x)))
-	clamped.z = clampf(clamped.z, float(bounds.get("min_z", clamped.z)), float(bounds.get("max_z", clamped.z)))
-	clamped.y = DASH_PATH_SPAWN_Y
-	return clamped
-
-
-func _distance_point_to_segment_xz(point: Vector3, segment_start: Vector3, segment_end: Vector3) -> float:
-	var start := Vector2(segment_start.x, segment_start.z)
-	var finish := Vector2(segment_end.x, segment_end.z)
-	var target := Vector2(point.x, point.z)
-	var segment := finish - start
-	var segment_length_sq := segment.length_squared()
-	if segment_length_sq <= 0.000001:
-		return target.distance_to(start)
-	var t := clampf((target - start).dot(segment) / segment_length_sq, 0.0, 1.0)
-	var projection := start + (segment * t)
-	return target.distance_to(projection)
-
-
-func _segments_intersect_xz(a_start: Vector3, a_end: Vector3, b_start: Vector3, b_end: Vector3) -> bool:
-	var p := Vector2(a_start.x, a_start.z)
-	var p2 := Vector2(a_end.x, a_end.z)
-	var q := Vector2(b_start.x, b_start.z)
-	var q2 := Vector2(b_end.x, b_end.z)
-	return Geometry2D.segment_intersects_segment(p, p2, q, q2) != null
