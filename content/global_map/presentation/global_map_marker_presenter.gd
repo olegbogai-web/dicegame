@@ -85,18 +85,6 @@ func pick_marker(mouse_position: Vector2) -> Dictionary:
 	return {}
 
 
-func get_visible_marker_positions(include_unavailable: bool = false) -> Array[Vector3]:
-	var positions: Array[Vector3] = []
-	for marker_data in _markers:
-		if not include_unavailable and bool(marker_data.get("unavailable", false)):
-			continue
-		var marker_node := marker_data.get("node") as Node3D
-		if marker_node == null or not is_instance_valid(marker_node) or not marker_node.visible:
-			continue
-		positions.append(marker_node.global_position)
-	return positions
-
-
 func mark_all_markers_unavailable() -> void:
 	for marker_data in _markers:
 		var marker_node := marker_data.get("node") as MeshInstance3D
