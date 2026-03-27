@@ -70,6 +70,20 @@ func export_markers_state() -> Array[Dictionary]:
 	return serialized_markers
 
 
+func get_active_marker_points(include_unavailable: bool = false) -> Array[Vector3]:
+	var points: Array[Vector3] = []
+	for marker_data in _markers:
+		var marker_node := marker_data.get("node") as Node3D
+		if marker_node == null or not is_instance_valid(marker_node):
+			continue
+		if not marker_node.visible:
+			continue
+		if not include_unavailable and bool(marker_data.get("unavailable", false)):
+			continue
+		points.append(marker_node.global_position)
+	return points
+
+
 func pick_marker(mouse_position: Vector2) -> Dictionary:
 	if _camera == null:
 		return {}
