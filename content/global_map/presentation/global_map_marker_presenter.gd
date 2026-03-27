@@ -2,6 +2,7 @@ extends RefCounted
 class_name GlobalMapMarkerPresenter
 
 const PICK_RADIUS := 55.0
+const DYNAMIC_MARKER_SCALE_MULTIPLIER := 0.1
 const UNAVAILABLE_MARK_TEXTURE := preload("res://assets/global_map/Х_mark.png")
 const UNAVAILABLE_MARK_SCALE_MULTIPLIER := 1.3
 const UNAVAILABLE_MARK_OFFSET_Y := 0.001
@@ -118,7 +119,7 @@ func _build_marker_node(marker_spec: Dictionary) -> MeshInstance3D:
 	marker.mesh = _template_icon.mesh
 	marker.transform = _template_icon.transform
 	marker.global_position = marker_spec.get("position", _template_icon.global_position)
-	marker.scale = _template_icon.scale
+	marker.scale = _template_icon.scale * DYNAMIC_MARKER_SCALE_MULTIPLIER
 	marker.visible = true
 	var material := _build_marker_material(marker_spec.get("icon") as Texture2D)
 	if material != null:
