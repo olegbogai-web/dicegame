@@ -67,7 +67,10 @@ func configure(
 	_hero_movement.configure(hero_icon)
 	_fade_presenter.configure(owner)
 	_event_presenter.configure(event_icon)
-	_marker_presenter.configure(owner, event_icon, camera)
+	var marker_template: MeshInstance3D = event_icon
+	if not _road_nodes.is_empty() and _road_nodes.back() is MeshInstance3D:
+		marker_template = _road_nodes.back() as MeshInstance3D
+	_marker_presenter.configure(owner, marker_template, camera)
 	_ensure_event_unavailable_mark()
 	_build_start_path_points()
 	_restore_persisted_state()
