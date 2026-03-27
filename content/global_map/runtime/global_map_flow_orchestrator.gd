@@ -25,13 +25,15 @@ const GLOBAL_MAP_DICE_LOG_PREFIX := "[GlobalMapDice]"
 const UNAVAILABLE_MARK_SCALE_MULTIPLIER := 1.3
 const UNAVAILABLE_MARK_OFFSET_Y := 0.001
 const DASH_PATH_SPAWN_Y := 0.005
-const DASH_PATH_POINT_SPACING := 0.95
+const DASH_PATH_POINT_SPACING := 0.85
 const DASH_PATH_MARGIN_FROM_BOUNDS := 0.45
 const DASH_PATH_MIN_MARKER_CLEARANCE := 0.6
 const DASH_PATH_OFFSET_AMPLITUDE := 0.35
 const DASH_PATH_JITTER_POSITION := 0.1
 const DASH_PATH_JITTER_ROTATION_DEGREES := 10.0
 const DASH_PATH_BUILD_ATTEMPTS := 10
+const DASH_EDGE_SPACING_MIN := 0.3
+const DASH_EDGE_SPACING_MAX := 0.5
 
 var _owner: Node3D
 var _camera: Camera3D
@@ -475,9 +477,16 @@ func _spawn_dash_path(path_points: Array[Vector3]) -> void:
 	if not _path_dash_template is MeshInstance3D:
 		return
 	var template := _path_dash_template as MeshInstance3D
-	for index in range(1, path_points.size() - 1):
-		var base_position := path_points[index]
-		var target_position := path_points[index + 1]
+	var dash_length := _resolve_dash_length(template)
+	var edge_gap := randf_range(DASH_EDGE_SPACING_MIN, DASH_EDGE_SPACING_MAX)
+	var center_spacing := maxf(0.05, dash_length + edge_gap)
+	var sampled_points := _sample_dash_positions(path_points, center_spacing)
+	if sampled_points.size() < 2:
+		return
+
+	for index in range(sampled_points.size() - 1):
+		var base_position := sampled_points[index]
+		var target_position := sampled_points[index + 1]
 		var dash := MeshInstance3D.new()
 		dash.mesh = template.mesh
 		dash.scale = template.scale
@@ -493,6 +502,45 @@ func _spawn_dash_path(path_points: Array[Vector3]) -> void:
 		dash.rotation = Vector3(0.0, yaw, 0.0)
 		_owner.add_child(dash)
 		_dynamic_path_dashes.append(dash)
+
+
+func _resolve_dash_length(template: MeshInstance3D) -> float:
+	if template == null or template.mesh == null:
+		return 0.4
+	var local_aabb := template.mesh.get_aabb()
+	return maxf(0.05, local_aabb.size.x * absf(template.scale.x))
+
+
+func _sample_dash_positions(path_points: Array[Vector3], center_spacing: float) -> Array[Vector3]:
+	var sampled: Array[Vector3] = []
+	if path_points.size() < 2:
+		return sampled
+	var remaining := 0.0
+	var first := path_points[0]
+	first.y = DASH_PATH_SPAWN_Y
+	sampled.append(first)
+	for index in range(path_points.size() - 1):
+		var segment_start := path_points[index]
+		var segment_end := path_points[index + 1]
+		segment_start.y = DASH_PATH_SPAWN_Y
+		segment_end.y = DASH_PATH_SPAWN_Y
+		var segment := segment_end - segment_start
+		var segment_length := segment.length()
+		if segment_length <= 0.000001:
+			continue
+		var direction := segment / segment_length
+		var distance_on_segment := center_spacing - remaining
+		while distance_on_segment < segment_length:
+			var point := segment_start + direction * distance_on_segment
+			point.y = DASH_PATH_SPAWN_Y
+			sampled.append(point)
+			distance_on_segment += center_spacing
+		remaining = segment_length - (distance_on_segment - center_spacing)
+	var finish := path_points[path_points.size() - 1]
+	finish.y = DASH_PATH_SPAWN_Y
+	if sampled[sampled.size() - 1].distance_to(finish) >= center_spacing * 0.35:
+		sampled.append(finish)
+	return sampled
 
 
 func _resolve_dash_yaw(from_position: Vector3, to_position: Vector3) -> float:
