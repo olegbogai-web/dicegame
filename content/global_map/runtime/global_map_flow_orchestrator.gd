@@ -480,7 +480,7 @@ func _spawn_dash_path(path_points: Array[Vector3]) -> void:
 		var target_position := path_points[index + 1]
 		var dash := MeshInstance3D.new()
 		dash.mesh = template.mesh
-		dash.scale = template.scale * 0.1
+		dash.scale = template.scale
 		dash.material_override = template.material_override
 		var jittered_position := Vector3(
 			base_position.x + randf_range(-DASH_PATH_JITTER_POSITION, DASH_PATH_JITTER_POSITION),
