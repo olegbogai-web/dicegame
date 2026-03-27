@@ -17,13 +17,13 @@ albedo_texture = ExtResource("1_7nkcx")
 transparency = 1
 albedo_texture = ExtResource("2_vux7t")
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_oecmp"]
-transparency = 1
-albedo_texture = ExtResource("3_aqsb5")
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uqttp"]
 transparency = 1
 albedo_texture = ExtResource("4_f4nsl")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_oecmp"]
+transparency = 1
+albedo_texture = ExtResource("3_aqsb5")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_f4nsl"]
 transparency = 1
@@ -46,18 +46,18 @@ mesh = SubResource("PlaneMesh_5qcje")
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 84.3, 0)
 fov = 12.0
 
-[node name="dash" type="MeshInstance3D" parent="." unique_id=1147296881]
-transform = Transform3D(0.39157063, 0, -0.05466498, 0, 0.85, 0, 0.06442394, 0, 0.33225536, -13.1899395, 0.01, 0.47136393)
-material_override = SubResource("StandardMaterial3D_oecmp")
-mesh = SubResource("PlaneMesh_5qcje")
-
 [node name="event_icon" type="MeshInstance3D" parent="." unique_id=870975301]
-transform = Transform3D(0.19819084, 0, 0, 0, 0.85, 0, 0, 0, 0.095808975, -10.044104, 0.01, 0.017569304)
+transform = Transform3D(0.5743785, 0, 0, 0, 0.85, 0, 0, 0, 0.6565916, -10.044104, 0.01, 0.017569304)
 material_override = SubResource("StandardMaterial3D_uqttp")
 mesh = SubResource("PlaneMesh_5qcje")
 
 [node name="board" parent="." unique_id=1670483730 instance=ExtResource("5_isgup")]
 transform = Transform3D(4.1566563, 0, 0, 0, 10.717996, 0, 0, 0, 4.4277115, 0, -0.15004885, 0)
+
+[node name="dash" type="MeshInstance3D" parent="." unique_id=1147296881]
+transform = Transform3D(0.39157063, 0, -0.05466498, 0, 0.85, 0, 0.06442394, 0, 0.33225536, -13.1899395, 0.01, 0.47136393)
+material_override = SubResource("StandardMaterial3D_oecmp")
+mesh = SubResource("PlaneMesh_5qcje")
 
 [node name="dash2" type="MeshInstance3D" parent="." unique_id=2006677491]
 transform = Transform3D(0.38952416, 0, 0.06433617, 0, 0.85, 0, -0.07582166, 0, 0.33051893, -12.105691, 0.01, 0.59302443)
