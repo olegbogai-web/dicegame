@@ -51,7 +51,7 @@ func get_resolved_base_cube_global_map() -> Array[DiceDefinition]:
 
 func _build_default_base_cube_global_map() -> Array[DiceDefinition]:
 	var resolved: Array[DiceDefinition] = []
-	for _index in 3:
+	for _index in 2:
 		resolved.append(_build_global_map_dice_definition())
 	return resolved
 
