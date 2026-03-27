@@ -403,8 +403,7 @@ func _has_available_markers(saved_markers: Array) -> bool:
 func _build_paths_for_markers(markers: Array[Dictionary]) -> void:
 	if markers.is_empty():
 		return
-	_clear_dynamic_paths()
-	var marker_positions := _collect_marker_positions(markers)
+	var marker_positions := _marker_presenter.get_all_marker_positions()
 	var background_bounds := _resolve_background_bounds()
 	if background_bounds.is_empty():
 		return
@@ -418,17 +417,6 @@ func _build_paths_for_markers(markers: Array[Dictionary]) -> void:
 			continue
 		_spawn_dash_path(path_points)
 		_marker_presenter.set_marker_path_points(marker_node, path_points)
-
-func _collect_marker_positions(markers: Array[Dictionary]) -> Array[Vector3]:
-	var marker_positions: Array[Vector3] = []
-	for marker_data in markers:
-		var marker_node := marker_data.get("node") as Node3D
-		if marker_node == null or not is_instance_valid(marker_node):
-			continue
-		if not marker_node.visible:
-			continue
-		marker_positions.append(marker_node.global_position)
-	return marker_positions
 
 func _rebuild_dynamic_paths(markers: Array[Dictionary]) -> void:
 	_clear_dynamic_paths()
