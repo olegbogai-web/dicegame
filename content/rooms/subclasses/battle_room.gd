@@ -7,6 +7,7 @@ const TEST_MONSTER_DEFINITION := preload("res://content/monsters/definitions/tes
 const COMMON_ATTACK_ABILITY := preload("res://content/abilities/definitions/common_attack.tres")
 const HEAL_ABILITY := preload("res://content/abilities/definitions/heal.tres")
 const DEATH_BLOW_ABILITY := preload("res://content/abilities/definitions/death_blow.tres")
+const CLAWED_SERIES_ABILITY := preload("res://content/abilities/definitions/clawed_series.tres")
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
 const BattleEffectRuntime = preload("res://content/combat/runtime/battle_effect_runtime.gd")
@@ -327,7 +328,7 @@ static func _build_test_player() -> Player:
 	base_stat.max_hp = 30
 	base_stat.starting_hp = 30
 	base_stat.starting_armor = 0
-	base_stat.starting_abilities = [COMMON_ATTACK_ABILITY, HEAL_ABILITY, DEATH_BLOW_ABILITY]
+	base_stat.starting_abilities = [COMMON_ATTACK_ABILITY, HEAL_ABILITY, DEATH_BLOW_ABILITY, CLAWED_SERIES_ABILITY]
 	base_stat.starting_dice = [
 		preload("res://content/resources/base_cube.tres"),
 		preload("res://content/resources/base_cube.tres"),
