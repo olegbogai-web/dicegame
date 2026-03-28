@@ -46,8 +46,6 @@ func apply_face(face_definition: DiceFaceDefinition, face_size: Vector2) -> void
 		DiceFaceDefinition.ContentType.TEXT:
 			_label.text = face_definition.text_value
 			_label.modulate = face_definition.text_color
-			_label.outline_modulate = face_definition.text_outline_color
-			_label.outline_size = face_definition.text_outline_size
 			_label.font_size = face_definition.font_size
 			_label.pixel_size = max(min_size * 0.7 / max(face_definition.font_size, 1), 0.0001)
 			_label.visible = true

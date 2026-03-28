@@ -11,8 +11,6 @@ enum ContentType {
 @export var text_value := "1"
 @export var icon: Texture2D
 @export var text_color: Color = Color(0.0, 0.0, 0.0, 1.0)
-@export var text_outline_color: Color = Color(0.0, 0.0, 0.0, 1.0)
-@export_range(0, 32, 1) var text_outline_size := 0
 @export var overlay_tint: Color = Color(1.0, 1.0, 1.0, 1.0)
 @export_range(16, 256, 1) var font_size := 96
 @export var aura_color: Color = Color(1.0, 1.0, 1.0, 0.0)

@@ -7,8 +7,6 @@ var current_hp := 0
 var current_armor := 0
 var dice_loadout: Array[DiceDefinition] = []
 var runtime_cube_global_map: Array[DiceDefinition] = []
-var runtime_reward_cube: DiceDefinition
-var runtime_money_cube: DiceDefinition
 var ability_loadout: Array[AbilityDefinition] = []
 var run_flags: Dictionary = {}
 var metadata: Dictionary = {}
@@ -34,8 +32,6 @@ func reset_for_run() -> void:
 		current_armor = 0
 		dice_loadout.clear()
 		runtime_cube_global_map.clear()
-		runtime_reward_cube = null
-		runtime_money_cube = null
 		ability_loadout.clear()
 		run_flags.clear()
 		return
@@ -43,8 +39,6 @@ func reset_for_run() -> void:
 	current_armor = base_stat.starting_armor
 	dice_loadout = base_stat.starting_dice.duplicate()
 	runtime_cube_global_map = base_stat.get_resolved_base_cube_global_map().duplicate(true)
-	runtime_reward_cube = base_stat.get_resolved_base_reward_cube().duplicate(true)
-	runtime_money_cube = base_stat.get_resolved_base_money_cube().duplicate(true)
 	ability_loadout = base_stat.starting_abilities.duplicate()
 	run_flags.clear()
 
