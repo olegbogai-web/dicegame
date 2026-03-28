@@ -47,7 +47,7 @@ transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 8
 fov = 12.0
 
 [node name="event_icon" type="MeshInstance3D" parent="." unique_id=870975301]
-transform = Transform3D(0.5743785, 0, 0, 0, 0.85, 0, 0, 0, 0.6565916, -10.044104, 0.01, 0.017569304)
+transform = Transform3D(0.5743785, 0, 0, 0, 0.85, 0, 0, 0, 0.6565916, -10.864424, 0.01, 0.017569304)
 material_override = SubResource("StandardMaterial3D_uqttp")
 mesh = SubResource("PlaneMesh_5qcje")
 
@@ -55,17 +55,17 @@ mesh = SubResource("PlaneMesh_5qcje")
 transform = Transform3D(4.1566563, 0, 0, 0, 10.717996, 0, 0, 0, 4.4277115, 0, -0.15004885, 0)
 
 [node name="dash" type="MeshInstance3D" parent="." unique_id=1147296881]
-transform = Transform3D(0.39157063, 0, -0.05466498, 0, 0.85, 0, 0.06442394, 0, 0.33225536, -13.1899395, 0.01, 0.47136393)
+transform = Transform3D(0.31883135, 0, -0.040607013, 0, 0.85, 0, 0.052456364, 0, 0.24681063, -13.586285, 0.01, 0.3384469)
 material_override = SubResource("StandardMaterial3D_oecmp")
 mesh = SubResource("PlaneMesh_5qcje")
 
 [node name="dash2" type="MeshInstance3D" parent="." unique_id=2006677491]
-transform = Transform3D(0.38952416, 0, 0.06433617, 0, 0.85, 0, -0.07582166, 0, 0.33051893, -12.105691, 0.01, 0.59302443)
+transform = Transform3D(0.31716505, 0, 0.047791105, 0, 0.85, 0, -0.06173681, 0, 0.24552076, -12.542233, 0.01, 0.5101393)
 material_override = SubResource("StandardMaterial3D_oecmp")
 mesh = SubResource("PlaneMesh_5qcje")
 
 [node name="dash3" type="MeshInstance3D" parent="." unique_id=907670957]
-transform = Transform3D(0.38014323, 0, -0.09663122, 0, 0.85, 0, 0.11388212, 0, 0.322559, -10.914911, 0.01, 0.46630302)
+transform = Transform3D(0.30952674, 0, -0.07178097, 0, 0.85, 0, 0.09272705, 0, 0.23960784, -11.602203, 0.01, 0.46302953)
 material_override = SubResource("StandardMaterial3D_oecmp")
 mesh = SubResource("PlaneMesh_5qcje")
 
