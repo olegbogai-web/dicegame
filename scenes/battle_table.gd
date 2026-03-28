@@ -24,6 +24,8 @@ const SELECTED_FRAME_LIFT_Y := 0.4
 const SELECTED_FRAME_MOUSE_FOLLOW_FACTOR := 0.2
 const ACTIVATION_ANIMATION_DURATION := 0.5
 const ACTIVATION_TARGET_LIFT_Y := 0.4
+const POST_BATTLE_REWARD_DICE_SIZE_MULTIPLIER := Vector3(5.0, 5.0, 5.0)
+const POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER := 2.0
 
 @onready var _camera: Camera3D = $battle_camera
 @onready var _board: BoardController = $board
@@ -871,7 +873,13 @@ func _handle_post_battle_reward_dice() -> void:
 		requests.append(_build_dice_throw_request(money_cube, {"owner": &"reward"}))
 	if requests.is_empty():
 		return
-	_board.throw_dice(requests)
+	for request in requests:
+		request.extra_size_multiplier = POST_BATTLE_REWARD_DICE_SIZE_MULTIPLIER
+	var spawned_dice := _board.throw_dice(requests)
+	for dice_body in spawned_dice:
+		if dice_body == null:
+			continue
+		dice_body.linear_velocity.y *= POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER
 	_has_spawned_post_battle_reward_dice = true
 
 
