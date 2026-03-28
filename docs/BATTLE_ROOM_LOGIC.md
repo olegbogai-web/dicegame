@@ -92,6 +92,8 @@
 
 Подробная архитектура принятия решений монстров описана отдельно в [docs/MONSTER_AI_ARCHITECTURE.md](./MONSTER_AI_ARCHITECTURE.md), чтобы не смешивать `BattleRoom` lifecycle и monster-specific AI rules. В частности, именно там зафиксированы правило старта AI только после полной остановки кубов, общий policy конца хода, отдельные сервисы переноса кубов и общий visual/action pipeline использования способности.
 
+Архитектура post-battle куба награды и куба денег описана отдельно в [docs/REWARD_AND_MONEY_DICE_ARCHITECTURE.md](./REWARD_AND_MONEY_DICE_ARCHITECTURE.md), чтобы не смешивать lifecycle `BattleRoom` с правилами хранения run-кубов в базовых/рантайм статах игрока и с правилами выдачи награды после победы.
+
 Это должно жить либо в `Combat`, либо в presentation/UI слое.
 
 ### Текущее разбиение runtime-логики
