@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
+
+[ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" uid="uid://cijja5c0f6ibw" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
+[ext_resource type="Script" uid="uid://vqakigfsnb18" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
+[ext_resource type="Script" uid="uid://c2t7x3op44t3s" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
+[ext_resource type="Script" uid="uid://drneiu6png0u3" path="res://content/abilities/resources/ability_effect_definition.gd" id="6_effect"]
+[ext_resource type="Texture2D" path="res://assets/ability/clawed_series.png" id="7_icon"]
+
+[sub_resource type="Resource" id="AbilityDiceCondition_pay"]
+script = ExtResource("3_dice_condition")
+max_value = 3
+required_count = 3
+required_tags = PackedStringArray()
+forbidden_tags = PackedStringArray()
+accepted_face_ids = PackedStringArray()
+consume_order = PackedStringArray()
+
+[sub_resource type="Resource" id="AbilityCost_main"]
+script = ExtResource("2_cost")
+dice_conditions = Array[ExtResource("3_dice_condition")]([SubResource("AbilityDiceCondition_pay")])
+
+[sub_resource type="Resource" id="AbilityEffect_damage"]
+script = ExtResource("6_effect")
+effect_id = "clawed_series_damage"
+magnitude = 15
+dice_query_tags = PackedStringArray()
+
+[sub_resource type="Resource" id="AbilityTargetRule_enemy"]
+script = ExtResource("4_target_rule")
+required_tags = PackedStringArray()
+forbidden_tags = PackedStringArray()
+
+[resource]
+script = ExtResource("1_ability")
+ability_id = "clawed_series"
+display_name = "Когтистая серия"
+description = "Требует 3 куба со значением 3 или меньше. Наносит 3 удара по 5 урона (итого 15)."
+icon = ExtResource("7_icon")
+tags = PackedStringArray("attack")
+owner_scope = 1
+cost = SubResource("AbilityCost_main")
+target_rule = SubResource("AbilityTargetRule_enemy")
+effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_damage")])
+follow_up_ability_ids = PackedStringArray()
