@@ -101,7 +101,7 @@ func _build_global_map_faces() -> Array[DiceFaceDefinition]:
 func _build_default_reward_cube_definition() -> DiceDefinition:
 	var dice_definition := DiceDefinitionScript.new()
 	dice_definition.dice_name = "reward_cube"
-	dice_definition.base_color = Color(0.96, 0.96, 0.96, 1.0)
+	dice_definition.base_color = Color(0.76, 0.76, 0.76, 1.0)
 	dice_definition.faces = [
 		_build_face("artifact_+", REWARD_ARTIFACT_ICON),
 		_build_face("card_+", REWARD_CARD_ICON),
