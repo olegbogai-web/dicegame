@@ -504,6 +504,8 @@ func _refresh_player_ability_snap_state() -> void:
 			var target_position := _get_slot_target_position(slot_state["dice_place"], assigned_dice)
 			assigned_dice.assign_ability_slot(slot_state["slot_id"], target_position)
 			continue
+		if not _is_player_ability_frame_at_base(slot_state["frame"] as MeshInstance3D):
+			continue
 
 		var candidate := _find_snap_candidate(slot_state, dice_list, used_dice)
 		if candidate == null:
@@ -512,6 +514,17 @@ func _refresh_player_ability_snap_state() -> void:
 		candidate.assign_ability_slot(slot_state["slot_id"], _get_slot_target_position(slot_state["dice_place"], candidate))
 
 	_update_player_ability_visuals(dice_list)
+
+
+func _is_player_ability_frame_at_base(frame: MeshInstance3D) -> bool:
+	if frame == null:
+		return false
+	for frame_state in _player_ability_frame_states:
+		if frame_state.get("frame") != frame:
+			continue
+		var base_origin: Vector3 = frame_state.get("base_origin", frame.transform.origin)
+		return frame.transform.origin.is_equal_approx(base_origin)
+	return true
 
 
 func _register_player_ability_frame(frame: MeshInstance3D, ability: AbilityDefinition, ability_index: int) -> void:
