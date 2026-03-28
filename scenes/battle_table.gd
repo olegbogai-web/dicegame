@@ -48,6 +48,7 @@ var _selected_ability_state: Dictionary = {}
 var _selected_mouse_anchor := Vector3.ZERO
 var _activation_in_progress := false
 var _turn_transition_in_progress := false
+var _has_spawned_post_battle_reward_dice := false
 
 
 func _ready() -> void:
@@ -65,6 +66,7 @@ func _ready() -> void:
 
 func configure_from_battle_room(next_battle_room: BattleRoom) -> void:
 	battle_room_data = next_battle_room
+	_has_spawned_post_battle_reward_dice = false
 	if is_node_ready():
 		_apply_room_data()
 		_initialize_battle_state()
@@ -845,6 +847,32 @@ func _apply_combatant_views_after_ability_resolution() -> void:
 	_update_turn_ui()
 	if battle_room_data != null and battle_room_data.is_battle_over():
 		_clear_board_dice()
+		_handle_post_battle_reward_dice()
+
+
+func _handle_post_battle_reward_dice() -> void:
+	if _has_spawned_post_battle_reward_dice:
+		return
+	if _board == null or battle_room_data == null:
+		return
+	if battle_room_data.battle_status != &"victory":
+		return
+	var player := battle_room_data.player_instance
+	if player == null:
+		return
+	var reward_cube := player.runtime_reward_cube
+	var money_cube := player.runtime_money_cube
+	if reward_cube == null and money_cube == null:
+		return
+	var requests: Array[DiceThrowRequest] = []
+	if reward_cube != null:
+		requests.append(_build_dice_throw_request(reward_cube, {"owner": &"reward"}))
+	if money_cube != null:
+		requests.append(_build_dice_throw_request(money_cube, {"owner": &"reward"}))
+	if requests.is_empty():
+		return
+	_board.throw_dice(requests)
+	_has_spawned_post_battle_reward_dice = true
 
 
 func _find_monster_ability_frame_state(monster_index: int, ability: AbilityDefinition) -> Dictionary:
@@ -905,6 +933,7 @@ func _initialize_battle_state() -> void:
 	if battle_room_data == null:
 		return
 	if battle_room_data.battle_status == &"not_started":
+		_has_spawned_post_battle_reward_dice = false
 		battle_room_data.start_battle()
 	_start_current_turn()
 
@@ -914,6 +943,7 @@ func _start_current_turn() -> void:
 		return
 	_clear_board_dice()
 	if battle_room_data.is_battle_over():
+		_handle_post_battle_reward_dice()
 		_update_turn_ui()
 		return
 	_throw_current_turn_dice()
