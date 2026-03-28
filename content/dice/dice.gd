@@ -260,6 +260,10 @@ func _try_return_to_board_if_outside() -> void:
 	if board.is_position_over_floor(global_position):
 		return
 
+	await get_tree().create_timer(0.75).timeout
+	if _slot_snap_controller != null and _slot_snap_controller.has_assigned_slot():
+		return
+
 	_is_returning_to_board = true
 	await _animate_return_to_board(board)
 	_is_returning_to_board = false
