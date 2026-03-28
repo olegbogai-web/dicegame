@@ -801,7 +801,9 @@ func _play_ability_use_visual(frame_state: Dictionary, target_descriptor: Dictio
 	var target_origin := _resolve_activation_target_origin(target_descriptor, base_origin)
 	var dice_assignments := _build_dice_assignments_for_frame(consumed_dice, frame_state)
 	var on_activate := func() -> void:
-		battle_room_data.activate_current_turn_ability(ability, target_descriptor)
+		var runtime_target_descriptor := target_descriptor.duplicate(true)
+		runtime_target_descriptor["consumed_dice"] = consumed_dice
+		battle_room_data.activate_current_turn_ability(ability, runtime_target_descriptor)
 		_apply_combatant_views_after_ability_resolution()
 	var on_finished := func() -> void:
 		_activation_in_progress = false
@@ -901,7 +903,9 @@ func _execute_monster_ability(
 ) -> void:
 	var frame_state := _find_monster_ability_frame_state(monster_index, ability)
 	if frame_state.is_empty():
-		battle_room_data.activate_current_turn_ability(ability, target_descriptor)
+		var runtime_target_descriptor := target_descriptor.duplicate(true)
+		runtime_target_descriptor["consumed_dice"] = consumed_dice
+		battle_room_data.activate_current_turn_ability(ability, runtime_target_descriptor)
 		_apply_combatant_views_after_ability_resolution()
 		for dice in consumed_dice:
 			if is_instance_valid(dice):
