@@ -18,6 +18,8 @@
 
 Связанный документ по архитектуре решений монстров: [docs/MONSTER_AI_ARCHITECTURE.md](./MONSTER_AI_ARCHITECTURE.md). Он фиксирует отдельную фазовую модель monster turn, правило старта AI только после полной остановки кубов, общий policy конца хода и обязательное вынесение reusable execution/visual logic из `battle_table`.
 
+Связанный документ по post-battle кубам награды и денег: [docs/REWARD_AND_MONEY_DICE_ARCHITECTURE.md](./REWARD_AND_MONEY_DICE_ARCHITECTURE.md). Он фиксирует, какие кубы хранятся в базовых/рантайм статах игрока и как они бросаются после победы в бою.
+
 ---
 
 ## 1. Цель подсистемы Combat
