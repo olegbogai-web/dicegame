@@ -6,6 +6,13 @@ const DEFAULT_MAX_HP := 30
 const GLOBAL_MAP_SWORDS_ICON := preload("res://assets/global_map/swords.png")
 const GLOBAL_MAP_EVENT_ICON := preload("res://assets/global_map/question_mark.png")
 const GLOBAL_MAP_DICE_SKIN := preload("res://assets/dice_edges/bones_dice_skin.png")
+const REWARD_ARTIFACT_ICON := preload("res://assets/dice_edges/artifact_+.png")
+const REWARD_CARD_ICON := preload("res://assets/dice_edges/card_+.png")
+const REWARD_CUBE_ICON := preload("res://assets/dice_edges/cube_+.png")
+const REWARD_CUBE_UP_ICON := preload("res://assets/dice_edges/cube_up.png")
+const REWARD_CARD_UP_ICON := preload("res://assets/dice_edges/card_up.png")
+const REWARD_MONEY_ICON := preload("res://assets/dice_edges/money.png")
+const MONEY_DICE_SKIN := preload("res://assets/dice_edges/money_dice_skin.png")
 const DiceDefinitionScript = preload("res://content/dice/resources/dice_definition.gd")
 const DiceFaceDefinitionScript = preload("res://content/dice/resources/dice_face_definition.gd")
 
@@ -20,6 +27,8 @@ const DiceFaceDefinitionScript = preload("res://content/dice/resources/dice_face
 @export_range(0, 999, 1) var starting_armor := 0
 @export var starting_dice: Array[DiceDefinition] = []
 @export var base_cube_global_map: Array[DiceDefinition] = []
+@export var base_reward_cube: DiceDefinition
+@export var base_money_cube: DiceDefinition
 @export var starting_abilities: Array[AbilityDefinition] = []
 @export var metadata: Dictionary = {}
 
@@ -37,6 +46,10 @@ func is_valid_definition() -> bool:
 	for global_map_dice_definition in get_resolved_base_cube_global_map():
 		if global_map_dice_definition == null:
 			return false
+	if get_resolved_base_reward_cube() == null:
+		return false
+	if get_resolved_base_money_cube() == null:
+		return false
 	for ability_definition in starting_abilities:
 		if ability_definition == null or not ability_definition.supports_owner(true):
 			return false
@@ -47,6 +60,18 @@ func get_resolved_base_cube_global_map() -> Array[DiceDefinition]:
 	if not base_cube_global_map.is_empty():
 		return base_cube_global_map
 	return _build_default_base_cube_global_map()
+
+
+func get_resolved_base_reward_cube() -> DiceDefinition:
+	if base_reward_cube != null:
+		return base_reward_cube
+	return _build_default_reward_cube_definition()
+
+
+func get_resolved_base_money_cube() -> DiceDefinition:
+	if base_money_cube != null:
+		return base_money_cube
+	return _build_default_money_cube_definition()
 
 
 func _build_default_base_cube_global_map() -> Array[DiceDefinition]:
@@ -71,6 +96,47 @@ func _build_global_map_faces() -> Array[DiceFaceDefinition]:
 		faces.append(_build_face("swords", GLOBAL_MAP_SWORDS_ICON))
 	faces.append(_build_face("question_mark", GLOBAL_MAP_EVENT_ICON))
 	return faces
+
+
+func _build_default_reward_cube_definition() -> DiceDefinition:
+	var dice_definition := DiceDefinitionScript.new()
+	dice_definition.dice_name = "reward_cube"
+	dice_definition.base_color = Color(0.96, 0.96, 0.96, 1.0)
+	dice_definition.faces = [
+		_build_face("artifact_+", REWARD_ARTIFACT_ICON),
+		_build_face("card_+", REWARD_CARD_ICON),
+		_build_face("cube_+", REWARD_CUBE_ICON),
+		_build_face("cube_up", REWARD_CUBE_UP_ICON),
+		_build_face("card_up", REWARD_CARD_UP_ICON),
+		_build_face("money", REWARD_MONEY_ICON),
+	]
+	return dice_definition
+
+
+func _build_default_money_cube_definition() -> DiceDefinition:
+	var dice_definition := DiceDefinitionScript.new()
+	dice_definition.dice_name = "money_cube"
+	dice_definition.texture = MONEY_DICE_SKIN
+	dice_definition.base_color = Color(1.0, 0.96, 0.86, 1.0)
+	dice_definition.faces = _build_default_money_faces()
+	return dice_definition
+
+
+func _build_default_money_faces() -> Array[DiceFaceDefinition]:
+	var faces: Array[DiceFaceDefinition] = []
+	for value in range(1, 7):
+		faces.append(_build_money_face(str(value)))
+	return faces
+
+
+func _build_money_face(value: String) -> DiceFaceDefinition:
+	var face := DiceFaceDefinitionScript.new()
+	face.text_value = value
+	face.content_type = DiceFaceDefinitionScript.ContentType.TEXT
+	face.text_color = Color(1.0, 0.95, 0.16, 1.0)
+	face.text_outline_size = 12
+	face.text_outline_color = Color(0.67, 0.22, 0.0, 1.0)
+	return face
 
 
 func _build_face(value: String, icon: Texture2D) -> DiceFaceDefinition:
