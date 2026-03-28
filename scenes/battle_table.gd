@@ -26,6 +26,7 @@ const ACTIVATION_ANIMATION_DURATION := 0.5
 const ACTIVATION_TARGET_LIFT_Y := 0.8
 const POST_BATTLE_REWARD_DICE_SIZE_MULTIPLIER := Vector3(5.0, 5.0, 5.0)
 const POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER := 3.0
+const POST_BATTLE_REWARD_DICE_DELAY_SECONDS := 1.0
 
 @onready var _camera: Camera3D = $battle_camera
 @onready var _board: BoardController = $board
@@ -51,6 +52,7 @@ var _selected_mouse_anchor := Vector3.ZERO
 var _activation_in_progress := false
 var _turn_transition_in_progress := false
 var _has_spawned_post_battle_reward_dice := false
+var _is_waiting_post_battle_reward_dice := false
 
 
 func _ready() -> void:
@@ -69,6 +71,7 @@ func _ready() -> void:
 func configure_from_battle_room(next_battle_room: BattleRoom) -> void:
 	battle_room_data = next_battle_room
 	_has_spawned_post_battle_reward_dice = false
+	_is_waiting_post_battle_reward_dice = false
 	if is_node_ready():
 		_apply_room_data()
 		_initialize_battle_state()
@@ -868,8 +871,11 @@ func _apply_combatant_views_after_ability_resolution() -> void:
 
 
 func _handle_post_battle_reward_dice() -> void:
-	if _has_spawned_post_battle_reward_dice:
+	if _has_spawned_post_battle_reward_dice or _is_waiting_post_battle_reward_dice:
 		return
+	_is_waiting_post_battle_reward_dice = true
+	await get_tree().create_timer(POST_BATTLE_REWARD_DICE_DELAY_SECONDS).timeout
+	_is_waiting_post_battle_reward_dice = false
 	if _board == null or battle_room_data == null:
 		return
 	if battle_room_data.battle_status != &"victory":
@@ -959,6 +965,7 @@ func _initialize_battle_state() -> void:
 		return
 	if battle_room_data.battle_status == &"not_started":
 		_has_spawned_post_battle_reward_dice = false
+		_is_waiting_post_battle_reward_dice = false
 		battle_room_data.start_battle()
 	_start_current_turn()
 
