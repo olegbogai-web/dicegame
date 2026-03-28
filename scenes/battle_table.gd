@@ -26,6 +26,7 @@ const ACTIVATION_ANIMATION_DURATION := 0.5
 const ACTIVATION_TARGET_LIFT_Y := 0.8
 const POST_BATTLE_REWARD_DICE_SIZE_MULTIPLIER := Vector3(5.0, 5.0, 5.0)
 const POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER := 3.0
+const POST_BATTLE_REWARD_THROW_DELAY_SECONDS := 1.0
 
 @onready var _camera: Camera3D = $battle_camera
 @onready var _board: BoardController = $board
@@ -51,6 +52,7 @@ var _selected_mouse_anchor := Vector3.ZERO
 var _activation_in_progress := false
 var _turn_transition_in_progress := false
 var _has_spawned_post_battle_reward_dice := false
+var _is_waiting_for_post_battle_reward_dice := false
 
 
 func _ready() -> void:
@@ -69,6 +71,7 @@ func _ready() -> void:
 func configure_from_battle_room(next_battle_room: BattleRoom) -> void:
 	battle_room_data = next_battle_room
 	_has_spawned_post_battle_reward_dice = false
+	_is_waiting_for_post_battle_reward_dice = false
 	if is_node_ready():
 		_apply_room_data()
 		_initialize_battle_state()
@@ -474,11 +477,11 @@ func _refresh_player_ability_snap_state() -> void:
 		return
 
 	var dice_list := _get_board_dice()
-	if battle_room_data == null or not battle_room_data.is_player_turn() or battle_room_data.is_battle_over():
+	if battle_room_data == null or not battle_room_data.is_player_turn() or battle_room_data.is_battle_over() or _is_ability_slot_snapping_blocked():
 		for dice in dice_list:
 			if dice.get_assigned_ability_slot_id() != &"":
 				dice.clear_ability_slot()
-		_update_player_ability_visuals([])
+		_update_player_ability_visuals(dice_list)
 		return
 
 	var slot_by_id := {}
@@ -512,6 +515,18 @@ func _refresh_player_ability_snap_state() -> void:
 		candidate.assign_ability_slot(slot_state["slot_id"], _get_slot_target_position(slot_state["dice_place"], candidate))
 
 	_update_player_ability_visuals(dice_list)
+
+
+func _is_ability_slot_snapping_blocked() -> bool:
+	if _activation_in_progress:
+		return true
+	if _selected_ability_state.is_empty():
+		return false
+	var selected_frame := _selected_ability_state.get("frame") as MeshInstance3D
+	if not is_instance_valid(selected_frame):
+		return false
+	var base_origin: Vector3 = _selected_ability_state.get("base_origin", selected_frame.transform.origin)
+	return not selected_frame.transform.origin.is_equal_approx(base_origin)
 
 
 func _register_player_ability_frame(frame: MeshInstance3D, ability: AbilityDefinition, ability_index: int) -> void:
@@ -855,7 +870,7 @@ func _apply_combatant_views_after_ability_resolution() -> void:
 
 
 func _handle_post_battle_reward_dice() -> void:
-	if _has_spawned_post_battle_reward_dice:
+	if _has_spawned_post_battle_reward_dice or _is_waiting_for_post_battle_reward_dice:
 		return
 	if _board == null or battle_room_data == null:
 		return
@@ -868,12 +883,26 @@ func _handle_post_battle_reward_dice() -> void:
 	var money_cube := player.runtime_money_cube
 	if reward_cube == null and money_cube == null:
 		return
+	_is_waiting_for_post_battle_reward_dice = true
+	await get_tree().create_timer(POST_BATTLE_REWARD_THROW_DELAY_SECONDS).timeout
+	if not is_inside_tree():
+		return
+	if _has_spawned_post_battle_reward_dice or _board == null or battle_room_data == null or battle_room_data.battle_status != &"victory":
+		_is_waiting_for_post_battle_reward_dice = false
+		return
+	player = battle_room_data.player_instance
+	if player == null:
+		_is_waiting_for_post_battle_reward_dice = false
+		return
+	reward_cube = player.runtime_reward_cube
+	money_cube = player.runtime_money_cube
 	var requests: Array[DiceThrowRequest] = []
 	if reward_cube != null:
 		requests.append(_build_dice_throw_request(reward_cube, {"owner": &"reward"}))
 	if money_cube != null:
 		requests.append(_build_dice_throw_request(money_cube, {"owner": &"reward"}))
 	if requests.is_empty():
+		_is_waiting_for_post_battle_reward_dice = false
 		return
 	for request in requests:
 		request.extra_size_multiplier = POST_BATTLE_REWARD_DICE_SIZE_MULTIPLIER
@@ -883,6 +912,7 @@ func _handle_post_battle_reward_dice() -> void:
 			continue
 		dice_body.linear_velocity.y *= POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER
 	_has_spawned_post_battle_reward_dice = true
+	_is_waiting_for_post_battle_reward_dice = false
 
 
 func _find_monster_ability_frame_state(monster_index: int, ability: AbilityDefinition) -> Dictionary:
@@ -946,6 +976,7 @@ func _initialize_battle_state() -> void:
 		return
 	if battle_room_data.battle_status == &"not_started":
 		_has_spawned_post_battle_reward_dice = false
+		_is_waiting_for_post_battle_reward_dice = false
 		battle_room_data.start_battle()
 	_start_current_turn()
 
