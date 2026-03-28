@@ -48,7 +48,6 @@ var _selected_ability_state: Dictionary = {}
 var _selected_mouse_anchor := Vector3.ZERO
 var _activation_in_progress := false
 var _turn_transition_in_progress := false
-var _post_battle_reward_dice_were_thrown := false
 
 
 func _ready() -> void:
@@ -905,7 +904,6 @@ func _resolve_activation_target_origin(target_descriptor: Dictionary, base_origi
 func _initialize_battle_state() -> void:
 	if battle_room_data == null:
 		return
-	_post_battle_reward_dice_were_thrown = false
 	if battle_room_data.battle_status == &"not_started":
 		battle_room_data.start_battle()
 	_start_current_turn()
@@ -916,40 +914,12 @@ func _start_current_turn() -> void:
 		return
 	_clear_board_dice()
 	if battle_room_data.is_battle_over():
-		_throw_post_battle_reward_dice_if_needed()
 		_update_turn_ui()
 		return
 	_throw_current_turn_dice()
 	_update_turn_ui()
 	if battle_room_data.is_monster_turn():
 		_run_current_monster_turn()
-
-
-func _throw_post_battle_reward_dice_if_needed() -> void:
-	if _board == null or battle_room_data == null:
-		return
-	if _post_battle_reward_dice_were_thrown:
-		return
-	if battle_room_data.battle_status != &"victory":
-		return
-	var player := battle_room_data.player_instance
-	if player == null:
-		return
-	var requests: Array[DiceThrowRequest] = []
-	if player.runtime_reward_cube != null:
-		requests.append(_build_dice_throw_request(player.runtime_reward_cube, {
-			"owner": &"reward",
-			"dice_kind": &"reward_dice",
-		}))
-	if player.runtime_money_cube != null:
-		requests.append(_build_dice_throw_request(player.runtime_money_cube, {
-			"owner": &"reward",
-			"dice_kind": &"money_dice",
-		}))
-	if requests.is_empty():
-		return
-	_post_battle_reward_dice_were_thrown = true
-	_board.throw_dice(requests)
 
 
 func _throw_current_turn_dice() -> void:
