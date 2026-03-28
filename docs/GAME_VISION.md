@@ -86,6 +86,7 @@
 - [docs/COMBAT_ARCHITECTURE.md](./COMBAT_ARCHITECTURE.md) — архитектура ядра боя и инварианты боевого цикла.
 - [docs/BATTLE_ROOM_LOGIC.md](./BATTLE_ROOM_LOGIC.md) — логика боевых комнат и их место в цикле забега.
 - [docs/MONSTER_AI_ARCHITECTURE.md](./MONSTER_AI_ARCHITECTURE.md) — архитектура ИИ монстров, их приоритетов действий, правила старта AI после остановки кубов, общего конца хода и переиспользуемого pipeline использования способностей.
+- [docs/STATE_ARCHITECTURE.md](./STATE_ARCHITECTURE.md) — архитектура состояний: хранение на сущностях, стэкинг, пассивные и триггерные эффекты, asset-контракт и границы интеграции с боем.
 
 
 - начинается пошаговое сражение;
