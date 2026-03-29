@@ -2,7 +2,6 @@ extends RefCounted
 class_name BattleTurnRuntime
 
 const StatusRuntime = preload("res://content/statuses/runtime/status_runtime.gd")
-const ArtifactRuntime = preload("res://content/artifacts/runtime/artifact_runtime.gd")
 
 
 static func start_battle(battle_room) -> Dictionary:
@@ -13,7 +12,6 @@ static func start_battle(battle_room) -> Dictionary:
 	battle_room.current_turn_owner = &"player"
 	battle_room.current_monster_turn_index = -1
 	battle_room.turn_counter = 1
-	_trigger_battle_start_artifacts(battle_room)
 	_trigger_turn_start_statuses(battle_room)
 	return get_current_turn_context(battle_room)
 
@@ -150,14 +148,3 @@ static func _trigger_turn_start_statuses(battle_room) -> void:
 				"index": battle_room.current_monster_turn_index,
 			}
 		)
-
-
-static func _trigger_battle_start_artifacts(battle_room) -> void:
-	if battle_room == null or battle_room.player_instance == null:
-		return
-	ArtifactRuntime.trigger_event(
-		ArtifactRuntime.EVENT_BATTLE_START,
-		battle_room,
-		{"side": &"player"},
-		battle_room.player_instance.get_active_artifact_definitions()
-	)
