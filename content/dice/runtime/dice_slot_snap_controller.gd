@@ -10,7 +10,6 @@ var _snap_speed := 6.5
 var _is_snapped := false
 var _is_attracting := false
 var _saved_gravity_scale := 1.0
-var _slot_lock_enabled := true
 
 
 func configure(snap_distance: float, snap_speed: float) -> void:
@@ -19,7 +18,7 @@ func configure(snap_distance: float, snap_speed: float) -> void:
 
 
 func physics_process(dice: RigidBody3D, delta: float, is_dragging: bool) -> void:
-	if not has_assigned_slot() or is_dragging or not _slot_lock_enabled:
+	if not has_assigned_slot() or is_dragging:
 		return
 
 	if _is_snapped:
@@ -51,16 +50,6 @@ func clear_slot(dice: RigidBody3D) -> void:
 	_target_position = Vector3.ZERO
 	_is_snapped = false
 	_is_attracting = false
-
-
-func set_slot_lock_enabled(dice: RigidBody3D, is_enabled: bool) -> void:
-	if _slot_lock_enabled == is_enabled:
-		return
-	_slot_lock_enabled = is_enabled
-	if not _slot_lock_enabled and (_is_attracting or _is_snapped):
-		_restore_physics(dice)
-		_is_snapped = false
-		_is_attracting = false
 
 
 func prepare_for_manual_drag(dice: RigidBody3D, event: InputEvent) -> bool:

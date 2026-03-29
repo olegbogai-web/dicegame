@@ -596,16 +596,6 @@ func _refresh_player_ability_snap_state() -> void:
 		used_dice[candidate.get_instance_id()] = true
 		candidate.assign_ability_slot(slot_state["slot_id"], _get_slot_target_position(slot_state["dice_place"], candidate))
 
-	var frame_ready_map := _build_frame_ready_map()
-	for slot_state in _player_ability_slot_states:
-		var assigned_dice := _find_dice_for_slot(slot_state, dice_list)
-		if assigned_dice == null:
-			continue
-		var frame := slot_state["frame"] as MeshInstance3D
-		var frame_key := frame.get_instance_id()
-		var is_ready := bool(frame_ready_map.get(frame_key, false))
-		assigned_dice.set_ability_slot_lock_enabled(is_ready)
-
 	_update_player_ability_visuals(dice_list)
 
 
@@ -715,12 +705,9 @@ func _get_slot_target_position(dice_place: MeshInstance3D, dice: Dice) -> Vector
 
 
 func _update_player_ability_visuals(dice_list: Array[Dice]) -> void:
-	var frame_ready_map := _build_frame_ready_map()
-	var ability_frames := {}
+	var ability_status := {}
 	var active_drag_dice := _get_active_drag_dice(dice_list)
 	for slot_state in _player_ability_slot_states:
-		var frame := slot_state["frame"] as MeshInstance3D
-		ability_frames[frame.get_instance_id()] = frame
 		var assigned_dice := _find_dice_for_slot(slot_state, dice_list)
 		var is_ready := assigned_dice != null and assigned_dice.is_snapped_to_ability_slot()
 		var slot_color := SLOT_EMPTY_COLOR
@@ -731,23 +718,21 @@ func _update_player_ability_visuals(dice_list: Array[Dice]) -> void:
 		if is_ready:
 			slot_color = SLOT_READY_COLOR
 		_set_mesh_tint(slot_state["dice_place"], slot_color)
+		var ability_key := (slot_state["frame"] as MeshInstance3D).get_instance_id()
+		if not ability_status.has(ability_key):
+			ability_status[ability_key] = {
+				"frame": slot_state["frame"],
+				"ready": true,
+			}
+		if not is_ready:
+			ability_status[ability_key]["ready"] = false
 
-	for ability_key in ability_frames.keys():
-		var frame := ability_frames[ability_key] as MeshInstance3D
-		var tint := FRAME_READY_COLOR if bool(frame_ready_map.get(ability_key, false)) else SLOT_EMPTY_COLOR
+	for slot_info in ability_status.values():
+		var frame := slot_info["frame"] as MeshInstance3D
+		var tint := FRAME_READY_COLOR if slot_info["ready"] else SLOT_EMPTY_COLOR
 		if not _selected_ability_state.is_empty() and _selected_ability_state.get("frame") == frame:
 			tint = FRAME_SELECTED_COLOR
 		_set_mesh_tint(frame, tint)
-
-
-func _build_frame_ready_map() -> Dictionary:
-	var frame_ready_map := {}
-	for frame_state in _player_ability_frame_states:
-		var frame := frame_state.get("frame") as MeshInstance3D
-		if frame == null:
-			continue
-		frame_ready_map[frame.get_instance_id()] = _is_ability_state_ready(frame_state)
-	return frame_ready_map
 
 
 func _get_active_drag_dice(dice_list: Array[Dice]) -> Dice:
