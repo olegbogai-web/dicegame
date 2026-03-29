@@ -6,6 +6,7 @@ const TEST_PLAYER_TEXTURE := preload("res://assets/entity/monsters/test_player.p
 const TEST_MONSTER_DEFINITION := preload("res://content/monsters/definitions/test_monster.tres")
 const COMMON_ATTACK_ABILITY := preload("res://content/abilities/definitions/common_attack.tres")
 const HEAL_ABILITY := preload("res://content/abilities/definitions/heal.tres")
+const STRENGTHENING_ABILITY := preload("res://content/abilities/definitions/strengthening.tres")
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
 const BattleEffectRuntime = preload("res://content/combat/runtime/battle_effect_runtime.gd")
@@ -261,7 +262,7 @@ func get_monster_ability_entries() -> Array[Dictionary]:
 
 
 func get_required_dice_slots(ability: AbilityDefinition) -> int:
-	return mini(BattleAbilityRuntime.get_required_dice_count(ability), 3)
+	return mini(BattleAbilityRuntime.build_slot_conditions(ability).size(), 3)
 
 
 func can_target_player() -> bool:
@@ -448,6 +449,7 @@ static func _build_test_player() -> Player:
 	base_stat.starting_abilities = [
 		COMMON_ATTACK_ABILITY,
 		HEAL_ABILITY,
+		STRENGTHENING_ABILITY,
 	]
 	base_stat.starting_dice = [
 		preload("res://content/resources/base_cube.tres"),
