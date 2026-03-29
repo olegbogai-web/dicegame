@@ -41,11 +41,13 @@ const STATUS_ICON_SPACING_X := 0.18
 @onready var _end_turn_button: Button = $UI/EndTurnButton
 @onready var _turn_status_label: Label = $UI/TurnStatusLabel
 @onready var _event_button: Button = $UI/EventButton
+@onready var _artifact_template: TextureRect = $UI/artefact
 
 var battle_room_data: BattleRoom
 var _generated_monster_sprites: Array[Node] = []
 var _generated_player_ability_frames: Array[Node] = []
 var _generated_monster_ability_frames: Array[Node] = []
+var _generated_artifact_icons: Array[TextureRect] = []
 var _player_ability_slot_states: Array[Dictionary] = []
 var _player_ability_frame_states: Array[Dictionary] = []
 var _monster_ability_frame_states: Array[Dictionary] = []
@@ -126,6 +128,7 @@ func _apply_room_data() -> void:
 		true
 	)
 	_apply_monster_ability_frames()
+	_apply_player_artifacts()
 	_refresh_player_ability_snap_state()
 	_update_turn_ui()
 
@@ -244,6 +247,62 @@ func _register_monster_ability_frame(frame: MeshInstance3D, ability_entry: Dicti
 		"base_origin": frame.transform.origin,
 		"dice_places": _get_dice_place_nodes(frame),
 	})
+
+
+func _apply_player_artifacts() -> void:
+	_clear_generated_artifact_icons()
+	if _artifact_template == null:
+		return
+
+	var active_artifacts: Array[ArtifactDefinition] = []
+	if battle_room_data != null and battle_room_data.player_instance != null:
+		active_artifacts = battle_room_data.player_instance.get_active_artifact_definitions()
+
+	if active_artifacts.is_empty():
+		_artifact_template.visible = false
+		return
+
+	var template_position := _artifact_template.position
+	var icon_step := _artifact_template.size * _artifact_template.scale
+	if icon_step.x <= 0.0:
+		icon_step.x = maxf(_artifact_template.get_combined_minimum_size().x * _artifact_template.scale.x, 1.0)
+	if icon_step.y <= 0.0:
+		icon_step.y = maxf(_artifact_template.get_combined_minimum_size().y * _artifact_template.scale.y, 1.0)
+
+	var viewport_height := get_viewport().get_visible_rect().size.y
+	var available_height := maxf(viewport_height - template_position.y, icon_step.y)
+	var rows_per_column := maxi(int(floor(available_height / icon_step.y)), 1)
+
+	for artifact_index in active_artifacts.size():
+		var artifact := active_artifacts[artifact_index]
+		var icon := _artifact_template if artifact_index == 0 else _spawn_artifact_icon()
+		if icon == null:
+			continue
+		var column := artifact_index / rows_per_column
+		var row := artifact_index % rows_per_column
+		icon.position = template_position + Vector2(icon_step.x * float(column), icon_step.y * float(row))
+		icon.texture = artifact.sprite if artifact != null and artifact.sprite != null else _artifact_template.texture
+		icon.visible = true
+		icon.tooltip_text = artifact.display_name if artifact != null else ""
+
+
+func _spawn_artifact_icon() -> TextureRect:
+	if _artifact_template == null or _artifact_template.get_parent() == null:
+		return null
+	var icon := _artifact_template.duplicate() as TextureRect
+	if icon == null:
+		return null
+	icon.name = "artefact_%d" % _generated_artifact_icons.size()
+	_artifact_template.get_parent().add_child(icon)
+	_generated_artifact_icons.append(icon)
+	return icon
+
+
+func _clear_generated_artifact_icons() -> void:
+	for icon in _generated_artifact_icons:
+		if is_instance_valid(icon):
+			icon.queue_free()
+	_generated_artifact_icons.clear()
 
 
 func _apply_ability_icon(frame: MeshInstance3D, ability: AbilityDefinition) -> void:
