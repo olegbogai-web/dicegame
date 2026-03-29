@@ -5,6 +5,7 @@ const CombatantRuntimeState = preload("res://content/combat/runtime/combatant_ru
 
 var player_state: CombatantRuntimeState
 var monster_states: Array[CombatantRuntimeState] = []
+var status_event_log: Array[Dictionary] = []
 
 
 func set_player_state(combatant_id: StringName, side: StringName = &"player") -> void:
@@ -57,3 +58,19 @@ func clear_all_statuses() -> void:
 	for monster_state in monster_states:
 		if monster_state != null and monster_state.statuses != null:
 			monster_state.statuses.clear()
+	clear_status_event_log()
+
+
+func publish_status_event(event_name: StringName, payload: Dictionary = {}) -> void:
+	status_event_log.append({
+		"event_name": event_name,
+		"payload": payload,
+	})
+
+
+func get_status_event_log() -> Array[Dictionary]:
+	return status_event_log.duplicate(true)
+
+
+func clear_status_event_log() -> void:
+	status_event_log.clear()

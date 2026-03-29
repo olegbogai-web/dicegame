@@ -305,6 +305,24 @@ func clear_all_statuses() -> void:
 		return
 	combat_runtime_state.clear_all_statuses()
 
+
+func publish_status_event(event_name: StringName, payload: Dictionary = {}) -> void:
+	if combat_runtime_state == null:
+		return
+	combat_runtime_state.publish_status_event(event_name, payload)
+
+
+func get_status_event_log() -> Array[Dictionary]:
+	if combat_runtime_state == null:
+		return []
+	return combat_runtime_state.get_status_event_log()
+
+
+func clear_status_event_log() -> void:
+	if combat_runtime_state == null:
+		return
+	combat_runtime_state.clear_status_event_log()
+
 func start_battle() -> Dictionary:
 	return BattleTurnRuntime.start_battle(self)
 
