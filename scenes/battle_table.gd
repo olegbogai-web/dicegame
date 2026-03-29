@@ -1201,17 +1201,59 @@ func _screen_point_hits_mesh(mesh_instance: MeshInstance3D, screen_point: Vector
 
 
 func _has_player_dice_at_screen_point(screen_point: Vector2) -> bool:
-	if _camera == null or get_world_3d() == null:
+	return _find_player_dice_at_screen_point(screen_point) != null
+
+
+func _find_player_dice_at_screen_point(screen_point: Vector2) -> Dice:
+	if _camera != null and get_world_3d() != null:
+		var ray_query := PhysicsRayQueryParameters3D.create(
+			_camera.project_ray_origin(screen_point),
+			_camera.project_ray_origin(screen_point) + _camera.project_ray_normal(screen_point) * 1000.0
+		)
+		var hit := get_world_3d().direct_space_state.intersect_ray(ray_query)
+		if not hit.is_empty():
+			var collider := hit.get("collider") as Node
+			if collider is Dice and StringName(collider.get_meta(&"owner", &"")) == &"player":
+				return collider as Dice
+
+	for dice in _get_board_dice():
+		if StringName(dice.get_meta(&"owner", &"")) != &"player":
+			continue
+		if _screen_point_hits_dice(dice, screen_point):
+			return dice
+	return null
+
+
+func _screen_point_hits_dice(dice: Dice, screen_point: Vector2) -> bool:
+	if _camera == null or dice == null or not is_instance_valid(dice) or not dice.visible:
 		return false
-	var ray_query := PhysicsRayQueryParameters3D.create(
-		_camera.project_ray_origin(screen_point),
-		_camera.project_ray_origin(screen_point) + _camera.project_ray_normal(screen_point) * 1000.0
-	)
-	var hit := get_world_3d().direct_space_state.intersect_ray(ray_query)
-	if hit.is_empty():
+	var collision_shape := dice.get_node_or_null(^"Collision") as CollisionShape3D
+	if collision_shape == null:
 		return false
-	var collider := hit.get("collider") as Node
-	return collider is Dice and StringName(collider.get_meta(&"owner", &"")) == &"player"
+	var shape := collision_shape.shape as BoxShape3D
+	if shape == null:
+		return false
+	var extents := shape.size * 0.5
+	var corners := [
+		Vector3(-extents.x, -extents.y, -extents.z),
+		Vector3(extents.x, -extents.y, -extents.z),
+		Vector3(-extents.x, extents.y, -extents.z),
+		Vector3(-extents.x, -extents.y, extents.z),
+		Vector3(extents.x, extents.y, -extents.z),
+		Vector3(extents.x, -extents.y, extents.z),
+		Vector3(-extents.x, extents.y, extents.z),
+		Vector3(extents.x, extents.y, extents.z),
+	]
+	var min_point := Vector2(INF, INF)
+	var max_point := Vector2(-INF, -INF)
+	for corner in corners:
+		var projected := _camera.unproject_position(dice.to_global(corner))
+		min_point.x = minf(min_point.x, projected.x)
+		min_point.y = minf(min_point.y, projected.y)
+		max_point.x = maxf(max_point.x, projected.x)
+		max_point.y = maxf(max_point.y, projected.y)
+	var projected_rect := Rect2(min_point, max_point - min_point)
+	return projected_rect.size.x > 0.0 and projected_rect.size.y > 0.0 and projected_rect.has_point(screen_point)
 
 
 func _project_mesh_screen_rect(mesh_instance: MeshInstance3D) -> Rect2:
