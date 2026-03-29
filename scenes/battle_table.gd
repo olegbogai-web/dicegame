@@ -708,26 +708,24 @@ func _update_player_ability_visuals(dice_list: Array[Dice]) -> void:
 	var ability_status := {}
 	var active_drag_dice := _get_active_drag_dice(dice_list)
 	for slot_state in _player_ability_slot_states:
-		var frame := slot_state["frame"] as MeshInstance3D
-		var ability := slot_state.get("ability") as AbilityDefinition
-		var ability_key := frame.get_instance_id()
-		if not ability_status.has(ability_key):
-			var snapped_dice := _collect_ready_dice_for_frame(frame)
-			ability_status[ability_key] = {
-				"frame": frame,
-				"ready": BattleAbilityRuntime.can_use_ability_with_dice(ability, snapped_dice, true),
-			}
-
 		var assigned_dice := _find_dice_for_slot(slot_state, dice_list)
-		var is_slot_snapped := assigned_dice != null and assigned_dice.is_snapped_to_ability_slot()
+		var is_ready := assigned_dice != null and assigned_dice.is_snapped_to_ability_slot()
 		var slot_color := SLOT_EMPTY_COLOR
 		if _should_highlight_slot_for_dice(slot_state, assigned_dice, active_drag_dice):
 			slot_color = SLOT_HIGHLIGHT_COLOR
 		elif assigned_dice != null:
 			slot_color = SLOT_ASSIGNED_COLOR
-		if is_slot_snapped and ability_status[ability_key]["ready"]:
+		if is_ready:
 			slot_color = SLOT_READY_COLOR
 		_set_mesh_tint(slot_state["dice_place"], slot_color)
+		var ability_key := (slot_state["frame"] as MeshInstance3D).get_instance_id()
+		if not ability_status.has(ability_key):
+			ability_status[ability_key] = {
+				"frame": slot_state["frame"],
+				"ready": true,
+			}
+		if not is_ready:
+			ability_status[ability_key]["ready"] = false
 
 	for slot_info in ability_status.values():
 		var frame := slot_info["frame"] as MeshInstance3D
