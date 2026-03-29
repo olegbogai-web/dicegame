@@ -264,7 +264,7 @@ static func _collect_effect_entries(
 		for status_instance in _get_sorted_active_statuses(container):
 			if status_instance == null or status_instance.definition == null:
 				continue
-			var status_id := status_instance.get_status_id()
+			var status_id = status_instance.get_status_id()
 			for effect in status_instance.definition.effects:
 				if effect == null:
 					continue
@@ -497,7 +497,7 @@ static func _publish_status_event(context: Dictionary, event_name: StringName, p
 		"event_name": event_name,
 		"payload": payload,
 	}
-	var buffer := context.get("published_events", null)
+	var buffer = context.get("published_events", null)
 	if buffer is Array:
 		buffer.append(event_payload)
 	if battle_room != null and battle_room.has_method("publish_status_event"):
