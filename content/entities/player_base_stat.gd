@@ -15,6 +15,9 @@ const REWARD_MONEY_ICON := preload("res://assets/dice_edges/money.png")
 const MONEY_DICE_SKIN := preload("res://assets/dice_edges/money_dice_skin.png")
 const DiceDefinitionScript = preload("res://content/dice/resources/dice_definition.gd")
 const DiceFaceDefinitionScript = preload("res://content/dice/resources/dice_face_definition.gd")
+const STARTING_COMMON_ATTACK_ABILITY := preload("res://content/abilities/definitions/common_attack.tres")
+const STARTING_HEAL_ABILITY := preload("res://content/abilities/definitions/heal.tres")
+const STARTING_STRENGTHENING_ABILITY := preload("res://content/abilities/definitions/strengthening.tres")
 
 @export_category("Identity")
 @export var player_id := ""
@@ -51,7 +54,7 @@ func is_valid_definition() -> bool:
 		return false
 	if get_resolved_base_money_cube() == null:
 		return false
-	for ability_definition in starting_abilities:
+	for ability_definition in get_resolved_starting_abilities():
 		if ability_definition == null or not ability_definition.supports_owner(true):
 			return false
 	for artifact_definition in get_resolved_artifacts_base():
@@ -76,6 +79,12 @@ func get_resolved_base_money_cube() -> DiceDefinition:
 	if base_money_cube != null:
 		return base_money_cube
 	return _build_default_money_cube_definition()
+
+
+func get_resolved_starting_abilities() -> Array[AbilityDefinition]:
+	if not starting_abilities.is_empty():
+		return starting_abilities
+	return _build_default_starting_abilities()
 
 
 func get_resolved_artifacts_base() -> Array[ArtifactDefinition]:
@@ -141,6 +150,14 @@ func _build_default_money_faces() -> Array[DiceFaceDefinition]:
 
 func _build_default_artifacts_base() -> Array[ArtifactDefinition]:
 	return []
+
+
+func _build_default_starting_abilities() -> Array[AbilityDefinition]:
+	return [
+		STARTING_COMMON_ATTACK_ABILITY,
+		STARTING_HEAL_ABILITY,
+		STARTING_STRENGTHENING_ABILITY,
+	]
 
 
 func _build_money_face(value: String) -> DiceFaceDefinition:

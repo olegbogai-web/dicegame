@@ -348,7 +348,6 @@ func _resolve_or_create_runtime_player() -> Player:
 	var base_stat := PlayerBaseStat.new()
 	base_stat.player_id = "global_map_runtime_player"
 	base_stat.display_name = "GlobalMapRuntimePlayer"
-	base_stat.starting_abilities = []
 	var player := Player.new(base_stat)
 	GlobalMapRuntimeState.save_runtime_player(player)
 	return player
