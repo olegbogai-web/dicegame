@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://content/artifacts/resources/artifact_definition.gd" id="1_artifact"]
 [ext_resource type="Script" path="res://content/artifacts/resources/artifact_trigger_definition.gd" id="2_trigger"]
-[ext_resource type="Texture2D" path="res://assets/dice_edges/artifact_+.png" id="3_icon"]
+[ext_resource type="Texture2D" path="res://assets/artefacts/necklace_strength.png" id="3_icon"]
 [ext_resource type="Resource" path="res://content/statuses/definitions/strength.tres" id="4_status"]
 
 [sub_resource type="Resource" id="ArtifactTrigger_strength_on_battle_start"]
