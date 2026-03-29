@@ -113,9 +113,9 @@ static func _resolve_source_status_container(battle_room):
 	if battle_room.current_turn_owner == &"player":
 		if battle_room.player_view == null:
 			return null
-		return battle_room.player_view.statuses
+		return battle_room.get_status_container_for_descriptor({"side": &"player"})
 	if battle_room.current_turn_owner == &"monster" and battle_room.can_target_monster(battle_room.current_monster_turn_index):
-		return battle_room.monster_views[battle_room.current_monster_turn_index].statuses
+		return battle_room.get_status_container_for_descriptor({"side": &"enemy", "index": battle_room.current_monster_turn_index})
 	return null
 
 
@@ -124,12 +124,12 @@ static func _resolve_target_status_container(battle_room, target_descriptor: Dic
 	if target_kind == &"player":
 		if battle_room.player_view == null:
 			return null
-		return battle_room.player_view.statuses
+		return battle_room.get_status_container_for_descriptor({"side": &"player"})
 	if target_kind == &"monster":
 		var monster_index := int(target_descriptor.get("index", -1))
 		if not battle_room.can_target_monster(monster_index):
 			return null
-		return battle_room.monster_views[monster_index].statuses
+		return battle_room.get_status_container_for_descriptor({"side": &"enemy", "index": monster_index})
 	return null
 
 

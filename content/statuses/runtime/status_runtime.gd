@@ -102,11 +102,7 @@ static func trigger_turn_end(battle_room, owner_descriptor: Dictionary) -> void:
 static func clear_all_statuses(battle_room) -> void:
 	if battle_room == null:
 		return
-	if battle_room.player_view != null and battle_room.player_view.statuses != null:
-		battle_room.player_view.statuses.clear()
-	for monster_view in battle_room.monster_views:
-		if monster_view != null and monster_view.statuses != null:
-			monster_view.statuses.clear()
+	battle_room.clear_all_statuses()
 
 
 static func _collect_effect_entries(
@@ -300,20 +296,7 @@ static func _resolve_status_definition(parameters: Dictionary) -> StatusDefiniti
 
 
 static func _get_container_for_descriptor(battle_room, descriptor: Dictionary) -> StatusContainer:
-	var side := StringName(descriptor.get("side", &""))
-	if side == &"player":
-		if battle_room.player_view == null:
-			return null
-		return battle_room.player_view.statuses
-	if side == &"enemy":
-		var monster_index := int(descriptor.get("index", -1))
-		if monster_index < 0 or monster_index >= battle_room.monster_views.size():
-			return null
-		var monster_view = battle_room.monster_views[monster_index]
-		if monster_view == null:
-			return null
-		return monster_view.statuses
-	return null
+	return battle_room.get_status_container_for_descriptor(descriptor)
 
 
 static func _get_sorted_active_statuses(container: StatusContainer) -> Array:
