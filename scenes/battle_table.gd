@@ -596,21 +596,7 @@ func _refresh_player_ability_snap_state() -> void:
 		used_dice[candidate.get_instance_id()] = true
 		candidate.assign_ability_slot(slot_state["slot_id"], _get_slot_target_position(slot_state["dice_place"], candidate))
 
-	_clear_not_ready_ability_slot_assignments(dice_list)
 	_update_player_ability_visuals(dice_list)
-
-
-func _clear_not_ready_ability_slot_assignments(dice_list: Array[Dice]) -> void:
-	for frame_state in _player_ability_frame_states:
-		var frame := frame_state.get("frame") as MeshInstance3D
-		if _is_ability_frame_ready_with_current_assignments(frame, dice_list):
-			continue
-		for slot_state in _player_ability_slot_states:
-			if slot_state.get("frame") != frame:
-				continue
-			var assigned_dice := _find_dice_for_slot(slot_state, dice_list)
-			if assigned_dice != null:
-				assigned_dice.clear_ability_slot()
 
 
 func _is_player_ability_frame_at_base(frame: MeshInstance3D) -> bool:
@@ -719,29 +705,31 @@ func _get_slot_target_position(dice_place: MeshInstance3D, dice: Dice) -> Vector
 
 
 func _update_player_ability_visuals(dice_list: Array[Dice]) -> void:
-	var ability_ready_by_key := {}
-	for frame_state in _player_ability_frame_states:
-		var frame := frame_state.get("frame") as MeshInstance3D
-		ability_ready_by_key[frame.get_instance_id()] = _is_ability_frame_ready_with_current_assignments(frame, dice_list)
-
+	var ability_status := {}
 	var active_drag_dice := _get_active_drag_dice(dice_list)
 	for slot_state in _player_ability_slot_states:
 		var assigned_dice := _find_dice_for_slot(slot_state, dice_list)
-		var ability_key := (slot_state["frame"] as MeshInstance3D).get_instance_id()
-		var is_ability_ready := bool(ability_ready_by_key.get(ability_key, false))
+		var is_ready := assigned_dice != null and assigned_dice.is_snapped_to_ability_slot()
 		var slot_color := SLOT_EMPTY_COLOR
 		if _should_highlight_slot_for_dice(slot_state, assigned_dice, active_drag_dice):
 			slot_color = SLOT_HIGHLIGHT_COLOR
 		elif assigned_dice != null:
 			slot_color = SLOT_ASSIGNED_COLOR
-		if is_ability_ready and assigned_dice != null:
+		if is_ready:
 			slot_color = SLOT_READY_COLOR
 		_set_mesh_tint(slot_state["dice_place"], slot_color)
+		var ability_key := (slot_state["frame"] as MeshInstance3D).get_instance_id()
+		if not ability_status.has(ability_key):
+			ability_status[ability_key] = {
+				"frame": slot_state["frame"],
+				"ready": true,
+			}
+		if not is_ready:
+			ability_status[ability_key]["ready"] = false
 
-	for frame_state in _player_ability_frame_states:
-		var frame := frame_state.get("frame") as MeshInstance3D
-		var is_ready := bool(ability_ready_by_key.get(frame.get_instance_id(), false))
-		var tint := FRAME_READY_COLOR if is_ready else SLOT_EMPTY_COLOR
+	for slot_info in ability_status.values():
+		var frame := slot_info["frame"] as MeshInstance3D
+		var tint := FRAME_READY_COLOR if slot_info["ready"] else SLOT_EMPTY_COLOR
 		if not _selected_ability_state.is_empty() and _selected_ability_state.get("frame") == frame:
 			tint = FRAME_SELECTED_COLOR
 		_set_mesh_tint(frame, tint)
@@ -825,31 +813,13 @@ func _is_ability_state_ready(frame_state: Dictionary) -> bool:
 	var frame := frame_state.get("frame") as MeshInstance3D
 	if frame == null:
 		return false
-	return _is_ability_frame_ready_with_current_assignments(frame, _get_board_dice())
-
-
-func _is_ability_frame_ready_with_current_assignments(frame: MeshInstance3D, dice_list: Array[Dice]) -> bool:
-	if frame == null:
-		return false
-	var ability := _find_ability_for_frame(frame)
-	if ability == null:
-		return false
-	var consumed_dice := _collect_assigned_dice_for_frame(frame, dice_list)
+	var ability := frame_state.get("ability") as AbilityDefinition
+	var consumed_dice := _collect_ready_dice_for_frame(frame)
 	return BattleAbilityRuntime.can_use_ability_with_dice(ability, consumed_dice, true)
 
 
-func _find_ability_for_frame(frame: MeshInstance3D) -> AbilityDefinition:
-	for frame_state in _player_ability_frame_states:
-		if frame_state.get("frame") == frame:
-			return frame_state.get("ability") as AbilityDefinition
-	return null
-
-
 func _collect_ready_dice_for_frame(frame: MeshInstance3D) -> Array[Dice]:
-	return _collect_assigned_dice_for_frame(frame, _get_board_dice())
-
-
-func _collect_assigned_dice_for_frame(frame: MeshInstance3D, dice_list: Array[Dice]) -> Array[Dice]:
+	var dice_list := _get_board_dice()
 	var consumed_dice: Array[Dice] = []
 	for slot_state in _player_ability_slot_states:
 		if slot_state.get("frame") != frame:
