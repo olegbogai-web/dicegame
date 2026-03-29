@@ -26,8 +26,10 @@ func handle_input_event(
 		if event.pressed:
 			if not allow_drag_without_sleep and not dice.sleeping:
 				return
+			print("DEBUG dice press: %s" % dice.name)
 			_start_dragging(dice, camera, position, drag_lift_height)
 		else:
+			print("DEBUG dice release: %s" % dice.name)
 			stop_dragging(dice)
 
 
