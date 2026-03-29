@@ -508,6 +508,6 @@ static func _get_status_stacks(container: StatusContainer, status_id: StringName
 	if container == null:
 		return 0
 	var instance := container.get_status(status_id)
-	if instance == null:
+	if instance == null or not instance.is_effectively_active():
 		return 0
 	return instance.stacks

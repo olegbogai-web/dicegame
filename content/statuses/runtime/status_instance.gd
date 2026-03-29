@@ -4,15 +4,16 @@ class_name StatusInstance
 var definition: StatusDefinition
 var owner_id: StringName = &""
 var stacks := 0
-var is_active := true
 var runtime_counters: Dictionary = {}
 
 
 func _init(next_definition: StatusDefinition = null, next_owner_id: StringName = &"", next_stacks: int = 1) -> void:
 	definition = next_definition
 	owner_id = next_owner_id
-	stacks = maxi(next_stacks, 1)
-	is_active = definition != null
+	if definition == null:
+		stacks = 0
+		return
+	stacks = mini(maxi(next_stacks, 1), definition.max_stacks)
 
 
 func get_status_id() -> StringName:
@@ -30,5 +31,16 @@ func add_stacks(amount: int) -> int:
 
 func remove_stacks(amount: int) -> int:
 	stacks = maxi(stacks - maxi(amount, 0), 0)
-	is_active = stacks > 0
 	return stacks
+
+
+func has_stacks() -> bool:
+	return stacks > 0
+
+
+func is_effectively_active() -> bool:
+	return definition != null and has_stacks()
+
+
+func is_expired() -> bool:
+	return not is_effectively_active()
