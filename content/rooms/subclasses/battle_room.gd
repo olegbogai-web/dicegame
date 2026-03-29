@@ -12,6 +12,7 @@ const NEEDLE_THROW_ABILITY := preload("res://content/abilities/definitions/needl
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
 const BattleEffectRuntime = preload("res://content/combat/runtime/battle_effect_runtime.gd")
+const StatusContainer = preload("res://content/statuses/runtime/status_container.gd")
 
 const PLAYER_SPRITE_POSITION := Vector3(-3.0, 0.01, -2.5)
 const PLAYER_SPRITE_SCALE := Vector3(2.0, 2.0, 2.0)
@@ -33,6 +34,9 @@ class CombatantViewData:
 	var max_hp := 0
 	var dice_count := 0
 	var ai_profile: MonsterAiProfile
+	var combatant_id: StringName = &""
+	var side: StringName = &""
+	var statuses: StatusContainer
 
 	func _init(
 		next_sprite: Texture2D = null,
@@ -41,7 +45,9 @@ class CombatantViewData:
 		next_current_hp: int = 0,
 		next_max_hp: int = 0,
 		next_dice_count: int = 0,
-		next_ai_profile: MonsterAiProfile = null
+		next_ai_profile: MonsterAiProfile = null,
+		next_combatant_id: StringName = &"",
+		next_side: StringName = &""
 	) -> void:
 		sprite = next_sprite
 		abilities = _sanitize_abilities(next_abilities)
@@ -50,6 +56,9 @@ class CombatantViewData:
 		max_hp = maxi(next_max_hp, 0)
 		dice_count = maxi(next_dice_count, 0)
 		ai_profile = next_ai_profile
+		combatant_id = next_combatant_id
+		side = next_side
+		statuses = StatusContainer.new(combatant_id)
 
 	static func _sanitize_abilities(next_abilities: Array[AbilityDefinition]) -> Array[AbilityDefinition]:
 		var sanitized: Array[AbilityDefinition] = []
@@ -145,7 +154,10 @@ func set_player_data(player: Player, sprite: Texture2D) -> void:
 		PLAYER_SPRITE_SCALE,
 		current_hp,
 		max_hp,
-		dice_count
+		dice_count,
+		ai_profile,
+		&"player",
+		&"player"
 	)
 	_reset_battle_progression()
 
@@ -163,7 +175,9 @@ func set_monsters_from_definitions(next_monster_definitions: Array[MonsterDefini
 				monster_definition.max_health,
 				monster_definition.max_health,
 				monster_definition.dice_count,
-				monster_definition.ai_profile
+				monster_definition.ai_profile,
+				StringName("%s_%d" % [monster_definition.monster_id, monster_views.size()]),
+				&"enemy"
 			)
 		)
 	_reset_battle_progression()

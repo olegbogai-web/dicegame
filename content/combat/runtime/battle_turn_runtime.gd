@@ -1,6 +1,8 @@
 extends RefCounted
 class_name BattleTurnRuntime
 
+const StatusRuntime = preload("res://content/statuses/runtime/status_runtime.gd")
+
 
 static func start_battle(battle_room) -> Dictionary:
 	_reset_battle_progression(battle_room)
@@ -49,6 +51,9 @@ static func advance_turn(battle_room) -> Dictionary:
 		return get_current_turn_context(battle_room)
 	if battle_room.battle_status != &"active":
 		return get_current_turn_context(battle_room)
+	_trigger_turn_end_statuses(battle_room)
+	if update_battle_result_if_finished(battle_room):
+		return get_current_turn_context(battle_room)
 
 	if battle_room.current_turn_owner == &"player":
 		var monster_order = battle_room.get_monster_turn_order()
@@ -79,12 +84,14 @@ static func update_battle_result_if_finished(battle_room) -> bool:
 		battle_room.battle_result = &"player_dead"
 		battle_room.current_turn_owner = &"none"
 		battle_room.current_monster_turn_index = -1
+		StatusRuntime.clear_all_statuses(battle_room)
 		return true
 	if battle_room.get_living_monster_indexes().is_empty():
 		battle_room.battle_status = &"victory"
 		battle_room.battle_result = &"monsters_defeated"
 		battle_room.current_turn_owner = &"none"
 		battle_room.current_monster_turn_index = -1
+		StatusRuntime.clear_all_statuses(battle_room)
 		return true
 	return false
 
@@ -99,3 +106,22 @@ static func _reset_battle_progression(battle_room) -> void:
 	battle_room.current_turn_owner = &"none"
 	battle_room.current_monster_turn_index = -1
 	battle_room.turn_counter = 0
+
+
+static func _trigger_turn_end_statuses(battle_room) -> void:
+	if battle_room.current_turn_owner == &"player":
+		StatusRuntime.trigger_turn_end(
+			battle_room,
+			{
+				"side": &"player",
+			}
+		)
+		return
+	if battle_room.current_turn_owner == &"monster" and battle_room.can_target_monster(battle_room.current_monster_turn_index):
+		StatusRuntime.trigger_turn_end(
+			battle_room,
+			{
+				"side": &"enemy",
+				"index": battle_room.current_monster_turn_index,
+			}
+		)
