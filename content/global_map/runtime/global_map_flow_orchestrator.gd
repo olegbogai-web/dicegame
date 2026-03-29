@@ -15,8 +15,6 @@ const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 const Dice = preload("res://content/dice/dice.gd")
 const UNAVAILABLE_MARK_TEXTURE = preload("res://assets/global_map/Х_mark.png")
-const CLAWED_SERIES_ABILITY = preload("res://content/abilities/definitions/clawed_series.tres")
-const NEEDLE_THROW_ABILITY = preload("res://content/abilities/definitions/needle_throw.tres")
 
 const START_EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
 const HERO_MOVE_SPEED := 4.75
@@ -350,7 +348,7 @@ func _resolve_or_create_runtime_player() -> Player:
 	var base_stat := PlayerBaseStat.new()
 	base_stat.player_id = "global_map_runtime_player"
 	base_stat.display_name = "GlobalMapRuntimePlayer"
-	base_stat.starting_abilities = [CLAWED_SERIES_ABILITY, NEEDLE_THROW_ABILITY]
+	base_stat.starting_abilities = []
 	var player := Player.new(base_stat)
 	GlobalMapRuntimeState.save_runtime_player(player)
 	return player
