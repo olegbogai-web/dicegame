@@ -27,14 +27,6 @@ const ACTIVATION_TARGET_LIFT_Y := 0.8
 const POST_BATTLE_REWARD_DICE_SIZE_MULTIPLIER := Vector3(4.0, 4.0, 4.0)
 const POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER := 1.0
 const POST_BATTLE_REWARD_DICE_DELAY_SECONDS := 1.0
-const REWARD_CARD_SLOTS := 3
-const REWARD_CARD_SPACING_X := 3.4
-const REWARD_RARITY_COMMON_WEIGHT := 50
-const REWARD_RARITY_UNCOMMON_WEIGHT := 30
-const REWARD_RARITY_RARE_WEIGHT := 20
-const REWARD_RARITY_UNIQUE_WEIGHT := 10
-const REWARD_ABILITY_DEFINITIONS_DIR := "res://content/abilities/definitions"
-const REWARD_CARD_FACE_ID := &"card_+"
 const STATUS_TEMPLATE_PATH := ^"state"
 const STATUS_RUNTIME_NODE_PREFIX := "state_runtime_"
 const STATUS_ICON_SPACING_X := 0.18
@@ -50,7 +42,6 @@ const STATUS_ICON_SPACING_X := 0.18
 @onready var _turn_status_label: Label = $UI/TurnStatusLabel
 @onready var _event_button: Button = $UI/EventButton
 @onready var _artifact_template: TextureRect = $UI/artefact
-@onready var _ability_reward_template: Node3D = $ability_reward
 
 var battle_room_data: BattleRoom
 var _generated_monster_sprites: Array[Node] = []
@@ -67,12 +58,6 @@ var _activation_in_progress := false
 var _turn_transition_in_progress := false
 var _has_spawned_post_battle_reward_dice := false
 var _is_waiting_post_battle_reward_dice := false
-var _has_processed_post_battle_reward_dice := false
-var _reward_card_selection_active := false
-var _generated_ability_reward_nodes: Array[Node3D] = []
-var _reward_offer_states: Array[Dictionary] = []
-var _reward_offered_abilities: Array[AbilityDefinition] = []
-var _last_reported_battle_status: StringName = &""
 
 
 func _ready() -> void:
@@ -92,9 +77,6 @@ func configure_from_battle_room(next_battle_room: BattleRoom) -> void:
 	battle_room_data = next_battle_room
 	_has_spawned_post_battle_reward_dice = false
 	_is_waiting_post_battle_reward_dice = false
-	_has_processed_post_battle_reward_dice = false
-	_last_reported_battle_status = &""
-	_clear_ability_reward_cards()
 	if is_node_ready():
 		_apply_room_data()
 		_initialize_battle_state()
@@ -147,7 +129,6 @@ func _apply_room_data() -> void:
 	)
 	_apply_monster_ability_frames()
 	_apply_player_artifacts()
-	_clear_ability_reward_cards()
 	_refresh_player_ability_snap_state()
 	_update_turn_ui()
 
@@ -585,7 +566,6 @@ func _physics_process(delta: float) -> void:
 	_update_health_bars(delta)
 	_refresh_status_visuals()
 	_update_turn_ui()
-	_process_post_battle_reward_flow()
 	if not _selected_ability_state.is_empty() and not _activation_in_progress:
 		if not _is_ability_state_ready(_selected_ability_state):
 			_cancel_selected_ability()
@@ -595,9 +575,6 @@ func _physics_process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if Engine.is_editor_hint() or _activation_in_progress or _turn_transition_in_progress:
-		return
-	if _reward_card_selection_active:
-		_handle_reward_card_input(event)
 		return
 	if battle_room_data == null or not battle_room_data.is_player_turn() or battle_room_data.is_battle_over():
 		return
@@ -634,58 +611,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	_activate_selected_ability(target_descriptor)
-	get_viewport().set_input_as_handled()
-
-
-func _process_post_battle_reward_flow() -> void:
-	if battle_room_data == null or battle_room_data.battle_status != &"victory":
-		return
-	if not _has_spawned_post_battle_reward_dice or _has_processed_post_battle_reward_dice:
-		return
-	var reward_dice := _get_turn_dice(&"reward")
-	if reward_dice.is_empty():
-		return
-	for dice in reward_dice:
-		if not BattleAbilityRuntime.is_die_fully_stopped(dice):
-			return
-	_handle_post_battle_reward_faces(reward_dice)
-
-
-func _handle_post_battle_reward_faces(reward_dice: Array[Dice]) -> void:
-	_has_processed_post_battle_reward_dice = true
-	var face_ids: PackedStringArray = PackedStringArray()
-	var has_card_reward := false
-	for dice in reward_dice:
-		if dice == null:
-			continue
-		var top_face := dice.get_top_face()
-		var top_face_id := StringName("")
-		if top_face != null:
-			top_face_id = StringName(top_face.text_value)
-		face_ids.append(String(top_face_id))
-		if top_face_id == REWARD_CARD_FACE_ID:
-			has_card_reward = true
-	print("[RewardDebug] Кубы добычи остановились. Грани: %s" % [", ".join(face_ids)])
-	if has_card_reward:
-		print("[RewardDebug] Выпало получение карты (card_+). Открываем выбор способностей.")
-		_present_ability_rewards()
-	else:
-		print("[RewardDebug] Карта способности не выпала. Выбор способностей не открывается.")
-
-
-func _handle_reward_card_input(event: InputEvent) -> void:
-	if not (event is InputEventMouseButton):
-		return
-	var mouse_event := event as InputEventMouseButton
-	if mouse_event.button_index != MOUSE_BUTTON_LEFT or not mouse_event.pressed:
-		return
-	var clicked_state := _find_reward_card_at_screen_point(mouse_event.position)
-	if clicked_state.is_empty():
-		return
-	var selected_ability := clicked_state.get("ability") as AbilityDefinition
-	if selected_ability == null:
-		return
-	_apply_selected_reward_ability(selected_ability)
 	get_viewport().set_input_as_handled()
 
 
@@ -1104,199 +1029,6 @@ func _handle_post_battle_reward_dice() -> void:
 			continue
 		dice_body.linear_velocity.y *= POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER
 	_has_spawned_post_battle_reward_dice = true
-	_has_processed_post_battle_reward_dice = false
-	print("[RewardDebug] Бой выигран. Бросаем кубы добычи.")
-
-
-func _present_ability_rewards() -> void:
-	_clear_ability_reward_cards()
-	var offered_abilities := _generate_reward_ability_offer()
-	if offered_abilities.is_empty():
-		print("[RewardDebug] Не удалось сгенерировать награду: нет доступных способностей.")
-		return
-	_reward_offered_abilities = offered_abilities
-	_reward_card_selection_active = true
-
-	var offsets := _build_centered_offsets(offered_abilities.size(), REWARD_CARD_SPACING_X)
-	for index in offered_abilities.size():
-		var ability := offered_abilities[index]
-		var card_node := _ability_reward_template if index == 0 else _duplicate_reward_card_template()
-		if card_node == null:
-			continue
-		card_node.visible = true
-		var base_transform := _ability_reward_template.transform
-		card_node.transform = Transform3D(
-			base_transform.basis,
-			base_transform.origin + Vector3(offsets[index], 0.0, 0.0)
-		)
-		_apply_ability_reward_card(card_node, ability)
-		var frame_mesh := card_node.get_node_or_null(^"ability_frame_base") as MeshInstance3D
-		_reward_offer_states.append({
-			"card": card_node,
-			"frame": frame_mesh,
-			"ability": ability,
-		})
-
-	var offered_names: PackedStringArray = PackedStringArray()
-	for ability in offered_abilities:
-		offered_names.append("%s (%s)" % [ability.display_name, _get_ability_rarity_label(ability.rarity)])
-	print("[RewardDebug] Выпали способности: %s" % [", ".join(offered_names)])
-
-
-func _generate_reward_ability_offer() -> Array[AbilityDefinition]:
-	var offered: Array[AbilityDefinition] = []
-	var blocked_ids := _get_player_ability_ids()
-	for _slot_index in REWARD_CARD_SLOTS:
-		var generated_rarity := _roll_reward_rarity()
-		var next_ability := _pick_reward_ability_for_rarity(generated_rarity, blocked_ids)
-		if next_ability == null:
-			break
-		offered.append(next_ability)
-		blocked_ids[next_ability.ability_id] = true
-	return offered
-
-
-func _get_player_ability_ids() -> Dictionary:
-	var ids := {}
-	if battle_room_data == null or battle_room_data.player_instance == null:
-		return ids
-	for ability in battle_room_data.player_instance.ability_loadout:
-		if ability == null:
-			continue
-		ids[ability.ability_id] = true
-	return ids
-
-
-func _roll_reward_rarity() -> int:
-	var total_weight := REWARD_RARITY_COMMON_WEIGHT + REWARD_RARITY_UNCOMMON_WEIGHT + REWARD_RARITY_RARE_WEIGHT + REWARD_RARITY_UNIQUE_WEIGHT
-	var roll := randi() % total_weight
-	if roll < REWARD_RARITY_COMMON_WEIGHT:
-		return AbilityDefinition.Rarity.COMMON
-	roll -= REWARD_RARITY_COMMON_WEIGHT
-	if roll < REWARD_RARITY_UNCOMMON_WEIGHT:
-		return AbilityDefinition.Rarity.UNCOMMON
-	roll -= REWARD_RARITY_UNCOMMON_WEIGHT
-	if roll < REWARD_RARITY_RARE_WEIGHT:
-		return AbilityDefinition.Rarity.RARE
-	return AbilityDefinition.Rarity.UNIQUE
-
-
-func _pick_reward_ability_for_rarity(target_rarity: int, blocked_ids: Dictionary) -> AbilityDefinition:
-	var rarity := target_rarity
-	while rarity >= AbilityDefinition.Rarity.COMMON:
-		var pool := _build_reward_ability_pool_for_rarity(rarity, blocked_ids)
-		if not pool.is_empty():
-			return pool[randi() % pool.size()]
-		rarity -= 1
-	return null
-
-
-func _build_reward_ability_pool_for_rarity(target_rarity: int, blocked_ids: Dictionary) -> Array[AbilityDefinition]:
-	var pool: Array[AbilityDefinition] = []
-	for ability in _load_all_ability_definitions():
-		if ability == null:
-			continue
-		if not ability.supports_owner(true):
-			continue
-		if blocked_ids.has(ability.ability_id):
-			continue
-		if ability.rarity != target_rarity:
-			continue
-		pool.append(ability)
-	return pool
-
-
-func _load_all_ability_definitions() -> Array[AbilityDefinition]:
-	var abilities: Array[AbilityDefinition] = []
-	var dir := DirAccess.open(REWARD_ABILITY_DEFINITIONS_DIR)
-	if dir == null:
-		push_warning("Failed to open ability directory for rewards: %s" % REWARD_ABILITY_DEFINITIONS_DIR)
-		return abilities
-	dir.list_dir_begin()
-	while true:
-		var file_name := dir.get_next()
-		if file_name.is_empty():
-			break
-		if dir.current_is_dir() or not file_name.ends_with(".tres"):
-			continue
-		var resource := ResourceLoader.load("%s/%s" % [REWARD_ABILITY_DEFINITIONS_DIR, file_name])
-		if resource is AbilityDefinition:
-			abilities.append(resource as AbilityDefinition)
-	dir.list_dir_end()
-	return abilities
-
-
-func _apply_ability_reward_card(card_node: Node3D, ability: AbilityDefinition) -> void:
-	if card_node == null or ability == null:
-		return
-	var title_label := card_node.get_node_or_null(^"ability_text") as Label3D
-	if title_label != null:
-		title_label.text = ability.display_name
-	var description_label := card_node.get_node_or_null(^"abilitu_description") as Label3D
-	if description_label != null:
-		description_label.text = ability.description
-	var icon_mesh := card_node.get_node_or_null(^"ability_icon") as MeshInstance3D
-	if icon_mesh != null:
-		_apply_texture_to_mesh(icon_mesh, ability.icon)
-
-
-func _duplicate_reward_card_template() -> Node3D:
-	if _ability_reward_template == null:
-		return null
-	var duplicated := _ability_reward_template.duplicate() as Node3D
-	if duplicated == null:
-		return null
-	add_child(duplicated)
-	_generated_ability_reward_nodes.append(duplicated)
-	return duplicated
-
-
-func _find_reward_card_at_screen_point(screen_point: Vector2) -> Dictionary:
-	for card_state in _reward_offer_states:
-		var frame_mesh := card_state.get("frame") as MeshInstance3D
-		if _screen_point_hits_mesh(frame_mesh, screen_point):
-			return card_state
-	return {}
-
-
-func _apply_selected_reward_ability(selected_ability: AbilityDefinition) -> void:
-	if battle_room_data == null or battle_room_data.player_instance == null or selected_ability == null:
-		return
-	var player := battle_room_data.player_instance
-	for owned_ability in player.ability_loadout:
-		if owned_ability != null and owned_ability.ability_id == selected_ability.ability_id:
-			print("[RewardDebug] Игрок выбрал способность %s, но она уже добавлена ранее." % selected_ability.display_name)
-			_clear_ability_reward_cards()
-			return
-	player.ability_loadout.append(selected_ability)
-	print("[RewardDebug] Игрок выбрал способность: %s" % selected_ability.display_name)
-	_clear_ability_reward_cards()
-
-
-func _clear_ability_reward_cards() -> void:
-	_reward_card_selection_active = false
-	_reward_offer_states.clear()
-	_reward_offered_abilities.clear()
-	for generated_card in _generated_ability_reward_nodes:
-		if generated_card != null and is_instance_valid(generated_card):
-			generated_card.queue_free()
-	_generated_ability_reward_nodes.clear()
-	if _ability_reward_template != null:
-		_ability_reward_template.visible = false
-
-
-func _get_ability_rarity_label(rarity: int) -> String:
-	match rarity:
-		AbilityDefinition.Rarity.COMMON:
-			return "обычный"
-		AbilityDefinition.Rarity.UNCOMMON:
-			return "необычный"
-		AbilityDefinition.Rarity.RARE:
-			return "редкий"
-		AbilityDefinition.Rarity.UNIQUE:
-			return "уникальный"
-		_:
-			return "неизвестный"
 
 
 func _find_monster_ability_frame_state(monster_index: int, ability: AbilityDefinition) -> Dictionary:
@@ -1361,9 +1093,6 @@ func _initialize_battle_state() -> void:
 	if battle_room_data.battle_status == &"not_started":
 		_has_spawned_post_battle_reward_dice = false
 		_is_waiting_post_battle_reward_dice = false
-		_has_processed_post_battle_reward_dice = false
-		_last_reported_battle_status = &""
-		_clear_ability_reward_cards()
 		battle_room_data.start_battle()
 	_start_current_turn()
 
@@ -1483,10 +1212,6 @@ func _run_current_monster_turn() -> void:
 
 
 func _update_turn_ui() -> void:
-	if battle_room_data != null and battle_room_data.battle_status != _last_reported_battle_status:
-		_last_reported_battle_status = battle_room_data.battle_status
-		if _last_reported_battle_status == &"victory":
-			print("[RewardDebug] Бой выигран.")
 	if _end_turn_button != null:
 		_end_turn_button.disabled = battle_room_data == null or not battle_room_data.is_player_turn() or _activation_in_progress or battle_room_data.is_battle_over()
 	if _turn_status_label == null:
