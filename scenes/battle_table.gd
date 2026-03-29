@@ -27,6 +27,9 @@ const ACTIVATION_TARGET_LIFT_Y := 0.8
 const POST_BATTLE_REWARD_DICE_SIZE_MULTIPLIER := Vector3(4.0, 4.0, 4.0)
 const POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER := 1.0
 const POST_BATTLE_REWARD_DICE_DELAY_SECONDS := 1.0
+const STATUS_TEMPLATE_PATH := ^"state"
+const STATUS_RUNTIME_NODE_PREFIX := "state_runtime_"
+const STATUS_ICON_SPACING_X := 0.18
 
 @onready var _camera: Camera3D = $battle_camera
 @onready var _board: BoardController = $board
@@ -139,12 +142,14 @@ func _apply_floor_textures() -> void:
 func _apply_player_sprite() -> void:
 	var player_view := battle_room_data.player_view
 	_player_sprite.visible = player_view != null and player_view.sprite != null
+	_set_status_template_visible(false)
 	if not _player_sprite.visible:
 		return
 	_apply_texture_to_mesh(_player_sprite, player_view.sprite)
 	_player_sprite.transform = Transform3D(Basis.from_scale(player_view.base_scale), BattleRoomScript.PLAYER_SPRITE_POSITION)
 	_apply_health_bar(_player_sprite, battle_room_data.get_player_health_ratio())
 	_apply_health_text(_player_sprite, battle_room_data.get_player_health_values(), ^"HP_frame/HP_text_player")
+	_apply_statuses_to_sprite(_player_sprite, {"side": &"player"})
 
 
 func _apply_monster_sprites() -> void:
@@ -170,6 +175,7 @@ func _apply_monster_sprites() -> void:
 		)
 		_apply_health_bar(target_sprite, battle_room_data.get_monster_health_ratio(index))
 		_apply_monster_health_text(target_sprite, battle_room_data.get_monster_health_values(index))
+		_apply_statuses_to_sprite(target_sprite, {"side": &"enemy", "index": index})
 		_monster_sprite_states.append({
 			"sprite": target_sprite,
 			"index": index,
@@ -383,6 +389,19 @@ func _update_health_bars(delta: float) -> void:
 		_animate_health_bar(sprite, battle_room_data.get_monster_health_ratio(monster_index), delta)
 
 
+func _refresh_status_visuals() -> void:
+	if battle_room_data == null:
+		return
+	if _player_sprite != null and _player_sprite.visible:
+		_apply_statuses_to_sprite(_player_sprite, {"side": &"player"})
+	for monster_state in _monster_sprite_states:
+		var sprite := monster_state.get("sprite") as MeshInstance3D
+		var monster_index := int(monster_state.get("index", -1))
+		if sprite == null or monster_index < 0 or not sprite.visible:
+			continue
+		_apply_statuses_to_sprite(sprite, {"side": &"enemy", "index": monster_index})
+
+
 func _apply_monster_health_text(combatant_sprite: MeshInstance3D, health_values: Vector2i) -> void:
 	_apply_health_text(combatant_sprite, health_values, ^"HP_frame_monster/HP_text_monster")
 
@@ -413,6 +432,66 @@ func _apply_texture_to_mesh(mesh_instance: MeshInstance3D, texture: Texture2D) -
 	mesh_instance.material_override = material
 
 
+func _set_status_template_visible(is_visible: bool) -> void:
+	var template := _get_status_template()
+	if template != null:
+		template.visible = is_visible
+
+
+func _get_status_template() -> MeshInstance3D:
+	if _player_sprite == null:
+		return null
+	return _player_sprite.get_node_or_null(STATUS_TEMPLATE_PATH) as MeshInstance3D
+
+
+func _clear_runtime_status_visuals(combatant_sprite: MeshInstance3D) -> void:
+	if combatant_sprite == null:
+		return
+	for child in combatant_sprite.get_children():
+		if child is MeshInstance3D and String(child.name).begins_with(STATUS_RUNTIME_NODE_PREFIX):
+			child.queue_free()
+
+
+func _apply_statuses_to_sprite(combatant_sprite: MeshInstance3D, descriptor: Dictionary) -> void:
+	_clear_runtime_status_visuals(combatant_sprite)
+	if battle_room_data == null or combatant_sprite == null:
+		return
+
+	var template := _get_status_template()
+	if template == null:
+		return
+
+	var status_container = battle_room_data.get_status_container_for_descriptor(descriptor)
+	if status_container == null:
+		return
+	var active_statuses := status_container.get_active_statuses()
+	if active_statuses.is_empty():
+		return
+	active_statuses.sort_custom(func(a, b) -> bool:
+		if a == null or b == null:
+			return false
+		return String(a.get_status_id()) < String(b.get_status_id())
+	)
+
+	var base_origin := template.transform.origin
+	var base_basis := template.transform.basis
+	for index in active_statuses.size():
+		var status_instance = active_statuses[index]
+		if status_instance == null or status_instance.definition == null:
+			continue
+		var status_node := template.duplicate() as MeshInstance3D
+		status_node.name = "%s%d" % [STATUS_RUNTIME_NODE_PREFIX, index]
+		status_node.visible = true
+		var icon_origin := base_origin + Vector3(STATUS_ICON_SPACING_X * index, 0.0, 0.0)
+		status_node.transform = Transform3D(base_basis, icon_origin)
+		combatant_sprite.add_child(status_node)
+		if status_instance.definition.asset != null:
+			_apply_texture_to_mesh(status_node, status_instance.definition.asset)
+		var stacks_label := status_node.get_node_or_null(^"state_stacks") as Label3D
+		if stacks_label != null:
+			stacks_label.text = str(maxi(status_instance.stacks, 0))
+
+
 func _build_centered_offsets(count: int, spacing: float) -> Array[float]:
 	var offsets: Array[float] = []
 	if count <= 0:
@@ -426,6 +505,7 @@ func _build_centered_offsets(count: int, spacing: float) -> Array[float]:
 func _physics_process(delta: float) -> void:
 	_refresh_player_ability_snap_state()
 	_update_health_bars(delta)
+	_refresh_status_visuals()
 	_update_turn_ui()
 	if not _selected_ability_state.is_empty() and not _activation_in_progress:
 		if not _is_ability_state_ready(_selected_ability_state):
