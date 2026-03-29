@@ -464,7 +464,7 @@ func _apply_statuses_to_sprite(combatant_sprite: MeshInstance3D, descriptor: Dic
 	var status_container = battle_room_data.get_status_container_for_descriptor(descriptor)
 	if status_container == null:
 		return
-	var active_statuses := status_container.get_active_statuses()
+	var active_statuses = status_container.get_active_statuses()
 	if active_statuses.is_empty():
 		return
 	active_statuses.sort_custom(func(a, b) -> bool:
