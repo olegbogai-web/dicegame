@@ -531,6 +531,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	var mouse_event := event as InputEventMouseButton
+	if _has_player_dice_at_screen_point(mouse_event.position):
+		return
+
 	var clicked_frame_state := _find_player_ability_frame_at_screen_point(mouse_event.position)
 	if not clicked_frame_state.is_empty():
 		if _is_ability_state_ready(clicked_frame_state):
@@ -1204,6 +1207,20 @@ func _screen_point_hits_mesh(mesh_instance: MeshInstance3D, screen_point: Vector
 		return false
 	var projected_rect := _project_mesh_screen_rect(mesh_instance)
 	return projected_rect.size.x > 0.0 and projected_rect.size.y > 0.0 and projected_rect.has_point(screen_point)
+
+
+func _has_player_dice_at_screen_point(screen_point: Vector2) -> bool:
+	if _camera == null or get_world_3d() == null:
+		return false
+	var ray_query := PhysicsRayQueryParameters3D.create(
+		_camera.project_ray_origin(screen_point),
+		_camera.project_ray_origin(screen_point) + _camera.project_ray_normal(screen_point) * 1000.0
+	)
+	var hit := get_world_3d().direct_space_state.intersect_ray(ray_query)
+	if hit.is_empty():
+		return false
+	var collider := hit.get("collider") as Node
+	return collider is Dice and StringName(collider.get_meta(&"owner", &"")) == &"player"
 
 
 func _project_mesh_screen_rect(mesh_instance: MeshInstance3D) -> Rect2:
