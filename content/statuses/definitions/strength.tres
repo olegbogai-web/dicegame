@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="StatusDefinition" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://content/statuses/resources/status_definition.gd" id="1_status"]
+[ext_resource type="Script" path="res://content/statuses/resources/status_effect_definition.gd" id="2_effect"]
+[ext_resource type="Texture2D" path="res://assets/ui/choice_effect.png" id="3_icon"]
+
+[sub_resource type="Resource" id="StatusEffect_strength_damage_bonus"]
+script = ExtResource("2_effect")
+effect_id = "strength_damage_bonus"
+effect_type = &"modifier"
+trigger = &"passive"
+priority = 0
+phase_order = 0
+stat_key = &"ability_damage_outgoing"
+operation = &"add"
+value = 1.0
+target_scope = &"self"
+status_id = ""
+parameters = {}
+
+[resource]
+script = ExtResource("1_status")
+status_id = "strength"
+display_name = "Сила"
+description = "Пассивно увеличивает урон способностей на 1 за каждый стак."
+asset = ExtResource("3_icon")
+stacking_policy = &"add"
+max_stacks = 99
+duration_model = &"battle"
+effects = Array[ExtResource("2_effect")]([SubResource("StatusEffect_strength_damage_bonus")])
+metadata = {}
