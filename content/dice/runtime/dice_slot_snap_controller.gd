@@ -60,10 +60,10 @@ func prepare_for_manual_drag(dice: RigidBody3D, event: InputEvent) -> bool:
 	if mouse_event.button_index != MOUSE_BUTTON_LEFT or not mouse_event.pressed:
 		return false
 
-	var was_assigned := has_assigned_slot()
-	if was_assigned:
+	var was_attached := _is_snapped or _is_attracting
+	if was_attached:
 		clear_slot(dice)
-	return was_assigned
+	return was_attached
 
 
 func has_assigned_slot() -> bool:
