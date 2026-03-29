@@ -181,6 +181,11 @@ func is_snapped_to_ability_slot() -> bool:
 	return _slot_snap_controller.is_snapped()
 
 
+func set_ability_slot_locked(is_locked: bool) -> void:
+	_setup_components()
+	_slot_snap_controller.set_slot_lock_enabled(self, is_locked)
+
+
 func is_being_dragged() -> bool:
 	_setup_components()
 	return _drag_controller.is_dragging()
