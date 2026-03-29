@@ -21,11 +21,16 @@ func set_monster_states(combatant_descriptors: Array[Dictionary]) -> void:
 
 
 func get_status_container_for_descriptor(descriptor: Dictionary):
+	var combatant_state := _get_combatant_state_for_descriptor(descriptor)
+	if combatant_state == null or not combatant_state.is_alive:
+		return null
+	return combatant_state.statuses
+
+
+func _get_combatant_state_for_descriptor(descriptor: Dictionary) -> CombatantRuntimeState:
 	var side := StringName(descriptor.get("side", &""))
 	if side == &"player":
-		if player_state == null:
-			return null
-		return player_state.statuses
+		return player_state
 	if side == &"enemy":
 		var monster_index := int(descriptor.get("index", -1))
 		if monster_index < 0 or monster_index >= monster_states.size():
@@ -33,23 +38,16 @@ func get_status_container_for_descriptor(descriptor: Dictionary):
 		var monster_state := monster_states[monster_index]
 		if monster_state == null:
 			return null
-		return monster_state.statuses
+		return monster_state
 	return null
 
 
 func get_status_container_for_turn_owner(turn_owner: StringName, monster_turn_index: int):
-	if turn_owner == &"player":
-		if player_state == null:
-			return null
-		return player_state.statuses
+	var descriptor := {"side": turn_owner}
 	if turn_owner == &"monster":
-		if monster_turn_index < 0 or monster_turn_index >= monster_states.size():
-			return null
-		var monster_state := monster_states[monster_turn_index]
-		if monster_state == null:
-			return null
-		return monster_state.statuses
-	return null
+		descriptor["side"] = &"enemy"
+		descriptor["index"] = monster_turn_index
+	return get_status_container_for_descriptor(descriptor)
 
 
 func clear_all_statuses() -> void:
@@ -59,6 +57,22 @@ func clear_all_statuses() -> void:
 		if monster_state != null and monster_state.statuses != null:
 			monster_state.statuses.clear()
 	clear_status_event_log()
+
+
+func mark_combatant_dead(descriptor: Dictionary) -> void:
+	var combatant_state := _get_combatant_state_for_descriptor(descriptor)
+	if combatant_state == null:
+		return
+	combatant_state.is_alive = false
+	if combatant_state.statuses != null:
+		combatant_state.statuses.clear()
+
+
+func mark_combatant_alive(descriptor: Dictionary) -> void:
+	var combatant_state := _get_combatant_state_for_descriptor(descriptor)
+	if combatant_state == null:
+		return
+	combatant_state.is_alive = true
 
 
 func publish_status_event(event_name: StringName, payload: Dictionary = {}) -> void:

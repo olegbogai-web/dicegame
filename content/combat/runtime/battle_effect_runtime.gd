@@ -107,7 +107,8 @@ static func _apply_effect_to_target(
 				var monster_index := int(target_descriptor.get("index", -1))
 				if not battle_room.can_target_monster(monster_index):
 					return false
-				battle_room.monster_views[monster_index].take_damage(resolved_magnitude)
+				if not battle_room.apply_damage_to_descriptor({"side": &"enemy", "index": monster_index}, resolved_magnitude):
+					return false
 				StatusRuntime.trigger_event(StatusRuntime.build_event_context(
 					StatusRuntime.TRIGGER_DAMAGE_TAKEN,
 					{
@@ -123,10 +124,8 @@ static func _apply_effect_to_target(
 				))
 				return true
 			if target_kind == &"player":
-				if battle_room.player_instance != null:
-					battle_room.player_instance.take_damage(resolved_magnitude)
-				if battle_room.player_view != null:
-					battle_room.player_view.take_damage(resolved_magnitude)
+				if not battle_room.apply_damage_to_descriptor({"side": &"player"}, resolved_magnitude):
+					return false
 				StatusRuntime.trigger_event(StatusRuntime.build_event_context(
 					StatusRuntime.TRIGGER_DAMAGE_TAKEN,
 					{
@@ -143,10 +142,8 @@ static func _apply_effect_to_target(
 				return true
 		&"healing":
 			if target_kind == &"player":
-				if battle_room.player_instance != null:
-					battle_room.player_instance.heal(resolved_magnitude)
-				if battle_room.player_view != null:
-					battle_room.player_view.heal(resolved_magnitude)
+				if not battle_room.apply_heal_to_descriptor({"side": &"player"}, resolved_magnitude):
+					return false
 				StatusRuntime.trigger_event(StatusRuntime.build_event_context(
 					StatusRuntime.TRIGGER_HEAL_TAKEN,
 					{
@@ -165,7 +162,8 @@ static func _apply_effect_to_target(
 				var monster_index := int(target_descriptor.get("index", -1))
 				if not battle_room.can_target_monster(monster_index):
 					return false
-				battle_room.monster_views[monster_index].heal(resolved_magnitude)
+				if not battle_room.apply_heal_to_descriptor({"side": &"enemy", "index": monster_index}, resolved_magnitude):
+					return false
 				StatusRuntime.trigger_event(StatusRuntime.build_event_context(
 					StatusRuntime.TRIGGER_HEAL_TAKEN,
 					{
@@ -194,7 +192,7 @@ static func _apply_effect_to_target(
 
 static func _resolve_source_status_container(battle_room):
 	if battle_room.current_turn_owner == &"player":
-		if battle_room.player_view == null:
+		if not battle_room.can_target_player():
 			return null
 		return battle_room.get_status_container_for_descriptor({"side": &"player"})
 	if battle_room.current_turn_owner == &"monster" and battle_room.can_target_monster(battle_room.current_monster_turn_index):

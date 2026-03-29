@@ -377,10 +377,9 @@ static func _apply_direct_magnitude(
 	var targets := _resolve_targets(battle_room, owner_descriptor, owner_side, effect.target_scope)
 	for target in targets:
 		if StringName(target.get("side", &"")) == &"player":
-			if battle_room.player_view == null:
-				continue
 			if is_damage:
-				battle_room.player_view.take_damage(magnitude)
+				if not battle_room.apply_damage_to_descriptor({"side": &"player"}, magnitude):
+					continue
 				trigger_event(build_event_context(TRIGGER_DAMAGE_TAKEN, {
 					"battle_room": battle_room,
 					"owner_descriptor": target,
@@ -390,7 +389,8 @@ static func _apply_direct_magnitude(
 					"metadata": {"origin": &"status"},
 				}))
 			else:
-				battle_room.player_view.heal(magnitude)
+				if not battle_room.apply_heal_to_descriptor({"side": &"player"}, magnitude):
+					continue
 				trigger_event(build_event_context(TRIGGER_HEAL_TAKEN, {
 					"battle_room": battle_room,
 					"owner_descriptor": target,
@@ -401,10 +401,10 @@ static func _apply_direct_magnitude(
 				}))
 			continue
 		var monster_index := int(target.get("index", -1))
-		if not battle_room.can_target_monster(monster_index):
-			continue
+		var monster_descriptor := {"side": &"enemy", "index": monster_index}
 		if is_damage:
-			battle_room.monster_views[monster_index].take_damage(magnitude)
+			if not battle_room.apply_damage_to_descriptor(monster_descriptor, magnitude):
+				continue
 			trigger_event(build_event_context(TRIGGER_DAMAGE_TAKEN, {
 				"battle_room": battle_room,
 				"owner_descriptor": target,
@@ -413,16 +413,17 @@ static func _apply_direct_magnitude(
 				"magnitude": magnitude,
 				"metadata": {"origin": &"status"},
 			}))
-		else:
-			battle_room.monster_views[monster_index].heal(magnitude)
-			trigger_event(build_event_context(TRIGGER_HEAL_TAKEN, {
-				"battle_room": battle_room,
-				"owner_descriptor": target,
-				"source_descriptor": owner_descriptor,
-				"target_descriptor": target,
-				"magnitude": magnitude,
-				"metadata": {"origin": &"status"},
-			}))
+			continue
+		if not battle_room.apply_heal_to_descriptor(monster_descriptor, magnitude):
+			continue
+		trigger_event(build_event_context(TRIGGER_HEAL_TAKEN, {
+			"battle_room": battle_room,
+			"owner_descriptor": target,
+			"source_descriptor": owner_descriptor,
+			"target_descriptor": target,
+			"magnitude": magnitude,
+			"metadata": {"origin": &"status"},
+		}))
 
 
 static func _apply_status_to_scope(
