@@ -20,9 +20,7 @@ enum Rarity {
 	COMMON,
 	UNCOMMON,
 	RARE,
-	EPIC,
-	LEGENDARY,
-	BOSS,
+	UNIQUE,
 }
 
 const KIND_TAGS := {

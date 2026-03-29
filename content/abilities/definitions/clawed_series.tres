@@ -40,6 +40,7 @@ description = "Требует 3 куба со значением 3 или мен
 icon = ExtResource("7_icon")
 tags = PackedStringArray("attack")
 owner_scope = 1
+rarity = 0
 cost = SubResource("AbilityCost_main")
 target_rule = SubResource("AbilityTargetRule_enemy")
 effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_damage")])

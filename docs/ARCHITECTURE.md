@@ -555,7 +555,7 @@ AbilityDefinition
 - id
 - name
 - description
-- rarity
+- rarity (`обычное`, `необычное`, `редкое`, `уникальное`; базовое значение — `обычное`)
 - tags
 - cooldown_rule
 - usage_limit_rule
@@ -641,7 +641,7 @@ DiceDefinition
 - id
 - family (battle/map)
 - faces
-- rarity
+- rarity (`обычное`, `необычное`, `редкое`, `уникальное`; базовое значение — `обычное`)
 - tags
 - visuals
 - intrinsic_effects
@@ -678,6 +678,8 @@ DiceFaceDefinition
 - `PatternRequirement`
 
 Это позволит в будущем вводить нестандартные кубы без переписывания способностей.
+
+Дополнительное ограничение по редкости: сущности редкости `уникальное` могут встретиться в рамках одного забега не более одного раза. Само применение этого ограничения выполняется в подсистеме наград/резолва контента, а не в `AbilityDefinition`/`DiceDefinition`.
 
 ---
 
