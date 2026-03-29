@@ -49,6 +49,7 @@ static func resolve_ability_effect_magnitude(
 	if effect == null:
 		return 0
 
+	var resolved_base_magnitude := effect.magnitude
 	var selected_die_multiplier := int(effect.parameters.get("selected_die_multiplier", 0))
 	if selected_die_multiplier != 0 and consumed_dice is Array and not consumed_dice.is_empty():
 		var selected_die = consumed_dice[0]
@@ -60,11 +61,11 @@ static func resolve_ability_effect_magnitude(
 					{"container": source_container, "stat_key": &"dice_face_value_outgoing", "scope": &"source"},
 				]
 			)
-			return maxi(die_result.get("value", 0), 0) * selected_die_multiplier
+			resolved_base_magnitude = maxi(die_result.get("value", 0), 0) * selected_die_multiplier
 
 	if effect.effect_type == &"damage":
 		var damage_result := resolve_passive_modifier_pipeline(
-			effect.magnitude,
+			resolved_base_magnitude,
 			[
 				{"container": source_container, "stat_key": &"ability_damage_outgoing", "scope": &"source"},
 				{"container": target_container, "stat_key": &"ability_damage_incoming", "scope": &"target"},
@@ -74,7 +75,7 @@ static func resolve_ability_effect_magnitude(
 
 	if effect.effect_type == &"healing":
 		var healing_result := resolve_passive_modifier_pipeline(
-			effect.magnitude,
+			resolved_base_magnitude,
 			[
 				{"container": source_container, "stat_key": &"ability_healing_outgoing", "scope": &"source"},
 				{"container": target_container, "stat_key": &"ability_healing_incoming", "scope": &"target"},
@@ -82,7 +83,7 @@ static func resolve_ability_effect_magnitude(
 		)
 		return maxi(healing_result.get("value", 0), 0)
 
-	return maxi(effect.magnitude, 0)
+	return maxi(resolved_base_magnitude, 0)
 
 
 static func resolve_passive_modifier_pipeline(base_value: int, modifier_queries: Array[Dictionary]) -> Dictionary:
