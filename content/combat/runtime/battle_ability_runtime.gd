@@ -43,9 +43,6 @@ static func can_use_any_ability(
 static func get_required_dice_count(ability: AbilityDefinition) -> int:
 	if ability == null or ability.cost == null:
 		return 0
-	var required_dice_sum := int(ability.cost.additional_costs.get("required_dice_sum", 0))
-	if required_dice_sum > 0 and ability.cost.dice_conditions.is_empty():
-		return maxi(int(ability.cost.additional_costs.get("min_dice_count", 1)), 1)
 	var total_required := 0
 	for dice_condition in ability.cost.dice_conditions:
 		if dice_condition == null:
@@ -66,10 +63,6 @@ static func collect_dice_for_ability(
 		return selected
 
 	var available_dice := _filter_candidate_dice(dice_list, require_stopped)
-	var required_dice_sum := int(ability.cost.additional_costs.get("required_dice_sum", 0))
-	if required_dice_sum > 0:
-		return _collect_dice_for_sum_cost(ability, available_dice, required_dice_sum)
-
 	for dice_condition in ability.cost.dice_conditions:
 		if dice_condition == null:
 			continue
@@ -81,69 +74,6 @@ static func collect_dice_for_ability(
 			available_dice.erase(matched_dice_item)
 			selected.append(matched_dice_item)
 	return selected
-
-
-static func _collect_dice_for_sum_cost(
-	ability: AbilityDefinition,
-	available_dice: Array[Dice],
-	required_dice_sum: int
-) -> Array[Dice]:
-	if required_dice_sum <= 0:
-		return []
-	var min_dice_count := maxi(int(ability.cost.additional_costs.get("min_dice_count", 1)), 1)
-	var max_dice_count := maxi(int(ability.cost.additional_costs.get("max_dice_count", available_dice.size())), min_dice_count)
-	var candidate_dice: Array[Dice] = []
-	for dice in available_dice:
-		if _is_die_allowed_for_sum_cost(dice, ability):
-			candidate_dice.append(dice)
-	if candidate_dice.is_empty():
-		return []
-	var selected := _find_sum_combination(candidate_dice, required_dice_sum, min_dice_count, max_dice_count, 0, [])
-	return selected
-
-
-static func _is_die_allowed_for_sum_cost(dice: Dice, ability: AbilityDefinition) -> bool:
-	if dice == null or ability == null:
-		return false
-	if ability.cost.dice_conditions.is_empty():
-		return true
-	for dice_condition in ability.cost.dice_conditions:
-		if is_die_usable_for_ability(dice, ability, dice_condition, false):
-			return true
-	return false
-
-
-static func _find_sum_combination(
-	candidate_dice: Array[Dice],
-	required_dice_sum: int,
-	min_dice_count: int,
-	max_dice_count: int,
-	start_index: int,
-	current_selection: Array[Dice]
-) -> Array[Dice]:
-	var current_sum := 0
-	for dice in current_selection:
-		current_sum += dice.get_top_face_value()
-	if current_sum == required_dice_sum and current_selection.size() >= min_dice_count:
-		return current_selection.duplicate()
-	if current_sum >= required_dice_sum or current_selection.size() >= max_dice_count:
-		return []
-
-	for index in range(start_index, candidate_dice.size()):
-		var next_die := candidate_dice[index]
-		current_selection.append(next_die)
-		var nested := _find_sum_combination(
-			candidate_dice,
-			required_dice_sum,
-			min_dice_count,
-			max_dice_count,
-			index + 1,
-			current_selection
-		)
-		if not nested.is_empty():
-			return nested
-		current_selection.remove_at(current_selection.size() - 1)
-	return []
 
 
 static func filter_ready_dice(dice_list: Array[Dice], require_stopped: bool = false) -> Array[Dice]:
