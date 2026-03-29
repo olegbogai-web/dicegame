@@ -6,7 +6,6 @@ const TEST_PLAYER_TEXTURE := preload("res://assets/entity/monsters/test_player.p
 const TEST_MONSTER_DEFINITION := preload("res://content/monsters/definitions/test_monster.tres")
 const COMMON_ATTACK_ABILITY := preload("res://content/abilities/definitions/common_attack.tres")
 const HEAL_ABILITY := preload("res://content/abilities/definitions/heal.tres")
-const STRENGTHENING_ABILITY := preload("res://content/abilities/definitions/strengthening.tres")
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
 const BattleEffectRuntime = preload("res://content/combat/runtime/battle_effect_runtime.gd")
@@ -449,7 +448,6 @@ static func _build_test_player() -> Player:
 	base_stat.starting_abilities = [
 		COMMON_ATTACK_ABILITY,
 		HEAL_ABILITY,
-		STRENGTHENING_ABILITY,
 	]
 	base_stat.starting_dice = [
 		preload("res://content/resources/base_cube.tres"),

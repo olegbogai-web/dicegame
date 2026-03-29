@@ -15,9 +15,7 @@ class_name AbilityCost
 
 
 func requires_dice() -> bool:
-	if dice_conditions.size() > 0:
-		return true
-	return additional_costs.has("required_dice_sum")
+	return dice_conditions.size() > 0
 
 
 func has_any_cost() -> bool:
