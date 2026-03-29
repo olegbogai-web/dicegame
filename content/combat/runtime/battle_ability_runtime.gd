@@ -26,7 +26,8 @@ static func can_use_ability_with_dice(
 		return false
 	if ability.cost == null or not ability.cost.requires_dice():
 		return true
-	return collect_dice_for_ability(ability, dice_list, require_stopped).size() >= get_required_dice_count(ability)
+	var collected_dice := collect_dice_for_ability(ability, dice_list, require_stopped)
+	return collected_dice.size() >= get_required_dice_count(ability) and are_use_conditions_satisfied(ability, collected_dice)
 
 
 static func can_use_any_ability(
@@ -76,6 +77,37 @@ static func collect_dice_for_ability(
 	return selected
 
 
+static func are_use_conditions_satisfied(ability: AbilityDefinition, selected_dice: Array[Dice]) -> bool:
+	if ability == null:
+		return false
+	for condition in ability.use_conditions:
+		if condition == null:
+			continue
+		if condition.predicate == &"selected_die_top_face_parity":
+			if selected_dice.is_empty():
+				return false
+			var parity := String(condition.parameters.get("parity", ""))
+			var top_face_value := selected_dice[0].get_top_face_value()
+			if parity == "even" and top_face_value % 2 != 0:
+				return false
+			if parity == "odd" and top_face_value % 2 == 0:
+				return false
+		elif condition.predicate == &"selected_dice_total_equals":
+			var min_dice_count := maxi(int(condition.parameters.get("min_dice_count", 1)), 0)
+			var max_dice_count := maxi(int(condition.parameters.get("max_dice_count", selected_dice.size())), 0)
+			if selected_dice.size() < min_dice_count or selected_dice.size() > max_dice_count:
+				return false
+			var required_total := int(condition.parameters.get("total", 0))
+			var current_total := 0
+			for dice in selected_dice:
+				if dice == null or not is_instance_valid(dice):
+					return false
+				current_total += maxi(dice.get_top_face_value(), 0)
+			if current_total != required_total:
+				return false
+	return true
+
+
 static func filter_ready_dice(dice_list: Array[Dice], require_stopped: bool = false) -> Array[Dice]:
 	return _filter_candidate_dice(dice_list, require_stopped)
 
@@ -106,7 +138,7 @@ static func is_die_usable_for_ability(
 	for forbidden_tag in dice_condition.forbidden_tags:
 		if dice_tags.has(forbidden_tag):
 			return false
-	return _satisfies_ability_use_conditions(dice, ability)
+	return _satisfies_selected_die_use_conditions(dice, ability)
 
 
 static func is_die_fully_stopped(dice: Dice) -> bool:
@@ -188,17 +220,18 @@ static func _collect_unique_value_dice(candidates: Array[Dice], required_count: 
 	return selected if selected.size() >= required_count else []
 
 
-static func _satisfies_ability_use_conditions(dice: Dice, ability: AbilityDefinition) -> bool:
+static func _satisfies_selected_die_use_conditions(dice: Dice, ability: AbilityDefinition) -> bool:
 	if dice == null or ability == null:
 		return false
 	for condition in ability.use_conditions:
 		if condition == null:
 			continue
-		if condition.predicate == &"selected_die_top_face_parity":
-			var parity := String(condition.parameters.get("parity", ""))
-			var top_face_value := dice.get_top_face_value()
-			if parity == "even" and top_face_value % 2 != 0:
-				return false
-			if parity == "odd" and top_face_value % 2 == 0:
-				return false
+		if condition.predicate != &"selected_die_top_face_parity":
+			continue
+		var parity := String(condition.parameters.get("parity", ""))
+		var top_face_value := dice.get_top_face_value()
+		if parity == "even" and top_face_value % 2 != 0:
+			return false
+		if parity == "odd" and top_face_value % 2 == 0:
+			return false
 	return true
