@@ -1,6 +1,8 @@
 extends RefCounted
 class_name Player
 
+const ON_GRANT_MAX_HP_BONUS_META_KEY := &"on_grant_max_hp_bonus"
+
 var player_id := ""
 var base_stat: PlayerBaseStat
 var current_hp := 0
@@ -11,6 +13,7 @@ var runtime_reward_cube: DiceDefinition
 var runtime_money_cube: DiceDefinition
 var ability_loadout: Array[AbilityDefinition] = []
 var artifacts_runtime: Array[ArtifactDefinition] = []
+var runtime_max_hp_bonus := 0
 var run_flags: Dictionary = {}
 var metadata: Dictionary = {}
 
@@ -39,6 +42,7 @@ func reset_for_run() -> void:
 		runtime_money_cube = null
 		ability_loadout.clear()
 		artifacts_runtime.clear()
+		runtime_max_hp_bonus = 0
 		run_flags.clear()
 		return
 	current_hp = base_stat.get_resolved_starting_hp()
@@ -49,6 +53,7 @@ func reset_for_run() -> void:
 	runtime_money_cube = base_stat.get_resolved_base_money_cube().duplicate(true)
 	ability_loadout = base_stat.starting_abilities.duplicate()
 	artifacts_runtime.clear()
+	runtime_max_hp_bonus = 0
 	run_flags.clear()
 
 
@@ -70,8 +75,21 @@ func heal(amount: int) -> int:
 		return 0
 	var resolved_amount := maxi(amount, 0)
 	var previous_hp := current_hp
-	current_hp = mini(current_hp + resolved_amount, base_stat.max_hp)
+	current_hp = mini(current_hp + resolved_amount, get_max_hp())
 	return current_hp - previous_hp
+
+
+func get_max_hp() -> int:
+	if base_stat == null:
+		return 0
+	return maxi(base_stat.max_hp + runtime_max_hp_bonus, 0)
+
+
+func grant_artifact(artifact_definition: ArtifactDefinition) -> void:
+	if artifact_definition == null:
+		return
+	artifacts_runtime.append(artifact_definition)
+	_apply_on_grant_effects(artifact_definition)
 
 
 func get_active_artifact_definitions() -> Array[ArtifactDefinition]:
@@ -84,3 +102,13 @@ func get_active_artifact_definitions() -> Array[ArtifactDefinition]:
 		if artifact_runtime != null:
 			resolved.append(artifact_runtime)
 	return resolved
+
+
+func _apply_on_grant_effects(artifact_definition: ArtifactDefinition) -> void:
+	if artifact_definition == null:
+		return
+	var max_hp_bonus := maxi(int(artifact_definition.metadata.get(ON_GRANT_MAX_HP_BONUS_META_KEY, 0)), 0)
+	if max_hp_bonus <= 0:
+		return
+	runtime_max_hp_bonus += max_hp_bonus
+	current_hp = mini(current_hp + max_hp_bonus, get_max_hp())
