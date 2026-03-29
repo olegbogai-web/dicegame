@@ -13,6 +13,7 @@ const REWARD_CUBE_UP_ICON := preload("res://assets/dice_edges/cube_up.png")
 const REWARD_CARD_UP_ICON := preload("res://assets/dice_edges/card_up.png")
 const REWARD_MONEY_ICON := preload("res://assets/dice_edges/money.png")
 const MONEY_DICE_SKIN := preload("res://assets/dice_edges/money_dice_skin.png")
+const DEFAULT_STRENGTH_NECKLACE := preload("res://content/artifacts/definitions/strength_necklace.tres")
 const DiceDefinitionScript = preload("res://content/dice/resources/dice_definition.gd")
 const DiceFaceDefinitionScript = preload("res://content/dice/resources/dice_face_definition.gd")
 
@@ -30,6 +31,7 @@ const DiceFaceDefinitionScript = preload("res://content/dice/resources/dice_face
 @export var base_reward_cube: DiceDefinition
 @export var base_money_cube: DiceDefinition
 @export var starting_abilities: Array[AbilityDefinition] = []
+@export var artifacts_base: Array[ArtifactDefinition] = []
 @export var metadata: Dictionary = {}
 
 
@@ -53,6 +55,9 @@ func is_valid_definition() -> bool:
 	for ability_definition in starting_abilities:
 		if ability_definition == null or not ability_definition.supports_owner(true):
 			return false
+	for artifact_definition in get_resolved_artifacts_base():
+		if artifact_definition == null:
+			return false
 	return true
 
 
@@ -72,6 +77,12 @@ func get_resolved_base_money_cube() -> DiceDefinition:
 	if base_money_cube != null:
 		return base_money_cube
 	return _build_default_money_cube_definition()
+
+
+func get_resolved_artifacts_base() -> Array[ArtifactDefinition]:
+	if not artifacts_base.is_empty():
+		return artifacts_base
+	return _build_default_artifacts_base()
 
 
 func _build_default_base_cube_global_map() -> Array[DiceDefinition]:
@@ -127,6 +138,10 @@ func _build_default_money_faces() -> Array[DiceFaceDefinition]:
 	for value in range(1, 7):
 		faces.append(_build_money_face(str(value)))
 	return faces
+
+
+func _build_default_artifacts_base() -> Array[ArtifactDefinition]:
+	return [DEFAULT_STRENGTH_NECKLACE]
 
 
 func _build_money_face(value: String) -> DiceFaceDefinition:
