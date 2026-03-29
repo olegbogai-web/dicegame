@@ -96,6 +96,7 @@ func _snap_now(dice: RigidBody3D) -> void:
 	dice.sleeping = true
 	_is_attracting = false
 	_is_snapped = true
+	print("DEBUG dice snapped to ability slot: %s -> %s" % [dice.name, String(_assigned_slot_id)])
 
 
 func _hold_to_slot(dice: RigidBody3D) -> void:
