@@ -12,7 +12,7 @@ static func build_slot_conditions(ability: AbilityDefinition) -> Array[AbilityDi
 	for dice_condition in ability.cost.dice_conditions:
 		if dice_condition == null:
 			continue
-		for _count in maxi(dice_condition.required_count, 0):
+		for _count in maxi(dice_condition.get_slot_count(), 0):
 			conditions.append(dice_condition)
 	return conditions
 
@@ -47,7 +47,7 @@ static func get_required_dice_count(ability: AbilityDefinition) -> int:
 	for dice_condition in ability.cost.dice_conditions:
 		if dice_condition == null:
 			continue
-		total_required += maxi(dice_condition.required_count, 0)
+		total_required += dice_condition.get_min_selected_count()
 	return total_required
 
 
@@ -67,7 +67,7 @@ static func collect_dice_for_ability(
 		if dice_condition == null:
 			continue
 		var matched_dice := _collect_dice_for_condition(ability, dice_condition, available_dice, require_stopped)
-		if matched_dice.size() < maxi(dice_condition.required_count, 0):
+		if matched_dice.size() < dice_condition.get_min_selected_count():
 			selected.clear()
 			return selected
 		for matched_dice_item in matched_dice:
@@ -138,12 +138,26 @@ static func _collect_dice_for_condition(
 		if is_die_usable_for_ability(dice, ability, dice_condition, require_stopped):
 			candidates.append(dice)
 
-	var required_count := maxi(dice_condition.required_count, 0)
-	if required_count <= 0:
+	var min_count := dice_condition.get_min_selected_count()
+	var max_count := mini(dice_condition.get_max_selected_count(), candidates.size())
+	if min_count <= 0:
 		return []
-	if candidates.size() < required_count:
+	if candidates.size() < min_count:
 		return []
+	for selected_count in range(min_count, max_count + 1):
+		var selected_for_count := _collect_dice_with_count(dice_condition, candidates, selected_count)
+		if selected_for_count.is_empty():
+			continue
+		if dice_condition.matches_total_value(_sum_dice_values(selected_for_count)):
+			return selected_for_count
+	return []
 
+
+static func _collect_dice_with_count(
+	dice_condition: AbilityDiceCondition,
+	candidates: Array[Dice],
+	required_count: int
+) -> Array[Dice]:
 	if dice_condition.requires_same_value:
 		return _collect_same_value_dice(candidates, required_count)
 	if dice_condition.requires_unique_values:
@@ -186,6 +200,15 @@ static func _collect_unique_value_dice(candidates: Array[Dice], required_count: 
 		if selected.size() >= required_count:
 			break
 	return selected if selected.size() >= required_count else []
+
+
+static func _sum_dice_values(dice_list: Array[Dice]) -> int:
+	var total_value := 0
+	for dice in dice_list:
+		if dice == null or not is_instance_valid(dice):
+			continue
+		total_value += maxi(dice.get_top_face_value(), 0)
+	return total_value
 
 
 static func _satisfies_ability_use_conditions(dice: Dice, ability: AbilityDefinition) -> bool:
