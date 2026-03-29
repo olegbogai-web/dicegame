@@ -84,14 +84,14 @@ static func update_battle_result_if_finished(battle_room) -> bool:
 		battle_room.battle_result = &"player_dead"
 		battle_room.current_turn_owner = &"none"
 		battle_room.current_monster_turn_index = -1
-		StatusRuntime.clear_all_statuses(battle_room)
+		battle_room.clear_all_statuses()
 		return true
 	if battle_room.get_living_monster_indexes().is_empty():
 		battle_room.battle_status = &"victory"
 		battle_room.battle_result = &"monsters_defeated"
 		battle_room.current_turn_owner = &"none"
 		battle_room.current_monster_turn_index = -1
-		StatusRuntime.clear_all_statuses(battle_room)
+		battle_room.clear_all_statuses()
 		return true
 	return false
 

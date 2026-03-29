@@ -12,7 +12,7 @@ const NEEDLE_THROW_ABILITY := preload("res://content/abilities/definitions/needl
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
 const BattleEffectRuntime = preload("res://content/combat/runtime/battle_effect_runtime.gd")
-const StatusContainer = preload("res://content/statuses/runtime/status_container.gd")
+const BattleCombatRuntimeState = preload("res://content/combat/runtime/battle_combat_runtime_state.gd")
 
 const PLAYER_SPRITE_POSITION := Vector3(-3.0, 0.01, -2.5)
 const PLAYER_SPRITE_SCALE := Vector3(2.0, 2.0, 2.0)
@@ -36,7 +36,6 @@ class CombatantViewData:
 	var ai_profile: MonsterAiProfile
 	var combatant_id: StringName = &""
 	var side: StringName = &""
-	var statuses: StatusContainer
 
 	func _init(
 		next_sprite: Texture2D = null,
@@ -58,7 +57,6 @@ class CombatantViewData:
 		ai_profile = next_ai_profile
 		combatant_id = next_combatant_id
 		side = next_side
-		statuses = StatusContainer.new(combatant_id)
 
 	static func _sanitize_abilities(next_abilities: Array[AbilityDefinition]) -> Array[AbilityDefinition]:
 		var sanitized: Array[AbilityDefinition] = []
@@ -107,6 +105,7 @@ var reward_refs: PackedStringArray = PackedStringArray()
 var player_instance: Player
 var player_view: CombatantViewData = CombatantViewData.new()
 var monster_views: Array[CombatantViewData] = []
+var combat_runtime_state: BattleCombatRuntimeState = BattleCombatRuntimeState.new()
 var left_floor_texture: Texture2D = DEFAULT_FLOOR_TEXTURE
 var right_floor_texture: Texture2D = DEFAULT_FLOOR_TEXTURE
 var current_turn_owner: StringName = &"none"
@@ -159,6 +158,7 @@ func set_player_data(player: Player, sprite: Texture2D) -> void:
 		&"player",
 		&"player"
 	)
+	combat_runtime_state.set_player_state(player_view.combatant_id, player_view.side)
 	_reset_battle_progression()
 
 
@@ -180,6 +180,15 @@ func set_monsters_from_definitions(next_monster_definitions: Array[MonsterDefini
 				&"enemy"
 			)
 		)
+	var runtime_monster_descriptors: Array[Dictionary] = []
+	for monster_view in monster_views:
+		if monster_view == null:
+			continue
+		runtime_monster_descriptors.append({
+			"combatant_id": monster_view.combatant_id,
+			"side": monster_view.side,
+		})
+	combat_runtime_state.set_monster_states(runtime_monster_descriptors)
 	_reset_battle_progression()
 
 
@@ -278,6 +287,23 @@ func get_monster_turn_order() -> Array[int]:
 	)
 	return living_indexes
 
+
+func get_status_container_for_descriptor(descriptor: Dictionary):
+	if combat_runtime_state == null:
+		return null
+	return combat_runtime_state.get_status_container_for_descriptor(descriptor)
+
+
+func get_status_container_for_turn_owner():
+	if combat_runtime_state == null:
+		return null
+	return combat_runtime_state.get_status_container_for_turn_owner(current_turn_owner, current_monster_turn_index)
+
+
+func clear_all_statuses() -> void:
+	if combat_runtime_state == null:
+		return
+	combat_runtime_state.clear_all_statuses()
 
 func start_battle() -> Dictionary:
 	return BattleTurnRuntime.start_battle(self)
