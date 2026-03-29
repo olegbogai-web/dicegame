@@ -238,9 +238,11 @@ offset_bottom = 120.0
 text = "Событие"
 
 [node name="artefact" type="TextureRect" parent="UI" unique_id=1203260053]
-offset_right = 256.0
-offset_bottom = 256.0
-scale = Vector2(0.3619105, 0.33799604)
+offset_left = 8.999999
+offset_top = 5.0
+offset_right = 265.0
+offset_bottom = 261.0
+scale = Vector2(0.26151982, 0.24725613)
 texture = ExtResource("10_tw8gb")
 
 [node name="ability_reward" parent="." unique_id=769588038 instance=ExtResource("10_df7hy")]

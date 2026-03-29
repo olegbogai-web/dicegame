@@ -45,7 +45,7 @@ func requires_face_filter() -> bool:
 
 
 func get_min_selected_count() -> int:
-	return maxi(min_selected_count, required_count, 0)
+	return maxi(min_selected_count, required_count)
 
 
 func get_max_selected_count() -> int:
