@@ -10,6 +10,7 @@ var runtime_cube_global_map: Array[DiceDefinition] = []
 var runtime_reward_cube: DiceDefinition
 var runtime_money_cube: DiceDefinition
 var ability_loadout: Array[AbilityDefinition] = []
+var artifacts_runtime: Array[ArtifactDefinition] = []
 var run_flags: Dictionary = {}
 var metadata: Dictionary = {}
 
@@ -37,6 +38,7 @@ func reset_for_run() -> void:
 		runtime_reward_cube = null
 		runtime_money_cube = null
 		ability_loadout.clear()
+		artifacts_runtime.clear()
 		run_flags.clear()
 		return
 	current_hp = base_stat.get_resolved_starting_hp()
@@ -46,6 +48,7 @@ func reset_for_run() -> void:
 	runtime_reward_cube = base_stat.get_resolved_base_reward_cube().duplicate(true)
 	runtime_money_cube = base_stat.get_resolved_base_money_cube().duplicate(true)
 	ability_loadout = base_stat.starting_abilities.duplicate()
+	artifacts_runtime.clear()
 	run_flags.clear()
 
 
@@ -69,3 +72,15 @@ func heal(amount: int) -> int:
 	var previous_hp := current_hp
 	current_hp = mini(current_hp + resolved_amount, base_stat.max_hp)
 	return current_hp - previous_hp
+
+
+func get_active_artifact_definitions() -> Array[ArtifactDefinition]:
+	var resolved: Array[ArtifactDefinition] = []
+	if base_stat != null:
+		for artifact_definition in base_stat.get_resolved_artifacts_base():
+			if artifact_definition != null:
+				resolved.append(artifact_definition)
+	for artifact_runtime in artifacts_runtime:
+		if artifact_runtime != null:
+			resolved.append(artifact_runtime)
+	return resolved
