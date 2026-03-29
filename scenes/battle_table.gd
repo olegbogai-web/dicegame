@@ -596,6 +596,7 @@ func _refresh_player_ability_snap_state() -> void:
 		used_dice[candidate.get_instance_id()] = true
 		candidate.assign_ability_slot(slot_state["slot_id"], _get_slot_target_position(slot_state["dice_place"], candidate))
 
+	_release_non_ready_full_assignments(dice_list)
 	_update_player_ability_visuals(dice_list)
 
 
@@ -715,24 +716,71 @@ func _update_player_ability_visuals(dice_list: Array[Dice]) -> void:
 			slot_color = SLOT_HIGHLIGHT_COLOR
 		elif assigned_dice != null:
 			slot_color = SLOT_ASSIGNED_COLOR
-		if is_ready:
-			slot_color = SLOT_READY_COLOR
 		_set_mesh_tint(slot_state["dice_place"], slot_color)
 		var ability_key := (slot_state["frame"] as MeshInstance3D).get_instance_id()
 		if not ability_status.has(ability_key):
 			ability_status[ability_key] = {
 				"frame": slot_state["frame"],
-				"ready": true,
+				"ability": slot_state.get("ability") as AbilityDefinition,
+				"consumed_dice": [],
+				"all_slots_ready": true,
 			}
-		if not is_ready:
-			ability_status[ability_key]["ready"] = false
+		if is_ready:
+			(ability_status[ability_key]["consumed_dice"] as Array).append(assigned_dice)
+		else:
+			ability_status[ability_key]["all_slots_ready"] = false
 
 	for slot_info in ability_status.values():
 		var frame := slot_info["frame"] as MeshInstance3D
-		var tint := FRAME_READY_COLOR if slot_info["ready"] else SLOT_EMPTY_COLOR
+		var is_ability_ready := bool(slot_info.get("all_slots_ready", false)) and BattleAbilityRuntime.can_use_ability_with_dice(
+			slot_info.get("ability") as AbilityDefinition,
+			slot_info.get("consumed_dice", []) as Array[Dice],
+			true
+		)
+		var tint := FRAME_READY_COLOR if is_ability_ready else SLOT_EMPTY_COLOR
 		if not _selected_ability_state.is_empty() and _selected_ability_state.get("frame") == frame:
 			tint = FRAME_SELECTED_COLOR
 		_set_mesh_tint(frame, tint)
+
+	for slot_state in _player_ability_slot_states:
+		var frame := slot_state["frame"] as MeshInstance3D
+		var ability_key := frame.get_instance_id()
+		var slot_info: Dictionary = ability_status.get(ability_key, {})
+		var assigned_dice := _find_dice_for_slot(slot_state, dice_list)
+		if assigned_dice != null and assigned_dice.is_snapped_to_ability_slot():
+			var is_frame_ready := bool(slot_info.get("all_slots_ready", false)) and BattleAbilityRuntime.can_use_ability_with_dice(
+				slot_info.get("ability") as AbilityDefinition,
+				slot_info.get("consumed_dice", []) as Array[Dice],
+				true
+			)
+			if is_frame_ready:
+				_set_mesh_tint(slot_state["dice_place"], SLOT_READY_COLOR)
+
+
+func _release_non_ready_full_assignments(dice_list: Array[Dice]) -> void:
+	for frame_state in _player_ability_frame_states:
+		var frame := frame_state.get("frame") as MeshInstance3D
+		var ability := frame_state.get("ability") as AbilityDefinition
+		if frame == null or ability == null:
+			continue
+		var consumed_dice: Array[Dice] = []
+		var has_slots := false
+		var all_slots_ready := true
+		for slot_state in _player_ability_slot_states:
+			if slot_state.get("frame") != frame:
+				continue
+			has_slots = true
+			var assigned_dice := _find_dice_for_slot(slot_state, dice_list)
+			if assigned_dice == null or not assigned_dice.is_snapped_to_ability_slot():
+				all_slots_ready = false
+				break
+			consumed_dice.append(assigned_dice)
+		if not has_slots or not all_slots_ready:
+			continue
+		if BattleAbilityRuntime.can_use_ability_with_dice(ability, consumed_dice, true):
+			continue
+		for dice in consumed_dice:
+			dice.clear_ability_slot()
 
 
 func _get_active_drag_dice(dice_list: Array[Dice]) -> Dice:
