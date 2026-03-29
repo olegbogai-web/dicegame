@@ -33,7 +33,7 @@ func remove_status(status_id: StringName, stacks: int = -1) -> bool:
 		_status_by_id.erase(status_id)
 		return true
 	instance.remove_stacks(stacks)
-	if instance.stacks <= 0:
+	if instance.is_expired():
 		_status_by_id.erase(status_id)
 	return true
 
@@ -52,7 +52,7 @@ func get_status(status_id: StringName) -> StatusInstance:
 func get_active_statuses() -> Array[StatusInstance]:
 	var statuses: Array[StatusInstance] = []
 	for value in _status_by_id.values():
-		if value is StatusInstance and value.is_active and value.stacks > 0:
+		if value is StatusInstance and (value as StatusInstance).is_effectively_active():
 			statuses.append(value as StatusInstance)
 	return statuses
 
