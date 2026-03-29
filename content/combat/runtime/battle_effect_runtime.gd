@@ -3,6 +3,7 @@ class_name BattleEffectRuntime
 
 const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
 const Dice = preload("res://content/dice/dice.gd")
+const StatusRuntime = preload("res://content/statuses/runtime/status_runtime.gd")
 
 
 static func activate_current_turn_ability(battle_room, ability: AbilityDefinition, target_descriptor: Dictionary) -> Dictionary:
@@ -62,7 +63,14 @@ static func _apply_effect_to_target(
 	consumed_dice: Array[Dice]
 ) -> bool:
 	var target_kind := StringName(target_descriptor.get("kind", &""))
-	var resolved_magnitude := _resolve_effect_magnitude(effect, consumed_dice)
+	var source_container = _resolve_source_status_container(battle_room)
+	var target_container = _resolve_target_status_container(battle_room, target_descriptor)
+	var resolved_magnitude := StatusRuntime.resolve_ability_effect_magnitude(
+		effect,
+		consumed_dice,
+		source_container,
+		target_container
+	)
 	match effect.effect_type:
 		&"damage":
 			if target_kind == &"monster":
@@ -90,15 +98,44 @@ static func _apply_effect_to_target(
 					return false
 				battle_room.monster_views[monster_index].heal(resolved_magnitude)
 				return true
+		&"apply_status":
+			var status_definition := _resolve_status_definition(effect)
+			if status_definition == null:
+				return false
+			var status_stacks := maxi(int(effect.parameters.get("stacks", 1)), 1)
+			if target_container != null:
+				target_container.add_status(status_definition, status_stacks)
+				return true
 	return false
 
 
-static func _resolve_effect_magnitude(effect: AbilityEffectDefinition, consumed_dice: Array[Dice]) -> int:
+static func _resolve_source_status_container(battle_room):
+	if battle_room.current_turn_owner == &"player":
+		if battle_room.player_view == null:
+			return null
+		return battle_room.player_view.statuses
+	if battle_room.current_turn_owner == &"monster" and battle_room.can_target_monster(battle_room.current_monster_turn_index):
+		return battle_room.monster_views[battle_room.current_monster_turn_index].statuses
+	return null
+
+
+static func _resolve_target_status_container(battle_room, target_descriptor: Dictionary):
+	var target_kind := StringName(target_descriptor.get("kind", &""))
+	if target_kind == &"player":
+		if battle_room.player_view == null:
+			return null
+		return battle_room.player_view.statuses
+	if target_kind == &"monster":
+		var monster_index := int(target_descriptor.get("index", -1))
+		if not battle_room.can_target_monster(monster_index):
+			return null
+		return battle_room.monster_views[monster_index].statuses
+	return null
+
+
+static func _resolve_status_definition(effect: AbilityEffectDefinition) -> StatusDefinition:
 	if effect == null:
-		return 0
-	var multiplier := int(effect.parameters.get("selected_die_multiplier", 0))
-	if multiplier != 0 and not consumed_dice.is_empty():
-		var selected_die := consumed_dice[0]
-		if selected_die != null and is_instance_valid(selected_die):
-			return maxi(selected_die.get_top_face_value(), 0) * multiplier
-	return effect.magnitude
+		return null
+	if effect.parameters.has("status_definition") and effect.parameters["status_definition"] is StatusDefinition:
+		return effect.parameters["status_definition"] as StatusDefinition
+	return null
