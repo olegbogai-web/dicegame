@@ -47,7 +47,7 @@ func reset_for_run() -> void:
 	runtime_cube_global_map = base_stat.get_resolved_base_cube_global_map().duplicate(true)
 	runtime_reward_cube = base_stat.get_resolved_base_reward_cube().duplicate(true)
 	runtime_money_cube = base_stat.get_resolved_base_money_cube().duplicate(true)
-	ability_loadout = base_stat.get_resolved_starting_abilities().duplicate()
+	ability_loadout = base_stat.starting_abilities.duplicate()
 	artifacts_runtime.clear()
 	run_flags.clear()
 

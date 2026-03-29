@@ -814,7 +814,6 @@ func _is_ability_state_ready(frame_state: Dictionary) -> bool:
 	if frame == null:
 		return false
 	var relevant_slot_count := 0
-	var consumed_dice: Array[Dice] = []
 	for slot_state in _player_ability_slot_states:
 		if slot_state.get("frame") != frame:
 			continue
@@ -822,11 +821,7 @@ func _is_ability_state_ready(frame_state: Dictionary) -> bool:
 		var assigned_dice := _find_dice_for_slot(slot_state, _get_board_dice())
 		if assigned_dice == null or not assigned_dice.is_snapped_to_ability_slot():
 			return false
-		consumed_dice.append(assigned_dice)
-	var has_required_slots := relevant_slot_count > 0 or battle_room_data.get_required_dice_slots(frame_state.get("ability") as AbilityDefinition) == 0
-	if not has_required_slots:
-		return false
-	return BattleAbilityRuntime.are_use_conditions_satisfied(frame_state.get("ability") as AbilityDefinition, consumed_dice)
+	return relevant_slot_count > 0 or battle_room_data.get_required_dice_slots(frame_state.get("ability") as AbilityDefinition) == 0
 
 
 func _collect_ready_dice_for_frame(frame: MeshInstance3D) -> Array[Dice]:

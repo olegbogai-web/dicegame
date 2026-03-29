@@ -4,7 +4,6 @@ class_name BattleEffectRuntime
 const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
 const Dice = preload("res://content/dice/dice.gd")
 const StatusRuntime = preload("res://content/statuses/runtime/status_runtime.gd")
-const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 
 
 static func activate_current_turn_ability(battle_room, ability: AbilityDefinition, target_descriptor: Dictionary) -> Dictionary:
@@ -20,13 +19,6 @@ static func activate_current_turn_ability(battle_room, ability: AbilityDefinitio
 	for raw_dice in target_descriptor.get("consumed_dice", []):
 		if raw_dice is Dice:
 			consumed_dice.append(raw_dice as Dice)
-
-	if not BattleAbilityRuntime.are_use_conditions_satisfied(ability, consumed_dice):
-		return {
-			"success": false,
-			"affected_targets": [],
-			"battle_finished": BattleTurnRuntime.is_battle_over(battle_room),
-		}
 
 	var source_descriptor := _resolve_current_turn_source_descriptor(battle_room)
 	StatusRuntime.trigger_event(StatusRuntime.build_event_context(
