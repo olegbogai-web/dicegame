@@ -159,6 +159,10 @@ func set_player_data(player: Player, sprite: Texture2D) -> void:
 		&"player"
 	)
 	combat_runtime_state.set_player_state(player_view.combatant_id, player_view.side)
+	if player_view.is_alive():
+		combat_runtime_state.mark_combatant_alive({"side": &"player"})
+	else:
+		combat_runtime_state.mark_combatant_dead({"side": &"player"})
 	_reset_battle_progression()
 
 
@@ -189,6 +193,11 @@ func set_monsters_from_definitions(next_monster_definitions: Array[MonsterDefini
 			"side": monster_view.side,
 		})
 	combat_runtime_state.set_monster_states(runtime_monster_descriptors)
+	for monster_index in monster_views.size():
+		if can_target_monster(monster_index):
+			combat_runtime_state.mark_combatant_alive({"side": &"enemy", "index": monster_index})
+		else:
+			combat_runtime_state.mark_combatant_dead({"side": &"enemy", "index": monster_index})
 	_reset_battle_progression()
 
 
@@ -322,6 +331,58 @@ func clear_status_event_log() -> void:
 	if combat_runtime_state == null:
 		return
 	combat_runtime_state.clear_status_event_log()
+
+
+func apply_damage_to_descriptor(descriptor: Dictionary, amount: int) -> bool:
+	var resolved_damage := maxi(amount, 0)
+	if resolved_damage <= 0:
+		return false
+	var side := StringName(descriptor.get("side", &""))
+	if side == &"player":
+		if not can_target_player():
+			return false
+		if player_instance != null:
+			player_instance.take_damage(resolved_damage)
+		player_view.take_damage(resolved_damage)
+		if not player_view.is_alive():
+			_on_combatant_died({"side": &"player"})
+		return true
+	if side == &"enemy":
+		var monster_index := int(descriptor.get("index", -1))
+		if not can_target_monster(monster_index):
+			return false
+		monster_views[monster_index].take_damage(resolved_damage)
+		if not monster_views[monster_index].is_alive():
+			_on_combatant_died({"side": &"enemy", "index": monster_index})
+		return true
+	return false
+
+
+func apply_heal_to_descriptor(descriptor: Dictionary, amount: int) -> bool:
+	var resolved_heal := maxi(amount, 0)
+	if resolved_heal <= 0:
+		return false
+	var side := StringName(descriptor.get("side", &""))
+	if side == &"player":
+		if not can_target_player():
+			return false
+		if player_instance != null:
+			player_instance.heal(resolved_heal)
+		player_view.heal(resolved_heal)
+		return true
+	if side == &"enemy":
+		var monster_index := int(descriptor.get("index", -1))
+		if not can_target_monster(monster_index):
+			return false
+		monster_views[monster_index].heal(resolved_heal)
+		return true
+	return false
+
+
+func _on_combatant_died(descriptor: Dictionary) -> void:
+	if combat_runtime_state == null:
+		return
+	combat_runtime_state.mark_combatant_dead(descriptor)
 
 func start_battle() -> Dictionary:
 	return BattleTurnRuntime.start_battle(self)
