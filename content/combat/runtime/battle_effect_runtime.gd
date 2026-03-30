@@ -17,7 +17,7 @@ static func activate_current_turn_ability(battle_room, ability: AbilityDefinitio
 	var affected_targets: Array[Dictionary] = []
 	var consumed_dice: Array[Dice] = []
 	for raw_dice in target_descriptor.get("consumed_dice", []):
-		if raw_dice is Dice:
+		if is_instance_valid(raw_dice) and raw_dice is Dice:
 			consumed_dice.append(raw_dice as Dice)
 
 	var source_descriptor := _resolve_current_turn_source_descriptor(battle_room)
