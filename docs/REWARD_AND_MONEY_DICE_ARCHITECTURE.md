@@ -147,6 +147,39 @@
 - `_render_artifact_reward_cards` и `_apply_artifact_reward_visual`;
 - `_resolve_artifact_reward_click` и `_select_artifact_reward`.
 
+## 4.4. Runtime-алгоритм награды кубами (`cube_+`)
+
+Если после победы на `reward dice` выпадает грань `cube_+`:
+
+1. генерируются 2 варианта кубов для выбора игроком;
+2. для каждого слота сначала бросается редкость (веса: `обычное 50`, `необычное 25`, `редкое 15`, `уникальное 10`);
+3. затем случайно выбирается куб нужной редкости из каталога `content/dice/definitions`;
+4. если в этой редкости нет валидных кубов, выполняется fallback к редкостям ниже (`уникальное -> редкое -> необычное -> обычное`);
+5. кубы scope `COMBAT`, `GLOBAL_MAP`, `REWARD`, `EVENT` валидны для выдачи; `MONEY` и `SYSTEM` не участвуют в этом reward flow;
+6. не-уникальные кубы могут повторяться (включая дубликаты в рамках одного забега);
+7. одинаковый `unique`-куб не может быть выдан повторно, если он уже есть в runtime-кубах игрока или уже выпал в текущем выборе;
+8. игрок выбирает один из двух вариантов (`ЛКМ`), после чего куб добавляется в соответствующий runtime-пул по scope:
+   - `COMBAT` -> `player.dice_loadout`;
+   - `GLOBAL_MAP` -> `player.runtime_cube_global_map`;
+   - `REWARD` -> `player.runtime_reward_cubes`;
+   - `EVENT` -> `player.runtime_cube_event`;
+9. для визуала используется существующая карточка `ability_reward`, но вместо картинки способности рендерится `cube_reward` (инстанс куба без физики), закрепленный внутри рамки `artefact_frame_reward`;
+10. после выбора выполняется переход на глобальную карту.
+
+### Текущие runtime-функции (cube reward)
+
+В `content/combat/reward/post_battle_reward_flow.gd` за `cube_+` flow отвечают:
+
+- `_show_cube_reward_options`;
+- `_build_cube_reward_options`;
+- `_load_reward_cube_definitions`;
+- `_collect_owned_unique_cube_ids`;
+- `_roll_cube_reward_rarity`;
+- `_pick_cube_by_rarity_with_fallback`;
+- `_render_cube_reward_cards` и `_apply_cube_reward_visual`;
+- `_ensure_embedded_reward_cube`;
+- `_resolve_cube_reward_click` и `_select_cube_reward`.
+
 ## 5. Базовая конфигурация куба денег
 
 Базовый `money dice` имеет 6 граней со значениями:

@@ -669,30 +669,41 @@ UI может реализовывать drag-and-drop, подсветку и в
 - `_find_post_battle_reward_die`;
 - `_show_ability_reward_options`;
 - `_show_artifact_reward_options`;
+- `_show_cube_reward_options`;
 - `_build_ability_reward_options`;
 - `_build_artifact_reward_options`;
+- `_build_cube_reward_options`;
 - `_load_player_reward_abilities`;
 - `_load_artifact_definitions`;
+- `_load_reward_cube_definitions`;
 - `_collect_owned_ability_ids`;
 - `_collect_owned_unique_artifact_ids`;
+- `_collect_owned_unique_cube_ids`;
 - `_roll_reward_rarity`;
 - `_roll_artifact_reward_rarity`;
+- `_roll_cube_reward_rarity`;
 - `_pick_ability_by_rarity_with_fallback`;
 - `_pick_artifact_by_rarity_with_fallback`;
+- `_pick_cube_by_rarity_with_fallback`;
 - `_compute_reward_card_spacing_x`;
 - `_compute_artifact_reward_spacing_x`;
 - `_render_ability_reward_cards`;
 - `_render_artifact_reward_cards`;
+- `_render_cube_reward_cards`;
 - `_apply_reward_card_visual`;
 - `_apply_artifact_reward_visual`;
+- `_apply_cube_reward_visual`;
 - `_clear_ability_reward_cards`;
 - `_clear_artifact_reward_cards`;
+- `_clear_cube_reward_cards`;
 - `_resolve_reward_click`;
 - `_resolve_ability_reward_click`;
 - `_resolve_artifact_reward_click`;
+- `_resolve_cube_reward_click`;
 - `_select_reward_entry`;
 - `_select_ability_reward`;
-- `_select_artifact_reward`.
+- `_select_artifact_reward`;
+- `_select_cube_reward`.
 
 ### 15.3. Зачем это обязательно для перехода от test battle к real game
 
