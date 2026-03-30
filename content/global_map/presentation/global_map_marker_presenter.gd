@@ -39,6 +39,9 @@ func show_markers(marker_specs: Array[Dictionary], clear_existing: bool = true) 
 		if node == null:
 			continue
 		_owner.add_child(node)
+		var marker_position = marker_spec.get("position", _template_icon.global_position)
+		if marker_position is Vector3:
+			node.global_position = marker_position as Vector3
 		var marker_data := {
 			"node": node,
 			"material": node.material_override,
@@ -143,7 +146,6 @@ func _build_marker_node(marker_spec: Dictionary) -> MeshInstance3D:
 	var marker := MeshInstance3D.new()
 	marker.mesh = _template_icon.mesh
 	marker.transform = _template_icon.transform
-	marker.global_position = marker_spec.get("position", _template_icon.global_position)
 	marker.scale = _template_icon.scale
 	marker.visible = true
 	var material := _build_marker_material(marker_spec.get("icon") as Texture2D)

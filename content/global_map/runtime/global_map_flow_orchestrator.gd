@@ -534,10 +534,10 @@ func _create_dash_node(position: Vector3, direction: Vector3) -> void:
 	if new_dash == null:
 		return
 	new_dash.visible = true
+	_owner.add_child(new_dash)
 	new_dash.global_position = position
 	var yaw := atan2(direction.x, direction.z) + (PI * 0.5) + deg_to_rad(_rng.randf_range(-PATH_JITTER_ROTATION_DEGREES, PATH_JITTER_ROTATION_DEGREES))
 	new_dash.basis = Basis.from_euler(Vector3(0.0, yaw, 0.0)).scaled(dash_template.scale)
-	_owner.add_child(new_dash)
 	_dynamic_path_dashes.append(new_dash)
 
 
