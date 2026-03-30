@@ -324,12 +324,11 @@ func _render_ability_reward_cards(owner: Node, entries: Array[Dictionary]) -> vo
 			template_basis,
 			template_origin + Vector3(offsets[index], 0.0, 0.0)
 		)
-		var ability := entries[index].get("ability") as AbilityDefinition
+		var reward_entry: Dictionary = entries[index]
+		var ability := reward_entry.get("ability") as AbilityDefinition
 		_apply_reward_card_visual(owner, card_root, ability)
-		owner._ability_reward_entries.append({
-			"node": card_root,
-			"ability": ability,
-		})
+		reward_entry["node"] = card_root
+		owner._ability_reward_entries.append(reward_entry)
 		if index > 0:
 			owner._generated_ability_reward_nodes.append(card_root)
 
