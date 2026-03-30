@@ -6,7 +6,8 @@ const Dice = preload("res://content/dice/dice.gd")
 const POST_BATTLE_REWARD_DICE_SIZE_MULTIPLIER := Vector3(4.0, 4.0, 4.0)
 const POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER := 1.0
 const POST_BATTLE_REWARD_DICE_DELAY_SECONDS := 1.0
-const REWARD_CARD_FACE_ID := &"card_+"
+const REWARD_CARD_NEW_FACE_ID := &"card_+"
+const REWARD_CARD_UP_FACE_ID := &"card_up"
 const ABILITY_REWARD_OPTIONS_COUNT := 3
 const ABILITY_REWARD_CARD_MIN_SPACING_X := 3.2
 const ABILITY_REWARD_CARD_GAP_X := 0.35
@@ -70,8 +71,10 @@ func _try_resolve_post_battle_reward_dice_result(owner: Node) -> void:
 	if reward_top_face != null:
 		reward_face = reward_top_face.text_value
 	print("[Debug][RewardFlow] На кубе награды выпало: %s." % reward_face)
-	if StringName(reward_face) == REWARD_CARD_FACE_ID:
+	if StringName(reward_face) == REWARD_CARD_NEW_FACE_ID:
 		_show_ability_reward_options(owner)
+	elif StringName(reward_face) == REWARD_CARD_UP_FACE_ID:
+		_show_ability_upgrade_options(owner)
 
 
 func _find_post_battle_reward_die(owner: Node) -> Dice:
@@ -102,6 +105,21 @@ func _show_ability_reward_options(owner: Node) -> void:
 	print("[Debug][RewardFlow] Выпали способности: %s." % ", ".join(ability_names))
 
 
+func _show_ability_upgrade_options(owner: Node) -> void:
+	var options := _build_ability_upgrade_options(owner)
+	if options.is_empty():
+		print("[Debug][RewardFlow] Не удалось сгенерировать улучшения способностей.")
+		return
+	_render_ability_reward_cards(owner, options)
+	owner._is_awaiting_ability_reward_selection = true
+	var ability_names: PackedStringArray = PackedStringArray()
+	for entry in options:
+		var ability := entry.get("ability") as AbilityDefinition
+		if ability != null:
+			ability_names.append(ability.display_name)
+	print("[Debug][RewardFlow] Выпали улучшения способности: %s." % ", ".join(ability_names))
+
+
 func _build_ability_reward_options(owner: Node, count: int) -> Array[Dictionary]:
 	var player = owner.battle_room_data.player_instance if owner.battle_room_data != null else null
 	if player == null:
@@ -121,11 +139,70 @@ func _build_ability_reward_options(owner: Node, count: int) -> Array[Dictionary]
 		generated.append({
 			"ability": ability,
 			"rolled_rarity": target_rarity,
+			"reward_kind": "new_ability",
+		})
+	return generated
+
+
+func _build_ability_upgrade_options(owner: Node) -> Array[Dictionary]:
+	var player = owner.battle_room_data.player_instance if owner.battle_room_data != null else null
+	if player == null:
+		return []
+	var ability_catalog := _load_ability_catalog()
+	var upgradable_entries: Array[Dictionary] = []
+	for ability_index in range(player.ability_loadout.size()):
+		var base_ability := player.ability_loadout[ability_index] as AbilityDefinition
+		if base_ability == null:
+			continue
+		var upgrade_options := _resolve_follow_up_abilities(base_ability, ability_catalog)
+		if upgrade_options.is_empty():
+			continue
+		upgradable_entries.append({
+			"ability_index": ability_index,
+			"base_ability": base_ability,
+			"upgrade_options": upgrade_options,
+		})
+	if upgradable_entries.is_empty():
+		return []
+	var rolled_entry: Dictionary = upgradable_entries[owner._ability_reward_rng.randi_range(0, upgradable_entries.size() - 1)]
+	var rolled_index := int(rolled_entry.get("ability_index", -1))
+	var rolled_options: Array[AbilityDefinition] = []
+	var rolled_options_raw = rolled_entry.get("upgrade_options", [])
+	for option in rolled_options_raw:
+		var typed_option := option as AbilityDefinition
+		if typed_option != null:
+			rolled_options.append(typed_option)
+	var generated: Array[Dictionary] = []
+	for option in rolled_options:
+		if option == null:
+			continue
+		generated.append({
+			"ability": option,
+			"reward_kind": "ability_upgrade",
+			"replace_index": rolled_index,
 		})
 	return generated
 
 
 func _load_player_reward_abilities() -> Array[AbilityDefinition]:
+	var abilities: Array[AbilityDefinition] = []
+	for ability in _load_all_abilities_from_directory():
+		if ability.owner_scope != AbilityDefinition.OwnerScope.PLAYER and ability.owner_scope != AbilityDefinition.OwnerScope.ANY:
+			continue
+		abilities.append(ability)
+	return abilities
+
+
+func _load_ability_catalog() -> Dictionary:
+	var catalog := {}
+	for ability in _load_all_abilities_from_directory():
+		if ability == null:
+			continue
+		catalog[ability.resource_path] = ability
+	return catalog
+
+
+func _load_all_abilities_from_directory() -> Array[AbilityDefinition]:
 	var abilities: Array[AbilityDefinition] = []
 	var dir := DirAccess.open(ABILITY_DEFINITIONS_DIRECTORY)
 	if dir == null:
@@ -139,15 +216,27 @@ func _load_player_reward_abilities() -> Array[AbilityDefinition]:
 		if dir.current_is_dir() or not file_name.ends_with(".tres"):
 			continue
 		var path := "%s/%s" % [ABILITY_DEFINITIONS_DIRECTORY, file_name]
-		var resource := ResourceLoader.load(path)
-		var ability := resource as AbilityDefinition
+		var ability := ResourceLoader.load(path) as AbilityDefinition
 		if ability == null:
-			continue
-		if ability.owner_scope != AbilityDefinition.OwnerScope.PLAYER and ability.owner_scope != AbilityDefinition.OwnerScope.ANY:
 			continue
 		abilities.append(ability)
 	dir.list_dir_end()
 	return abilities
+
+
+func _resolve_follow_up_abilities(base_ability: AbilityDefinition, ability_catalog: Dictionary) -> Array[AbilityDefinition]:
+	var resolved: Array[AbilityDefinition] = []
+	if base_ability == null:
+		return resolved
+	for follow_up_id in base_ability.follow_up_ability_ids:
+		var key := str(follow_up_id)
+		if key.is_empty():
+			continue
+		var follow_up_ability := ability_catalog.get(key, null) as AbilityDefinition
+		if follow_up_ability == null:
+			continue
+		resolved.append(follow_up_ability)
+	return resolved
 
 
 func _collect_owned_ability_ids(player: Player) -> Dictionary:
@@ -285,11 +374,19 @@ func _select_ability_reward(owner: Node, entry: Dictionary) -> void:
 	if selected_ability == null or owner.battle_room_data == null or owner.battle_room_data.player_instance == null:
 		return
 	var player = owner.battle_room_data.player_instance
-	for owned in player.ability_loadout:
-		if owned != null and owned.ability_id == selected_ability.ability_id:
+	var reward_kind := str(entry.get("reward_kind", "new_ability"))
+	if reward_kind == "ability_upgrade":
+		var replace_index := int(entry.get("replace_index", -1))
+		if replace_index < 0 or replace_index >= player.ability_loadout.size():
 			_clear_ability_reward_cards(owner)
 			return
-	player.ability_loadout.append(selected_ability)
+		player.ability_loadout[replace_index] = selected_ability
+	else:
+		for owned in player.ability_loadout:
+			if owned != null and owned.ability_id == selected_ability.ability_id:
+				_clear_ability_reward_cards(owner)
+				return
+		player.ability_loadout.append(selected_ability)
 	owner.battle_room_data.player_view.abilities = player.ability_loadout.duplicate()
 	print("[Debug][RewardFlow] Игрок выбрал способность: %s." % selected_ability.display_name)
 	owner._player_ability_frame_states.clear()
