@@ -10,17 +10,14 @@ const POST_BATTLE_REWARD_DICE_DELAY_SECONDS := 1.0
 const REWARD_CARD_NEW_FACE_ID := &"card_+"
 const REWARD_CARD_UP_FACE_ID := &"card_up"
 const REWARD_ARTIFACT_FACE_ID := &"artifact_+"
-const REWARD_CUBE_FACE_ID := &"cube_+"
 const ABILITY_REWARD_OPTIONS_COUNT := 3
 const ARTIFACT_REWARD_OPTIONS_COUNT := 2
-const CUBE_REWARD_OPTIONS_COUNT := 2
 const ABILITY_REWARD_CARD_MIN_SPACING_X := 3.2
 const ABILITY_REWARD_CARD_GAP_X := 0.35
 const ARTIFACT_REWARD_MIN_SPACING_X := 1.75
 const ARTIFACT_REWARD_GAP_X := 0.25
 const ABILITY_DEFINITIONS_DIRECTORY := "res://content/abilities/definitions"
 const ARTIFACT_DEFINITIONS_DIRECTORY := "res://content/artifacts/definitions"
-const DICE_DEFINITIONS_DIRECTORY := "res://content/dice/definitions"
 const RARITY_COMMON_WEIGHT := 50.0
 const RARITY_UNCOMMON_WEIGHT := 30.0
 const RARITY_RARE_WEIGHT := 20.0
@@ -29,10 +26,6 @@ const ARTIFACT_RARITY_COMMON_WEIGHT := 50.0
 const ARTIFACT_RARITY_UNCOMMON_WEIGHT := 25.0
 const ARTIFACT_RARITY_RARE_WEIGHT := 15.0
 const ARTIFACT_RARITY_UNIQUE_WEIGHT := 10.0
-const CUBE_RARITY_COMMON_WEIGHT := 50.0
-const CUBE_RARITY_UNCOMMON_WEIGHT := 25.0
-const CUBE_RARITY_RARE_WEIGHT := 15.0
-const CUBE_RARITY_UNIQUE_WEIGHT := 10.0
 const GLOBAL_MAP_SCENE_PATH := "res://scenes/global_map_room.tscn"
 
 
@@ -95,8 +88,6 @@ func _try_resolve_post_battle_reward_dice_result(owner: Node) -> void:
 		_show_ability_upgrade_options(owner)
 	elif StringName(reward_face) == REWARD_ARTIFACT_FACE_ID:
 		_show_artifact_reward_options(owner)
-	elif StringName(reward_face) == REWARD_CUBE_FACE_ID:
-		_show_cube_reward_options(owner)
 
 
 func _find_post_battle_reward_die(owner: Node) -> Dice:
@@ -155,21 +146,6 @@ func _show_artifact_reward_options(owner: Node) -> void:
 		if artifact != null:
 			artifact_names.append(artifact.display_name)
 	print("[Debug][RewardFlow] Выпали артефакты: %s." % ", ".join(artifact_names))
-
-
-func _show_cube_reward_options(owner: Node) -> void:
-	var options := _build_cube_reward_options(owner, CUBE_REWARD_OPTIONS_COUNT)
-	if options.is_empty():
-		print("[Debug][RewardFlow] Не удалось сгенерировать кубы для награды.")
-		return
-	_render_cube_reward_cards(owner, options)
-	owner._is_awaiting_ability_reward_selection = true
-	var cube_names: PackedStringArray = PackedStringArray()
-	for entry in options:
-		var cube := entry.get("cube") as DiceDefinition
-		if cube != null:
-			cube_names.append(cube.dice_name)
-	print("[Debug][RewardFlow] Выпали кубы: %s." % ", ".join(cube_names))
 
 
 func _build_ability_reward_options(owner: Node, count: int) -> Array[Dictionary]:
@@ -260,30 +236,6 @@ func _build_artifact_reward_options(owner: Node, count: int) -> Array[Dictionary
 	return generated
 
 
-func _build_cube_reward_options(owner: Node, count: int) -> Array[Dictionary]:
-	var player = owner.battle_room_data.player_instance if owner.battle_room_data != null else null
-	if player == null:
-		return []
-	var available_dice := _load_reward_candidate_dice_definitions()
-	if available_dice.is_empty():
-		return []
-	var blocked_unique_dice_ids := _collect_owned_unique_dice_ids(player)
-	var generated: Array[Dictionary] = []
-	for _index in count:
-		var target_rarity := _roll_cube_reward_rarity(owner)
-		var cube := _pick_dice_by_rarity_with_fallback(available_dice, target_rarity, blocked_unique_dice_ids, owner)
-		if cube == null:
-			continue
-		if _is_unique_dice(cube):
-			blocked_unique_dice_ids[_resolve_dice_unique_id(cube)] = true
-		generated.append({
-			"cube": cube,
-			"rolled_rarity": target_rarity,
-			"reward_kind": "cube",
-		})
-	return generated
-
-
 func _load_player_reward_abilities() -> Array[AbilityDefinition]:
 	var abilities: Array[AbilityDefinition] = []
 	for ability in _load_all_abilities_from_directory():
@@ -322,33 +274,6 @@ func _load_all_abilities_from_directory() -> Array[AbilityDefinition]:
 		abilities.append(ability)
 	dir.list_dir_end()
 	return abilities
-
-
-func _load_reward_candidate_dice_definitions() -> Array[DiceDefinition]:
-	var dice_definitions: Array[DiceDefinition] = []
-	var dir := DirAccess.open(DICE_DEFINITIONS_DIRECTORY)
-	if dir == null:
-		push_warning("Unable to open dice definitions directory: %s" % DICE_DEFINITIONS_DIRECTORY)
-		return dice_definitions
-	dir.list_dir_begin()
-	while true:
-		var file_name := dir.get_next()
-		if file_name.is_empty():
-			break
-		if dir.current_is_dir():
-			continue
-		if not file_name.ends_with(".tres") and not file_name.ends_with(".res"):
-			continue
-		var resource_path := "%s/%s" % [DICE_DEFINITIONS_DIRECTORY, file_name]
-		var loaded = load(resource_path)
-		var dice_definition := loaded as DiceDefinition
-		if dice_definition == null:
-			continue
-		if not _is_dice_scope_supported_for_cube_reward(dice_definition.scope):
-			continue
-		dice_definitions.append(dice_definition)
-	dir.list_dir_end()
-	return dice_definitions
 
 
 func _load_artifact_definitions() -> Array[ArtifactDefinition]:
@@ -410,27 +335,6 @@ func _collect_owned_unique_artifact_ids(player: Player) -> Dictionary:
 	return owned_unique
 
 
-func _collect_owned_unique_dice_ids(player: Player) -> Dictionary:
-	var owned_unique := {}
-	if player == null:
-		return owned_unique
-	var collections := [
-		player.dice_loadout,
-		player.runtime_cube_global_map,
-		player.runtime_cube_reward,
-		player.runtime_cube_event,
-	]
-	for collection in collections:
-		for dice_definition in collection:
-			var typed_dice := dice_definition as DiceDefinition
-			if typed_dice == null or not _is_unique_dice(typed_dice):
-				continue
-			owned_unique[_resolve_dice_unique_id(typed_dice)] = true
-	if player.runtime_money_cube != null and _is_unique_dice(player.runtime_money_cube):
-		owned_unique[_resolve_dice_unique_id(player.runtime_money_cube)] = true
-	return owned_unique
-
-
 func _roll_reward_rarity(owner: Node) -> int:
 	var total_weight := RARITY_COMMON_WEIGHT + RARITY_UNCOMMON_WEIGHT + RARITY_RARE_WEIGHT + RARITY_UNIQUE_WEIGHT
 	var roll = owner._ability_reward_rng.randf_range(0.0, total_weight)
@@ -457,20 +361,6 @@ func _roll_artifact_reward_rarity(owner: Node) -> StringName:
 	if roll < ARTIFACT_RARITY_RARE_WEIGHT:
 		return &"rare"
 	return &"unique"
-
-
-func _roll_cube_reward_rarity(owner: Node) -> int:
-	var total_weight := CUBE_RARITY_COMMON_WEIGHT + CUBE_RARITY_UNCOMMON_WEIGHT + CUBE_RARITY_RARE_WEIGHT + CUBE_RARITY_UNIQUE_WEIGHT
-	var roll = owner._ability_reward_rng.randf_range(0.0, total_weight)
-	if roll < CUBE_RARITY_COMMON_WEIGHT:
-		return DiceDefinition.Rarity.COMMON
-	roll -= CUBE_RARITY_COMMON_WEIGHT
-	if roll < CUBE_RARITY_UNCOMMON_WEIGHT:
-		return DiceDefinition.Rarity.UNCOMMON
-	roll -= CUBE_RARITY_UNCOMMON_WEIGHT
-	if roll < CUBE_RARITY_RARE_WEIGHT:
-		return DiceDefinition.Rarity.RARE
-	return DiceDefinition.Rarity.UNIQUE
 
 
 func _pick_ability_by_rarity_with_fallback(
@@ -516,26 +406,6 @@ func _pick_artifact_by_rarity_with_fallback(
 	return null
 
 
-func _pick_dice_by_rarity_with_fallback(
-	dice_definitions: Array[DiceDefinition],
-	start_rarity: int,
-	blocked_unique_dice_ids: Dictionary,
-	owner: Node
-) -> DiceDefinition:
-	for rarity in range(start_rarity, DiceDefinition.Rarity.COMMON - 1, -1):
-		var candidates: Array[DiceDefinition] = []
-		for dice_definition in dice_definitions:
-			if dice_definition == null or dice_definition.rarity != rarity:
-				continue
-			if _is_unique_dice(dice_definition) and blocked_unique_dice_ids.has(_resolve_dice_unique_id(dice_definition)):
-				continue
-			candidates.append(dice_definition)
-		if candidates.is_empty():
-			continue
-		return candidates[owner._ability_reward_rng.randi_range(0, candidates.size() - 1)]
-	return null
-
-
 func _build_artifact_rarity_fallback_chain(start_rarity: StringName) -> Array[StringName]:
 	var ordered: Array[StringName] = [&"common", &"uncommon", &"rare", &"unique"]
 	var start_index := maxi(ordered.find(start_rarity), 0)
@@ -547,27 +417,6 @@ func _build_artifact_rarity_fallback_chain(start_rarity: StringName) -> Array[St
 
 func _is_unique_artifact(artifact: ArtifactDefinition) -> bool:
 	return artifact != null and artifact.rarity == &"unique"
-
-
-func _is_unique_dice(dice_definition: DiceDefinition) -> bool:
-	return dice_definition != null and dice_definition.rarity == DiceDefinition.Rarity.UNIQUE
-
-
-func _resolve_dice_unique_id(dice_definition: DiceDefinition) -> StringName:
-	if dice_definition == null:
-		return &""
-	if not dice_definition.dice_name.is_empty():
-		return StringName(dice_definition.dice_name)
-	if not dice_definition.resource_path.is_empty():
-		return StringName(dice_definition.resource_path)
-	return StringName(str(dice_definition.get_instance_id()))
-
-
-func _is_dice_scope_supported_for_cube_reward(scope: int) -> bool:
-	return scope == DiceDefinition.Scope.COMBAT \
-		or scope == DiceDefinition.Scope.GLOBAL_MAP \
-		or scope == DiceDefinition.Scope.REWARD \
-		or scope == DiceDefinition.Scope.EVENT
 
 
 func _compute_reward_card_spacing_x(owner: Node) -> float:
@@ -629,7 +478,6 @@ func _render_ability_reward_cards(owner: Node, entries: Array[Dictionary]) -> vo
 func _render_artifact_reward_cards(owner: Node, entries: Array[Dictionary]) -> void:
 	_clear_ability_reward_cards(owner)
 	_clear_artifact_reward_cards(owner)
-	_clear_cube_reward_cards(owner)
 	if owner._ability_reward_template == null:
 		return
 	if owner._artifact_reward_template != null:
@@ -658,42 +506,6 @@ func _render_artifact_reward_cards(owner: Node, entries: Array[Dictionary]) -> v
 		owner._artifact_reward_entries.append(reward_entry)
 		if index > 0:
 			owner._generated_artifact_reward_nodes.append(card_root)
-
-
-func _render_cube_reward_cards(owner: Node, entries: Array[Dictionary]) -> void:
-	_clear_ability_reward_cards(owner)
-	_clear_artifact_reward_cards(owner)
-	_clear_cube_reward_cards(owner)
-	if owner._ability_reward_template == null:
-		return
-	if owner._cube_reward_template != null:
-		owner._cube_reward_template.visible = false
-	if owner._artifact_reward_template != null:
-		owner._artifact_reward_template.visible = false
-	owner._ability_reward_template.visible = false
-	owner._cube_reward_entries.clear()
-	if entries.is_empty():
-		return
-	var spacing_x := _compute_reward_card_spacing_x(owner)
-	var offsets = owner._build_centered_offsets(entries.size(), spacing_x)
-	var template_basis = owner._ability_reward_template.transform.basis
-	var template_origin = owner._ability_reward_template.transform.origin
-	for index in entries.size():
-		var card_root = owner._ability_reward_template if index == 0 else (owner._ability_reward_template.duplicate() as Node3D)
-		if card_root.get_parent() == null:
-			owner.add_child(card_root)
-		card_root.visible = true
-		card_root.transform = Transform3D(
-			template_basis,
-			template_origin + Vector3(offsets[index], 0.0, 0.0)
-		)
-		var reward_entry: Dictionary = entries[index]
-		var cube_definition := reward_entry.get("cube") as DiceDefinition
-		_apply_cube_reward_visual(owner, card_root, cube_definition)
-		reward_entry["node"] = card_root
-		owner._cube_reward_entries.append(reward_entry)
-		if index > 0:
-			owner._generated_cube_reward_nodes.append(card_root)
 
 
 func _apply_reward_card_visual(owner: Node, card_root: Node3D, ability: AbilityDefinition) -> void:
@@ -733,95 +545,6 @@ func _apply_artifact_reward_visual(owner: Node, card_root: Node3D, artifact: Art
 		owner._apply_texture_to_mesh(icon_mesh, artifact.sprite)
 
 
-func _apply_cube_reward_visual(owner: Node, card_root: Node3D, cube_definition: DiceDefinition) -> void:
-	if card_root == null:
-		return
-	var title_label := card_root.get_node_or_null(^"ability_text") as Label3D
-	if title_label != null:
-		title_label.text = cube_definition.dice_name if cube_definition != null else ""
-	var description_label := card_root.get_node_or_null(^"abilitu_description") as Label3D
-	if description_label != null:
-		description_label.text = _build_cube_reward_description(cube_definition)
-	var ability_icon := card_root.get_node_or_null(^"ability_icon") as MeshInstance3D
-	if ability_icon != null:
-		ability_icon.visible = false
-	var icon_frame := _ensure_embedded_artifact_reward_frame(owner, card_root, ability_icon)
-	if icon_frame != null:
-		var frame_icon := icon_frame.get_node_or_null(^"artefact_icon_reward") as MeshInstance3D
-		if frame_icon != null:
-			frame_icon.visible = false
-	_embed_cube_preview_into_reward_card(owner, card_root, ability_icon, cube_definition)
-
-
-func _build_cube_reward_description(cube_definition: DiceDefinition) -> String:
-	if cube_definition == null:
-		return ""
-	return "Редкость: %s · Тип: %s" % [_resolve_dice_rarity_label(cube_definition), _resolve_dice_scope_label(cube_definition.scope)]
-
-
-func _resolve_dice_rarity_label(cube_definition: DiceDefinition) -> String:
-	if cube_definition == null:
-		return "?"
-	match cube_definition.rarity:
-		DiceDefinition.Rarity.UNCOMMON:
-			return "необычный"
-		DiceDefinition.Rarity.RARE:
-			return "редкий"
-		DiceDefinition.Rarity.UNIQUE:
-			return "уникальный"
-		_:
-			return "обычный"
-
-
-func _resolve_dice_scope_label(scope: int) -> String:
-	match scope:
-		DiceDefinition.Scope.COMBAT:
-			return "бой"
-		DiceDefinition.Scope.GLOBAL_MAP:
-			return "карта"
-		DiceDefinition.Scope.REWARD:
-			return "награда"
-		DiceDefinition.Scope.EVENT:
-			return "событие"
-		DiceDefinition.Scope.MONEY:
-			return "деньги"
-		_:
-			return "система"
-
-
-func _embed_cube_preview_into_reward_card(owner: Node, card_root: Node3D, ability_icon: MeshInstance3D, cube_definition: DiceDefinition) -> void:
-	if owner._cube_reward_template == null or card_root == null or cube_definition == null:
-		return
-	_remove_embedded_cube_reward_preview(card_root)
-	var embedded_cube := owner._cube_reward_template.duplicate() as Dice
-	if embedded_cube == null:
-		return
-	embedded_cube.name = "cube_reward_preview"
-	card_root.add_child(embedded_cube)
-	var target_transform := owner._cube_reward_template.transform
-	if ability_icon != null:
-		target_transform.origin = ability_icon.transform.origin
-	embedded_cube.transform = target_transform
-	embedded_cube.definition = cube_definition
-	embedded_cube.freeze = true
-	embedded_cube.sleeping = true
-	embedded_cube.gravity_scale = 0.0
-	embedded_cube.linear_velocity = Vector3.ZERO
-	embedded_cube.angular_velocity = Vector3.ZERO
-	embedded_cube.lock_rotation = true
-	embedded_cube.collision_layer = 0
-	embedded_cube.collision_mask = 0
-	embedded_cube.input_ray_pickable = false
-
-
-func _remove_embedded_cube_reward_preview(card_root: Node3D) -> void:
-	if card_root == null:
-		return
-	var embedded_cube := card_root.get_node_or_null(^"cube_reward_preview")
-	if embedded_cube != null and is_instance_valid(embedded_cube):
-		embedded_cube.queue_free()
-
-
 func _ensure_embedded_artifact_reward_frame(owner: Node, card_root: Node3D, ability_icon: MeshInstance3D) -> MeshInstance3D:
 	if owner._artifact_reward_template == null or card_root == null:
 		return null
@@ -854,12 +577,6 @@ func _clear_ability_reward_cards(owner: Node) -> void:
 	owner._ability_reward_entries.clear()
 	if owner._ability_reward_template != null:
 		owner._ability_reward_template.visible = false
-	var base_card := owner._ability_reward_template
-	if base_card != null:
-		_remove_embedded_cube_reward_preview(base_card)
-		var frame_icon := base_card.get_node_or_null(^"artifact_reward_icon_frame/artefact_icon_reward") as MeshInstance3D
-		if frame_icon != null:
-			frame_icon.visible = true
 	_update_reward_waiting_state(owner)
 
 
@@ -874,31 +591,11 @@ func _clear_artifact_reward_cards(owner: Node) -> void:
 	_update_reward_waiting_state(owner)
 
 
-func _clear_cube_reward_cards(owner: Node) -> void:
-	for generated_node in owner._generated_cube_reward_nodes:
-		if generated_node != null and is_instance_valid(generated_node):
-			generated_node.queue_free()
-	owner._generated_cube_reward_nodes.clear()
-	owner._cube_reward_entries.clear()
-	if owner._cube_reward_template != null:
-		owner._cube_reward_template.visible = false
-	if owner._ability_reward_template != null:
-		var base_card := owner._ability_reward_template
-		_remove_embedded_cube_reward_preview(base_card)
-		var frame_icon := base_card.get_node_or_null(^"artifact_reward_icon_frame/artefact_icon_reward") as MeshInstance3D
-		if frame_icon != null:
-			frame_icon.visible = true
-	_update_reward_waiting_state(owner)
-
-
 func _resolve_reward_click(owner: Node, screen_point: Vector2) -> Dictionary:
 	var ability_entry := _resolve_ability_reward_click(owner, screen_point)
 	if not ability_entry.is_empty():
 		return ability_entry
-	var artifact_entry := _resolve_artifact_reward_click(owner, screen_point)
-	if not artifact_entry.is_empty():
-		return artifact_entry
-	return _resolve_cube_reward_click(owner, screen_point)
+	return _resolve_artifact_reward_click(owner, screen_point)
 
 
 func _resolve_ability_reward_click(owner: Node, screen_point: Vector2) -> Dictionary:
@@ -925,25 +622,10 @@ func _resolve_artifact_reward_click(owner: Node, screen_point: Vector2) -> Dicti
 	return {}
 
 
-func _resolve_cube_reward_click(owner: Node, screen_point: Vector2) -> Dictionary:
-	for index in range(owner._cube_reward_entries.size() - 1, -1, -1):
-		var entry = owner._cube_reward_entries[index]
-		var card_node := entry.get("node") as Node3D
-		if card_node == null:
-			continue
-		var frame_mesh := card_node.get_node_or_null(^"ability_frame_base") as MeshInstance3D
-		if owner._screen_point_hits_mesh(frame_mesh, screen_point):
-			return entry
-	return {}
-
-
 func _select_reward_entry(owner: Node, entry: Dictionary) -> void:
 	var reward_kind := StringName(str(entry.get("reward_kind", "")))
 	if reward_kind == &"artifact":
 		_select_artifact_reward(owner, entry)
-		return
-	if reward_kind == &"cube":
-		_select_cube_reward(owner, entry)
 		return
 	_select_ability_reward(owner, entry)
 
@@ -997,27 +679,8 @@ func _select_artifact_reward(owner: Node, entry: Dictionary) -> void:
 	_return_to_saved_global_map(owner)
 
 
-func _select_cube_reward(owner: Node, entry: Dictionary) -> void:
-	var selected_cube := entry.get("cube") as DiceDefinition
-	if selected_cube == null or owner.battle_room_data == null or owner.battle_room_data.player_instance == null:
-		return
-	var player := owner.battle_room_data.player_instance
-	if _is_unique_dice(selected_cube):
-		var owned_unique_dice_ids := _collect_owned_unique_dice_ids(player)
-		if owned_unique_dice_ids.has(_resolve_dice_unique_id(selected_cube)):
-			_clear_cube_reward_cards(owner)
-			return
-	player.grant_runtime_dice(selected_cube)
-	print("[Debug][RewardFlow] Игрок выбрал куб: %s." % selected_cube.dice_name)
-	_clear_cube_reward_cards(owner)
-	_return_to_saved_global_map(owner)
-
-
 func _update_reward_waiting_state(owner: Node) -> void:
-	owner._is_awaiting_ability_reward_selection = \
-		not owner._ability_reward_entries.is_empty() \
-		or not owner._artifact_reward_entries.is_empty() \
-		or not owner._cube_reward_entries.is_empty()
+	owner._is_awaiting_ability_reward_selection = not owner._ability_reward_entries.is_empty() or not owner._artifact_reward_entries.is_empty()
 
 
 func _return_to_saved_global_map(owner: Node) -> void:

@@ -41,11 +41,8 @@
 
 - `runtime_reward_cube` инициализируется копией `base_reward_cube`;
 - `runtime_money_cube` инициализируется копией `base_money_cube`.
-- `runtime_cube_reward` инициализируется массивом reward-кубов забега (на старте содержит `runtime_reward_cube`);
-- `runtime_cube_event` инициализируется пустым массивом event-кубов забега.
 
 Ключевое правило: в течение текущего забега `runtime_reward_cube` и `runtime_money_cube` могут изменяться.
-Новые кубы, полученные в награду, должны добавляться в runtime-коллекцию по `scope`: `COMBAT -> dice_loadout`, `GLOBAL_MAP -> runtime_cube_global_map`, `REWARD -> runtime_cube_reward`, `EVENT -> runtime_cube_event`.
 
 ---
 
@@ -149,39 +146,6 @@
 - `_pick_artifact_by_rarity_with_fallback`;
 - `_render_artifact_reward_cards` и `_apply_artifact_reward_visual`;
 - `_resolve_artifact_reward_click` и `_select_artifact_reward`.
-
-## 4.4. Runtime-алгоритм награды кубами (`cube_+`)
-
-Если после победы на `reward dice` выпадает грань `cube_+`:
-
-1. генерируются 2 варианта кубов для выбора игроком;
-2. для каждого слота сначала бросается редкость (веса: `обычный 50`, `необычный 25`, `редкий 15`, `уникальный 10`);
-3. затем случайно выбирается куб нужной редкости из доступного data-driven пула (`content/dice/definitions`);
-4. если в целевой редкости нет валидных кубов, выполняется fallback к более низкой редкости (`unique -> rare -> uncommon -> common`);
-5. не-уникальные кубы могут повторяться (в рамках текущего выбора и в рамках забега);
-6. одинаковый `unique`-куб не может повторяться: если уже есть у игрока в runtime или уже выпал в текущем выборе;
-7. игрок выбирает один из двух вариантов (`ЛКМ`);
-8. выбранный куб добавляется в runtime-статы игрока строго по `DiceDefinition.scope`:
-   - `COMBAT` -> `player.dice_loadout`;
-   - `GLOBAL_MAP` -> `player.runtime_cube_global_map`;
-   - `REWARD` -> `player.runtime_cube_reward`;
-   - `EVENT` -> `player.runtime_cube_event`;
-9. UI выбора переиспользует `ability_reward` карточку, но вместо иконки использует встроенный 3D-объект `cube_reward` из `new_battle_table` (без физики, с сохранением базового поворота/масштаба и рамкой `artefact_frame_reward`);
-10. после выбора происходит переход на глобальную карту.
-
-### Текущие runtime-функции (cube reward)
-
-В `content/combat/reward/post_battle_reward_flow.gd` за `cube_+` flow отвечают:
-
-- `_show_cube_reward_options`;
-- `_build_cube_reward_options`;
-- `_load_reward_candidate_dice_definitions`;
-- `_collect_owned_unique_dice_ids`;
-- `_roll_cube_reward_rarity`;
-- `_pick_dice_by_rarity_with_fallback`;
-- `_render_cube_reward_cards` и `_apply_cube_reward_visual`;
-- `_embed_cube_preview_into_reward_card`;
-- `_resolve_cube_reward_click` и `_select_cube_reward`.
 
 ## 5. Базовая конфигурация куба денег
 
