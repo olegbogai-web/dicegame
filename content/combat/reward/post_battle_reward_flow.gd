@@ -16,6 +16,7 @@ const RARITY_COMMON_WEIGHT := 50.0
 const RARITY_UNCOMMON_WEIGHT := 30.0
 const RARITY_RARE_WEIGHT := 20.0
 const RARITY_UNIQUE_WEIGHT := 10.0
+const GLOBAL_MAP_SCENE_PATH := "res://scenes/global_map_room.tscn"
 
 
 func _handle_post_battle_reward_dice(owner: Node) -> void:
@@ -398,3 +399,15 @@ func _select_ability_reward(owner: Node, entry: Dictionary) -> void:
 		true
 	)
 	_clear_ability_reward_cards(owner)
+	_return_to_saved_global_map(owner)
+
+
+func _return_to_saved_global_map(owner: Node) -> void:
+	if owner == null:
+		return
+	var tree := owner.get_tree()
+	if tree == null:
+		return
+	var result := tree.change_scene_to_file(GLOBAL_MAP_SCENE_PATH)
+	if result != OK:
+		push_warning("Failed to open global map scene: %s" % GLOBAL_MAP_SCENE_PATH)
