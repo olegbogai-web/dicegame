@@ -5,7 +5,7 @@ const Dice = preload("res://content/dice/dice.gd")
 const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
 
 const POST_BATTLE_REWARD_DICE_SIZE_MULTIPLIER := Vector3(4.0, 4.0, 4.0)
-const POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER := 1.0
+const POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER := 0.75
 const POST_BATTLE_REWARD_DICE_DELAY_SECONDS := 1.0
 const REWARD_CARD_NEW_FACE_ID := &"card_+"
 const REWARD_CARD_UP_FACE_ID := &"card_up"
