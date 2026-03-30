@@ -135,6 +135,8 @@ func set_floor_textures(left_texture: Texture2D, right_texture: Texture2D) -> vo
 
 func set_player_data(player: Player, sprite: Texture2D) -> void:
 	player_instance = player
+	if player_instance != null:
+		player_instance.ensure_runtime_initialized_from_base_stat()
 	var abilities: Array[AbilityDefinition] = []
 	var current_hp := 0
 	var max_hp := 0
@@ -435,7 +437,7 @@ static func create_test_battle_room() -> BattleRoom:
 	var room := BattleRoom.new()
 	room.room_id = "test_battle_room"
 	room.set_floor_textures(DEFAULT_FLOOR_TEXTURE, DEFAULT_FLOOR_TEXTURE)
-	room.set_player_data(_build_test_player(), TEST_PLAYER_TEXTURE)
+	room.set_player_data(build_default_player(), TEST_PLAYER_TEXTURE)
 	room.set_monsters_from_definitions([TEST_MONSTER_DEFINITION])
 	return room
 
@@ -443,12 +445,17 @@ static func create_test_battle_room() -> BattleRoom:
 static func create_runtime_battle_room(player: Player, rng: RandomNumberGenerator = null) -> BattleRoom:
 	var room := BattleRoom.new()
 	room.room_id = "runtime_battle_room"
+	var runtime_player := player
+	if runtime_player == null:
+		runtime_player = build_default_player()
+	else:
+		runtime_player.ensure_runtime_initialized_from_base_stat()
 	var resolved_rng := rng if rng != null else RandomNumberGenerator.new()
 	if rng == null:
 		resolved_rng.randomize()
 	var floor_texture := _pick_runtime_floor_texture(resolved_rng)
 	room.set_floor_textures(floor_texture, floor_texture)
-	room.set_player_data(player, TEST_PLAYER_TEXTURE)
+	room.set_player_data(runtime_player, TEST_PLAYER_TEXTURE)
 	room.set_monsters_from_definitions([TEST_MONSTER_DEFINITION])
 	return room
 
@@ -459,7 +466,7 @@ static func _pick_runtime_floor_texture(rng: RandomNumberGenerator) -> Texture2D
 	return DUNGEON_FLOOR_TEXTURE_2
 
 
-static func _build_test_player() -> Player:
+static func build_default_player() -> Player:
 	var base_stat := PlayerBaseStat.new()
 	base_stat.player_id = "test_player"
 	base_stat.display_name = "Тестовый игрок"

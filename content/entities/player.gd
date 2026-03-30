@@ -16,6 +16,7 @@ var artifacts_runtime: Array[ArtifactDefinition] = []
 var runtime_max_hp_bonus := 0
 var run_flags: Dictionary = {}
 var metadata: Dictionary = {}
+var _is_runtime_initialized := false
 
 
 func _init(initial_base_stat: PlayerBaseStat = null) -> void:
@@ -44,6 +45,7 @@ func reset_for_run() -> void:
 		artifacts_runtime.clear()
 		runtime_max_hp_bonus = 0
 		run_flags.clear()
+		_is_runtime_initialized = false
 		return
 	current_hp = base_stat.get_resolved_starting_hp()
 	current_armor = base_stat.starting_armor
@@ -55,6 +57,15 @@ func reset_for_run() -> void:
 	artifacts_runtime.clear()
 	runtime_max_hp_bonus = 0
 	run_flags.clear()
+	_is_runtime_initialized = true
+
+
+func ensure_runtime_initialized_from_base_stat() -> void:
+	if base_stat == null:
+		return
+	if _is_runtime_initialized:
+		return
+	reset_for_run()
 
 
 func is_alive() -> bool:
