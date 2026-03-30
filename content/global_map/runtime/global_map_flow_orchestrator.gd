@@ -72,6 +72,7 @@ func configure(
 	_event_icon = event_icon
 	_background = background
 	_board = board
+	GlobalMapRuntimeState.save_map_scene_path(_owner.scene_file_path)
 	_rng.randomize()
 	_road_nodes = road_nodes.duplicate()
 	_hero_movement.configure(hero_icon)

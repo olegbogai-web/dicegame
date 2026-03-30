@@ -2,6 +2,7 @@ extends RefCounted
 class_name PostBattleRewardFlow
 
 const Dice = preload("res://content/dice/dice.gd")
+const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
 
 const POST_BATTLE_REWARD_DICE_SIZE_MULTIPLIER := Vector3(4.0, 4.0, 4.0)
 const POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER := 1.0
@@ -408,6 +409,10 @@ func _return_to_saved_global_map(owner: Node) -> void:
 	var tree := owner.get_tree()
 	if tree == null:
 		return
-	var result := tree.change_scene_to_file(GLOBAL_MAP_SCENE_PATH)
+	var map_scene_path := GlobalMapRuntimeState.load_map_scene_path()
+	if map_scene_path.is_empty():
+		push_warning("Failed to open global map scene: runtime map scene path is empty.")
+		return
+	var result := tree.change_scene_to_file(map_scene_path)
 	if result != OK:
-		push_warning("Failed to open global map scene: %s" % GLOBAL_MAP_SCENE_PATH)
+		push_warning("Failed to open global map scene: %s" % map_scene_path)
