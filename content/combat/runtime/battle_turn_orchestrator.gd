@@ -34,6 +34,8 @@ func throw_current_turn_dice(context: Dictionary) -> void:
 		for dice_definition in battle_room_data.player_instance.dice_loadout:
 			if dice_definition == null:
 				continue
+			if dice_definition.scope != DiceDefinition.Scope.COMBAT:
+				continue
 			requests.append(build_dice_throw_request(dice_definition, {"owner": &"player"}))
 	elif battle_room_data.is_monster_turn() and battle_room_data.can_target_monster(battle_room_data.current_monster_turn_index):
 		var monster_view = battle_room_data.monster_views[battle_room_data.current_monster_turn_index]

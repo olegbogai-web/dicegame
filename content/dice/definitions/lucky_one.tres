@@ -36,6 +36,7 @@ text_color = Color(0.95, 0.98, 1, 1)
 [resource]
 script = ExtResource("1_dice")
 dice_name = "lucky_one"
+scope = 0
 size_multiplier = Vector3(2.52, 2.52, 2.52)
-base_color = Color(0.8, 0.8, 0.8, 1)
+base_color = Color(0.99, 0.85, 0.8, 1)
 faces = Array[ExtResource("2_face")]([SubResource("Face_1"), SubResource("Face_2"), SubResource("Face_3"), SubResource("Face_4"), SubResource("Face_5"), SubResource("Face_6")])

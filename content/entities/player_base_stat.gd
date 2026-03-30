@@ -95,6 +95,7 @@ func _build_global_map_dice_definition() -> DiceDefinition:
 	var dice_definition := DiceDefinitionScript.new()
 	dice_definition.dice_name = "base_cube_global_map"
 	dice_definition.texture = GLOBAL_MAP_DICE_SKIN
+	dice_definition.scope = DiceDefinitionScript.Scope.GLOBAL_MAP
 	dice_definition.base_color = Color(0.96, 0.96, 0.96, 1.0)
 	dice_definition.faces = _build_global_map_faces()
 	return dice_definition
@@ -112,6 +113,7 @@ func _build_default_reward_cube_definition() -> DiceDefinition:
 	var dice_definition := DiceDefinitionScript.new()
 	dice_definition.dice_name = "reward_cube"
 	dice_definition.base_color = Color(0.76, 0.76, 0.76, 1.0)
+	dice_definition.scope = DiceDefinitionScript.Scope.REWARD
 	dice_definition.faces = [
 		_build_face("cube_+", REWARD_CUBE_ICON),
 		_build_face("cube_+", REWARD_CUBE_ICON),
@@ -127,6 +129,7 @@ func _build_default_money_cube_definition() -> DiceDefinition:
 	var dice_definition := DiceDefinitionScript.new()
 	dice_definition.dice_name = "money_cube"
 	dice_definition.texture = MONEY_DICE_SKIN
+	dice_definition.scope = DiceDefinitionScript.Scope.MONEY
 	dice_definition.base_color = Color(1.0, 0.96, 0.86, 1.0)
 	dice_definition.faces = _build_default_money_faces()
 	return dice_definition
