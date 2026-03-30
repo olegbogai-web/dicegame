@@ -677,6 +677,19 @@ UI может реализовывать drag-and-drop, подсветку и в
 - `_clear_ability_reward_cards`;
 - `_resolve_ability_reward_click`;
 - `_select_ability_reward`.
+- `_show_artifact_reward_options`;
+- `_build_artifact_reward_options`;
+- `_load_all_artifacts_from_directory`;
+- `_collect_owned_unique_artifact_ids`;
+- `_roll_artifact_reward_rarity`;
+- `_pick_artifact_by_rarity_with_fallback`;
+- `_build_artifact_rarity_fallback_chain`;
+- `_compute_artifact_reward_spacing_x`;
+- `_render_artifact_reward_cards`;
+- `_apply_artifact_reward_visual`;
+- `_clear_artifact_reward_cards`;
+- `_resolve_artifact_reward_click`;
+- `_select_artifact_reward`.
 
 ### 15.3. Зачем это обязательно для перехода от test battle к real game
 

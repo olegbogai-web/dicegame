@@ -9,14 +9,27 @@ const POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER := 0.75
 const POST_BATTLE_REWARD_DICE_DELAY_SECONDS := 1.0
 const REWARD_CARD_NEW_FACE_ID := &"card_+"
 const REWARD_CARD_UP_FACE_ID := &"card_up"
+const REWARD_ARTIFACT_FACE_ID := &"artifact_+"
 const ABILITY_REWARD_OPTIONS_COUNT := 3
+const ARTIFACT_REWARD_OPTIONS_COUNT := 2
 const ABILITY_REWARD_CARD_MIN_SPACING_X := 3.2
 const ABILITY_REWARD_CARD_GAP_X := 0.35
 const ABILITY_DEFINITIONS_DIRECTORY := "res://content/abilities/definitions"
+const ARTIFACT_DEFINITIONS_DIRECTORY := "res://content/artifacts/definitions"
 const RARITY_COMMON_WEIGHT := 50.0
 const RARITY_UNCOMMON_WEIGHT := 30.0
 const RARITY_RARE_WEIGHT := 20.0
 const RARITY_UNIQUE_WEIGHT := 10.0
+const ARTIFACT_RARITY_COMMON_WEIGHT := 50.0
+const ARTIFACT_RARITY_UNCOMMON_WEIGHT := 25.0
+const ARTIFACT_RARITY_RARE_WEIGHT := 15.0
+const ARTIFACT_RARITY_UNIQUE_WEIGHT := 10.0
+const ARTIFACT_REWARD_MIN_SPACING_X := 2.8
+const ARTIFACT_REWARD_GAP_X := 0.2
+const ARTIFACT_RARITY_COMMON := &"common"
+const ARTIFACT_RARITY_UNCOMMON := &"uncommon"
+const ARTIFACT_RARITY_RARE := &"rare"
+const ARTIFACT_RARITY_UNIQUE := &"unique"
 const GLOBAL_MAP_SCENE_PATH := "res://scenes/global_map_room.tscn"
 
 
@@ -77,6 +90,8 @@ func _try_resolve_post_battle_reward_dice_result(owner: Node) -> void:
 		_show_ability_reward_options(owner)
 	elif StringName(reward_face) == REWARD_CARD_UP_FACE_ID:
 		_show_ability_upgrade_options(owner)
+	elif StringName(reward_face) == REWARD_ARTIFACT_FACE_ID:
+		_show_artifact_reward_options(owner)
 
 
 func _find_post_battle_reward_die(owner: Node) -> Dice:
@@ -93,6 +108,7 @@ func _find_post_battle_reward_die(owner: Node) -> Dice:
 
 
 func _show_ability_reward_options(owner: Node) -> void:
+	_clear_artifact_reward_cards(owner)
 	var options := _build_ability_reward_options(owner, ABILITY_REWARD_OPTIONS_COUNT)
 	if options.is_empty():
 		print("[Debug][RewardFlow] Не удалось сгенерировать способности для награды.")
@@ -108,6 +124,7 @@ func _show_ability_reward_options(owner: Node) -> void:
 
 
 func _show_ability_upgrade_options(owner: Node) -> void:
+	_clear_artifact_reward_cards(owner)
 	var options := _build_ability_upgrade_options(owner)
 	if options.is_empty():
 		print("[Debug][RewardFlow] Не удалось сгенерировать улучшения способностей.")
@@ -186,6 +203,52 @@ func _build_ability_upgrade_options(owner: Node) -> Array[Dictionary]:
 	return generated
 
 
+func _show_artifact_reward_options(owner: Node) -> void:
+	_clear_ability_reward_cards(owner)
+	var options := _build_artifact_reward_options(owner, ARTIFACT_REWARD_OPTIONS_COUNT)
+	if options.is_empty():
+		print("[Debug][RewardFlow] Не удалось сгенерировать артефакты для награды.")
+		return
+	_render_artifact_reward_cards(owner, options)
+	owner._is_awaiting_artifact_reward_selection = true
+	var artifact_names: PackedStringArray = PackedStringArray()
+	for entry in options:
+		var artifact := entry.get("artifact") as ArtifactDefinition
+		if artifact != null:
+			artifact_names.append(artifact.display_name)
+	print("[Debug][RewardFlow] Выпали артефакты: %s." % ", ".join(artifact_names))
+
+
+func _build_artifact_reward_options(owner: Node, count: int) -> Array[Dictionary]:
+	var player = owner.battle_room_data.player_instance if owner.battle_room_data != null else null
+	if player == null:
+		return []
+	var available_artifacts := _load_all_artifacts_from_directory()
+	if available_artifacts.is_empty():
+		return []
+	var owned_unique_artifact_ids := _collect_owned_unique_artifact_ids(player)
+	var generated: Array[Dictionary] = []
+	var offered_artifact_ids := {}
+	for _index in count:
+		var target_rarity := _roll_artifact_reward_rarity(owner)
+		var artifact := _pick_artifact_by_rarity_with_fallback(
+			available_artifacts,
+			target_rarity,
+			owned_unique_artifact_ids,
+			offered_artifact_ids,
+			owner
+		)
+		if artifact == null:
+			continue
+		offered_artifact_ids[artifact.artifact_id] = true
+		generated.append({
+			"artifact": artifact,
+			"rolled_rarity": target_rarity,
+			"reward_kind": "artifact",
+		})
+	return generated
+
+
 func _load_player_reward_abilities() -> Array[AbilityDefinition]:
 	var abilities: Array[AbilityDefinition] = []
 	for ability in _load_all_abilities_from_directory():
@@ -226,6 +289,28 @@ func _load_all_abilities_from_directory() -> Array[AbilityDefinition]:
 	return abilities
 
 
+func _load_all_artifacts_from_directory() -> Array[ArtifactDefinition]:
+	var artifacts: Array[ArtifactDefinition] = []
+	var dir := DirAccess.open(ARTIFACT_DEFINITIONS_DIRECTORY)
+	if dir == null:
+		push_warning("Не удалось открыть каталог артефактов: %s" % ARTIFACT_DEFINITIONS_DIRECTORY)
+		return artifacts
+	dir.list_dir_begin()
+	while true:
+		var file_name := dir.get_next()
+		if file_name.is_empty():
+			break
+		if dir.current_is_dir() or not file_name.ends_with(".tres"):
+			continue
+		var path := "%s/%s" % [ARTIFACT_DEFINITIONS_DIRECTORY, file_name]
+		var artifact := ResourceLoader.load(path) as ArtifactDefinition
+		if artifact == null:
+			continue
+		artifacts.append(artifact)
+	dir.list_dir_end()
+	return artifacts
+
+
 func _resolve_follow_up_abilities(base_ability: AbilityDefinition, ability_catalog: Dictionary) -> Array[AbilityDefinition]:
 	var resolved: Array[AbilityDefinition] = []
 	if base_ability == null:
@@ -252,6 +337,19 @@ func _collect_owned_ability_ids(player: Player) -> Dictionary:
 	return owned
 
 
+func _collect_owned_unique_artifact_ids(player: Player) -> Dictionary:
+	var owned_unique := {}
+	if player == null:
+		return owned_unique
+	for artifact in player.get_active_artifact_definitions():
+		if artifact == null:
+			continue
+		if StringName(artifact.rarity) != ARTIFACT_RARITY_UNIQUE:
+			continue
+		owned_unique[artifact.artifact_id] = true
+	return owned_unique
+
+
 func _roll_reward_rarity(owner: Node) -> int:
 	var total_weight := RARITY_COMMON_WEIGHT + RARITY_UNCOMMON_WEIGHT + RARITY_RARE_WEIGHT + RARITY_UNIQUE_WEIGHT
 	var roll = owner._ability_reward_rng.randf_range(0.0, total_weight)
@@ -264,6 +362,20 @@ func _roll_reward_rarity(owner: Node) -> int:
 	if roll < RARITY_RARE_WEIGHT:
 		return AbilityDefinition.Rarity.RARE
 	return AbilityDefinition.Rarity.UNIQUE
+
+
+func _roll_artifact_reward_rarity(owner: Node) -> StringName:
+	var total_weight := ARTIFACT_RARITY_COMMON_WEIGHT + ARTIFACT_RARITY_UNCOMMON_WEIGHT + ARTIFACT_RARITY_RARE_WEIGHT + ARTIFACT_RARITY_UNIQUE_WEIGHT
+	var roll = owner._ability_reward_rng.randf_range(0.0, total_weight)
+	if roll < ARTIFACT_RARITY_COMMON_WEIGHT:
+		return ARTIFACT_RARITY_COMMON
+	roll -= ARTIFACT_RARITY_COMMON_WEIGHT
+	if roll < ARTIFACT_RARITY_UNCOMMON_WEIGHT:
+		return ARTIFACT_RARITY_UNCOMMON
+	roll -= ARTIFACT_RARITY_UNCOMMON_WEIGHT
+	if roll < ARTIFACT_RARITY_RARE_WEIGHT:
+		return ARTIFACT_RARITY_RARE
+	return ARTIFACT_RARITY_UNIQUE
 
 
 func _pick_ability_by_rarity_with_fallback(
@@ -289,6 +401,48 @@ func _pick_ability_by_rarity_with_fallback(
 	return null
 
 
+func _pick_artifact_by_rarity_with_fallback(
+	artifacts: Array[ArtifactDefinition],
+	start_rarity: StringName,
+	owned_unique_artifact_ids: Dictionary,
+	offered_artifact_ids: Dictionary,
+	owner: Node
+) -> ArtifactDefinition:
+	var rarity_chain := _build_artifact_rarity_fallback_chain(start_rarity)
+	for rarity in rarity_chain:
+		var candidates: Array[ArtifactDefinition] = []
+		for artifact in artifacts:
+			if artifact == null:
+				continue
+			if StringName(artifact.rarity) != rarity:
+				continue
+			if offered_artifact_ids.has(artifact.artifact_id):
+				continue
+			if rarity == ARTIFACT_RARITY_UNIQUE and owned_unique_artifact_ids.has(artifact.artifact_id):
+				continue
+			candidates.append(artifact)
+		if candidates.is_empty():
+			continue
+		return candidates[owner._ability_reward_rng.randi_range(0, candidates.size() - 1)]
+	return null
+
+
+func _build_artifact_rarity_fallback_chain(start_rarity: StringName) -> Array[StringName]:
+	var order: Array[StringName] = [
+		ARTIFACT_RARITY_UNIQUE,
+		ARTIFACT_RARITY_RARE,
+		ARTIFACT_RARITY_UNCOMMON,
+		ARTIFACT_RARITY_COMMON,
+	]
+	var start_index := order.find(start_rarity)
+	if start_index < 0:
+		start_index = order.size() - 1
+	var chain: Array[StringName] = []
+	for rarity_index in range(start_index, order.size()):
+		chain.append(order[rarity_index])
+	return chain
+
+
 func _compute_reward_card_spacing_x(owner: Node) -> float:
 	if owner._ability_reward_template == null:
 		return ABILITY_REWARD_CARD_MIN_SPACING_X
@@ -301,6 +455,17 @@ func _compute_reward_card_spacing_x(owner: Node) -> float:
 	if card_width <= 0.0:
 		return ABILITY_REWARD_CARD_MIN_SPACING_X
 	return maxf(ABILITY_REWARD_CARD_MIN_SPACING_X, card_width + ABILITY_REWARD_CARD_GAP_X)
+
+
+func _compute_artifact_reward_spacing_x(owner: Node) -> float:
+	if owner._artifact_reward_template == null or owner._artifact_reward_template.mesh == null:
+		return ARTIFACT_REWARD_MIN_SPACING_X
+	var card_size := owner._artifact_reward_template.mesh.get_aabb().size
+	var world_scale := owner._artifact_reward_template.global_transform.basis.get_scale()
+	var card_width := card_size.x * absf(world_scale.x)
+	if card_width <= 0.0:
+		return ARTIFACT_REWARD_MIN_SPACING_X
+	return maxf(ARTIFACT_REWARD_MIN_SPACING_X, card_width + ARTIFACT_REWARD_GAP_X)
 
 
 func _render_ability_reward_cards(owner: Node, entries: Array[Dictionary]) -> void:
@@ -358,6 +523,57 @@ func _clear_ability_reward_cards(owner: Node) -> void:
 		owner._ability_reward_template.visible = false
 
 
+func _render_artifact_reward_cards(owner: Node, entries: Array[Dictionary]) -> void:
+	_clear_artifact_reward_cards(owner)
+	if owner._artifact_reward_template == null:
+		return
+	owner._artifact_reward_template.visible = false
+	owner._artifact_reward_entries.clear()
+	if entries.is_empty():
+		return
+	var spacing_x := _compute_artifact_reward_spacing_x(owner)
+	var offsets = owner._build_centered_offsets(entries.size(), spacing_x)
+	var template_basis = owner._artifact_reward_template.transform.basis
+	var template_origin = owner._artifact_reward_template.transform.origin
+	for index in entries.size():
+		var frame_node = owner._artifact_reward_template if index == 0 else (owner._artifact_reward_template.duplicate() as Node3D)
+		if frame_node.get_parent() == null:
+			owner.add_child(frame_node)
+		frame_node.visible = true
+		frame_node.transform = Transform3D(
+			template_basis,
+			template_origin + Vector3(offsets[index], 0.0, 0.0)
+		)
+		var reward_entry: Dictionary = entries[index]
+		var artifact := reward_entry.get("artifact") as ArtifactDefinition
+		_apply_artifact_reward_visual(owner, frame_node, artifact)
+		reward_entry["node"] = frame_node
+		owner._artifact_reward_entries.append(reward_entry)
+		if index > 0:
+			owner._generated_artifact_reward_nodes.append(frame_node)
+
+
+func _apply_artifact_reward_visual(owner: Node, frame_node: Node3D, artifact: ArtifactDefinition) -> void:
+	if frame_node == null:
+		return
+	var icon_mesh := frame_node.get_node_or_null(^"artefact_icon_reward") as MeshInstance3D
+	if icon_mesh == null:
+		return
+	if artifact != null and artifact.sprite != null:
+		owner._apply_texture_to_mesh(icon_mesh, artifact.sprite)
+
+
+func _clear_artifact_reward_cards(owner: Node) -> void:
+	for generated_node in owner._generated_artifact_reward_nodes:
+		if generated_node != null and is_instance_valid(generated_node):
+			generated_node.queue_free()
+	owner._generated_artifact_reward_nodes.clear()
+	owner._artifact_reward_entries.clear()
+	owner._is_awaiting_artifact_reward_selection = false
+	if owner._artifact_reward_template != null:
+		owner._artifact_reward_template.visible = false
+
+
 func _resolve_ability_reward_click(owner: Node, screen_point: Vector2) -> Dictionary:
 	for index in range(owner._ability_reward_entries.size() - 1, -1, -1):
 		var entry = owner._ability_reward_entries[index]
@@ -365,6 +581,16 @@ func _resolve_ability_reward_click(owner: Node, screen_point: Vector2) -> Dictio
 		if card_node == null:
 			continue
 		var frame_mesh := card_node.get_node_or_null(^"ability_frame_base") as MeshInstance3D
+		if owner._screen_point_hits_mesh(frame_mesh, screen_point):
+			return entry
+	return {}
+
+
+func _resolve_artifact_reward_click(owner: Node, screen_point: Vector2) -> Dictionary:
+	for index in range(owner._artifact_reward_entries.size() - 1, -1, -1):
+		var entry = owner._artifact_reward_entries[index]
+		var frame_node := entry.get("node") as Node3D
+		var frame_mesh := frame_node as MeshInstance3D
 		if owner._screen_point_hits_mesh(frame_mesh, screen_point):
 			return entry
 	return {}
@@ -399,6 +625,27 @@ func _select_ability_reward(owner: Node, entry: Dictionary) -> void:
 		true
 	)
 	_clear_ability_reward_cards(owner)
+	_return_to_saved_global_map(owner)
+
+
+func _select_artifact_reward(owner: Node, entry: Dictionary) -> void:
+	var selected_artifact := entry.get("artifact") as ArtifactDefinition
+	if selected_artifact == null or owner.battle_room_data == null or owner.battle_room_data.player_instance == null:
+		return
+	var player = owner.battle_room_data.player_instance
+	if StringName(selected_artifact.rarity) == ARTIFACT_RARITY_UNIQUE:
+		for artifact in player.get_active_artifact_definitions():
+			if artifact == null:
+				continue
+			if artifact.artifact_id != selected_artifact.artifact_id:
+				continue
+			_clear_artifact_reward_cards(owner)
+			_return_to_saved_global_map(owner)
+			return
+	player.grant_artifact(selected_artifact)
+	print("[Debug][RewardFlow] Игрок выбрал артефакт: %s." % selected_artifact.display_name)
+	owner._apply_player_artifacts()
+	_clear_artifact_reward_cards(owner)
 	_return_to_saved_global_map(owner)
 
 
