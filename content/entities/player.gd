@@ -2,7 +2,6 @@ extends RefCounted
 class_name Player
 
 const ON_GRANT_MAX_HP_BONUS_META_KEY := &"on_grant_max_hp_bonus"
-const RUN_FLAG_RUNTIME_FROM_BASE_SYNCED := &"runtime_from_base_synced"
 
 var player_id := ""
 var base_stat: PlayerBaseStat
@@ -56,16 +55,6 @@ func reset_for_run() -> void:
 	artifacts_runtime.clear()
 	runtime_max_hp_bonus = 0
 	run_flags.clear()
-	run_flags[RUN_FLAG_RUNTIME_FROM_BASE_SYNCED] = true
-
-
-func ensure_runtime_from_base_stat() -> bool:
-	if base_stat == null:
-		return false
-	if not bool(run_flags.get(RUN_FLAG_RUNTIME_FROM_BASE_SYNCED, false)):
-		reset_for_run()
-		return true
-	return false
 
 
 func is_alive() -> bool:

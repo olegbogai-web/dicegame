@@ -16,7 +16,6 @@ const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 const Dice = preload("res://content/dice/dice.gd")
 const UNAVAILABLE_MARK_TEXTURE = preload("res://assets/global_map/Х_mark.png")
-const DEFAULT_PLAYER_BASE_STAT := preload("res://content/entities/definitions/default_player_base_stat.tres")
 
 const START_EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
 const HERO_MOVE_SPEED := 4.75
@@ -347,15 +346,12 @@ func _build_global_map_throw_request(definition: DiceDefinition) -> DiceThrowReq
 func _resolve_or_create_runtime_player() -> Player:
 	var saved_player = GlobalMapRuntimeState.load_runtime_player()
 	if saved_player != null:
-		saved_player.ensure_runtime_from_base_stat()
 		return saved_player
-	var base_stat := _build_default_player_base_stat()
-	if base_stat == null:
-		base_stat = PlayerBaseStat.new()
-		base_stat.player_id = "global_map_runtime_player"
-		base_stat.display_name = "GlobalMapRuntimePlayer"
+	var base_stat := PlayerBaseStat.new()
+	base_stat.player_id = "global_map_runtime_player"
+	base_stat.display_name = "GlobalMapRuntimePlayer"
+	base_stat.starting_abilities = []
 	var player := Player.new(base_stat)
-	player.ensure_runtime_from_base_stat()
 	GlobalMapRuntimeState.save_runtime_player(player)
 	return player
 
@@ -369,15 +365,8 @@ func _prepare_pending_runtime_battle_room(next_scene_path: String) -> void:
 		push_warning("%s Не удалось подготовить боевую комнату: runtime-игрок не найден." % GLOBAL_MAP_DICE_LOG_PREFIX)
 		GlobalMapRuntimeState.save_pending_battle_room(null)
 		return
-	runtime_player.ensure_runtime_from_base_stat()
 	GlobalMapRuntimeState.save_runtime_player(runtime_player)
 	GlobalMapRuntimeState.save_pending_battle_room(BattleRoom.create_runtime_battle_room(runtime_player, _rng))
-
-
-func _build_default_player_base_stat() -> PlayerBaseStat:
-	if DEFAULT_PLAYER_BASE_STAT == null:
-		return null
-	return DEFAULT_PLAYER_BASE_STAT.duplicate(true) as PlayerBaseStat
 
 
 func _format_faces_for_debug(definition: DiceDefinition) -> String:

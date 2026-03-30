@@ -6,7 +6,8 @@ const DUNGEON_FLOOR_TEXTURE_1 := preload("res://assets/material/dangeon_floor_1.
 const DUNGEON_FLOOR_TEXTURE_2 := preload("res://assets/material/dangeon_floor_2.png")
 const TEST_PLAYER_TEXTURE := preload("res://assets/entity/monsters/test_player.png")
 const TEST_MONSTER_DEFINITION := preload("res://content/monsters/definitions/test_monster.tres")
-const DEFAULT_PLAYER_BASE_STAT := preload("res://content/entities/definitions/default_player_base_stat.tres")
+const COMMON_ATTACK_ABILITY := preload("res://content/abilities/definitions/common_attack.tres")
+const HEAL_ABILITY := preload("res://content/abilities/definitions/heal.tres")
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
 const BattleEffectRuntime = preload("res://content/combat/runtime/battle_effect_runtime.gd")
@@ -134,8 +135,6 @@ func set_floor_textures(left_texture: Texture2D, right_texture: Texture2D) -> vo
 
 func set_player_data(player: Player, sprite: Texture2D) -> void:
 	player_instance = player
-	if player_instance != null:
-		player_instance.ensure_runtime_from_base_stat()
 	var abilities: Array[AbilityDefinition] = []
 	var current_hp := 0
 	var max_hp := 0
@@ -461,9 +460,19 @@ static func _pick_runtime_floor_texture(rng: RandomNumberGenerator) -> Texture2D
 
 
 static func _build_test_player() -> Player:
-	var base_stat := DEFAULT_PLAYER_BASE_STAT.duplicate(true) as PlayerBaseStat
-	if base_stat == null:
-		base_stat = PlayerBaseStat.new()
-		base_stat.player_id = "test_player"
-		base_stat.display_name = "Тестовый игрок"
+	var base_stat := PlayerBaseStat.new()
+	base_stat.player_id = "test_player"
+	base_stat.display_name = "Тестовый игрок"
+	base_stat.max_hp = 30
+	base_stat.starting_hp = 30
+	base_stat.starting_armor = 0
+	base_stat.starting_abilities = [
+		COMMON_ATTACK_ABILITY,
+		HEAL_ABILITY,
+	]
+	base_stat.starting_dice = [
+		preload("res://content/resources/base_cube.tres"),
+		preload("res://content/resources/base_cube.tres"),
+		preload("res://content/resources/base_cube.tres"),
+	]
 	return Player.new(base_stat)

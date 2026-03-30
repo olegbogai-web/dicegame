@@ -41,9 +41,6 @@ func set_monsters(owner: Node, monster_definitions: Array[MonsterDefinition]) ->
 func _initialize_battle_state(owner: Node) -> void:
 	if owner.battle_room_data == null:
 		return
-	if owner.battle_room_data.player_instance != null:
-		owner.battle_room_data.player_instance.ensure_runtime_from_base_stat()
-		owner.battle_room_data.set_player_data(owner.battle_room_data.player_instance, owner.battle_room_data.player_view.sprite)
 	if owner.battle_room_data.battle_status == &"not_started":
 		owner._has_spawned_post_battle_reward_dice = false
 		owner._is_waiting_post_battle_reward_dice = false
