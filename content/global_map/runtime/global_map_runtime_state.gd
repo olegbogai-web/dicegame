@@ -8,6 +8,7 @@ static var _has_persisted_snapshot := false
 static var _persisted_snapshot: Dictionary = {}
 static var _runtime_player: Player
 static var _pending_battle_room: BattleRoom
+static var _map_scene_path := ""
 
 var is_transition_in_progress := false
 var event_reached := false
@@ -48,3 +49,11 @@ static func consume_pending_battle_room() -> BattleRoom:
 	var battle_room := _pending_battle_room
 	_pending_battle_room = null
 	return battle_room
+
+
+static func save_map_scene_path(scene_path: String) -> void:
+	_map_scene_path = scene_path
+
+
+static func load_map_scene_path() -> String:
+	return _map_scene_path
