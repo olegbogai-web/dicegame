@@ -27,6 +27,7 @@ const ACTIVATION_ANIMATION_DURATION := 0.5
 @onready var _artifact_template: TextureRect = $UI/artefact
 @onready var _ability_reward_template: Node3D = $ability_reward
 @onready var _artifact_reward_template: MeshInstance3D = $artefact_frame_reward
+@onready var _cube_reward_template: Node3D = $cube_reward
 
 var battle_room_data: BattleRoom
 var _generated_monster_sprites: Array[Node] = []
@@ -48,6 +49,8 @@ var _generated_ability_reward_nodes: Array[Node3D] = []
 var _ability_reward_entries: Array[Dictionary] = []
 var _generated_artifact_reward_nodes: Array[Node3D] = []
 var _artifact_reward_entries: Array[Dictionary] = []
+var _generated_cube_reward_nodes: Array[Node3D] = []
+var _cube_reward_entries: Array[Dictionary] = []
 var _is_awaiting_ability_reward_selection := false
 var _scene_bootstrap := BattleSceneBootstrap.new()
 var _scene_view_renderer := BattleSceneViewRenderer.new()
