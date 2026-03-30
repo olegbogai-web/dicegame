@@ -2,29 +2,17 @@ extends Node3D
 
 const BattleRoomScript = preload("res://content/rooms/subclasses/battle_room.gd")
 const Dice = preload("res://content/dice/dice.gd")
-const BattleActivationAnimationRuntime = preload("res://content/combat/runtime/battle_activation_animation_runtime.gd")
 const BattleSceneBootstrap = preload("res://content/combat/presentation/battle_scene_bootstrap.gd")
 const BattleSceneViewRenderer = preload("res://content/combat/presentation/battle_scene_view_renderer.gd")
 const PlayerAbilityInputController = preload("res://content/combat/presentation/player_ability_input_controller.gd")
 const BattleTargetingService = preload("res://content/combat/presentation/battle_targeting_service.gd")
 const BattleTurnOrchestrator = preload("res://content/combat/runtime/battle_turn_orchestrator.gd")
+const BattleActionOrchestrator = preload("res://content/combat/runtime/battle_action_orchestrator.gd")
+const PostBattleRewardFlow = preload("res://content/combat/reward/post_battle_reward_flow.gd")
 const EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
 
 const ACTIVATION_ANIMATION_DURATION := 0.5
-const ACTIVATION_TARGET_LIFT_Y := 0.8
 const SELECTED_FRAME_LIFT_Y := 1.9
-const POST_BATTLE_REWARD_DICE_SIZE_MULTIPLIER := Vector3(4.0, 4.0, 4.0)
-const POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER := 1.0
-const POST_BATTLE_REWARD_DICE_DELAY_SECONDS := 1.0
-const REWARD_CARD_FACE_ID := &"card_+"
-const ABILITY_REWARD_OPTIONS_COUNT := 3
-const ABILITY_REWARD_CARD_MIN_SPACING_X := 3.2
-const ABILITY_REWARD_CARD_GAP_X := 0.35
-const ABILITY_DEFINITIONS_DIRECTORY := "res://content/abilities/definitions"
-const RARITY_COMMON_WEIGHT := 50.0
-const RARITY_UNCOMMON_WEIGHT := 30.0
-const RARITY_RARE_WEIGHT := 20.0
-const RARITY_UNIQUE_WEIGHT := 10.0
 
 @onready var _camera: Camera3D = $battle_camera
 @onready var _board: BoardController = $board
@@ -64,6 +52,8 @@ var _scene_view_renderer := BattleSceneViewRenderer.new()
 var _player_ability_input_controller := PlayerAbilityInputController.new()
 var _battle_targeting_service := BattleTargetingService.new()
 var _battle_turn_orchestrator := BattleTurnOrchestrator.new()
+var _battle_action_orchestrator := BattleActionOrchestrator.new()
+var _post_battle_reward_flow := PostBattleRewardFlow.new()
 
 
 func _ready() -> void:
@@ -374,127 +364,27 @@ func _resolve_target_descriptor_at_screen_point(ability: AbilityDefinition, scre
 
 
 func _activate_selected_ability(target_descriptor: Dictionary) -> void:
-	if _selected_ability_state.is_empty():
-		return
-	if not _is_ability_state_ready(_selected_ability_state):
-		_cancel_selected_ability()
-		return
-
-	var frame_state := _selected_ability_state.duplicate(true)
-	var consumed_dice := _collect_ready_dice_for_frame(frame_state.get("frame") as MeshInstance3D)
-	_selected_ability_state.clear()
-	await _play_ability_use_visual(frame_state, target_descriptor, consumed_dice)
-	_refresh_player_ability_snap_state()
+	await _battle_action_orchestrator._activate_selected_ability(self, target_descriptor)
 
 
 func _play_ability_use_visual(frame_state: Dictionary, target_descriptor: Dictionary, consumed_dice: Array[Dice]) -> void:
-	var frame := frame_state.get("frame") as MeshInstance3D
-	var ability := frame_state.get("ability") as AbilityDefinition
-	if frame == null or ability == null:
-		return
-	var base_origin: Vector3 = frame_state.get("base_origin", frame.transform.origin)
-	var target_origin := _resolve_activation_target_origin(target_descriptor, base_origin)
-	var dice_assignments := _build_dice_assignments_for_frame(consumed_dice, frame_state)
-	var on_activate := func() -> void:
-		var runtime_target_descriptor := target_descriptor.duplicate(true)
-		runtime_target_descriptor["consumed_dice"] = consumed_dice
-		battle_room_data.activate_current_turn_ability(ability, runtime_target_descriptor)
-		_apply_combatant_views_after_ability_resolution()
-	var on_finished := func() -> void:
-		_activation_in_progress = false
-		_update_turn_ui()
-	_activation_in_progress = true
-	await BattleActivationAnimationRuntime.play_ability_use_animation(
-		self,
-		frame,
-		base_origin,
-		target_origin,
-		consumed_dice,
-		dice_assignments,
-		ACTIVATION_ANIMATION_DURATION,
-		SELECTED_FRAME_LIFT_Y,
-		on_activate,
-		on_finished
-	)
+	await _battle_action_orchestrator._play_ability_use_visual(self, frame_state, target_descriptor, consumed_dice)
 
 
 func _build_dice_assignments_for_frame(consumed_dice: Array[Dice], frame_state: Dictionary) -> Array[Dictionary]:
-	var dice_assignments: Array[Dictionary] = []
-	var dice_places: Array[MeshInstance3D] = []
-	var raw_dice_places := frame_state.get("dice_places", []) as Array
-	for dice_place in raw_dice_places:
-		if dice_place is MeshInstance3D:
-			dice_places.append(dice_place as MeshInstance3D)
-	if dice_places.is_empty():
-		var frame := frame_state.get("frame") as MeshInstance3D
-		dice_places = _get_dice_place_nodes(frame)
-	for index in mini(consumed_dice.size(), dice_places.size()):
-		var dice := consumed_dice[index]
-		var dice_place := dice_places[index]
-		if dice == null or dice_place == null:
-			continue
-		dice_assignments.append({
-			"dice": dice,
-			"target_position": _get_slot_target_position(dice_place, dice),
-		})
-	return dice_assignments
+	return _battle_action_orchestrator._build_dice_assignments_for_frame(self, consumed_dice, frame_state)
 
 
 func _apply_combatant_views_after_ability_resolution() -> void:
-	_apply_player_sprite()
-	_apply_monster_sprites()
-	_update_turn_ui()
-	if battle_room_data != null and battle_room_data.is_battle_over():
-		print("[Debug][RewardFlow] Бой завершен. Статус: %s" % String(battle_room_data.battle_status))
-		_clear_board_dice()
-		_handle_post_battle_reward_dice()
+	_battle_action_orchestrator._apply_combatant_views_after_ability_resolution(self)
 
 
 func _handle_post_battle_reward_dice() -> void:
-	if _has_spawned_post_battle_reward_dice or _is_waiting_post_battle_reward_dice:
-		return
-	_is_waiting_post_battle_reward_dice = true
-	await get_tree().create_timer(POST_BATTLE_REWARD_DICE_DELAY_SECONDS).timeout
-	_is_waiting_post_battle_reward_dice = false
-	if _board == null or battle_room_data == null:
-		return
-	if battle_room_data.battle_status != &"victory":
-		return
-	print("[Debug][RewardFlow] Бой выигран. Запуск post-battle броска кубов награды.")
-	var player := battle_room_data.player_instance
-	if player == null:
-		return
-	var reward_cube := player.runtime_reward_cube
-	var money_cube := player.runtime_money_cube
-	if reward_cube == null and money_cube == null:
-		return
-	var requests: Array[DiceThrowRequest] = []
-	if reward_cube != null:
-		requests.append(_build_dice_throw_request(reward_cube, {"owner": &"reward"}))
-	if money_cube != null:
-		requests.append(_build_dice_throw_request(money_cube, {"owner": &"reward"}))
-	if requests.is_empty():
-		return
-	for request in requests:
-		request.extra_size_multiplier = POST_BATTLE_REWARD_DICE_SIZE_MULTIPLIER
-	var spawned_dice := _board.throw_dice(requests)
-	print("[Debug][RewardFlow] Куб награды/денег брошен. Количество кубов: %d." % spawned_dice.size())
-	for dice_body in spawned_dice:
-		if dice_body == null:
-			continue
-		dice_body.linear_velocity.y *= POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER
-	_has_spawned_post_battle_reward_dice = true
-	_has_processed_post_battle_reward_result = false
+	await _post_battle_reward_flow._handle_post_battle_reward_dice(self)
 
 
 func _find_monster_ability_frame_state(monster_index: int, ability: AbilityDefinition) -> Dictionary:
-	for frame_state in _monster_ability_frame_states:
-		if int(frame_state.get("monster_index", -1)) != monster_index:
-			continue
-		if frame_state.get("ability") != ability:
-			continue
-		return frame_state
-	return {}
+	return _battle_action_orchestrator._find_monster_ability_frame_state(self, monster_index, ability)
 
 
 func _execute_monster_ability(
@@ -503,17 +393,7 @@ func _execute_monster_ability(
 	target_descriptor: Dictionary,
 	consumed_dice: Array[Dice]
 ) -> void:
-	var frame_state := _find_monster_ability_frame_state(monster_index, ability)
-	if frame_state.is_empty():
-		var runtime_target_descriptor := target_descriptor.duplicate(true)
-		runtime_target_descriptor["consumed_dice"] = consumed_dice
-		battle_room_data.activate_current_turn_ability(ability, runtime_target_descriptor)
-		_apply_combatant_views_after_ability_resolution()
-		for dice in consumed_dice:
-			if is_instance_valid(dice):
-				dice.queue_free()
-		return
-	await _play_ability_use_visual(frame_state, target_descriptor, consumed_dice)
+	await _battle_action_orchestrator._execute_monster_ability(self, monster_index, ability, target_descriptor, consumed_dice)
 
 
 func _resolve_activation_target_origin(target_descriptor: Dictionary, base_origin: Vector3) -> Vector3:
@@ -525,124 +405,31 @@ func _initialize_battle_state() -> void:
 
 
 func _try_resolve_post_battle_reward_dice_result() -> void:
-	if not _has_spawned_post_battle_reward_dice or _has_processed_post_battle_reward_result:
-		return
-	var reward_dice := _find_post_battle_reward_die()
-	if reward_dice == null:
-		return
-	var all_reward_dice := _get_turn_dice(&"reward")
-	for dice in all_reward_dice:
-		if dice == null or not dice.has_completed_first_stop():
-			return
-	_has_processed_post_battle_reward_result = true
-	var reward_face := ""
-	var reward_top_face := reward_dice.get_top_face()
-	if reward_top_face != null:
-		reward_face = reward_top_face.text_value
-	print("[Debug][RewardFlow] На кубе награды выпало: %s." % reward_face)
-	if StringName(reward_face) == REWARD_CARD_FACE_ID:
-		_show_ability_reward_options()
+	_post_battle_reward_flow._try_resolve_post_battle_reward_dice_result(self)
 
 
 func _find_post_battle_reward_die() -> Dice:
-	var reward_dice := _get_turn_dice(&"reward")
-	for dice in reward_dice:
-		if dice == null:
-			continue
-		var dice_definition := dice.get_meta(&"definition", null) as DiceDefinition
-		if dice_definition == null:
-			continue
-		if dice_definition.dice_name == "reward_cube":
-			return dice
-	return null
+	return _post_battle_reward_flow._find_post_battle_reward_die(self)
 
 
 func _show_ability_reward_options() -> void:
-	var options := _build_ability_reward_options(ABILITY_REWARD_OPTIONS_COUNT)
-	if options.is_empty():
-		print("[Debug][RewardFlow] Не удалось сгенерировать способности для награды.")
-		return
-	_render_ability_reward_cards(options)
-	_is_awaiting_ability_reward_selection = true
-	var ability_names: PackedStringArray = PackedStringArray()
-	for entry in options:
-		var ability := entry.get("ability") as AbilityDefinition
-		if ability != null:
-			ability_names.append(ability.display_name)
-	print("[Debug][RewardFlow] Выпали способности: %s." % ", ".join(ability_names))
+	_post_battle_reward_flow._show_ability_reward_options(self)
 
 
 func _build_ability_reward_options(count: int) -> Array[Dictionary]:
-	var player := battle_room_data.player_instance if battle_room_data != null else null
-	if player == null:
-		return []
-	var available_abilities := _load_player_reward_abilities()
-	if available_abilities.is_empty():
-		return []
-	var owned_ability_ids := _collect_owned_ability_ids(player)
-	var generated: Array[Dictionary] = []
-	var offered_ability_ids := {}
-	for _index in count:
-		var target_rarity := _roll_reward_rarity()
-		var ability := _pick_ability_by_rarity_with_fallback(available_abilities, target_rarity, owned_ability_ids, offered_ability_ids)
-		if ability == null:
-			continue
-		offered_ability_ids[ability.ability_id] = true
-		generated.append({
-			"ability": ability,
-			"rolled_rarity": target_rarity,
-		})
-	return generated
+	return _post_battle_reward_flow._build_ability_reward_options(self, count)
 
 
 func _load_player_reward_abilities() -> Array[AbilityDefinition]:
-	var abilities: Array[AbilityDefinition] = []
-	var dir := DirAccess.open(ABILITY_DEFINITIONS_DIRECTORY)
-	if dir == null:
-		push_warning("Не удалось открыть каталог способностей: %s" % ABILITY_DEFINITIONS_DIRECTORY)
-		return abilities
-	dir.list_dir_begin()
-	while true:
-		var file_name := dir.get_next()
-		if file_name.is_empty():
-			break
-		if dir.current_is_dir() or not file_name.ends_with(".tres"):
-			continue
-		var path := "%s/%s" % [ABILITY_DEFINITIONS_DIRECTORY, file_name]
-		var resource := ResourceLoader.load(path)
-		var ability := resource as AbilityDefinition
-		if ability == null:
-			continue
-		if ability.owner_scope != AbilityDefinition.OwnerScope.PLAYER and ability.owner_scope != AbilityDefinition.OwnerScope.ANY:
-			continue
-		abilities.append(ability)
-	dir.list_dir_end()
-	return abilities
+	return _post_battle_reward_flow._load_player_reward_abilities()
 
 
 func _collect_owned_ability_ids(player: Player) -> Dictionary:
-	var owned := {}
-	if player == null:
-		return owned
-	for ability in player.ability_loadout:
-		if ability == null:
-			continue
-		owned[ability.ability_id] = true
-	return owned
+	return _post_battle_reward_flow._collect_owned_ability_ids(player)
 
 
 func _roll_reward_rarity() -> int:
-	var total_weight := RARITY_COMMON_WEIGHT + RARITY_UNCOMMON_WEIGHT + RARITY_RARE_WEIGHT + RARITY_UNIQUE_WEIGHT
-	var roll := _ability_reward_rng.randf_range(0.0, total_weight)
-	if roll < RARITY_COMMON_WEIGHT:
-		return AbilityDefinition.Rarity.COMMON
-	roll -= RARITY_COMMON_WEIGHT
-	if roll < RARITY_UNCOMMON_WEIGHT:
-		return AbilityDefinition.Rarity.UNCOMMON
-	roll -= RARITY_UNCOMMON_WEIGHT
-	if roll < RARITY_RARE_WEIGHT:
-		return AbilityDefinition.Rarity.RARE
-	return AbilityDefinition.Rarity.UNIQUE
+	return _post_battle_reward_flow._roll_reward_rarity(self)
 
 
 func _pick_ability_by_rarity_with_fallback(
@@ -651,124 +438,36 @@ func _pick_ability_by_rarity_with_fallback(
 	owned_ability_ids: Dictionary,
 	offered_ability_ids: Dictionary
 ) -> AbilityDefinition:
-	for rarity in range(start_rarity, AbilityDefinition.Rarity.COMMON - 1, -1):
-		var candidates: Array[AbilityDefinition] = []
-		for ability in abilities:
-			if ability == null:
-				continue
-			if ability.rarity != rarity:
-				continue
-			if owned_ability_ids.has(ability.ability_id) or offered_ability_ids.has(ability.ability_id):
-				continue
-			candidates.append(ability)
-		if candidates.is_empty():
-			continue
-		return candidates[_ability_reward_rng.randi_range(0, candidates.size() - 1)]
-	return null
+	return _post_battle_reward_flow._pick_ability_by_rarity_with_fallback(
+		abilities,
+		start_rarity,
+		owned_ability_ids,
+		offered_ability_ids,
+		self
+	)
 
 func _compute_reward_card_spacing_x() -> float:
-	if _ability_reward_template == null:
-		return ABILITY_REWARD_CARD_MIN_SPACING_X
-	var frame_base := _ability_reward_template.get_node_or_null(^"ability_frame_base") as MeshInstance3D
-	if frame_base == null or frame_base.mesh == null:
-		return ABILITY_REWARD_CARD_MIN_SPACING_X
-	var card_size := frame_base.mesh.get_aabb().size
-	var world_scale := frame_base.global_transform.basis.get_scale()
-	var card_width := card_size.x * absf(world_scale.x)
-	if card_width <= 0.0:
-		return ABILITY_REWARD_CARD_MIN_SPACING_X
-	return maxf(ABILITY_REWARD_CARD_MIN_SPACING_X, card_width + ABILITY_REWARD_CARD_GAP_X)
+	return _post_battle_reward_flow._compute_reward_card_spacing_x(self)
 
 
 func _render_ability_reward_cards(entries: Array[Dictionary]) -> void:
-	_clear_ability_reward_cards()
-	if _ability_reward_template == null:
-		return
-	_ability_reward_template.visible = false
-	_ability_reward_entries.clear()
-	if entries.is_empty():
-		return
-	var spacing_x := _compute_reward_card_spacing_x()
-	var offsets := _build_centered_offsets(entries.size(), spacing_x)
-	var template_basis := _ability_reward_template.transform.basis
-	var template_origin := _ability_reward_template.transform.origin
-	for index in entries.size():
-		var card_root := _ability_reward_template if index == 0 else (_ability_reward_template.duplicate() as Node3D)
-		if card_root.get_parent() == null:
-			add_child(card_root)
-		card_root.visible = true
-		card_root.transform = Transform3D(
-			template_basis,
-			template_origin + Vector3(offsets[index], 0.0, 0.0)
-		)
-		var ability := entries[index].get("ability") as AbilityDefinition
-		_apply_reward_card_visual(card_root, ability)
-		_ability_reward_entries.append({
-			"node": card_root,
-			"ability": ability,
-		})
-		if index > 0:
-			_generated_ability_reward_nodes.append(card_root)
+	_post_battle_reward_flow._render_ability_reward_cards(self, entries)
 
 
 func _apply_reward_card_visual(card_root: Node3D, ability: AbilityDefinition) -> void:
-	if card_root == null:
-		return
-	var icon_mesh := card_root.get_node_or_null(^"ability_icon") as MeshInstance3D
-	if icon_mesh != null and ability != null and ability.icon != null:
-		_apply_texture_to_mesh(icon_mesh, ability.icon)
-	var title_label := card_root.get_node_or_null(^"ability_text") as Label3D
-	if title_label != null:
-		title_label.text = ability.display_name if ability != null else ""
-	var description_label := card_root.get_node_or_null(^"abilitu_description") as Label3D
-	if description_label != null:
-		description_label.text = ability.description if ability != null else ""
+	_post_battle_reward_flow._apply_reward_card_visual(self, card_root, ability)
 
 
 func _clear_ability_reward_cards() -> void:
-	for generated_node in _generated_ability_reward_nodes:
-		if generated_node != null and is_instance_valid(generated_node):
-			generated_node.queue_free()
-	_generated_ability_reward_nodes.clear()
-	_ability_reward_entries.clear()
-	_is_awaiting_ability_reward_selection = false
-	if _ability_reward_template != null:
-		_ability_reward_template.visible = false
+	_post_battle_reward_flow._clear_ability_reward_cards(self)
 
 
 func _resolve_ability_reward_click(screen_point: Vector2) -> Dictionary:
-	for index in range(_ability_reward_entries.size() - 1, -1, -1):
-		var entry := _ability_reward_entries[index]
-		var card_node := entry.get("node") as Node3D
-		if card_node == null:
-			continue
-		var frame_mesh := card_node.get_node_or_null(^"ability_frame_base") as MeshInstance3D
-		if _screen_point_hits_mesh(frame_mesh, screen_point):
-			return entry
-	return {}
+	return _post_battle_reward_flow._resolve_ability_reward_click(self, screen_point)
 
 
 func _select_ability_reward(entry: Dictionary) -> void:
-	var selected_ability := entry.get("ability") as AbilityDefinition
-	if selected_ability == null or battle_room_data == null or battle_room_data.player_instance == null:
-		return
-	var player := battle_room_data.player_instance
-	for owned in player.ability_loadout:
-		if owned != null and owned.ability_id == selected_ability.ability_id:
-			_clear_ability_reward_cards()
-			return
-	player.ability_loadout.append(selected_ability)
-	battle_room_data.player_view.abilities = player.ability_loadout.duplicate()
-	print("[Debug][RewardFlow] Игрок выбрал способность: %s." % selected_ability.display_name)
-	_player_ability_frame_states.clear()
-	_player_ability_slot_states.clear()
-	_apply_ability_frames(
-		battle_room_data.get_player_abilities(),
-		_player_ability_template,
-		_generated_player_ability_frames,
-		true
-	)
-	_clear_ability_reward_cards()
+	_post_battle_reward_flow._select_ability_reward(self, entry)
 
 
 func _start_current_turn() -> void:
