@@ -6,6 +6,7 @@ const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 const BattleActivationAnimationRuntime = preload("res://content/combat/runtime/battle_activation_animation_runtime.gd")
 const BattleSceneBootstrap = preload("res://content/combat/presentation/battle_scene_bootstrap.gd")
+const BattleSceneViewRenderer = preload("res://content/combat/presentation/battle_scene_view_renderer.gd")
 const MonsterTurnRuntime = preload("res://content/monster_ai/monster_turn_runtime.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 const EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
@@ -16,11 +17,6 @@ const SLOT_READY_COLOR := Color(0.2, 0.62, 1.0, 1.0)
 const SLOT_HIGHLIGHT_COLOR := Color(0.36, 0.9, 0.48, 1.0)
 const FRAME_READY_COLOR := Color(0.12, 0.55, 1.0, 1.0)
 const FRAME_SELECTED_COLOR := Color(1.0, 0.92, 0.52, 1.0)
-const TINT_MATERIAL_META_KEY := &"runtime_tint_material"
-const HEALTH_BAR_META_KEY := &"health_bar_base_transform"
-const HEALTH_BAR_CURRENT_RATIO_META_KEY := &"health_bar_current_ratio"
-const HEALTH_BAR_TARGET_RATIO_META_KEY := &"health_bar_target_ratio"
-const HEALTH_BAR_ANIMATION_DURATION := 0.5
 const SELECTED_FRAME_LIFT_Y := 1.9
 const SELECTED_FRAME_MOUSE_FOLLOW_FACTOR := 0.2
 const ACTIVATION_ANIMATION_DURATION := 0.5
@@ -37,9 +33,6 @@ const RARITY_COMMON_WEIGHT := 50.0
 const RARITY_UNCOMMON_WEIGHT := 30.0
 const RARITY_RARE_WEIGHT := 20.0
 const RARITY_UNIQUE_WEIGHT := 10.0
-const STATUS_TEMPLATE_PATH := ^"state"
-const STATUS_RUNTIME_NODE_PREFIX := "state_runtime_"
-const STATUS_ICON_SPACING_X := 0.18
 
 @onready var _camera: Camera3D = $battle_camera
 @onready var _board: BoardController = $board
@@ -75,6 +68,7 @@ var _generated_ability_reward_nodes: Array[Node3D] = []
 var _ability_reward_entries: Array[Dictionary] = []
 var _is_awaiting_ability_reward_selection := false
 var _scene_bootstrap := BattleSceneBootstrap.new()
+var _scene_view_renderer := BattleSceneViewRenderer.new()
 
 
 func _ready() -> void:
@@ -112,78 +106,19 @@ func _ensure_battle_room_data() -> void:
 
 
 func _apply_room_data() -> void:
-	if battle_room_data == null:
-		return
-	_cancel_selected_ability(true)
-	_player_ability_frame_states.clear()
-	_monster_ability_frame_states.clear()
-	_monster_sprite_states.clear()
-	_apply_floor_textures()
-	_apply_player_sprite()
-	_apply_monster_sprites()
-	_player_ability_slot_states.clear()
-	_apply_ability_frames(
-		battle_room_data.get_player_abilities(),
-		_player_ability_template,
-		_generated_player_ability_frames,
-		true
-	)
-	_apply_monster_ability_frames()
-	_apply_player_artifacts()
-	_refresh_player_ability_snap_state()
-	_update_turn_ui()
+	_scene_view_renderer._apply_room_data(self)
 
 
 func _apply_floor_textures() -> void:
-	if _floor == null:
-		return
-	var floor_texture := battle_room_data.left_floor_texture
-	if floor_texture == null:
-		floor_texture = battle_room_data.right_floor_texture
-	_apply_texture_to_mesh(_floor, floor_texture)
+	_scene_view_renderer._apply_floor_textures(self)
 
 
 func _apply_player_sprite() -> void:
-	var player_view := battle_room_data.player_view
-	_player_sprite.visible = player_view != null and player_view.sprite != null
-	_set_status_template_visible(false)
-	if not _player_sprite.visible:
-		return
-	_apply_texture_to_mesh(_player_sprite, player_view.sprite)
-	_player_sprite.transform = Transform3D(Basis.from_scale(player_view.base_scale), BattleRoomScript.PLAYER_SPRITE_POSITION)
-	_apply_health_bar(_player_sprite, battle_room_data.get_player_health_ratio())
-	_apply_health_text(_player_sprite, battle_room_data.get_player_health_values(), ^"HP_frame/HP_text_player")
-	_apply_statuses_to_sprite(_player_sprite, {"side": &"player"})
+	_scene_view_renderer._apply_player_sprite(self)
 
 
 func _apply_monster_sprites() -> void:
-	_clear_generated_nodes(_generated_monster_sprites)
-	_monster_sprite_states.clear()
-
-	var monster_views := battle_room_data.monster_views
-	if monster_views.is_empty():
-		_monster_sprite_template.visible = false
-		return
-
-	var offsets := _build_centered_offsets(monster_views.size(), BattleRoomScript.STACK_SPACING_Z)
-	for index in monster_views.size():
-		var target_sprite := _monster_sprite_template if index == 0 else _duplicate_sprite_template(_monster_sprite_template, _generated_monster_sprites)
-		var monster_view = monster_views[index]
-		target_sprite.visible = monster_view != null and monster_view.sprite != null
-		if not target_sprite.visible:
-			continue
-		_apply_texture_to_mesh(target_sprite, monster_view.sprite)
-		target_sprite.transform = Transform3D(
-			Basis.from_scale(monster_view.base_scale),
-			BattleRoomScript.MONSTER_SPRITE_POSITION + Vector3(0.0, 0.0, offsets[index])
-		)
-		_apply_health_bar(target_sprite, battle_room_data.get_monster_health_ratio(index))
-		_apply_monster_health_text(target_sprite, battle_room_data.get_monster_health_values(index))
-		_apply_statuses_to_sprite(target_sprite, {"side": &"enemy", "index": index})
-		_monster_sprite_states.append({
-			"sprite": target_sprite,
-			"index": index,
-		})
+	_scene_view_renderer._apply_monster_sprites(self)
 
 
 func _apply_ability_frames(
@@ -192,374 +127,107 @@ func _apply_ability_frames(
 	generated_nodes: Array[Node],
 	track_player_slots: bool = false
 ) -> void:
-	_clear_generated_nodes(generated_nodes)
-
-	if abilities.is_empty():
-		template.visible = false
-		return
-
-	var anchor := BattleRoomScript.PLAYER_ABILITY_FRAME_POSITION if template == _player_ability_template else BattleRoomScript.MONSTER_ABILITY_FRAME_POSITION
-	var offsets := _build_centered_offsets(abilities.size(), BattleRoomScript.STACK_SPACING_Z)
-	for index in abilities.size():
-		var frame := template if index == 0 else _duplicate_frame_template(template, generated_nodes)
-		var ability := abilities[index]
-		frame.visible = ability != null
-		if ability == null:
-			continue
-		frame.transform = Transform3D(frame.transform.basis, anchor + Vector3(0.0, 0.0, offsets[index]))
-		_apply_ability_icon(frame, ability)
-		_apply_dice_places(frame, battle_room_data.get_required_dice_slots(ability))
-		if track_player_slots:
-			_register_player_ability_frame(frame, ability, index)
-			_register_player_ability_slots(frame, ability, index)
+	_scene_view_renderer._apply_ability_frames(self, abilities, template, generated_nodes, track_player_slots)
 
 
 func _apply_monster_ability_frames() -> void:
-	_clear_generated_nodes(_generated_monster_ability_frames)
-	_monster_ability_frame_states.clear()
-	var monster_entries := battle_room_data.get_monster_ability_entries()
-	if monster_entries.is_empty():
-		_monster_ability_template.visible = false
-		return
-
-	var offsets := _build_centered_offsets(monster_entries.size(), BattleRoomScript.STACK_SPACING_Z)
-	for index in monster_entries.size():
-		var frame := _monster_ability_template if index == 0 else _duplicate_frame_template(_monster_ability_template, _generated_monster_ability_frames)
-		var entry := monster_entries[index]
-		var ability := entry.get("ability") as AbilityDefinition
-		frame.visible = ability != null
-		if ability == null:
-			continue
-		frame.transform = Transform3D(
-			frame.transform.basis,
-			BattleRoomScript.MONSTER_ABILITY_FRAME_POSITION + Vector3(0.0, 0.0, offsets[index])
-		)
-		_apply_ability_icon(frame, ability)
-		_apply_dice_places(frame, battle_room_data.get_required_dice_slots(ability))
-		_register_monster_ability_frame(frame, entry, index)
+	_scene_view_renderer._apply_monster_ability_frames(self)
 
 
 func _register_monster_ability_frame(frame: MeshInstance3D, ability_entry: Dictionary, runtime_index: int) -> void:
-	_monster_ability_frame_states.append({
-		"frame": frame,
-		"ability": ability_entry.get("ability") as AbilityDefinition,
-		"monster_index": int(ability_entry.get("monster_index", -1)),
-		"ability_index": int(ability_entry.get("ability_index", runtime_index)),
-		"base_origin": frame.transform.origin,
-		"dice_places": _get_dice_place_nodes(frame),
-	})
+	_scene_view_renderer._register_monster_ability_frame(self, frame, ability_entry, runtime_index)
 
 
 func _apply_player_artifacts() -> void:
-	_clear_generated_artifact_icons()
-	if _artifact_template == null:
-		return
-
-	var active_artifacts: Array[ArtifactDefinition] = []
-	if battle_room_data != null and battle_room_data.player_instance != null:
-		active_artifacts = battle_room_data.player_instance.get_active_artifact_definitions()
-
-	if active_artifacts.is_empty():
-		_artifact_template.visible = false
-		return
-
-	var template_position := _artifact_template.position
-	var icon_step := _artifact_template.size * _artifact_template.scale
-	if icon_step.x <= 0.0:
-		icon_step.x = maxf(_artifact_template.get_combined_minimum_size().x * _artifact_template.scale.x, 1.0)
-	if icon_step.y <= 0.0:
-		icon_step.y = maxf(_artifact_template.get_combined_minimum_size().y * _artifact_template.scale.y, 1.0)
-
-	var viewport_height := get_viewport().get_visible_rect().size.y
-	var available_height := maxf(viewport_height - template_position.y, icon_step.y)
-	var rows_per_column := maxi(int(floor(available_height / icon_step.y)), 1)
-
-	for artifact_index in active_artifacts.size():
-		var artifact := active_artifacts[artifact_index]
-		var icon := _artifact_template if artifact_index == 0 else _spawn_artifact_icon()
-		if icon == null:
-			continue
-		var column := artifact_index / rows_per_column
-		var row := artifact_index % rows_per_column
-		icon.position = template_position + Vector2(icon_step.x * float(column), icon_step.y * float(row))
-		icon.texture = artifact.sprite if artifact != null and artifact.sprite != null else _artifact_template.texture
-		icon.visible = true
-		icon.tooltip_text = artifact.display_name if artifact != null else ""
+	_scene_view_renderer._apply_player_artifacts(self)
 
 
 func _spawn_artifact_icon() -> TextureRect:
-	if _artifact_template == null or _artifact_template.get_parent() == null:
-		return null
-	var icon := _artifact_template.duplicate() as TextureRect
-	if icon == null:
-		return null
-	icon.name = "artefact_%d" % _generated_artifact_icons.size()
-	_artifact_template.get_parent().add_child(icon)
-	_generated_artifact_icons.append(icon)
-	return icon
+	return _scene_view_renderer._spawn_artifact_icon(self)
 
 
 func _clear_generated_artifact_icons() -> void:
-	for icon in _generated_artifact_icons:
-		if is_instance_valid(icon):
-			icon.queue_free()
-	_generated_artifact_icons.clear()
+	_scene_view_renderer._clear_generated_artifact_icons(self)
 
 
 func _apply_ability_icon(frame: MeshInstance3D, ability: AbilityDefinition) -> void:
-	var icon_node := frame.get_node_or_null(^"player_ability") as MeshInstance3D
-	if icon_node == null:
-		icon_node = frame.get_node_or_null(^"monster_ability") as MeshInstance3D
-	if icon_node == null:
-		return
-	icon_node.visible = ability.icon != null
-	if icon_node.visible:
-		_apply_texture_to_mesh(icon_node, ability.icon)
+	_scene_view_renderer._apply_ability_icon(self, frame, ability)
 
 
 func _apply_dice_places(frame: MeshInstance3D, required_count: int) -> void:
-	var dice_places := _get_dice_place_nodes(frame)
-	if dice_places.is_empty():
-		return
-
-	var active_count := clampi(required_count, 0, dice_places.size())
-	var base_positions := BattleRoomScript.DICE_PLACE_Z_POSITIONS
-	var spacing := 0.0
-	if base_positions.size() >= 2:
-		spacing = absf(base_positions[1] - base_positions[0])
-	var center = base_positions[1] if base_positions.size() >= 2 else 0.0
-
-	var slot_positions := _build_centered_offsets(active_count, spacing)
-	for index in dice_places.size():
-		var dice_place := dice_places[index]
-		if index >= active_count:
-			dice_place.visible = false
-			continue
-		dice_place.visible = true
-		var origin := dice_place.transform.origin
-		origin.z = center + slot_positions[index]
-		dice_place.transform = Transform3D(dice_place.transform.basis, origin)
+	_scene_view_renderer._apply_dice_places(frame, required_count)
 
 
 func _get_dice_place_nodes(frame: MeshInstance3D) -> Array[MeshInstance3D]:
-	var dice_places: Array[MeshInstance3D] = []
-	for child in frame.get_children():
-		if child is MeshInstance3D and String(child.name).begins_with("dice_place"):
-			dice_places.append(child as MeshInstance3D)
-	dice_places.sort_custom(func(a: MeshInstance3D, b: MeshInstance3D) -> bool:
-		return String(a.name) < String(b.name)
-	)
-	return dice_places
+	return _scene_view_renderer._get_dice_place_nodes(frame)
 
 
 func _duplicate_sprite_template(template: MeshInstance3D, generated_nodes: Array[Node]) -> MeshInstance3D:
-	var duplicate := template.duplicate() as MeshInstance3D
-	duplicate.name = "%s_runtime_%d" % [template.name, generated_nodes.size()]
-	add_child(duplicate)
-	generated_nodes.append(duplicate)
-	return duplicate
+	return _scene_view_renderer._duplicate_sprite_template(self, template, generated_nodes)
 
 
 func _duplicate_frame_template(template: MeshInstance3D, generated_nodes: Array[Node]) -> MeshInstance3D:
-	var duplicate := template.duplicate() as MeshInstance3D
-	duplicate.name = "%s_runtime_%d" % [template.name, generated_nodes.size()]
-	add_child(duplicate)
-	generated_nodes.append(duplicate)
-	return duplicate
+	return _scene_view_renderer._duplicate_frame_template(self, template, generated_nodes)
 
 
 func _clear_generated_nodes(nodes: Array[Node]) -> void:
-	for node in nodes:
-		if is_instance_valid(node):
-			node.queue_free()
-	nodes.clear()
+	_scene_view_renderer._clear_generated_nodes(self, nodes)
 
 
 func _apply_health_bar(combatant_sprite: MeshInstance3D, health_ratio: float) -> void:
-	var resolved_ratio := clampf(health_ratio, 0.0, 1.0)
-	var health_bar := _resolve_health_bar(combatant_sprite)
-	if health_bar == null:
-		return
-
-	if not health_bar.has_meta(HEALTH_BAR_META_KEY):
-		health_bar.set_meta(HEALTH_BAR_META_KEY, health_bar.transform)
-	if not health_bar.has_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY):
-		health_bar.set_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY, resolved_ratio)
-		_update_health_bar_transform(health_bar, resolved_ratio)
-	health_bar.set_meta(HEALTH_BAR_TARGET_RATIO_META_KEY, resolved_ratio)
+	_scene_view_renderer._apply_health_bar(self, combatant_sprite, health_ratio)
 
 
 func _resolve_health_bar(combatant_sprite: MeshInstance3D) -> MeshInstance3D:
-	if combatant_sprite == null:
-		return null
-
-	var health_bar := combatant_sprite.get_node_or_null(^"HP_frame/HP_bar_player") as MeshInstance3D
-	if health_bar == null:
-		health_bar = combatant_sprite.get_node_or_null(^"HP_frame_monster/HP_bar_monster") as MeshInstance3D
-	return health_bar
+	return _scene_view_renderer._resolve_health_bar(combatant_sprite)
 
 
 func _update_health_bar_transform(health_bar: MeshInstance3D, health_ratio: float) -> void:
-	if health_bar == null or not health_bar.has_meta(HEALTH_BAR_META_KEY):
-		return
-
-	var resolved_ratio := clampf(health_ratio, 0.0, 1.0)
-	var base_transform: Transform3D = health_bar.get_meta(HEALTH_BAR_META_KEY)
-	var base_scale := base_transform.basis.get_scale()
-	var target_scale_x := base_scale.x * resolved_ratio
-	health_bar.visible = not is_zero_approx(target_scale_x)
-	if not health_bar.visible:
-		return
-
-	var target_basis := Basis.from_scale(Vector3(target_scale_x, base_scale.y, base_scale.z))
-	var target_origin := base_transform.origin
-	target_origin.x = base_transform.origin.x - (base_scale.x - target_scale_x) * 1
-	health_bar.transform = Transform3D(target_basis, target_origin)
+	_scene_view_renderer._update_health_bar_transform(health_bar, health_ratio)
 
 
 func _animate_health_bar(combatant_sprite: MeshInstance3D, target_ratio: float, delta: float) -> void:
-	var health_bar := _resolve_health_bar(combatant_sprite)
-	if health_bar == null:
-		return
-	if not health_bar.has_meta(HEALTH_BAR_META_KEY):
-		health_bar.set_meta(HEALTH_BAR_META_KEY, health_bar.transform)
-	if not health_bar.has_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY):
-		health_bar.set_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY, clampf(target_ratio, 0.0, 1.0))
-	if not health_bar.has_meta(HEALTH_BAR_TARGET_RATIO_META_KEY):
-		health_bar.set_meta(HEALTH_BAR_TARGET_RATIO_META_KEY, clampf(target_ratio, 0.0, 1.0))
-
-	var current_ratio := float(health_bar.get_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY, target_ratio))
-	var resolved_target_ratio := clampf(float(health_bar.get_meta(HEALTH_BAR_TARGET_RATIO_META_KEY, target_ratio)), 0.0, 1.0)
-	var step := 1.0 if HEALTH_BAR_ANIMATION_DURATION <= 0.0 else minf(delta / HEALTH_BAR_ANIMATION_DURATION, 1.0)
-	var next_ratio := move_toward(current_ratio, resolved_target_ratio, absf(resolved_target_ratio - current_ratio) * step)
-	health_bar.set_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY, next_ratio)
-	_update_health_bar_transform(health_bar, next_ratio)
+	_scene_view_renderer._animate_health_bar(self, combatant_sprite, target_ratio, delta)
 
 
 func _update_health_bars(delta: float) -> void:
-	if battle_room_data == null:
-		return
-	if battle_room_data.player_view != null:
-		_animate_health_bar(_player_sprite, battle_room_data.get_player_health_ratio(), delta)
-	for monster_state in _monster_sprite_states:
-		var sprite := monster_state.get("sprite") as MeshInstance3D
-		var monster_index := int(monster_state.get("index", -1))
-		if sprite == null or monster_index < 0:
-			continue
-		_animate_health_bar(sprite, battle_room_data.get_monster_health_ratio(monster_index), delta)
+	_scene_view_renderer._update_health_bars(self, delta)
 
 
 func _refresh_status_visuals() -> void:
-	if battle_room_data == null:
-		return
-	if _player_sprite != null and _player_sprite.visible:
-		_apply_statuses_to_sprite(_player_sprite, {"side": &"player"})
-	for monster_state in _monster_sprite_states:
-		var sprite := monster_state.get("sprite") as MeshInstance3D
-		var monster_index := int(monster_state.get("index", -1))
-		if sprite == null or monster_index < 0 or not sprite.visible:
-			continue
-		_apply_statuses_to_sprite(sprite, {"side": &"enemy", "index": monster_index})
+	_scene_view_renderer._refresh_status_visuals(self)
 
 
 func _apply_monster_health_text(combatant_sprite: MeshInstance3D, health_values: Vector2i) -> void:
-	_apply_health_text(combatant_sprite, health_values, ^"HP_frame_monster/HP_text_monster")
+	_scene_view_renderer._apply_monster_health_text(combatant_sprite, health_values)
 
 
 func _apply_health_text(combatant_sprite: MeshInstance3D, health_values: Vector2i, label_path: NodePath) -> void:
-	if combatant_sprite == null:
-		return
-
-	var health_label := combatant_sprite.get_node_or_null(label_path) as Label3D
-	if health_label == null:
-		return
-
-	health_label.text = "%d/%d" % [maxi(health_values.x, 0), maxi(health_values.y, 0)]
-	health_label.modulate = Color(1.0, 0.45, 0.75, 1.0)
-	health_label.visible = health_values.y > 0
+	_scene_view_renderer._apply_health_text(combatant_sprite, health_values, label_path)
 
 
 func _apply_texture_to_mesh(mesh_instance: MeshInstance3D, texture: Texture2D) -> void:
-	if mesh_instance == null:
-		return
-	var material := mesh_instance.material_override
-	if material == null:
-		material = StandardMaterial3D.new()
-	else:
-		material = material.duplicate()
-	if material is StandardMaterial3D:
-		material.albedo_texture = texture
-	mesh_instance.material_override = material
+	_scene_view_renderer._apply_texture_to_mesh(self, mesh_instance, texture)
 
 
 func _set_status_template_visible(is_visible: bool) -> void:
-	var template := _get_status_template()
-	if template != null:
-		template.visible = is_visible
+	_scene_view_renderer._set_status_template_visible(self, is_visible)
 
 
 func _get_status_template() -> MeshInstance3D:
-	if _player_sprite == null:
-		return null
-	return _player_sprite.get_node_or_null(STATUS_TEMPLATE_PATH) as MeshInstance3D
+	return _scene_view_renderer._get_status_template(self)
 
 
 func _clear_runtime_status_visuals(combatant_sprite: MeshInstance3D) -> void:
-	if combatant_sprite == null:
-		return
-	for child in combatant_sprite.get_children():
-		if child is MeshInstance3D and String(child.name).begins_with(STATUS_RUNTIME_NODE_PREFIX):
-			child.queue_free()
+	_scene_view_renderer._clear_runtime_status_visuals(self, combatant_sprite)
 
 
 func _apply_statuses_to_sprite(combatant_sprite: MeshInstance3D, descriptor: Dictionary) -> void:
-	_clear_runtime_status_visuals(combatant_sprite)
-	if battle_room_data == null or combatant_sprite == null:
-		return
-
-	var template := _get_status_template()
-	if template == null:
-		return
-
-	var status_container = battle_room_data.get_status_container_for_descriptor(descriptor)
-	if status_container == null:
-		return
-	var active_statuses = status_container.get_active_statuses()
-	if active_statuses.is_empty():
-		return
-	active_statuses.sort_custom(func(a, b) -> bool:
-		if a == null or b == null:
-			return false
-		return String(a.get_status_id()) < String(b.get_status_id())
-	)
-
-	var base_origin := template.transform.origin
-	var base_basis := template.transform.basis
-	for index in active_statuses.size():
-		var status_instance = active_statuses[index]
-		if status_instance == null or status_instance.definition == null:
-			continue
-		var status_node := template.duplicate() as MeshInstance3D
-		status_node.name = "%s%d" % [STATUS_RUNTIME_NODE_PREFIX, index]
-		status_node.visible = true
-		var icon_origin := base_origin + Vector3(STATUS_ICON_SPACING_X * index, 0.0, 0.0)
-		status_node.transform = Transform3D(base_basis, icon_origin)
-		combatant_sprite.add_child(status_node)
-		if status_instance.definition.asset != null:
-			_apply_texture_to_mesh(status_node, status_instance.definition.asset)
-		var stacks_label := status_node.get_node_or_null(^"state_stacks") as Label3D
-		if stacks_label != null:
-			stacks_label.text = str(maxi(status_instance.stacks, 0))
+	_scene_view_renderer._apply_statuses_to_sprite(self, combatant_sprite, descriptor)
 
 
 func _build_centered_offsets(count: int, spacing: float) -> Array[float]:
-	var offsets: Array[float] = []
-	if count <= 0:
-		return offsets
-	var start := -0.5 * spacing * float(count - 1)
-	for index in count:
-		offsets.append(start + spacing * float(index))
-	return offsets
+	return _scene_view_renderer._build_centered_offsets(count, spacing)
 
 
 func _physics_process(delta: float) -> void:
@@ -812,19 +480,7 @@ func _should_highlight_slot_for_dice(slot_state: Dictionary, assigned_dice: Dice
 
 
 func _set_mesh_tint(mesh_instance: MeshInstance3D, color: Color) -> void:
-	if mesh_instance == null:
-		return
-	var material: StandardMaterial3D = null
-	if mesh_instance.has_meta(TINT_MATERIAL_META_KEY):
-		material = mesh_instance.get_meta(TINT_MATERIAL_META_KEY) as StandardMaterial3D
-	if material == null:
-		if mesh_instance.material_override is StandardMaterial3D:
-			material = (mesh_instance.material_override as StandardMaterial3D).duplicate()
-		else:
-			material = StandardMaterial3D.new()
-		mesh_instance.set_meta(TINT_MATERIAL_META_KEY, material)
-		mesh_instance.material_override = material
-	material.albedo_color = color
+	_scene_view_renderer._set_mesh_tint(mesh_instance, color)
 
 
 func _find_player_ability_frame_at_screen_point(screen_point: Vector2) -> Dictionary:
