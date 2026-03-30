@@ -101,7 +101,15 @@ func _ensure_battle_room_data() -> void:
 
 
 func _apply_room_data() -> void:
+	_cancel_selected_ability(true)
+	_player_ability_slot_states.clear()
+	_player_ability_frame_states.clear()
+	_monster_ability_frame_states.clear()
+	_monster_sprite_states.clear()
 	_scene_view_renderer._apply_room_data(self)
+	_rebuild_player_ability_runtime_states()
+	_refresh_player_ability_snap_state()
+	_update_turn_ui()
 
 
 func _apply_floor_textures() -> void:
@@ -119,10 +127,9 @@ func _apply_monster_sprites() -> void:
 func _apply_ability_frames(
 	abilities: Array[AbilityDefinition],
 	template: MeshInstance3D,
-	generated_nodes: Array[Node],
-	track_player_slots: bool = false
+	generated_nodes: Array[Node]
 ) -> void:
-	_scene_view_renderer._apply_ability_frames(self, abilities, template, generated_nodes, track_player_slots)
+	_scene_view_renderer._apply_ability_frames(self, abilities, template, generated_nodes)
 
 
 func _apply_monster_ability_frames() -> void:
@@ -223,6 +230,31 @@ func _apply_statuses_to_sprite(combatant_sprite: MeshInstance3D, descriptor: Dic
 
 func _build_centered_offsets(count: int, spacing: float) -> Array[float]:
 	return _scene_view_renderer._build_centered_offsets(count, spacing)
+
+
+func _rebuild_player_ability_runtime_states() -> void:
+	_player_ability_slot_states.clear()
+	_player_ability_frame_states.clear()
+	if battle_room_data == null:
+		return
+	var abilities := battle_room_data.get_player_abilities()
+	if abilities.is_empty():
+		return
+	var frames: Array[MeshInstance3D] = []
+	if _player_ability_template != null and _player_ability_template.visible:
+		frames.append(_player_ability_template)
+	for generated in _generated_player_ability_frames:
+		var runtime_frame := generated as MeshInstance3D
+		if runtime_frame != null and runtime_frame.visible:
+			frames.append(runtime_frame)
+	var count := mini(abilities.size(), frames.size())
+	for index in count:
+		var ability := abilities[index]
+		var frame := frames[index]
+		if ability == null or frame == null:
+			continue
+		_register_player_ability_frame(frame, ability, index)
+		_register_player_ability_slots(frame, ability, index)
 
 
 func _physics_process(delta: float) -> void:
@@ -765,9 +797,9 @@ func _select_ability_reward(entry: Dictionary) -> void:
 	_apply_ability_frames(
 		battle_room_data.get_player_abilities(),
 		_player_ability_template,
-		_generated_player_ability_frames,
-		true
+		_generated_player_ability_frames
 	)
+	_rebuild_player_ability_runtime_states()
 	_clear_ability_reward_cards()
 
 
