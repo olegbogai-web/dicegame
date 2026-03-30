@@ -120,6 +120,18 @@
 - `Яблоко` (`artifact_id = apple`): при получении `+20` к текущему и максимальному HP (`metadata.on_grant_max_hp_bonus = 20`).
 - `Арбуз` (`artifact_id = watermelon`): при получении `+30` к текущему и максимальному HP (`metadata.on_grant_max_hp_bonus = 30`).
 
+
+## Интеграция с post-battle reward (`artifact_+`)
+
+В текущем runtime-потоке (`content/combat/reward/post_battle_reward_flow.gd`) выбор артефактов реализуется через функции:
+- `_show_artifact_reward_options`;
+- `_build_artifact_reward_options`;
+- `_roll_artifact_reward_rarity`;
+- `_pick_artifact_by_rarity_with_fallback`;
+- `_select_artifact_reward`.
+
+UI-часть использует 3D-шаблон `artefact_frame_reward` с дочерним `artefact_icon_reward` (сцена `new_battle_table`), где иконка подставляется из `ArtifactDefinition.sprite`.
+
 ## Границы документа
 Документ **описывает**:
 - модель артефактов (content/runtime);

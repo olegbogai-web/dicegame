@@ -26,6 +26,7 @@ const ACTIVATION_ANIMATION_DURATION := 0.5
 @onready var _event_button: Button = $UI/EventButton
 @onready var _artifact_template: TextureRect = $UI/artefact
 @onready var _ability_reward_template: Node3D = $ability_reward
+@onready var _artifact_reward_template: MeshInstance3D = $artefact_frame_reward
 
 var battle_room_data: BattleRoom
 var _generated_monster_sprites: Array[Node] = []
@@ -45,6 +46,8 @@ var _has_processed_post_battle_reward_result := false
 var _ability_reward_rng := RandomNumberGenerator.new()
 var _generated_ability_reward_nodes: Array[Node3D] = []
 var _ability_reward_entries: Array[Dictionary] = []
+var _generated_artifact_reward_nodes: Array[MeshInstance3D] = []
+var _artifact_reward_entries: Array[Dictionary] = []
 var _is_awaiting_ability_reward_selection := false
 var _scene_bootstrap := BattleSceneBootstrap.new()
 var _scene_view_renderer := BattleSceneViewRenderer.new()
@@ -58,6 +61,7 @@ var _post_battle_reward_flow := PostBattleRewardFlow.new()
 func _ready() -> void:
 	set_physics_process(true)
 	_ability_reward_rng.randomize()
+	_post_battle_reward_flow._clear_artifact_reward_cards(self)
 	if _end_turn_button != null and not _end_turn_button.pressed.is_connected(_on_end_turn_button_pressed):
 		_end_turn_button.pressed.connect(_on_end_turn_button_pressed)
 	if _event_button != null and not _event_button.pressed.is_connected(_on_event_button_pressed):
@@ -350,6 +354,14 @@ func _show_ability_reward_options() -> void:
 	_post_battle_reward_flow._show_ability_reward_options(self)
 
 
+func _show_artifact_reward_options() -> void:
+	_post_battle_reward_flow._show_artifact_reward_options(self)
+
+
+func _build_artifact_reward_options(count: int) -> Array[Dictionary]:
+	return _post_battle_reward_flow._build_artifact_reward_options(self, count)
+
+
 func _build_ability_reward_options(count: int) -> Array[Dictionary]:
 	return _post_battle_reward_flow._build_ability_reward_options(self, count)
 
@@ -396,12 +408,24 @@ func _clear_ability_reward_cards() -> void:
 	_post_battle_reward_flow._clear_ability_reward_cards(self)
 
 
+func _clear_artifact_reward_cards() -> void:
+	_post_battle_reward_flow._clear_artifact_reward_cards(self)
+
+
+func _resolve_reward_click(screen_point: Vector2) -> Dictionary:
+	return _post_battle_reward_flow._resolve_reward_click(self, screen_point)
+
+
 func _resolve_ability_reward_click(screen_point: Vector2) -> Dictionary:
 	return _post_battle_reward_flow._resolve_ability_reward_click(self, screen_point)
 
 
 func _select_ability_reward(entry: Dictionary) -> void:
 	_post_battle_reward_flow._select_ability_reward(self, entry)
+
+
+func _select_reward_entry(entry: Dictionary) -> void:
+	_post_battle_reward_flow._select_reward_entry(self, entry)
 
 
 func _start_current_turn() -> void:
