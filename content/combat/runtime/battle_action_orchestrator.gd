@@ -12,8 +12,8 @@ func _activate_selected_ability(owner: Node, target_descriptor: Dictionary) -> v
 		owner._cancel_selected_ability()
 		return
 
-	var frame_state := owner._selected_ability_state.duplicate(true)
-	var consumed_dice := owner._collect_ready_dice_for_frame(frame_state.get("frame") as MeshInstance3D)
+	var frame_state = owner._selected_ability_state.duplicate(true)
+	var consumed_dice = owner._collect_ready_dice_for_frame(frame_state.get("frame") as MeshInstance3D)
 	owner._selected_ability_state.clear()
 	await _play_ability_use_visual(owner, frame_state, target_descriptor, consumed_dice)
 	owner._refresh_player_ability_snap_state()
@@ -25,7 +25,7 @@ func _play_ability_use_visual(owner: Node, frame_state: Dictionary, target_descr
 	if frame == null or ability == null:
 		return
 	var base_origin: Vector3 = frame_state.get("base_origin", frame.transform.origin)
-	var target_origin := owner._resolve_activation_target_origin(target_descriptor, base_origin)
+	var target_origin = owner._resolve_activation_target_origin(target_descriptor, base_origin)
 	var dice_assignments := _build_dice_assignments_for_frame(owner, consumed_dice, frame_state)
 	var on_activate := func() -> void:
 		var runtime_target_descriptor := target_descriptor.duplicate(true)

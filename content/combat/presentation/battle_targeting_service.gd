@@ -19,7 +19,7 @@ func _resolve_target_descriptor_at_screen_point(owner: Node, ability: AbilityDef
 				}
 		&"single_enemy":
 			for index in range(owner._monster_sprite_states.size() - 1, -1, -1):
-				var monster_state := owner._monster_sprite_states[index]
+				var monster_state = owner._monster_sprite_states[index]
 				var sprite := monster_state.get("sprite") as MeshInstance3D
 				var monster_index := int(monster_state.get("index", -1))
 				if _screen_point_hits_mesh(owner, sprite, screen_point) and owner.battle_room_data.can_target_monster(monster_index):
@@ -73,16 +73,16 @@ func _resolve_activation_target_origin(owner: Node, target_descriptor: Dictionar
 
 
 func _project_mouse_to_horizontal_plane(owner: Node, plane_y: float) -> Vector3:
-	var mouse_position := owner.get_viewport().get_mouse_position()
-	var ray_origin := owner._camera.project_ray_origin(mouse_position)
-	var ray_direction := owner._camera.project_ray_normal(mouse_position)
-	var denominator := ray_direction.y
+	var mouse_position = owner.get_viewport().get_mouse_position()
+	var ray_origin = owner._camera.project_ray_origin(mouse_position)
+	var ray_direction = owner._camera.project_ray_normal(mouse_position)
+	var denominator = ray_direction.y
 	if absf(denominator) < 0.0001:
 		return Vector3(ray_origin.x, plane_y, ray_origin.z)
-	var distance := (plane_y - ray_origin.y) / denominator
+	var distance = (plane_y - ray_origin.y) / denominator
 	if distance < 0.0:
 		distance = 0.0
-	var hit_position := ray_origin + ray_direction * distance
+	var hit_position = ray_origin + ray_direction * distance
 	hit_position.y = plane_y
 	return hit_position
 
@@ -103,7 +103,7 @@ func _has_player_dice_at_screen_point(owner: Node, screen_point: Vector2) -> boo
 		owner._camera.project_ray_origin(screen_point),
 		owner._camera.project_ray_origin(screen_point) + owner._camera.project_ray_normal(screen_point) * 1000.0
 	)
-	var hit := owner.get_world_3d().direct_space_state.intersect_ray(ray_query)
+	var hit = owner.get_world_3d().direct_space_state.intersect_ray(ray_query)
 	if hit.is_empty():
 		return false
 	var collider := hit.get("collider") as Node
@@ -125,7 +125,7 @@ func _project_mesh_screen_rect(owner: Node, mesh_instance: MeshInstance3D) -> Re
 	var min_point := Vector2(INF, INF)
 	var max_point := Vector2(-INF, -INF)
 	for corner in corners:
-		var projected := owner._camera.unproject_position(mesh_instance.to_global(corner))
+		var projected = owner._camera.unproject_position(mesh_instance.to_global(corner))
 		min_point.x = minf(min_point.x, projected.x)
 		min_point.y = minf(min_point.y, projected.y)
 		max_point.x = maxf(max_point.x, projected.x)

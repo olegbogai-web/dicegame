@@ -40,14 +40,14 @@ func _apply_room_data(owner: Node) -> void:
 func _apply_floor_textures(owner: Node) -> void:
 	if owner._floor == null:
 		return
-	var floor_texture := owner.battle_room_data.left_floor_texture
+	var floor_texture = owner.battle_room_data.left_floor_texture
 	if floor_texture == null:
 		floor_texture = owner.battle_room_data.right_floor_texture
 	_apply_texture_to_mesh(owner, owner._floor, floor_texture)
 
 
 func _apply_player_sprite(owner: Node) -> void:
-	var player_view := owner.battle_room_data.player_view
+	var player_view = owner.battle_room_data.player_view
 	owner._player_sprite.visible = player_view != null and player_view.sprite != null
 	_set_status_template_visible(owner, false)
 	if not owner._player_sprite.visible:
@@ -63,14 +63,14 @@ func _apply_monster_sprites(owner: Node) -> void:
 	_clear_generated_nodes(owner, owner._generated_monster_sprites)
 	owner._monster_sprite_states.clear()
 
-	var monster_views := owner.battle_room_data.monster_views
+	var monster_views = owner.battle_room_data.monster_views
 	if monster_views.is_empty():
 		owner._monster_sprite_template.visible = false
 		return
 
 	var offsets := _build_centered_offsets(monster_views.size(), BattleRoomScript.STACK_SPACING_Z)
 	for index in monster_views.size():
-		var target_sprite := owner._monster_sprite_template if index == 0 else _duplicate_sprite_template(owner, owner._monster_sprite_template, owner._generated_monster_sprites)
+		var target_sprite = owner._monster_sprite_template if index == 0 else _duplicate_sprite_template(owner, owner._monster_sprite_template, owner._generated_monster_sprites)
 		var monster_view = monster_views[index]
 		target_sprite.visible = monster_view != null and monster_view.sprite != null
 		if not target_sprite.visible:
@@ -121,15 +121,15 @@ func _apply_ability_frames(
 func _apply_monster_ability_frames(owner: Node) -> void:
 	_clear_generated_nodes(owner, owner._generated_monster_ability_frames)
 	owner._monster_ability_frame_states.clear()
-	var monster_entries := owner.battle_room_data.get_monster_ability_entries()
+	var monster_entries = owner.battle_room_data.get_monster_ability_entries()
 	if monster_entries.is_empty():
 		owner._monster_ability_template.visible = false
 		return
 
 	var offsets := _build_centered_offsets(monster_entries.size(), BattleRoomScript.STACK_SPACING_Z)
 	for index in monster_entries.size():
-		var frame := owner._monster_ability_template if index == 0 else _duplicate_frame_template(owner, owner._monster_ability_template, owner._generated_monster_ability_frames)
-		var entry := monster_entries[index]
+		var frame = owner._monster_ability_template if index == 0 else _duplicate_frame_template(owner, owner._monster_ability_template, owner._generated_monster_ability_frames)
+		var entry = monster_entries[index]
 		var ability := entry.get("ability") as AbilityDefinition
 		frame.visible = ability != null
 		if ability == null:
@@ -167,8 +167,8 @@ func _apply_player_artifacts(owner: Node) -> void:
 		owner._artifact_template.visible = false
 		return
 
-	var template_position := owner._artifact_template.position
-	var icon_step := owner._artifact_template.size * owner._artifact_template.scale
+	var template_position = owner._artifact_template.position
+	var icon_step = owner._artifact_template.size * owner._artifact_template.scale
 	if icon_step.x <= 0.0:
 		icon_step.x = maxf(owner._artifact_template.get_combined_minimum_size().x * owner._artifact_template.scale.x, 1.0)
 	if icon_step.y <= 0.0:
@@ -180,7 +180,7 @@ func _apply_player_artifacts(owner: Node) -> void:
 
 	for artifact_index in active_artifacts.size():
 		var artifact := active_artifacts[artifact_index]
-		var icon := owner._artifact_template if artifact_index == 0 else _spawn_artifact_icon(owner)
+		var icon = owner._artifact_template if artifact_index == 0 else _spawn_artifact_icon(owner)
 		if icon == null:
 			continue
 		var column := artifact_index / rows_per_column

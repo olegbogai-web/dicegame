@@ -28,11 +28,11 @@ func _handle_post_battle_reward_dice(owner: Node) -> void:
 	if owner.battle_room_data.battle_status != &"victory":
 		return
 	print("[Debug][RewardFlow] Бой выигран. Запуск post-battle броска кубов награды.")
-	var player := owner.battle_room_data.player_instance
+	var player = owner.battle_room_data.player_instance
 	if player == null:
 		return
-	var reward_cube := player.runtime_reward_cube
-	var money_cube := player.runtime_money_cube
+	var reward_cube = player.runtime_reward_cube
+	var money_cube = player.runtime_money_cube
 	if reward_cube == null and money_cube == null:
 		return
 	var requests: Array[DiceThrowRequest] = []
@@ -44,7 +44,7 @@ func _handle_post_battle_reward_dice(owner: Node) -> void:
 		return
 	for request in requests:
 		request.extra_size_multiplier = POST_BATTLE_REWARD_DICE_SIZE_MULTIPLIER
-	var spawned_dice := owner._board.throw_dice(requests)
+	var spawned_dice = owner._board.throw_dice(requests)
 	print("[Debug][RewardFlow] Куб награды/денег брошен. Количество кубов: %d." % spawned_dice.size())
 	for dice_body in spawned_dice:
 		if dice_body == null:
@@ -60,7 +60,7 @@ func _try_resolve_post_battle_reward_dice_result(owner: Node) -> void:
 	var reward_dice := _find_post_battle_reward_die(owner)
 	if reward_dice == null:
 		return
-	var all_reward_dice := owner._get_turn_dice(&"reward")
+	var all_reward_dice = owner._get_turn_dice(&"reward")
 	for dice in all_reward_dice:
 		if dice == null or not dice.has_completed_first_stop():
 			return
@@ -75,7 +75,7 @@ func _try_resolve_post_battle_reward_dice_result(owner: Node) -> void:
 
 
 func _find_post_battle_reward_die(owner: Node) -> Dice:
-	var reward_dice := owner._get_turn_dice(&"reward")
+	var reward_dice = owner._get_turn_dice(&"reward")
 	for dice in reward_dice:
 		if dice == null:
 			continue
@@ -103,7 +103,7 @@ func _show_ability_reward_options(owner: Node) -> void:
 
 
 func _build_ability_reward_options(owner: Node, count: int) -> Array[Dictionary]:
-	var player := owner.battle_room_data.player_instance if owner.battle_room_data != null else null
+	var player = owner.battle_room_data.player_instance if owner.battle_room_data != null else null
 	if player == null:
 		return []
 	var available_abilities := _load_player_reward_abilities()
@@ -163,7 +163,7 @@ func _collect_owned_ability_ids(player: Player) -> Dictionary:
 
 func _roll_reward_rarity(owner: Node) -> int:
 	var total_weight := RARITY_COMMON_WEIGHT + RARITY_UNCOMMON_WEIGHT + RARITY_RARE_WEIGHT + RARITY_UNIQUE_WEIGHT
-	var roll := owner._ability_reward_rng.randf_range(0.0, total_weight)
+	var roll = owner._ability_reward_rng.randf_range(0.0, total_weight)
 	if roll < RARITY_COMMON_WEIGHT:
 		return AbilityDefinition.Rarity.COMMON
 	roll -= RARITY_COMMON_WEIGHT
@@ -221,11 +221,11 @@ func _render_ability_reward_cards(owner: Node, entries: Array[Dictionary]) -> vo
 	if entries.is_empty():
 		return
 	var spacing_x := _compute_reward_card_spacing_x(owner)
-	var offsets := owner._build_centered_offsets(entries.size(), spacing_x)
-	var template_basis := owner._ability_reward_template.transform.basis
-	var template_origin := owner._ability_reward_template.transform.origin
+	var offsets = owner._build_centered_offsets(entries.size(), spacing_x)
+	var template_basis = owner._ability_reward_template.transform.basis
+	var template_origin = owner._ability_reward_template.transform.origin
 	for index in entries.size():
-		var card_root := owner._ability_reward_template if index == 0 else (owner._ability_reward_template.duplicate() as Node3D)
+		var card_root = owner._ability_reward_template if index == 0 else (owner._ability_reward_template.duplicate() as Node3D)
 		if card_root.get_parent() == null:
 			owner.add_child(card_root)
 		card_root.visible = true
@@ -270,7 +270,7 @@ func _clear_ability_reward_cards(owner: Node) -> void:
 
 func _resolve_ability_reward_click(owner: Node, screen_point: Vector2) -> Dictionary:
 	for index in range(owner._ability_reward_entries.size() - 1, -1, -1):
-		var entry := owner._ability_reward_entries[index]
+		var entry = owner._ability_reward_entries[index]
 		var card_node := entry.get("node") as Node3D
 		if card_node == null:
 			continue
@@ -284,7 +284,7 @@ func _select_ability_reward(owner: Node, entry: Dictionary) -> void:
 	var selected_ability := entry.get("ability") as AbilityDefinition
 	if selected_ability == null or owner.battle_room_data == null or owner.battle_room_data.player_instance == null:
 		return
-	var player := owner.battle_room_data.player_instance
+	var player = owner.battle_room_data.player_instance
 	for owned in player.ability_loadout:
 		if owned != null and owned.ability_id == selected_ability.ability_id:
 			_clear_ability_reward_cards(owner)

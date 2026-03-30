@@ -82,10 +82,10 @@ func _register_player_ability_frame(owner: Node, frame: MeshInstance3D, ability:
 
 
 func _register_player_ability_slots(owner: Node, frame: MeshInstance3D, ability: AbilityDefinition, ability_index: int) -> void:
-	var dice_places := owner._get_dice_place_nodes(frame)
+	var dice_places = owner._get_dice_place_nodes(frame)
 	var slot_conditions := BattleAbilityRuntime.build_slot_conditions(ability)
 	for index in dice_places.size():
-		var dice_place := dice_places[index]
+		var dice_place = dice_places[index]
 		if index >= slot_conditions.size() or not dice_place.visible:
 			continue
 		owner._player_ability_slot_states.append({
@@ -100,7 +100,7 @@ func _register_player_ability_slots(owner: Node, frame: MeshInstance3D, ability:
 
 func _find_player_ability_frame_at_screen_point(owner: Node, screen_point: Vector2) -> Dictionary:
 	for index in range(owner._player_ability_frame_states.size() - 1, -1, -1):
-		var frame_state := owner._player_ability_frame_states[index]
+		var frame_state = owner._player_ability_frame_states[index]
 		var frame := frame_state.get("frame") as MeshInstance3D
 		if owner._screen_point_hits_mesh(frame, screen_point):
 			return frame_state
@@ -137,8 +137,8 @@ func _update_selected_ability_follow(owner: Node) -> void:
 		owner._selected_ability_state.clear()
 		return
 	var base_origin: Vector3 = owner._selected_ability_state.get("base_origin", frame.transform.origin)
-	var mouse_world := owner._project_mouse_to_horizontal_plane(base_origin.y)
-	var mouse_delta := (mouse_world - owner._selected_mouse_anchor) * SELECTED_FRAME_MOUSE_FOLLOW_FACTOR
+	var mouse_world = owner._project_mouse_to_horizontal_plane(base_origin.y)
+	var mouse_delta = (mouse_world - owner._selected_mouse_anchor) * SELECTED_FRAME_MOUSE_FOLLOW_FACTOR
 	var target_origin := base_origin + Vector3(mouse_delta.x, SELECTED_FRAME_LIFT_Y, mouse_delta.z)
 	frame.transform = Transform3D(frame.transform.basis, target_origin)
 

@@ -32,7 +32,7 @@ func _throw_current_turn_dice(owner: Node) -> void:
 				continue
 			requests.append(_build_dice_throw_request(owner, dice_definition, {"owner": &"player"}))
 	elif owner.battle_room_data.is_monster_turn() and owner.battle_room_data.can_target_monster(owner.battle_room_data.current_monster_turn_index):
-		var monster_view := owner.battle_room_data.monster_views[owner.battle_room_data.current_monster_turn_index]
+		var monster_view = owner.battle_room_data.monster_views[owner.battle_room_data.current_monster_turn_index]
 		for _index in range(monster_view.dice_count):
 			requests.append(_build_dice_throw_request(owner, null, {
 				"owner": &"monster",
@@ -93,7 +93,7 @@ func _advance_to_next_turn(owner: Node) -> void:
 func _run_current_monster_turn(owner: Node) -> void:
 	if owner.battle_room_data == null or not owner.battle_room_data.is_monster_turn() or owner.battle_room_data.is_battle_over():
 		return
-	var current_monster_index := owner.battle_room_data.current_monster_turn_index
+	var current_monster_index = owner.battle_room_data.current_monster_turn_index
 	await MonsterTurnRuntime.run_turn(owner, {
 		"battle_room": owner.battle_room_data,
 		"monster_index": current_monster_index,
