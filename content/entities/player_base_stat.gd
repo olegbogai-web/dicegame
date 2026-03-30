@@ -116,7 +116,7 @@ func _build_default_reward_cube_definition() -> DiceDefinition:
 		_build_face("card_up", REWARD_CARD_UP_ICON),
 		_build_face("artifact_+", REWARD_ARTIFACT_ICON),
 		_build_face("artifact_+", REWARD_ARTIFACT_ICON),
-		_build_face("artifact_+", REWARD_ARTIFACT_ICON),
+		_build_face("cube_+", REWARD_CUBE_ICON),
 		_build_face("card_+", REWARD_CARD_ICON),
 		_build_face("card_+", REWARD_CARD_ICON),
 	]
