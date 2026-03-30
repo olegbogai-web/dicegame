@@ -78,6 +78,18 @@ albedo_texture = ExtResource("6_4mdnn")
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_v2h1w"]
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ojcrh"]
+transparency = 1
+albedo_texture = ExtResource("5_ovkts")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_aextr"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2v2t6"]
+transparency = 1
+albedo_texture = ExtResource("10_tw8gb")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_kitqn"]
+
 [node name="battle_table" type="Node3D" unique_id=2051974326]
 script = ExtResource("2_runtime")
 
@@ -118,6 +130,7 @@ mesh = SubResource("PlaneMesh_dkycd")
 
 [node name="HP_text_monster" type="Label3D" parent="monster_sprite/HP_frame_monster" unique_id=1463909296]
 transform = Transform3D(0.06, 0, 0, 0, 0.045, 0, 0, 0, 0.045, 0, 0.040013324, 0)
+sorting_offset = 2.0
 pixel_size = 0.08
 billboard = 1
 modulate = Color(0.80784315, 0.53333336, 1, 1)
@@ -247,3 +260,16 @@ texture = ExtResource("10_tw8gb")
 
 [node name="ability_reward" parent="." unique_id=769588038 instance=ExtResource("10_df7hy")]
 transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 4, 0)
+visible = false
+
+[node name="artefact_frame_reward" type="MeshInstance3D" parent="." unique_id=1132208606]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.02, -0.5158154)
+sorting_offset = 3.0
+material_override = SubResource("StandardMaterial3D_ojcrh")
+mesh = SubResource("PlaneMesh_aextr")
+
+[node name="artefact_icon_reward" type="MeshInstance3D" parent="artefact_frame_reward" unique_id=1496693985]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0, 0.01, 0)
+sorting_offset = 5.0
+material_override = SubResource("StandardMaterial3D_2v2t6")
+mesh = SubResource("PlaneMesh_kitqn")
