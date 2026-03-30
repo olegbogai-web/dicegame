@@ -31,9 +31,9 @@ func handle_unhandled_input(
 	if event is InputEventMouseButton and not event.pressed:
 		return false
 	if owner._is_awaiting_ability_reward_selection and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		var reward_click := post_battle_reward_flow._resolve_ability_reward_click(owner, (event as InputEventMouseButton).position)
+		var reward_click := post_battle_reward_flow._resolve_reward_click(owner, (event as InputEventMouseButton).position)
 		if not reward_click.is_empty():
-			post_battle_reward_flow._select_ability_reward(owner, reward_click)
+			post_battle_reward_flow._select_reward_entry(owner, reward_click)
 			return true
 	if not owner.battle_room_data.is_player_turn() or owner.battle_room_data.is_battle_over():
 		return false

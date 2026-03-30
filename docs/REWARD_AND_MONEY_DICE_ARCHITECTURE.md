@@ -119,6 +119,34 @@
 - `_render_ability_reward_cards` и `_apply_reward_card_visual` — визуализация карточек в `new_battle_table`;
 - `_resolve_ability_reward_click` и `_select_ability_reward` — выбор игроком и запись способности в runtime-статы игрока.
 
+
+## 4.3. Runtime-алгоритм награды артефактами (`artifact_+`)
+
+Если после победы на `reward dice` выпадает грань `artifact_+`:
+
+1. генерируются 2 варианта артефактов для выбора игроком;
+2. для каждого слота сначала бросается редкость (веса: `обычное 50`, `необычное 25`, `редкое 15`, `уникальное 10`);
+3. затем случайно выбирается артефакт нужной редкости;
+4. если в этой редкости нет валидных артефактов, выполняется fallback к редкостям ниже (`уникальное -> редкое -> необычное -> обычное`);
+5. не-уникальные артефакты могут повторяться (в том числе в рамках одного забега);
+6. одинаковый `unique`-артефакт не может быть выдан повторно, если уже есть у игрока или уже выпал в текущем выборе;
+7. игрок выбирает один из двух вариантов (`ЛКМ`), после чего артефакт добавляется в `Player.artifacts_runtime` через `Player.grant_artifact`;
+8. UI использует `artefact_frame_reward`/`artefact_icon_reward` в `new_battle_table`, где `artefact_icon_reward` динамически получает спрайт выбранного `ArtifactDefinition`;
+9. после выбора выполняется переход на глобальную карту.
+
+### Текущие runtime-функции (artifact reward)
+
+В `content/combat/reward/post_battle_reward_flow.gd` за `artifact_+` flow отвечают:
+
+- `_show_artifact_reward_options`;
+- `_build_artifact_reward_options`;
+- `_load_artifact_definitions`;
+- `_collect_owned_unique_artifact_ids`;
+- `_roll_artifact_reward_rarity`;
+- `_pick_artifact_by_rarity_with_fallback`;
+- `_render_artifact_reward_cards` и `_apply_artifact_reward_visual`;
+- `_resolve_artifact_reward_click` и `_select_artifact_reward`.
+
 ## 5. Базовая конфигурация куба денег
 
 Базовый `money dice` имеет 6 граней со значениями:

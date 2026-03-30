@@ -264,6 +264,7 @@ visible = false
 
 [node name="artefact_frame_reward" type="MeshInstance3D" parent="." unique_id=1132208606]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.02, -0.5158154)
+visible = false
 sorting_offset = 3.0
 material_override = SubResource("StandardMaterial3D_ojcrh")
 mesh = SubResource("PlaneMesh_aextr")
