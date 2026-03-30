@@ -113,12 +113,12 @@ func _build_default_reward_cube_definition() -> DiceDefinition:
 	dice_definition.dice_name = "reward_cube"
 	dice_definition.base_color = Color(0.76, 0.76, 0.76, 1.0)
 	dice_definition.faces = [
-		_build_face("card_up", REWARD_CARD_UP_ICON),
-		_build_face("artifact_+", REWARD_ARTIFACT_ICON),
-		_build_face("artifact_+", REWARD_ARTIFACT_ICON),
-		_build_face("artifact_+", REWARD_ARTIFACT_ICON),
-		_build_face("card_+", REWARD_CARD_ICON),
-		_build_face("card_+", REWARD_CARD_ICON),
+		_build_face("cube_+", REWARD_CUBE_ICON),
+		_build_face("cube_+", REWARD_CUBE_ICON),
+		_build_face("cube_+", REWARD_CUBE_ICON),
+		_build_face("cube_+", REWARD_CUBE_ICON),
+		_build_face("cube_+", REWARD_CUBE_ICON),
+		_build_face("cube_+", REWARD_CUBE_ICON),
 	]
 	return dice_definition
 
