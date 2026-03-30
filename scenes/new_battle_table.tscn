@@ -12,6 +12,7 @@
 [ext_resource type="Texture2D" uid="uid://cr5mbqdxoaee3" path="res://assets/entity/monsters/test_player.png" id="9_v3i8a"]
 [ext_resource type="PackedScene" uid="uid://damoph5umarop" path="res://scenes/ability_reward.tscn" id="10_df7hy"]
 [ext_resource type="Texture2D" uid="uid://dxvwoyqvt34rk" path="res://assets/artefacts/necklace_strength.png" id="10_tw8gb"]
+[ext_resource type="PackedScene" uid="uid://boqsu0xoab2wo" path="res://content/resources/base_cube.tscn" id="13_aextr"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gpgk3"]
 albedo_texture = ExtResource("3_5yklm")
@@ -89,6 +90,10 @@ transparency = 1
 albedo_texture = ExtResource("10_tw8gb")
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_kitqn"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_2v2t6"]
+friction = 0.25
+bounce = 0.75
 
 [node name="battle_table" type="Node3D" unique_id=2051974326]
 script = ExtResource("2_runtime")
@@ -260,11 +265,9 @@ texture = ExtResource("10_tw8gb")
 
 [node name="ability_reward" parent="." unique_id=769588038 instance=ExtResource("10_df7hy")]
 transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 4, 0)
-visible = false
 
 [node name="artefact_frame_reward" type="MeshInstance3D" parent="." unique_id=1132208606]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.02, -0.5158154)
-visible = false
 sorting_offset = 3.0
 material_override = SubResource("StandardMaterial3D_ojcrh")
 mesh = SubResource("PlaneMesh_aextr")
@@ -274,3 +277,9 @@ transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0, 0.01, 0)
 sorting_offset = 5.0
 material_override = SubResource("StandardMaterial3D_2v2t6")
 mesh = SubResource("PlaneMesh_kitqn")
+
+[node name="base_cube" parent="." unique_id=548484381 instance=ExtResource("13_aextr")]
+transform = Transform3D(-1.1312975, 1.2586299, 0.16129775, -0.97238976, -0.7210595, -1.1935374, -0.81524503, -0.88652354, 1.1997715, 0.021961555, 4.388258, -0.55540115)
+physics_material_override = SubResource("PhysicsMaterial_2v2t6")
+linear_damp = 0.25
+angular_damp = 0.25
