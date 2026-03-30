@@ -1102,7 +1102,7 @@ func _resolve_activation_target_origin(target_descriptor: Dictionary, base_origi
 
 
 func _initialize_battle_state() -> void:
-	_scene_bootstrap.initialize_battle_state(self)
+	_scene_bootstrap._initialize_battle_state(self)
 
 
 func _try_resolve_post_battle_reward_dice_result() -> void:
