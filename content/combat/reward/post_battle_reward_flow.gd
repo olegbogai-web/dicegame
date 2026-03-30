@@ -478,39 +478,43 @@ func _render_ability_reward_cards(owner: Node, entries: Array[Dictionary]) -> vo
 func _render_artifact_reward_cards(owner: Node, entries: Array[Dictionary]) -> void:
 	_clear_ability_reward_cards(owner)
 	_clear_artifact_reward_cards(owner)
-	if owner._artifact_reward_template == null:
+	if owner._ability_reward_template == null:
 		return
-	owner._artifact_reward_template.visible = false
+	if owner._artifact_reward_template != null:
+		owner._artifact_reward_template.visible = false
+	owner._ability_reward_template.visible = false
 	owner._artifact_reward_entries.clear()
 	if entries.is_empty():
 		return
-	var spacing_x := _compute_artifact_reward_spacing_x(owner)
+	var spacing_x := _compute_reward_card_spacing_x(owner)
 	var offsets = owner._build_centered_offsets(entries.size(), spacing_x)
-	var template_parent := owner._artifact_reward_template.get_parent()
-	var template_basis = owner._artifact_reward_template.transform.basis
-	var template_origin = owner._artifact_reward_template.transform.origin
+	var template_basis = owner._ability_reward_template.transform.basis
+	var template_origin = owner._ability_reward_template.transform.origin
 	for index in entries.size():
-		var frame_root = owner._artifact_reward_template if index == 0 else (owner._artifact_reward_template.duplicate() as MeshInstance3D)
-		if frame_root.get_parent() == null and template_parent != null:
-			template_parent.add_child(frame_root)
-		frame_root.visible = true
-		frame_root.transform = Transform3D(
+		var card_root = owner._ability_reward_template if index == 0 else (owner._ability_reward_template.duplicate() as Node3D)
+		if card_root.get_parent() == null:
+			owner.add_child(card_root)
+		card_root.visible = true
+		card_root.transform = Transform3D(
 			template_basis,
 			template_origin + Vector3(offsets[index], 0.0, 0.0)
 		)
 		var reward_entry: Dictionary = entries[index]
 		var artifact := reward_entry.get("artifact") as ArtifactDefinition
-		_apply_artifact_reward_visual(owner, frame_root, artifact)
-		reward_entry["node"] = frame_root
+		_apply_artifact_reward_visual(owner, card_root, artifact)
+		reward_entry["node"] = card_root
 		owner._artifact_reward_entries.append(reward_entry)
 		if index > 0:
-			owner._generated_artifact_reward_nodes.append(frame_root)
+			owner._generated_artifact_reward_nodes.append(card_root)
 
 
 func _apply_reward_card_visual(owner: Node, card_root: Node3D, ability: AbilityDefinition) -> void:
 	if card_root == null:
 		return
+	_remove_embedded_artifact_reward_frame(card_root)
 	var icon_mesh := card_root.get_node_or_null(^"ability_icon") as MeshInstance3D
+	if icon_mesh != null:
+		icon_mesh.visible = true
 	if icon_mesh != null and ability != null and ability.icon != null:
 		owner._apply_texture_to_mesh(icon_mesh, ability.icon)
 	var title_label := card_root.get_node_or_null(^"ability_text") as Label3D
@@ -521,12 +525,48 @@ func _apply_reward_card_visual(owner: Node, card_root: Node3D, ability: AbilityD
 		description_label.text = ability.description if ability != null else ""
 
 
-func _apply_artifact_reward_visual(owner: Node, frame_root: MeshInstance3D, artifact: ArtifactDefinition) -> void:
-	if frame_root == null:
+func _apply_artifact_reward_visual(owner: Node, card_root: Node3D, artifact: ArtifactDefinition) -> void:
+	if card_root == null:
 		return
-	var icon_mesh := frame_root.get_node_or_null(^"artefact_icon_reward") as MeshInstance3D
+	var title_label := card_root.get_node_or_null(^"ability_text") as Label3D
+	if title_label != null:
+		title_label.text = artifact.display_name if artifact != null else ""
+	var description_label := card_root.get_node_or_null(^"abilitu_description") as Label3D
+	if description_label != null:
+		description_label.text = artifact.description if artifact != null else ""
+	var ability_icon := card_root.get_node_or_null(^"ability_icon") as MeshInstance3D
+	if ability_icon != null:
+		ability_icon.visible = false
+	var icon_frame := _ensure_embedded_artifact_reward_frame(owner, card_root, ability_icon)
+	if icon_frame == null:
+		return
+	var icon_mesh := icon_frame.get_node_or_null(^"artefact_icon_reward") as MeshInstance3D
 	if icon_mesh != null and artifact != null and artifact.sprite != null:
 		owner._apply_texture_to_mesh(icon_mesh, artifact.sprite)
+
+
+func _ensure_embedded_artifact_reward_frame(owner: Node, card_root: Node3D, ability_icon: MeshInstance3D) -> MeshInstance3D:
+	if owner._artifact_reward_template == null or card_root == null:
+		return null
+	var embedded_frame := card_root.get_node_or_null(^"artifact_reward_icon_frame") as MeshInstance3D
+	if embedded_frame == null:
+		embedded_frame = owner._artifact_reward_template.duplicate() as MeshInstance3D
+		if embedded_frame == null:
+			return null
+		embedded_frame.name = "artifact_reward_icon_frame"
+		card_root.add_child(embedded_frame)
+	embedded_frame.visible = true
+	if ability_icon != null:
+		embedded_frame.transform = ability_icon.transform
+	return embedded_frame
+
+
+func _remove_embedded_artifact_reward_frame(card_root: Node3D) -> void:
+	if card_root == null:
+		return
+	var embedded_frame := card_root.get_node_or_null(^"artifact_reward_icon_frame") as MeshInstance3D
+	if embedded_frame != null and is_instance_valid(embedded_frame):
+		embedded_frame.queue_free()
 
 
 func _clear_ability_reward_cards(owner: Node) -> void:
@@ -573,8 +613,11 @@ func _resolve_ability_reward_click(owner: Node, screen_point: Vector2) -> Dictio
 func _resolve_artifact_reward_click(owner: Node, screen_point: Vector2) -> Dictionary:
 	for index in range(owner._artifact_reward_entries.size() - 1, -1, -1):
 		var entry = owner._artifact_reward_entries[index]
-		var frame_node := entry.get("node") as MeshInstance3D
-		if owner._screen_point_hits_mesh(frame_node, screen_point):
+		var card_node := entry.get("node") as Node3D
+		if card_node == null:
+			continue
+		var frame_mesh := card_node.get_node_or_null(^"ability_frame_base") as MeshInstance3D
+		if owner._screen_point_hits_mesh(frame_mesh, screen_point):
 			return entry
 	return {}
 
