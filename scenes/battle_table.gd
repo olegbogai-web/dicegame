@@ -8,6 +8,7 @@ const BattleActivationAnimationRuntime = preload("res://content/combat/runtime/b
 const BattleSceneBootstrap = preload("res://content/combat/presentation/battle_scene_bootstrap.gd")
 const BattleSceneViewRenderer = preload("res://content/combat/presentation/battle_scene_view_renderer.gd")
 const PlayerAbilityInputController = preload("res://content/combat/presentation/player_ability_input_controller.gd")
+const BattleTargetingService = preload("res://content/combat/presentation/battle_targeting_service.gd")
 const MonsterTurnRuntime = preload("res://content/monster_ai/monster_turn_runtime.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 const EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
@@ -64,6 +65,7 @@ var _is_awaiting_ability_reward_selection := false
 var _scene_bootstrap := BattleSceneBootstrap.new()
 var _scene_view_renderer := BattleSceneViewRenderer.new()
 var _player_ability_input_controller := PlayerAbilityInputController.new()
+var _battle_targeting_service := BattleTargetingService.new()
 
 
 func _ready() -> void:
@@ -370,41 +372,7 @@ func _collect_ready_dice_for_frame(frame: MeshInstance3D) -> Array[Dice]:
 
 
 func _resolve_target_descriptor_at_screen_point(ability: AbilityDefinition, screen_point: Vector2) -> Dictionary:
-	if battle_room_data == null or ability == null or ability.target_rule == null:
-		return {}
-
-	match ability.target_rule.get_target_hint():
-		&"self":
-			if _screen_point_hits_mesh(_player_sprite, screen_point) and battle_room_data.can_target_player():
-				return {
-					"kind": &"player",
-				}
-		&"single_enemy":
-			for index in range(_monster_sprite_states.size() - 1, -1, -1):
-				var monster_state := _monster_sprite_states[index]
-				var sprite := monster_state.get("sprite") as MeshInstance3D
-				var monster_index := int(monster_state.get("index", -1))
-				if _screen_point_hits_mesh(sprite, screen_point) and battle_room_data.can_target_monster(monster_index):
-					return {
-						"kind": &"monster",
-						"index": monster_index,
-					}
-		&"all_enemies":
-			for monster_state in _monster_sprite_states:
-				var sprite := monster_state.get("sprite") as MeshInstance3D
-				if _screen_point_hits_mesh(sprite, screen_point):
-					return {
-						"kind": &"all_monsters",
-					}
-			if _screen_point_hits_mesh(_floor, screen_point):
-				return {
-					"kind": &"all_monsters",
-				}
-		&"global":
-			return {
-				"kind": &"all_monsters",
-			}
-	return {}
+	return _battle_targeting_service._resolve_target_descriptor_at_screen_point(self, ability, screen_point)
 
 
 func _activate_selected_ability(target_descriptor: Dictionary) -> void:
@@ -551,30 +519,7 @@ func _execute_monster_ability(
 
 
 func _resolve_activation_target_origin(target_descriptor: Dictionary, base_origin: Vector3) -> Vector3:
-	var target_kind := StringName(target_descriptor.get("kind", &""))
-	if target_kind == &"player":
-		return _player_sprite.global_position + Vector3.UP * ACTIVATION_TARGET_LIFT_Y
-	if target_kind == &"monster":
-		var monster_index := int(target_descriptor.get("index", -1))
-		for monster_state in _monster_sprite_states:
-			if int(monster_state.get("index", -1)) == monster_index:
-				var sprite := monster_state.get("sprite") as MeshInstance3D
-				return sprite.global_position + Vector3.UP * ACTIVATION_TARGET_LIFT_Y
-	if target_kind == &"all_monsters":
-		var living_monster_positions: Array[Vector3] = []
-		for monster_state in _monster_sprite_states:
-			var monster_index := int(monster_state.get("index", -1))
-			if not battle_room_data.can_target_monster(monster_index):
-				continue
-			var sprite := monster_state.get("sprite") as MeshInstance3D
-			living_monster_positions.append(sprite.global_position)
-		if not living_monster_positions.is_empty():
-			var center := Vector3.ZERO
-			for position in living_monster_positions:
-				center += position
-			center /= float(living_monster_positions.size())
-			return center + Vector3.UP * ACTIVATION_TARGET_LIFT_Y
-	return base_origin + Vector3.UP * SELECTED_FRAME_LIFT_Y
+	return _battle_targeting_service._resolve_activation_target_origin(self, target_descriptor, base_origin)
 
 
 func _initialize_battle_state() -> void:
@@ -967,61 +912,16 @@ func _update_turn_ui() -> void:
 
 
 func _project_mouse_to_horizontal_plane(plane_y: float) -> Vector3:
-	var mouse_position := get_viewport().get_mouse_position()
-	var ray_origin := _camera.project_ray_origin(mouse_position)
-	var ray_direction := _camera.project_ray_normal(mouse_position)
-	var denominator := ray_direction.y
-	if absf(denominator) < 0.0001:
-		return Vector3(ray_origin.x, plane_y, ray_origin.z)
-	var distance := (plane_y - ray_origin.y) / denominator
-	if distance < 0.0:
-		distance = 0.0
-	var hit_position := ray_origin + ray_direction * distance
-	hit_position.y = plane_y
-	return hit_position
+	return _battle_targeting_service._project_mouse_to_horizontal_plane(self, plane_y)
 
 
 func _screen_point_hits_mesh(mesh_instance: MeshInstance3D, screen_point: Vector2) -> bool:
-	if mesh_instance == null or not is_instance_valid(mesh_instance) or not mesh_instance.visible:
-		return false
-	if mesh_instance.mesh == null:
-		return false
-	var projected_rect := _project_mesh_screen_rect(mesh_instance)
-	return projected_rect.size.x > 0.0 and projected_rect.size.y > 0.0 and projected_rect.has_point(screen_point)
+	return _battle_targeting_service._screen_point_hits_mesh(self, mesh_instance, screen_point)
 
 
 func _has_player_dice_at_screen_point(screen_point: Vector2) -> bool:
-	if _camera == null or get_world_3d() == null:
-		return false
-	var ray_query := PhysicsRayQueryParameters3D.create(
-		_camera.project_ray_origin(screen_point),
-		_camera.project_ray_origin(screen_point) + _camera.project_ray_normal(screen_point) * 1000.0
-	)
-	var hit := get_world_3d().direct_space_state.intersect_ray(ray_query)
-	if hit.is_empty():
-		return false
-	var collider := hit.get("collider") as Node
-	return collider is Dice and StringName(collider.get_meta(&"owner", &"")) == &"player"
+	return _battle_targeting_service._has_player_dice_at_screen_point(self, screen_point)
 
 
 func _project_mesh_screen_rect(mesh_instance: MeshInstance3D) -> Rect2:
-	var aabb := mesh_instance.mesh.get_aabb()
-	var corners := [
-		Vector3(aabb.position.x, aabb.position.y, aabb.position.z),
-		Vector3(aabb.position.x + aabb.size.x, aabb.position.y, aabb.position.z),
-		Vector3(aabb.position.x, aabb.position.y + aabb.size.y, aabb.position.z),
-		Vector3(aabb.position.x, aabb.position.y, aabb.position.z + aabb.size.z),
-		Vector3(aabb.position.x + aabb.size.x, aabb.position.y + aabb.size.y, aabb.position.z),
-		Vector3(aabb.position.x + aabb.size.x, aabb.position.y, aabb.position.z + aabb.size.z),
-		Vector3(aabb.position.x, aabb.position.y + aabb.size.y, aabb.position.z + aabb.size.z),
-		Vector3(aabb.position.x + aabb.size.x, aabb.position.y + aabb.size.y, aabb.position.z + aabb.size.z),
-	]
-	var min_point := Vector2(INF, INF)
-	var max_point := Vector2(-INF, -INF)
-	for corner in corners:
-		var projected := _camera.unproject_position(mesh_instance.to_global(corner))
-		min_point.x = minf(min_point.x, projected.x)
-		min_point.y = minf(min_point.y, projected.y)
-		max_point.x = maxf(max_point.x, projected.x)
-		max_point.y = maxf(max_point.y, projected.y)
-	return Rect2(min_point, max_point - min_point)
+	return _battle_targeting_service._project_mesh_screen_rect(self, mesh_instance)
