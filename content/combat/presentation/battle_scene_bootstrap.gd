@@ -12,7 +12,7 @@ func configure_from_battle_room(owner: Node, next_battle_room: BattleRoom) -> vo
 	owner._clear_ability_reward_cards()
 	if owner.is_node_ready():
 		owner._apply_room_data()
-		initialize_battle_state(owner)
+		_initialize_battle_state(owner)
 
 
 func set_floor_textures(owner: Node, left_texture: Texture2D, right_texture: Texture2D) -> void:
@@ -27,7 +27,7 @@ func set_player_data(owner: Node, player: Player, sprite: Texture2D) -> void:
 	owner.battle_room_data.set_player_data(player, sprite)
 	if owner.is_node_ready():
 		owner._apply_room_data()
-		initialize_battle_state(owner)
+		_initialize_battle_state(owner)
 
 
 func set_monsters(owner: Node, monster_definitions: Array[MonsterDefinition]) -> void:
@@ -35,10 +35,10 @@ func set_monsters(owner: Node, monster_definitions: Array[MonsterDefinition]) ->
 	owner.battle_room_data.set_monsters_from_definitions(monster_definitions)
 	if owner.is_node_ready():
 		owner._apply_room_data()
-		initialize_battle_state(owner)
+		_initialize_battle_state(owner)
 
 
-func initialize_battle_state(owner: Node) -> void:
+func _initialize_battle_state(owner: Node) -> void:
 	if owner.battle_room_data == null:
 		return
 	if owner.battle_room_data.battle_status == &"not_started":
