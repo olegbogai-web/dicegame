@@ -549,3 +549,139 @@ UI может реализовывать drag-and-drop, подсветку и в
 - комната не дублирует боевую логику, а использует результат `Combat`.
 
 Именно эти инварианты являются ядром текущего дизайна боя.
+
+
+---
+
+## 15. Декомпозиция `scenes/battle_table.gd` (обязательный целевой контракт)
+
+`battle_table.gd` должен быть **тонким orchestration-слоем сцены**, а не контейнером доменной и UI-инфраструктурной логики.
+
+Целевой состав обязан быть таким:
+
+### 15.1. Что остается в `scenes/battle_table.gd`
+
+Только связка Godot lifecycle + делегирование:
+
+- `_ready`, `_physics_process`, `_unhandled_input` (без тяжелой бизнес-логики внутри);
+- подписка на кнопки/сигналы;
+- вызов runtime-сервисов через фасады;
+- хранение ссылок на scene nodes и простого `BattleScreenContext`.
+
+### 15.2. Куда переносятся существующие функции
+
+#### A. В `content/combat/presentation/battle_scene_bootstrap.gd`
+
+Ответственность: подготовка `BattleRoom` из run-time данных (игрок, монстры, фон), чтобы сцена боя не создавала тестовые данные сама.
+
+Переносимые функции:
+
+- `configure_from_battle_room`;
+- `set_floor_textures`;
+- `set_player_data`;
+- `set_monsters`;
+- `_ensure_battle_room_data`;
+- `_initialize_battle_state`.
+
+#### B. В `content/combat/presentation/battle_scene_view_renderer.gd`
+
+Ответственность: отрисовка и обновление visual-узлов боевой сцены (спрайты, фреймы, иконки, HP, статусы, артефакты).
+
+Переносимые функции:
+
+- `_apply_room_data`, `_apply_floor_textures`, `_apply_player_sprite`, `_apply_monster_sprites`;
+- `_apply_ability_frames`, `_apply_monster_ability_frames`, `_register_monster_ability_frame`;
+- `_apply_player_artifacts`, `_spawn_artifact_icon`, `_clear_generated_artifact_icons`;
+- `_apply_ability_icon`, `_apply_dice_places`, `_get_dice_place_nodes`;
+- `_duplicate_sprite_template`, `_duplicate_frame_template`, `_clear_generated_nodes`;
+- `_apply_health_bar`, `_resolve_health_bar`, `_update_health_bar_transform`, `_animate_health_bar`, `_update_health_bars`;
+- `_apply_health_text`, `_apply_monster_health_text`;
+- `_set_status_template_visible`, `_get_status_template`, `_clear_runtime_status_visuals`, `_apply_statuses_to_sprite`, `_refresh_status_visuals`;
+- `_apply_texture_to_mesh`, `_build_centered_offsets`, `_set_mesh_tint`.
+
+#### C. В `content/combat/presentation/player_ability_input_controller.gd`
+
+Ответственность: player input + выбор/отмена способности + snap/подсветка слотов.
+
+Переносимые функции:
+
+- `_refresh_player_ability_snap_state`, `_is_player_ability_frame_at_base`;
+- `_register_player_ability_frame`, `_register_player_ability_slots`;
+- `_find_player_ability_frame_at_screen_point`, `_select_player_ability`, `_cancel_selected_ability`, `_update_selected_ability_follow`;
+- `_is_ability_state_ready`, `_collect_ready_dice_for_frame`;
+- `_update_player_ability_visuals`, `_get_active_drag_dice`, `_should_highlight_slot_for_dice`;
+- `_dice_matches_slot`, `_get_slot_target_position`.
+
+#### D. В `content/combat/presentation/battle_targeting_service.gd`
+
+Ответственность: hit-testing и выбор целей в world-space/screen-space.
+
+Переносимые функции:
+
+- `_resolve_target_descriptor_at_screen_point`;
+- `_resolve_activation_target_origin`;
+- `_project_mouse_to_horizontal_plane`;
+- `_screen_point_hits_mesh`;
+- `_has_player_dice_at_screen_point`;
+- `_project_mesh_screen_rect`.
+
+#### E. В `content/combat/runtime/battle_turn_orchestrator.gd`
+
+Ответственность: запуск/переключение ходов, бросок кубов, переход player↔monster.
+
+Переносимые функции:
+
+- `_start_current_turn`;
+- `_throw_current_turn_dice`;
+- `_build_dice_throw_request`;
+- `_clear_board_dice`;
+- `_get_turn_dice`;
+- `_are_current_monster_turn_dice_stopped`;
+- `_advance_to_next_turn`;
+- `_run_current_monster_turn`;
+- `_on_end_turn_button_pressed`.
+
+#### F. В `content/combat/runtime/battle_action_orchestrator.gd`
+
+Ответственность: активация способностей игрока/монстра и синхронизация с анимацией.
+
+Переносимые функции:
+
+- `_activate_selected_ability`;
+- `_play_ability_use_visual`;
+- `_build_dice_assignments_for_frame`;
+- `_find_monster_ability_frame_state`;
+- `_execute_monster_ability`;
+- `_apply_combatant_views_after_ability_resolution`.
+
+#### G. В `content/combat/reward/post_battle_reward_flow.gd`
+
+Ответственность: post-battle кубы награды/денег и выбор новой способности.
+
+Переносимые функции:
+
+- `_handle_post_battle_reward_dice`;
+- `_try_resolve_post_battle_reward_dice_result`;
+- `_find_post_battle_reward_die`;
+- `_show_ability_reward_options`;
+- `_build_ability_reward_options`;
+- `_load_player_reward_abilities`;
+- `_collect_owned_ability_ids`;
+- `_roll_reward_rarity`;
+- `_pick_ability_by_rarity_with_fallback`;
+- `_compute_reward_card_spacing_x`;
+- `_render_ability_reward_cards`;
+- `_apply_reward_card_visual`;
+- `_clear_ability_reward_cards`;
+- `_resolve_ability_reward_click`;
+- `_select_ability_reward`.
+
+### 15.3. Зачем это обязательно для перехода от test battle к real game
+
+При таком разбиении `battle_table.gd` не создает данные боя и не знает, откуда пришли статы. Источник данных становится внешним (`RunState`/`Player` runtime/encounter runtime), а сцена только:
+
+1. получает уже собранный `BattleRoom` (или `BattleScreenContext`),
+2. рендерит его,
+3. делегирует действия в orchestrator-слои.
+
+Это делает безопасным переход от тестовой комнаты к production-flow глобальной карты без переписывания UI-экрана боя.

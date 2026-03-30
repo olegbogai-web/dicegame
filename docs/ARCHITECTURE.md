@@ -50,6 +50,19 @@
 
 ---
 
+## Архитектура экрана боя (`battle_table`)
+
+Документ `docs/BATTLE_TABLE_REFACTOR_PLAN.md` фиксирует декомпозицию перегруженного `scenes/battle_table.gd` и пошаговый план переноса функций по сервисам (bootstrap, render, targeting, action orchestration, reward flow).
+
+Зона ответственности документа:
+- целевые границы `battle_table.gd` как thin scene-orchestrator;
+- карта переноса существующих функций по новым файлам;
+- порядок внедрения рефакторинга без остановки разработки.
+
+Ссылка: [docs/BATTLE_TABLE_REFACTOR_PLAN.md](./BATTLE_TABLE_REFACTOR_PLAN.md)
+
+---
+
 
 ## Архитектура подсистемы состояний (Statuses)
 
