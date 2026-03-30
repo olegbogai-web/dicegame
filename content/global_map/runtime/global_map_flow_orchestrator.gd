@@ -233,8 +233,6 @@ func _restore_persisted_state() -> void:
 
 
 func _persist_current_state() -> void:
-	if not GlobalMapRuntimeState.has_snapshot():
-		_initialize_runtime_player_on_first_map_save()
 	var marker_snapshot := _marker_presenter.export_markers_state()
 	if _state.is_transition_in_progress:
 		for marker_data in marker_snapshot:
@@ -349,26 +347,13 @@ func _resolve_or_create_runtime_player() -> Player:
 	var saved_player = GlobalMapRuntimeState.load_runtime_player()
 	if saved_player != null:
 		return saved_player
-	var player := Player.new()
-	GlobalMapRuntimeState.save_runtime_player(player)
-	return player
-
-
-func _initialize_runtime_player_on_first_map_save() -> void:
-	var runtime_player := _resolve_or_create_runtime_player()
-	if runtime_player == null or runtime_player.base_stat != null:
-		return
-	# TODO: Временное место. Позже инициализация runtime-статов игрока должна быть перенесена в отдельный этап старта ранa.
-	runtime_player.apply_base_stat(_build_runtime_player_base_stat())
-	GlobalMapRuntimeState.save_runtime_player(runtime_player)
-
-
-func _build_runtime_player_base_stat() -> PlayerBaseStat:
 	var base_stat := PlayerBaseStat.new()
 	base_stat.player_id = "global_map_runtime_player"
 	base_stat.display_name = "GlobalMapRuntimePlayer"
 	base_stat.starting_abilities = []
-	return base_stat
+	var player := Player.new(base_stat)
+	GlobalMapRuntimeState.save_runtime_player(player)
+	return player
 
 
 func _prepare_pending_runtime_battle_room(next_scene_path: String) -> void:
