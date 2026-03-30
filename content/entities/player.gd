@@ -85,6 +85,23 @@ func get_max_hp() -> int:
 	return maxi(base_stat.max_hp + runtime_max_hp_bonus, 0)
 
 
+func get_combat_dice_loadout() -> Array[DiceDefinition]:
+	var resolved: Array[DiceDefinition] = []
+	for dice_definition in dice_loadout:
+		if dice_definition != null:
+			resolved.append(dice_definition)
+	if not resolved.is_empty():
+		return resolved
+	for global_map_dice_definition in runtime_cube_global_map:
+		if global_map_dice_definition != null:
+			resolved.append(global_map_dice_definition)
+	return resolved
+
+
+func get_combat_dice_count() -> int:
+	return get_combat_dice_loadout().size()
+
+
 func grant_artifact(artifact_definition: ArtifactDefinition) -> void:
 	if artifact_definition == null:
 		return

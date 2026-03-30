@@ -351,6 +351,7 @@ func _resolve_or_create_runtime_player() -> Player:
 	base_stat.player_id = "global_map_runtime_player"
 	base_stat.display_name = "GlobalMapRuntimePlayer"
 	base_stat.starting_abilities = []
+	base_stat.starting_dice = base_stat.get_resolved_base_cube_global_map().duplicate(true)
 	var player := Player.new(base_stat)
 	GlobalMapRuntimeState.save_runtime_player(player)
 	return player
