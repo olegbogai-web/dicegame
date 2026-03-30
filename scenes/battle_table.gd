@@ -5,6 +5,7 @@ const Dice = preload("res://content/dice/dice.gd")
 const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd")
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 const BattleActivationAnimationRuntime = preload("res://content/combat/runtime/battle_activation_animation_runtime.gd")
+const BattleSceneBootstrap = preload("res://content/combat/presentation/battle_scene_bootstrap.gd")
 const MonsterTurnRuntime = preload("res://content/monster_ai/monster_turn_runtime.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 const EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
@@ -73,6 +74,7 @@ var _ability_reward_rng := RandomNumberGenerator.new()
 var _generated_ability_reward_nodes: Array[Node3D] = []
 var _ability_reward_entries: Array[Dictionary] = []
 var _is_awaiting_ability_reward_selection := false
+var _scene_bootstrap := BattleSceneBootstrap.new()
 
 
 func _ready() -> void:
@@ -90,42 +92,23 @@ func _ready() -> void:
 
 
 func configure_from_battle_room(next_battle_room: BattleRoom) -> void:
-	battle_room_data = next_battle_room
-	_has_spawned_post_battle_reward_dice = false
-	_is_waiting_post_battle_reward_dice = false
-	_has_processed_post_battle_reward_result = false
-	_clear_ability_reward_cards()
-	if is_node_ready():
-		_apply_room_data()
-		_initialize_battle_state()
+	_scene_bootstrap.configure_from_battle_room(self, next_battle_room)
 
 
 func set_floor_textures(left_texture: Texture2D, right_texture: Texture2D) -> void:
-	_ensure_battle_room_data()
-	battle_room_data.set_floor_textures(left_texture, right_texture)
-	if is_node_ready():
-		_apply_floor_textures()
+	_scene_bootstrap.set_floor_textures(self, left_texture, right_texture)
 
 
 func set_player_data(player: Player, sprite: Texture2D) -> void:
-	_ensure_battle_room_data()
-	battle_room_data.set_player_data(player, sprite)
-	if is_node_ready():
-		_apply_room_data()
-		_initialize_battle_state()
+	_scene_bootstrap.set_player_data(self, player, sprite)
 
 
 func set_monsters(monster_definitions: Array[MonsterDefinition]) -> void:
-	_ensure_battle_room_data()
-	battle_room_data.set_monsters_from_definitions(monster_definitions)
-	if is_node_ready():
-		_apply_room_data()
-		_initialize_battle_state()
+	_scene_bootstrap.set_monsters(self, monster_definitions)
 
 
 func _ensure_battle_room_data() -> void:
-	if battle_room_data == null:
-		battle_room_data = BattleRoomScript.new()
+	_scene_bootstrap._ensure_battle_room_data(self)
 
 
 func _apply_room_data() -> void:
@@ -1119,15 +1102,7 @@ func _resolve_activation_target_origin(target_descriptor: Dictionary, base_origi
 
 
 func _initialize_battle_state() -> void:
-	if battle_room_data == null:
-		return
-	if battle_room_data.battle_status == &"not_started":
-		_has_spawned_post_battle_reward_dice = false
-		_is_waiting_post_battle_reward_dice = false
-		_has_processed_post_battle_reward_result = false
-		_clear_ability_reward_cards()
-		battle_room_data.start_battle()
-	_start_current_turn()
+	_scene_bootstrap.initialize_battle_state(self)
 
 
 func _try_resolve_post_battle_reward_dice_result() -> void:
