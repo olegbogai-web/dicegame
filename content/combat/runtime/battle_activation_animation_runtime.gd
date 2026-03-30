@@ -52,11 +52,11 @@ static func play_ability_use_animation(
 	tween.tween_property(frame, "transform:origin", lift_origin, half_duration * 0.3)
 	tween.tween_property(frame, "transform:origin", target_origin, half_duration * 0.7)
 	tween.tween_callback(func() -> void:
+		if on_activate.is_valid():
+			on_activate.call()
 		for dice in consumed_dice:
 			if is_instance_valid(dice):
 				dice.queue_free()
-		if on_activate.is_valid():
-			on_activate.call()
 	)
 	tween.tween_property(frame, "transform:origin", base_origin, half_duration)
 	await tween.finished
