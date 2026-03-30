@@ -246,4 +246,4 @@ scale = Vector2(0.26151982, 0.24725613)
 texture = ExtResource("10_tw8gb")
 
 [node name="ability_reward" parent="." unique_id=769588038 instance=ExtResource("10_df7hy")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 4.823, -1.029)
+transform = Transform3D(1.8, 0, 0, 0, 1.8, 0, 0, 0, 1.8, 0, 4, -1.029)
