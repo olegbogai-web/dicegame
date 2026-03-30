@@ -2,15 +2,12 @@ extends Node3D
 
 const BattleRoomScript = preload("res://content/rooms/subclasses/battle_room.gd")
 const Dice = preload("res://content/dice/dice.gd")
-const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd")
-const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 const BattleActivationAnimationRuntime = preload("res://content/combat/runtime/battle_activation_animation_runtime.gd")
 const BattleSceneBootstrap = preload("res://content/combat/presentation/battle_scene_bootstrap.gd")
 const BattleSceneViewRenderer = preload("res://content/combat/presentation/battle_scene_view_renderer.gd")
 const PlayerAbilityInputController = preload("res://content/combat/presentation/player_ability_input_controller.gd")
 const BattleTargetingService = preload("res://content/combat/presentation/battle_targeting_service.gd")
-const MonsterTurnRuntime = preload("res://content/monster_ai/monster_turn_runtime.gd")
-const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
+const BattleTurnOrchestrator = preload("res://content/combat/runtime/battle_turn_orchestrator.gd")
 const EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
 
 const ACTIVATION_ANIMATION_DURATION := 0.5
@@ -66,6 +63,7 @@ var _scene_bootstrap := BattleSceneBootstrap.new()
 var _scene_view_renderer := BattleSceneViewRenderer.new()
 var _player_ability_input_controller := PlayerAbilityInputController.new()
 var _battle_targeting_service := BattleTargetingService.new()
+var _battle_turn_orchestrator := BattleTurnOrchestrator.new()
 
 
 func _ready() -> void:
@@ -774,83 +772,31 @@ func _select_ability_reward(entry: Dictionary) -> void:
 
 
 func _start_current_turn() -> void:
-	if battle_room_data == null:
-		return
-	_clear_board_dice()
-	if battle_room_data.is_battle_over():
-		_handle_post_battle_reward_dice()
-		_update_turn_ui()
-		return
-	_throw_current_turn_dice()
-	_update_turn_ui()
-	if battle_room_data.is_monster_turn():
-		_run_current_monster_turn()
+	_battle_turn_orchestrator._start_current_turn(self)
 
 
 func _throw_current_turn_dice() -> void:
-	if _board == null or battle_room_data == null:
-		return
-	var requests: Array[DiceThrowRequest] = []
-	if battle_room_data.is_player_turn() and battle_room_data.player_instance != null:
-		for dice_definition in battle_room_data.player_instance.dice_loadout:
-			if dice_definition == null:
-				continue
-			requests.append(_build_dice_throw_request(dice_definition, {"owner": &"player"}))
-	elif battle_room_data.is_monster_turn() and battle_room_data.can_target_monster(battle_room_data.current_monster_turn_index):
-		var monster_view := battle_room_data.monster_views[battle_room_data.current_monster_turn_index]
-		for _index in range(monster_view.dice_count):
-			requests.append(_build_dice_throw_request(null, {
-				"owner": &"monster",
-				"monster_index": battle_room_data.current_monster_turn_index,
-			}))
-	if not requests.is_empty():
-		_board.throw_dice(requests)
+	_battle_turn_orchestrator._throw_current_turn_dice(self)
 
 
 func _build_dice_throw_request(dice_definition: DiceDefinition, metadata: Dictionary) -> DiceThrowRequest:
-	var request := DiceThrowRequestScript.create(BASE_DICE_SCENE, Vector3.ZERO, 1.0, Vector3.ONE, metadata)
-	if dice_definition != null:
-		request.metadata["definition"] = dice_definition
-	return request
+	return _battle_turn_orchestrator._build_dice_throw_request(self, dice_definition, metadata)
 
 
 func _clear_board_dice() -> void:
-	for dice in _get_board_dice():
-		if not is_instance_valid(dice):
-			continue
-		if dice.get_parent() != null:
-			dice.get_parent().remove_child(dice)
-		dice.queue_free()
+	_battle_turn_orchestrator._clear_board_dice(self)
 
 
 func _get_turn_dice(owner: StringName, monster_index: int = -1) -> Array[Dice]:
-	var owned_dice: Array[Dice] = []
-	for dice in _get_board_dice():
-		if StringName(dice.get_meta(&"owner", &"")) != owner:
-			continue
-		if owner == &"monster" and int(dice.get_meta(&"monster_index", -1)) != monster_index:
-			continue
-		owned_dice.append(dice)
-	return owned_dice
+	return _battle_turn_orchestrator._get_turn_dice(self, owner, monster_index)
 
 
 func _are_current_monster_turn_dice_stopped() -> bool:
-	if battle_room_data == null or not battle_room_data.is_monster_turn():
-		return true
-	var monster_dice := _get_turn_dice(&"monster", battle_room_data.current_monster_turn_index)
-	if monster_dice.is_empty():
-		return true
-	for dice in monster_dice:
-		if not BattleAbilityRuntime.is_die_fully_stopped(dice):
-			return false
-	return true
+	return _battle_turn_orchestrator._are_current_monster_turn_dice_stopped(self)
 
 
 func _on_end_turn_button_pressed() -> void:
-	if battle_room_data == null or not battle_room_data.is_player_turn() or battle_room_data.is_battle_over():
-		return
-	_cancel_selected_ability()
-	_advance_to_next_turn()
+	_battle_turn_orchestrator._on_end_turn_button_pressed(self)
 
 
 func _on_event_button_pressed() -> void:
@@ -860,31 +806,11 @@ func _on_event_button_pressed() -> void:
 
 
 func _advance_to_next_turn() -> void:
-	if battle_room_data == null or _turn_transition_in_progress:
-		return
-	_turn_transition_in_progress = true
-	battle_room_data.advance_turn()
-	_start_current_turn()
-	_turn_transition_in_progress = false
+	_battle_turn_orchestrator._advance_to_next_turn(self)
 
 
 func _run_current_monster_turn() -> void:
-	if battle_room_data == null or not battle_room_data.is_monster_turn() or battle_room_data.is_battle_over():
-		return
-	var current_monster_index := battle_room_data.current_monster_turn_index
-	await MonsterTurnRuntime.run_turn(self, {
-		"battle_room": battle_room_data,
-		"monster_index": current_monster_index,
-		"provide_turn_dice": func() -> Array[Dice]:
-			return _get_turn_dice(&"monster", current_monster_index),
-		"are_turn_dice_stopped": func() -> bool:
-			return _are_current_monster_turn_dice_stopped(),
-		"execute_ability": func(monster_index: int, ability: AbilityDefinition, target_descriptor: Dictionary, consumed_dice: Array[Dice]) -> void:
-			await _execute_monster_ability(monster_index, ability, target_descriptor, consumed_dice),
-	})
-	if battle_room_data == null or not is_inside_tree() or not battle_room_data.is_monster_turn() or battle_room_data.is_battle_over():
-		return
-	_advance_to_next_turn()
+	await _battle_turn_orchestrator._run_current_monster_turn(self)
 
 
 func _update_turn_ui() -> void:
