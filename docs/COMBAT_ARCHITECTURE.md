@@ -23,6 +23,8 @@
 
 Связанный документ по post-battle кубам награды и денег: [docs/REWARD_AND_MONEY_DICE_ARCHITECTURE.md](./REWARD_AND_MONEY_DICE_ARCHITECTURE.md). Он фиксирует, какие кубы хранятся в базовых/рантайм статах игрока и как они бросаются после победы в бою.
 
+Связанный документ по архитектуре улучшения карт: [docs/CARD_UPGRADE_ARCHITECTURE.md](./CARD_UPGRADE_ARCHITECTURE.md). Он фиксирует инвариант, что upgraded-способности игрока и монстров исполняются тем же combat runtime без специальных веток по типу версии.
+
 ---
 
 ## 1. Цель подсистемы Combat
