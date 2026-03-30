@@ -242,7 +242,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		_post_battle_reward_flow
 	)
 	if handled:
-		get_viewport().set_input_as_handled()
+		var viewport := get_viewport()
+		if viewport != null:
+			viewport.set_input_as_handled()
 
 
 func _refresh_player_ability_snap_state() -> void:
