@@ -26,7 +26,6 @@ const ACTIVATION_ANIMATION_DURATION := 0.5
 @onready var _event_button: Button = $UI/EventButton
 @onready var _artifact_template: TextureRect = $UI/artefact
 @onready var _ability_reward_template: Node3D = $ability_reward
-@onready var _artifact_reward_template: MeshInstance3D = $artefact_frame_reward
 
 var battle_room_data: BattleRoom
 var _generated_monster_sprites: Array[Node] = []
@@ -47,9 +46,6 @@ var _ability_reward_rng := RandomNumberGenerator.new()
 var _generated_ability_reward_nodes: Array[Node3D] = []
 var _ability_reward_entries: Array[Dictionary] = []
 var _is_awaiting_ability_reward_selection := false
-var _generated_artifact_reward_nodes: Array[Node3D] = []
-var _artifact_reward_entries: Array[Dictionary] = []
-var _is_awaiting_artifact_reward_selection := false
 var _scene_bootstrap := BattleSceneBootstrap.new()
 var _scene_view_renderer := BattleSceneViewRenderer.new()
 var _player_ability_input_controller := PlayerAbilityInputController.new()
@@ -62,8 +58,6 @@ var _post_battle_reward_flow := PostBattleRewardFlow.new()
 func _ready() -> void:
 	set_physics_process(true)
 	_ability_reward_rng.randomize()
-	if _artifact_reward_template != null:
-		_artifact_reward_template.visible = false
 	if _end_turn_button != null and not _end_turn_button.pressed.is_connected(_on_end_turn_button_pressed):
 		_end_turn_button.pressed.connect(_on_end_turn_button_pressed)
 	if _event_button != null and not _event_button.pressed.is_connected(_on_event_button_pressed):
