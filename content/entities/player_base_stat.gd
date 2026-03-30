@@ -8,6 +8,7 @@ const GLOBAL_MAP_EVENT_ICON := preload("res://assets/global_map/question_mark.pn
 const GLOBAL_MAP_DICE_SKIN := preload("res://assets/dice_edges/bones_dice_skin.png")
 const REWARD_ARTIFACT_ICON := preload("res://assets/dice_edges/artifact_+.png")
 const REWARD_CUBE_ICON := preload("res://assets/dice_edges/cube_+.png")
+const REWARD_CARD_ICON := preload("res://assets/dice_edges/card_+.png")
 const REWARD_CUBE_UP_ICON := preload("res://assets/dice_edges/cube_up.png")
 const REWARD_CARD_UP_ICON := preload("res://assets/dice_edges/card_up.png")
 const REWARD_MONEY_ICON := preload("res://assets/dice_edges/money.png")
@@ -116,8 +117,8 @@ func _build_default_reward_cube_definition() -> DiceDefinition:
 		_build_face("card_up", REWARD_CARD_UP_ICON),
 		_build_face("card_up", REWARD_CARD_UP_ICON),
 		_build_face("card_up", REWARD_CARD_UP_ICON),
-		_build_face("card_up", REWARD_CARD_UP_ICON),
-		_build_face("card_up", REWARD_CARD_UP_ICON),
+		_build_face("card_+", REWARD_CARD_ICON),
+		_build_face("card_+", REWARD_CARD_ICON),
 	]
 	return dice_definition
 

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://brukhuagxw1c3"]
 
 [ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
 [ext_resource type="Script" uid="uid://cijja5c0f6ibw" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
@@ -46,7 +46,6 @@ display_name = "Обычный удар"
 description = "Требует четное значение на верхней грани куба. Наносит 5 урона выбранному существу."
 icon = ExtResource("7_icon")
 tags = PackedStringArray("attack")
-upgrade_level = 0
 max_upgrade_level = 1
 cost = SubResource("AbilityCost_main")
 target_rule = SubResource("AbilityTargetRule_enemy")

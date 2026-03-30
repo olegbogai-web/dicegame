@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://cacxbe2qipr8i"]
 
 [ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
 [ext_resource type="Script" uid="uid://lfpdg732cjt" path="res://content/abilities/resources/ability_condition.gd" id="1_stfg0"]
@@ -45,7 +45,6 @@ description = "Требует 2 любых куба. Исцеляет на 5."
 icon = ExtResource("7_icon")
 tags = PackedStringArray("heal", "support")
 owner_scope = 0
-upgrade_level = 0
 max_upgrade_level = 1
 cost = SubResource("AbilityCost_main")
 target_rule = SubResource("AbilityTargetRule_self")
