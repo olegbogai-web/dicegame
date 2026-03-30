@@ -9,7 +9,9 @@ var current_hp := 0
 var current_armor := 0
 var dice_loadout: Array[DiceDefinition] = []
 var runtime_cube_global_map: Array[DiceDefinition] = []
+var runtime_cube_event: Array[DiceDefinition] = []
 var runtime_reward_cube: DiceDefinition
+var runtime_reward_cubes: Array[DiceDefinition] = []
 var runtime_money_cube: DiceDefinition
 var ability_loadout: Array[AbilityDefinition] = []
 var artifacts_runtime: Array[ArtifactDefinition] = []
@@ -39,7 +41,9 @@ func reset_for_run() -> void:
 		current_armor = 0
 		dice_loadout.clear()
 		runtime_cube_global_map.clear()
+		runtime_cube_event.clear()
 		runtime_reward_cube = null
+		runtime_reward_cubes.clear()
 		runtime_money_cube = null
 		ability_loadout.clear()
 		artifacts_runtime.clear()
@@ -52,6 +56,10 @@ func reset_for_run() -> void:
 	dice_loadout = base_stat.starting_dice.duplicate()
 	runtime_cube_global_map = base_stat.get_resolved_base_cube_global_map().duplicate(true)
 	runtime_reward_cube = base_stat.get_resolved_base_reward_cube().duplicate(true)
+	runtime_reward_cubes = []
+	if runtime_reward_cube != null:
+		runtime_reward_cubes.append(runtime_reward_cube)
+	runtime_cube_event = []
 	runtime_money_cube = base_stat.get_resolved_base_money_cube().duplicate(true)
 	ability_loadout = base_stat.starting_abilities.duplicate()
 	artifacts_runtime.clear()
@@ -101,6 +109,27 @@ func grant_artifact(artifact_definition: ArtifactDefinition) -> void:
 		return
 	artifacts_runtime.append(artifact_definition)
 	_apply_on_grant_effects(artifact_definition)
+
+
+func grant_runtime_cube(cube_definition: DiceDefinition) -> void:
+	if cube_definition == null:
+		return
+	var runtime_cube := cube_definition.duplicate(true) as DiceDefinition
+	if runtime_cube == null:
+		return
+	if runtime_cube.scope == DiceDefinition.Scope.COMBAT:
+		dice_loadout.append(runtime_cube)
+		return
+	if runtime_cube.scope == DiceDefinition.Scope.GLOBAL_MAP:
+		runtime_cube_global_map.append(runtime_cube)
+		return
+	if runtime_cube.scope == DiceDefinition.Scope.REWARD:
+		runtime_reward_cubes.append(runtime_cube)
+		if runtime_reward_cube == null:
+			runtime_reward_cube = runtime_cube
+		return
+	if runtime_cube.scope == DiceDefinition.Scope.EVENT:
+		runtime_cube_event.append(runtime_cube)
 
 
 func get_active_artifact_definitions() -> Array[ArtifactDefinition]:
