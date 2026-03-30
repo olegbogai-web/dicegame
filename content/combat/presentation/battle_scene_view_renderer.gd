@@ -13,10 +13,12 @@ const STATUS_RUNTIME_NODE_PREFIX := "state_runtime_"
 const STATUS_ICON_SPACING_X := 0.18
 
 
-func _apply_room_data(owner: Node) -> void:
+func apply_room_data(owner: Node, callbacks: Dictionary = {}) -> void:
 	if owner.battle_room_data == null:
 		return
-	owner._cancel_selected_ability(true)
+	var cancel_selected_ability := callbacks.get("cancel_selected_ability") as Callable
+	if cancel_selected_ability.is_valid():
+		cancel_selected_ability.call(true)
 	owner._player_ability_frame_states.clear()
 	owner._monster_ability_frame_states.clear()
 	owner._monster_sprite_states.clear()
@@ -29,12 +31,16 @@ func _apply_room_data(owner: Node) -> void:
 		owner.battle_room_data.get_player_abilities(),
 		owner._player_ability_template,
 		owner._generated_player_ability_frames,
-		true
+		callbacks
 	)
 	_apply_monster_ability_frames(owner)
 	_apply_player_artifacts(owner)
-	owner._refresh_player_ability_snap_state()
-	owner._update_turn_ui()
+	var refresh_snap := callbacks.get("refresh_player_ability_snap_state") as Callable
+	if refresh_snap.is_valid():
+		refresh_snap.call()
+	var update_turn_ui := callbacks.get("update_turn_ui") as Callable
+	if update_turn_ui.is_valid():
+		update_turn_ui.call()
 
 
 func _apply_floor_textures(owner: Node) -> void:
@@ -94,7 +100,7 @@ func _apply_ability_frames(
 	abilities: Array[AbilityDefinition],
 	template: MeshInstance3D,
 	generated_nodes: Array[Node],
-	track_player_slots: bool = false
+	callbacks: Dictionary = {}
 ) -> void:
 	_clear_generated_nodes(owner, generated_nodes)
 
@@ -113,9 +119,13 @@ func _apply_ability_frames(
 		frame.transform = Transform3D(frame.transform.basis, anchor + Vector3(0.0, 0.0, offsets[index]))
 		_apply_ability_icon(owner, frame, ability)
 		_apply_dice_places(frame, owner.battle_room_data.get_required_dice_slots(ability))
-		if track_player_slots:
-			owner._register_player_ability_frame(frame, ability, index)
-			owner._register_player_ability_slots(frame, ability, index)
+		if template == owner._player_ability_template:
+			var register_frame := callbacks.get("register_player_ability_frame") as Callable
+			if register_frame.is_valid():
+				register_frame.call(frame, ability, index)
+			var register_slots := callbacks.get("register_player_ability_slots") as Callable
+			if register_slots.is_valid():
+				register_slots.call(frame, ability, index)
 
 
 func _apply_monster_ability_frames(owner: Node) -> void:
@@ -480,3 +490,7 @@ func _set_mesh_tint(mesh_instance: MeshInstance3D, color: Color) -> void:
 		mesh_instance.set_meta(TINT_MATERIAL_META_KEY, material)
 		mesh_instance.material_override = material
 	material.albedo_color = color
+
+
+func _apply_room_data(owner: Node) -> void:
+	apply_room_data(owner)
