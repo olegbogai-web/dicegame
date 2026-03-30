@@ -31,7 +31,7 @@ func throw_current_turn_dice(context: Dictionary) -> void:
 		return
 	var requests: Array[DiceThrowRequest] = []
 	if battle_room_data.is_player_turn() and battle_room_data.player_instance != null:
-		for dice_definition in battle_room_data.player_instance.dice_loadout:
+		for dice_definition in battle_room_data.player_instance.get_combat_dice_loadout():
 			if dice_definition == null:
 				continue
 			requests.append(build_dice_throw_request(dice_definition, {"owner": &"player"}))

@@ -143,7 +143,7 @@ func set_player_data(player: Player, sprite: Texture2D) -> void:
 	if player_instance != null:
 		abilities.assign(player_instance.ability_loadout)
 		current_hp = player_instance.current_hp
-		dice_count = player_instance.dice_loadout.size()
+		dice_count = player_instance.get_combat_dice_count()
 		if player_instance.base_stat != null:
 			max_hp = player_instance.get_max_hp()
 	player_view = CombatantViewData.new(
