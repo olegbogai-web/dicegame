@@ -278,7 +278,7 @@ sorting_offset = 5.0
 material_override = SubResource("StandardMaterial3D_2v2t6")
 mesh = SubResource("PlaneMesh_kitqn")
 
-[node name="base_cube" parent="." unique_id=548484381 instance=ExtResource("13_aextr")]
+[node name="cube_reward" parent="." unique_id=548484381 instance=ExtResource("13_aextr")]
 transform = Transform3D(-1.1312975, 1.2586299, 0.16129775, -0.97238976, -0.7210595, -1.1935374, -0.81524503, -0.88652354, 1.1997715, 0.021961555, 4.388258, -0.55540115)
 physics_material_override = SubResource("PhysicsMaterial_2v2t6")
 linear_damp = 0.25
