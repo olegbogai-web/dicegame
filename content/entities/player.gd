@@ -103,12 +103,6 @@ func grant_artifact(artifact_definition: ArtifactDefinition) -> void:
 	_apply_on_grant_effects(artifact_definition)
 
 
-func grant_runtime_cube_global_map(cube_definition: DiceDefinition) -> void:
-	if cube_definition == null:
-		return
-	runtime_cube_global_map.append(cube_definition.duplicate(true))
-
-
 func get_active_artifact_definitions() -> Array[ArtifactDefinition]:
 	var resolved: Array[ArtifactDefinition] = []
 	if base_stat != null:
