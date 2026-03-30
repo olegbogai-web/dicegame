@@ -9,6 +9,7 @@ const BattleTargetingService = preload("res://content/combat/presentation/battle
 const BattleTurnOrchestrator = preload("res://content/combat/runtime/battle_turn_orchestrator.gd")
 const BattleActionOrchestrator = preload("res://content/combat/runtime/battle_action_orchestrator.gd")
 const PostBattleRewardFlow = preload("res://content/combat/reward/post_battle_reward_flow.gd")
+const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
 const EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
 
 const ACTIVATION_ANIMATION_DURATION := 0.5
@@ -62,7 +63,11 @@ func _ready() -> void:
 	if _event_button != null and not _event_button.pressed.is_connected(_on_event_button_pressed):
 		_event_button.pressed.connect(_on_event_button_pressed)
 	if battle_room_data == null:
-		configure_from_battle_room(BattleRoomScript.create_test_battle_room())
+		var pending_runtime_battle_room := GlobalMapRuntimeState.consume_pending_battle_room()
+		if pending_runtime_battle_room != null:
+			configure_from_battle_room(pending_runtime_battle_room)
+		else:
+			configure_from_battle_room(BattleRoomScript.create_test_battle_room())
 	else:
 		_apply_room_data()
 	_initialize_battle_state()

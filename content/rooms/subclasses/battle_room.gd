@@ -2,6 +2,8 @@ extends Room
 class_name BattleRoom
 
 const DEFAULT_FLOOR_TEXTURE := preload("res://assets/material/дерево.png")
+const DUNGEON_FLOOR_TEXTURE_1 := preload("res://assets/material/dangeon_floor_1.png")
+const DUNGEON_FLOOR_TEXTURE_2 := preload("res://assets/material/dangeon_floor_2.png")
 const TEST_PLAYER_TEXTURE := preload("res://assets/entity/monsters/test_player.png")
 const TEST_MONSTER_DEFINITION := preload("res://content/monsters/definitions/test_monster.tres")
 const COMMON_ATTACK_ABILITY := preload("res://content/abilities/definitions/common_attack.tres")
@@ -436,6 +438,25 @@ static func create_test_battle_room() -> BattleRoom:
 	room.set_player_data(_build_test_player(), TEST_PLAYER_TEXTURE)
 	room.set_monsters_from_definitions([TEST_MONSTER_DEFINITION])
 	return room
+
+
+static func create_runtime_battle_room(player: Player, rng: RandomNumberGenerator = null) -> BattleRoom:
+	var room := BattleRoom.new()
+	room.room_id = "runtime_battle_room"
+	var resolved_rng := rng if rng != null else RandomNumberGenerator.new()
+	if rng == null:
+		resolved_rng.randomize()
+	var floor_texture := _pick_runtime_floor_texture(resolved_rng)
+	room.set_floor_textures(floor_texture, floor_texture)
+	room.set_player_data(player, TEST_PLAYER_TEXTURE)
+	room.set_monsters_from_definitions([TEST_MONSTER_DEFINITION])
+	return room
+
+
+static func _pick_runtime_floor_texture(rng: RandomNumberGenerator) -> Texture2D:
+	if rng.randi_range(0, 1) == 0:
+		return DUNGEON_FLOOR_TEXTURE_1
+	return DUNGEON_FLOOR_TEXTURE_2
 
 
 static func _build_test_player() -> Player:

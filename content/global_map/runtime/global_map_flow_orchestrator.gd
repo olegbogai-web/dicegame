@@ -8,6 +8,7 @@ const GlobalMapMarkerPresenter = preload("res://content/global_map/presentation/
 const GlobalMapMarkerSpawnService = preload("res://content/global_map/runtime/global_map_marker_spawn_service.gd")
 const GlobalMapMarkerRoomLinkResolver = preload("res://content/global_map/routing/global_map_marker_room_link_resolver.gd")
 const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
+const BattleRoom = preload("res://content/rooms/subclasses/battle_room.gd")
 const Player = preload("res://content/entities/player.gd")
 const PlayerBaseStat = preload("res://content/entities/player_base_stat.gd")
 const BoardController = preload("res://ui/scripts/board_controller.gd")
@@ -185,6 +186,7 @@ func _on_target_marker_reached() -> void:
 	await _play_enter_room_animation()
 	_persist_current_state()
 	var next_scene_path := _pending_room_scene_path if not _pending_room_scene_path.is_empty() else START_EVENT_ROOM_SCENE_PATH
+	_prepare_pending_runtime_battle_room(next_scene_path)
 	_owner.get_tree().change_scene_to_file(next_scene_path)
 
 
@@ -352,6 +354,19 @@ func _resolve_or_create_runtime_player() -> Player:
 	var player := Player.new(base_stat)
 	GlobalMapRuntimeState.save_runtime_player(player)
 	return player
+
+
+func _prepare_pending_runtime_battle_room(next_scene_path: String) -> void:
+	if next_scene_path != GlobalMapMarkerRoomLinkResolver.TEST_BATTLE_ROOM_SCENE_PATH:
+		GlobalMapRuntimeState.save_pending_battle_room(null)
+		return
+	var runtime_player := _resolve_or_create_runtime_player()
+	if runtime_player == null:
+		push_warning("%s Не удалось подготовить боевую комнату: runtime-игрок не найден." % GLOBAL_MAP_DICE_LOG_PREFIX)
+		GlobalMapRuntimeState.save_pending_battle_room(null)
+		return
+	GlobalMapRuntimeState.save_runtime_player(runtime_player)
+	GlobalMapRuntimeState.save_pending_battle_room(BattleRoom.create_runtime_battle_room(runtime_player, _rng))
 
 
 func _format_faces_for_debug(definition: DiceDefinition) -> String:
