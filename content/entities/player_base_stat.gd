@@ -15,6 +15,8 @@ const REWARD_MONEY_ICON := preload("res://assets/dice_edges/money.png")
 const MONEY_DICE_SKIN := preload("res://assets/dice_edges/money_dice_skin.png")
 const DiceDefinitionScript = preload("res://content/dice/resources/dice_definition.gd")
 const DiceFaceDefinitionScript = preload("res://content/dice/resources/dice_face_definition.gd")
+const DEFAULT_STARTING_BATTLE_DIE := preload("res://content/resources/base_cube.tres")
+const DEFAULT_STARTING_DICE_COUNT := 3
 
 @export_category("Identity")
 @export var player_id := ""
@@ -38,10 +40,18 @@ func get_resolved_starting_hp() -> int:
 	return clampi(starting_hp, 0, max_hp)
 
 
+
+func get_resolved_starting_dice() -> Array[DiceDefinition]:
+	var sanitized := _sanitize_dice_definitions(starting_dice)
+	if not sanitized.is_empty():
+		return sanitized
+	return _build_default_starting_dice()
+
+
 func is_valid_definition() -> bool:
 	if player_id.is_empty() or display_name.is_empty() or max_hp <= 0:
 		return false
-	for dice_definition in starting_dice:
+	for dice_definition in get_resolved_starting_dice():
 		if dice_definition == null:
 			return false
 	for global_map_dice_definition in get_resolved_base_cube_global_map():
@@ -160,3 +170,18 @@ func _build_face(value: String, icon: Texture2D) -> DiceFaceDefinition:
 	face.icon = icon
 	face.overlay_tint = Color(1.0, 1.0, 1.0, 1.0)
 	return face
+
+
+func _build_default_starting_dice() -> Array[DiceDefinition]:
+	var defaults: Array[DiceDefinition] = []
+	for _index in DEFAULT_STARTING_DICE_COUNT:
+		defaults.append(DEFAULT_STARTING_BATTLE_DIE)
+	return defaults
+
+
+func _sanitize_dice_definitions(source: Array[DiceDefinition]) -> Array[DiceDefinition]:
+	var sanitized: Array[DiceDefinition] = []
+	for dice_definition in source:
+		if dice_definition != null:
+			sanitized.append(dice_definition)
+	return sanitized
