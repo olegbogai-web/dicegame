@@ -7,20 +7,14 @@ const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_abilit
 const BattleActivationAnimationRuntime = preload("res://content/combat/runtime/battle_activation_animation_runtime.gd")
 const BattleSceneBootstrap = preload("res://content/combat/presentation/battle_scene_bootstrap.gd")
 const BattleSceneViewRenderer = preload("res://content/combat/presentation/battle_scene_view_renderer.gd")
+const PlayerAbilityInputController = preload("res://content/combat/presentation/player_ability_input_controller.gd")
 const MonsterTurnRuntime = preload("res://content/monster_ai/monster_turn_runtime.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 const EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
 
-const SLOT_EMPTY_COLOR := Color(1.0, 1.0, 1.0, 1.0)
-const SLOT_ASSIGNED_COLOR := Color(0.82, 0.9, 1.0, 1.0)
-const SLOT_READY_COLOR := Color(0.2, 0.62, 1.0, 1.0)
-const SLOT_HIGHLIGHT_COLOR := Color(0.36, 0.9, 0.48, 1.0)
-const FRAME_READY_COLOR := Color(0.12, 0.55, 1.0, 1.0)
-const FRAME_SELECTED_COLOR := Color(1.0, 0.92, 0.52, 1.0)
-const SELECTED_FRAME_LIFT_Y := 1.9
-const SELECTED_FRAME_MOUSE_FOLLOW_FACTOR := 0.2
 const ACTIVATION_ANIMATION_DURATION := 0.5
 const ACTIVATION_TARGET_LIFT_Y := 0.8
+const SELECTED_FRAME_LIFT_Y := 1.9
 const POST_BATTLE_REWARD_DICE_SIZE_MULTIPLIER := Vector3(4.0, 4.0, 4.0)
 const POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER := 1.0
 const POST_BATTLE_REWARD_DICE_DELAY_SECONDS := 1.0
@@ -69,6 +63,7 @@ var _ability_reward_entries: Array[Dictionary] = []
 var _is_awaiting_ability_reward_selection := false
 var _scene_bootstrap := BattleSceneBootstrap.new()
 var _scene_view_renderer := BattleSceneViewRenderer.new()
+var _player_ability_input_controller := PlayerAbilityInputController.new()
 
 
 func _ready() -> void:
@@ -293,87 +288,19 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _refresh_player_ability_snap_state() -> void:
-	if _player_ability_slot_states.is_empty():
-		return
-
-	var dice_list := _get_board_dice()
-	if battle_room_data == null or not battle_room_data.is_player_turn() or battle_room_data.is_battle_over():
-		for dice in dice_list:
-			if dice.get_assigned_ability_slot_id() != &"":
-				dice.clear_ability_slot()
-		_update_player_ability_visuals([])
-		return
-
-	var slot_by_id := {}
-	for slot_state in _player_ability_slot_states:
-		slot_by_id[slot_state["slot_id"]] = slot_state
-
-	for dice in dice_list:
-		var assigned_slot_id := dice.get_assigned_ability_slot_id()
-		if assigned_slot_id == &"":
-			continue
-		if not slot_by_id.has(assigned_slot_id):
-			dice.clear_ability_slot()
-			continue
-		var assigned_slot: Dictionary = slot_by_id[assigned_slot_id]
-		if not _dice_matches_slot(dice, assigned_slot):
-			dice.clear_ability_slot()
-
-	var used_dice := {}
-	for slot_state in _player_ability_slot_states:
-		var assigned_dice := _find_dice_for_slot(slot_state, dice_list)
-		if assigned_dice != null:
-			used_dice[assigned_dice.get_instance_id()] = true
-			var target_position := _get_slot_target_position(slot_state["dice_place"], assigned_dice)
-			assigned_dice.assign_ability_slot(slot_state["slot_id"], target_position)
-			continue
-		if not _is_player_ability_frame_at_base(slot_state["frame"] as MeshInstance3D):
-			continue
-
-		var candidate := _find_snap_candidate(slot_state, dice_list, used_dice)
-		if candidate == null:
-			continue
-		used_dice[candidate.get_instance_id()] = true
-		candidate.assign_ability_slot(slot_state["slot_id"], _get_slot_target_position(slot_state["dice_place"], candidate))
-
-	_update_player_ability_visuals(dice_list)
+	_player_ability_input_controller._refresh_player_ability_snap_state(self)
 
 
 func _is_player_ability_frame_at_base(frame: MeshInstance3D) -> bool:
-	if frame == null:
-		return false
-	for frame_state in _player_ability_frame_states:
-		if frame_state.get("frame") != frame:
-			continue
-		var base_origin: Vector3 = frame_state.get("base_origin", frame.transform.origin)
-		return frame.transform.origin.is_equal_approx(base_origin)
-	return true
+	return _player_ability_input_controller._is_player_ability_frame_at_base(self, frame)
 
 
 func _register_player_ability_frame(frame: MeshInstance3D, ability: AbilityDefinition, ability_index: int) -> void:
-	_player_ability_frame_states.append({
-		"frame": frame,
-		"ability": ability,
-		"ability_index": ability_index,
-		"base_origin": frame.transform.origin,
-	})
+	_player_ability_input_controller._register_player_ability_frame(self, frame, ability, ability_index)
 
 
 func _register_player_ability_slots(frame: MeshInstance3D, ability: AbilityDefinition, ability_index: int) -> void:
-	var dice_places := _get_dice_place_nodes(frame)
-	var slot_conditions := BattleAbilityRuntime.build_slot_conditions(ability)
-	for index in dice_places.size():
-		var dice_place := dice_places[index]
-		if index >= slot_conditions.size() or not dice_place.visible:
-			continue
-		_player_ability_slot_states.append({
-			"slot_id": StringName("player_%s_%d_%d" % [ability.ability_id, ability_index, index]),
-			"ability_id": ability.ability_id,
-			"ability": ability,
-			"frame": frame,
-			"dice_place": dice_place,
-			"condition": slot_conditions[index],
-		})
+	_player_ability_input_controller._register_player_ability_slots(self, frame, ability, ability_index)
 
 
 func _get_board_dice() -> Array[Dice]:
@@ -387,96 +314,31 @@ func _get_board_dice() -> Array[Dice]:
 
 
 func _find_dice_for_slot(slot_state: Dictionary, dice_list: Array[Dice]) -> Dice:
-	for dice in dice_list:
-		if dice.get_assigned_ability_slot_id() == slot_state["slot_id"]:
-			return dice
-	return null
+	return _player_ability_input_controller._find_dice_for_slot(slot_state, dice_list)
 
 
 func _find_snap_candidate(slot_state: Dictionary, dice_list: Array[Dice], used_dice: Dictionary) -> Dice:
-	var best_candidate: Dice
-	var best_distance := INF
-	var dice_place := slot_state["dice_place"] as MeshInstance3D
-	for dice in dice_list:
-		if used_dice.has(dice.get_instance_id()):
-			continue
-		if dice.is_being_dragged() or dice.get_assigned_ability_slot_id() != &"":
-			continue
-		if not _dice_matches_slot(dice, slot_state):
-			continue
-		var distance := dice.global_position.distance_to(_get_slot_target_position(dice_place, dice))
-		if distance > dice.ability_snap_distance or distance >= best_distance:
-			continue
-		best_distance = distance
-		best_candidate = dice
-	return best_candidate
+	return _player_ability_input_controller._find_snap_candidate(self, slot_state, dice_list, used_dice)
 
 
 func _dice_matches_slot(dice: Dice, slot_state: Dictionary) -> bool:
-	var condition := slot_state.get("condition") as AbilityDiceCondition
-	if dice == null or condition == null:
-		return false
-
-	var top_face_value := dice.get_top_face_value()
-	if top_face_value < 0 or not condition.matches_value(top_face_value):
-		return false
-
-	if condition.requires_face_filter():
-		var top_face := dice.get_top_face()
-		if top_face == null or not condition.accepted_face_ids.has(top_face.text_value):
-			return false
-
-	var dice_tags := dice.get_match_tags()
-	for required_tag in condition.required_tags:
-		if not dice_tags.has(required_tag):
-			return false
-	for forbidden_tag in condition.forbidden_tags:
-		if dice_tags.has(forbidden_tag):
-			return false
-
-	return BattleAbilityRuntime.is_die_usable_for_ability(dice, slot_state.get("ability") as AbilityDefinition, condition)
+	return _player_ability_input_controller._dice_matches_slot(self, dice, slot_state)
 
 
 func _get_slot_target_position(dice_place: MeshInstance3D, dice: Dice) -> Vector3:
-	var offset_y := 0.1
-	if dice != null and dice.definition != null:
-		offset_y = dice.definition.get_resolved_size().y * dice.extra_size_multiplier.y * 0.5
-	return dice_place.global_position + Vector3.UP * offset_y
+	return _player_ability_input_controller._get_slot_target_position(dice_place, dice)
 
 
 func _update_player_ability_visuals(dice_list: Array[Dice]) -> void:
-	var active_drag_dice := _get_active_drag_dice(dice_list)
-	for slot_state in _player_ability_slot_states:
-		var assigned_dice := _find_dice_for_slot(slot_state, dice_list)
-		var is_ready := assigned_dice != null and assigned_dice.is_snapped_to_ability_slot()
-		var slot_color := SLOT_EMPTY_COLOR
-		if _should_highlight_slot_for_dice(slot_state, assigned_dice, active_drag_dice):
-			slot_color = SLOT_HIGHLIGHT_COLOR
-		elif assigned_dice != null:
-			slot_color = SLOT_ASSIGNED_COLOR
-		if is_ready:
-			slot_color = SLOT_READY_COLOR
-		_set_mesh_tint(slot_state["dice_place"], slot_color)
-
-	for frame_state in _player_ability_frame_states:
-		var frame := frame_state.get("frame") as MeshInstance3D
-		var tint := FRAME_READY_COLOR if _is_ability_state_ready(frame_state) else SLOT_EMPTY_COLOR
-		if not _selected_ability_state.is_empty() and _selected_ability_state.get("frame") == frame:
-			tint = FRAME_SELECTED_COLOR
-		_set_mesh_tint(frame, tint)
+	_player_ability_input_controller._update_player_ability_visuals(self, dice_list)
 
 
 func _get_active_drag_dice(dice_list: Array[Dice]) -> Dice:
-	for dice in dice_list:
-		if dice.is_being_dragged():
-			return dice
-	return null
+	return _player_ability_input_controller._get_active_drag_dice(dice_list)
 
 
 func _should_highlight_slot_for_dice(slot_state: Dictionary, assigned_dice: Dice, active_drag_dice: Dice) -> bool:
-	if active_drag_dice == null or assigned_dice != null:
-		return false
-	return _dice_matches_slot(active_drag_dice, slot_state)
+	return _player_ability_input_controller._should_highlight_slot_for_dice(self, slot_state, assigned_dice, active_drag_dice)
 
 
 func _set_mesh_tint(mesh_instance: MeshInstance3D, color: Color) -> void:
@@ -484,69 +346,27 @@ func _set_mesh_tint(mesh_instance: MeshInstance3D, color: Color) -> void:
 
 
 func _find_player_ability_frame_at_screen_point(screen_point: Vector2) -> Dictionary:
-	for index in range(_player_ability_frame_states.size() - 1, -1, -1):
-		var frame_state := _player_ability_frame_states[index]
-		var frame := frame_state.get("frame") as MeshInstance3D
-		if _screen_point_hits_mesh(frame, screen_point):
-			return frame_state
-	return {}
+	return _player_ability_input_controller._find_player_ability_frame_at_screen_point(self, screen_point)
 
 
 func _select_player_ability(frame_state: Dictionary) -> void:
-	if frame_state.is_empty():
-		return
-	if not _selected_ability_state.is_empty() and _selected_ability_state.get("frame") == frame_state.get("frame"):
-		return
-	_cancel_selected_ability()
-	_selected_ability_state = frame_state.duplicate()
-	var selected_base_origin: Vector3 = frame_state.get("base_origin", Vector3.ZERO)
-	_selected_mouse_anchor = _project_mouse_to_horizontal_plane(selected_base_origin.y)
-	_update_selected_ability_follow()
+	_player_ability_input_controller._select_player_ability(self, frame_state)
 
 
 func _cancel_selected_ability(skip_visual_reset: bool = false) -> void:
-	if _selected_ability_state.is_empty():
-		return
-	if not skip_visual_reset:
-		var frame := _selected_ability_state.get("frame") as MeshInstance3D
-		var base_origin: Vector3 = _selected_ability_state.get("base_origin", Vector3.ZERO)
-		if is_instance_valid(frame):
-			frame.transform = Transform3D(frame.transform.basis, base_origin)
-	_selected_ability_state.clear()
-	_selected_mouse_anchor = Vector3.ZERO
+	_player_ability_input_controller._cancel_selected_ability(self, skip_visual_reset)
 
 
 func _update_selected_ability_follow() -> void:
-	var frame := _selected_ability_state.get("frame") as MeshInstance3D
-	if not is_instance_valid(frame):
-		_selected_ability_state.clear()
-		return
-	var base_origin: Vector3 = _selected_ability_state.get("base_origin", frame.transform.origin)
-	var mouse_world := _project_mouse_to_horizontal_plane(base_origin.y)
-	var mouse_delta := (mouse_world - _selected_mouse_anchor) * SELECTED_FRAME_MOUSE_FOLLOW_FACTOR
-	var target_origin := base_origin + Vector3(mouse_delta.x, SELECTED_FRAME_LIFT_Y, mouse_delta.z)
-	frame.transform = Transform3D(frame.transform.basis, target_origin)
+	_player_ability_input_controller._update_selected_ability_follow(self)
 
 
 func _is_ability_state_ready(frame_state: Dictionary) -> bool:
-	var frame := frame_state.get("frame") as MeshInstance3D
-	if frame == null:
-		return false
-	var ability := frame_state.get("ability") as AbilityDefinition
-	var consumed_dice := _collect_ready_dice_for_frame(frame)
-	return BattleAbilityRuntime.can_use_ability_with_dice(ability, consumed_dice, true)
+	return _player_ability_input_controller._is_ability_state_ready(self, frame_state)
 
 
 func _collect_ready_dice_for_frame(frame: MeshInstance3D) -> Array[Dice]:
-	var dice_list := _get_board_dice()
-	var consumed_dice: Array[Dice] = []
-	for slot_state in _player_ability_slot_states:
-		if slot_state.get("frame") != frame:
-			continue
-		var assigned_dice := _find_dice_for_slot(slot_state, dice_list)
-		if assigned_dice != null and assigned_dice.is_snapped_to_ability_slot():
-			consumed_dice.append(assigned_dice)
-	return consumed_dice
+	return _player_ability_input_controller._collect_ready_dice_for_frame(self, frame)
 
 
 func _resolve_target_descriptor_at_screen_point(ability: AbilityDefinition, screen_point: Vector2) -> Dictionary:
