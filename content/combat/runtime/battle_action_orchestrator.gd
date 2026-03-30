@@ -44,7 +44,7 @@ func _play_ability_use_visual(owner: Node, frame_state: Dictionary, target_descr
 		consumed_dice,
 		dice_assignments,
 		owner.ACTIVATION_ANIMATION_DURATION,
-		owner.SELECTED_FRAME_LIFT_Y,
+		owner._player_ability_input_controller.SELECTED_FRAME_LIFT_Y,
 		on_activate,
 		on_finished
 	)
@@ -67,7 +67,7 @@ func _build_dice_assignments_for_frame(owner: Node, consumed_dice: Array[Dice], 
 			continue
 		dice_assignments.append({
 			"dice": dice,
-			"target_position": owner._get_slot_target_position(dice_place, dice),
+			"target_position": owner._player_ability_input_controller._get_slot_target_position(dice_place, dice),
 		})
 	return dice_assignments
 

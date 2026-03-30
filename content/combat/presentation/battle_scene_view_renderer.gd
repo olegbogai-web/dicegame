@@ -16,7 +16,7 @@ const STATUS_ICON_SPACING_X := 0.18
 func _apply_room_data(owner: Node) -> void:
 	if owner.battle_room_data == null:
 		return
-	owner._cancel_selected_ability(true)
+	owner._player_ability_input_controller._cancel_selected_ability(owner, true)
 	owner._player_ability_frame_states.clear()
 	owner._monster_ability_frame_states.clear()
 	owner._monster_sprite_states.clear()
@@ -33,7 +33,7 @@ func _apply_room_data(owner: Node) -> void:
 	)
 	_apply_monster_ability_frames(owner)
 	_apply_player_artifacts(owner)
-	owner._refresh_player_ability_snap_state()
+	owner._player_ability_input_controller._refresh_player_ability_snap_state(owner)
 	owner._update_turn_ui()
 
 
@@ -114,8 +114,8 @@ func _apply_ability_frames(
 		_apply_ability_icon(owner, frame, ability)
 		_apply_dice_places(frame, owner.battle_room_data.get_required_dice_slots(ability))
 		if track_player_slots:
-			owner._register_player_ability_frame(frame, ability, index)
-			owner._register_player_ability_slots(frame, ability, index)
+			owner._player_ability_input_controller._register_player_ability_frame(owner, frame, ability, index)
+			owner._player_ability_input_controller._register_player_ability_slots(owner, frame, ability, index)
 
 
 func _apply_monster_ability_frames(owner: Node) -> void:

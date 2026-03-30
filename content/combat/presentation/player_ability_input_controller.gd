@@ -3,6 +3,9 @@ class_name PlayerAbilityInputController
 
 const Dice = preload("res://content/dice/dice.gd")
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
+const BattleActionOrchestrator = preload("res://content/combat/runtime/battle_action_orchestrator.gd")
+const BattleTargetingService = preload("res://content/combat/presentation/battle_targeting_service.gd")
+const PostBattleRewardFlow = preload("res://content/combat/reward/post_battle_reward_flow.gd")
 
 const SLOT_EMPTY_COLOR := Color(1.0, 1.0, 1.0, 1.0)
 const SLOT_ASSIGNED_COLOR := Color(0.82, 0.9, 1.0, 1.0)
@@ -12,6 +15,57 @@ const FRAME_READY_COLOR := Color(0.12, 0.55, 1.0, 1.0)
 const FRAME_SELECTED_COLOR := Color(1.0, 0.92, 0.52, 1.0)
 const SELECTED_FRAME_LIFT_Y := 1.9
 const SELECTED_FRAME_MOUSE_FOLLOW_FACTOR := 0.2
+
+
+func handle_unhandled_input(
+	owner: Node,
+	event: InputEvent,
+	targeting_service: BattleTargetingService,
+	action_orchestrator: BattleActionOrchestrator,
+	post_battle_reward_flow: PostBattleRewardFlow
+) -> bool:
+	if Engine.is_editor_hint() or owner._activation_in_progress:
+		return false
+	if owner.battle_room_data == null:
+		return false
+	if event is InputEventMouseButton and not event.pressed:
+		return false
+	if owner._is_awaiting_ability_reward_selection and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		var reward_click := post_battle_reward_flow._resolve_ability_reward_click(owner, (event as InputEventMouseButton).position)
+		if not reward_click.is_empty():
+			post_battle_reward_flow._select_ability_reward(owner, reward_click)
+			return true
+	if not owner.battle_room_data.is_player_turn() or owner.battle_room_data.is_battle_over():
+		return false
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
+		_cancel_selected_ability(owner)
+		return true
+	if not (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT):
+		return false
+
+	var mouse_event := event as InputEventMouseButton
+	if targeting_service.has_player_dice_at_screen_point(mouse_event.position, owner._camera, owner.get_world_3d()):
+		return false
+	var clicked_frame_state := _find_player_ability_frame_at_screen_point(owner, mouse_event.position)
+	if not clicked_frame_state.is_empty():
+		if _is_ability_state_ready(owner, clicked_frame_state):
+			_select_player_ability(owner, clicked_frame_state)
+			return true
+	if owner._selected_ability_state.is_empty():
+		return false
+	var target_descriptor := targeting_service.resolve_target_descriptor_at_screen_point(
+		owner._selected_ability_state.get("ability") as AbilityDefinition,
+		mouse_event.position,
+		owner.battle_room_data,
+		owner._player_sprite,
+		owner._monster_sprite_states,
+		owner._floor,
+		owner._camera
+	)
+	if target_descriptor.is_empty():
+		return false
+	await action_orchestrator._activate_selected_ability(owner, target_descriptor)
+	return true
 
 
 func _refresh_player_ability_snap_state(owner: Node) -> void:
@@ -137,7 +191,7 @@ func _update_selected_ability_follow(owner: Node) -> void:
 		owner._selected_ability_state.clear()
 		return
 	var base_origin: Vector3 = owner._selected_ability_state.get("base_origin", frame.transform.origin)
-	var mouse_world = owner._project_mouse_to_horizontal_plane(base_origin.y)
+	var mouse_world = owner._battle_targeting_service.project_mouse_to_horizontal_plane(owner._camera, owner.get_viewport(), base_origin.y)
 	var mouse_delta = (mouse_world - owner._selected_mouse_anchor) * SELECTED_FRAME_MOUSE_FOLLOW_FACTOR
 	var target_origin := base_origin + Vector3(mouse_delta.x, SELECTED_FRAME_LIFT_Y, mouse_delta.z)
 	frame.transform = Transform3D(frame.transform.basis, target_origin)
