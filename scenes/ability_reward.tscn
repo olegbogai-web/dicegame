@@ -39,7 +39,7 @@ material_override = SubResource("StandardMaterial3D_svy3x")
 mesh = SubResource("PlaneMesh_nkpy2")
 
 [node name="abilitu_description" type="Label3D" parent="." unique_id=1402201755]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -0.99999994, -4.371139e-08, 0, 0.0100000305, 0.71575075)
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -0.99999994, -4.371139e-08, 0, 0.010000039, 0.8966606)
 render_priority = 1
 text = "текст описания способности текст описания способности "
 font_size = 24

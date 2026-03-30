@@ -436,9 +436,9 @@ func _compute_reward_card_spacing_x(owner: Node) -> float:
 func _compute_artifact_reward_spacing_x(owner: Node) -> float:
 	if owner._artifact_reward_template == null or owner._artifact_reward_template.mesh == null:
 		return ARTIFACT_REWARD_MIN_SPACING_X
-	var frame_size := owner._artifact_reward_template.mesh.get_aabb().size
-	var world_scale := owner._artifact_reward_template.global_transform.basis.get_scale()
-	var frame_width := frame_size.x * absf(world_scale.x)
+	var frame_size = owner._artifact_reward_template.mesh.get_aabb().size
+	var world_scale = owner._artifact_reward_template.global_transform.basis.get_scale()
+	var frame_width = frame_size.x * absf(world_scale.x)
 	if frame_width <= 0.0:
 		return ARTIFACT_REWARD_MIN_SPACING_X
 	return maxf(ARTIFACT_REWARD_MIN_SPACING_X, frame_width + ARTIFACT_REWARD_GAP_X)
