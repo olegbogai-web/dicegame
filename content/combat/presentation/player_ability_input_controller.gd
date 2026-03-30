@@ -35,11 +35,6 @@ func handle_unhandled_input(
 		if not reward_click.is_empty():
 			post_battle_reward_flow._select_ability_reward(owner, reward_click)
 			return true
-	if owner._is_awaiting_artifact_reward_selection and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		var artifact_click := post_battle_reward_flow._resolve_artifact_reward_click(owner, (event as InputEventMouseButton).position)
-		if not artifact_click.is_empty():
-			post_battle_reward_flow._select_artifact_reward(owner, artifact_click)
-			return true
 	if not owner.battle_room_data.is_player_turn() or owner.battle_room_data.is_battle_over():
 		return false
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
