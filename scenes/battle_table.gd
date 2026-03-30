@@ -12,7 +12,7 @@ const PostBattleRewardFlow = preload("res://content/combat/reward/post_battle_re
 const EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
 
 const ACTIVATION_ANIMATION_DURATION := 0.5
-const SELECTED_FRAME_LIFT_Y := BattleTargetingService.SELECTED_FRAME_LIFT_Y
+const SELECTED_FRAME_LIFT_Y := 1.9
 
 @onready var _camera: Camera3D = $battle_camera
 @onready var _board: BoardController = $board
@@ -39,6 +39,7 @@ var _monster_sprite_states: Array[Dictionary] = []
 var _selected_ability_state: Dictionary = {}
 var _selected_mouse_anchor := Vector3.ZERO
 var _activation_in_progress := false
+var _turn_transition_in_progress := false
 var _has_spawned_post_battle_reward_dice := false
 var _is_waiting_post_battle_reward_dice := false
 var _has_processed_post_battle_reward_result := false
@@ -90,13 +91,7 @@ func _ensure_battle_room_data() -> void:
 
 
 func _apply_room_data() -> void:
-	_scene_view_renderer.apply_room_data(self, {
-		"cancel_selected_ability": Callable(self, "_cancel_selected_ability"),
-		"refresh_player_ability_snap_state": Callable(self, "_refresh_player_ability_snap_state"),
-		"update_turn_ui": Callable(self, "_update_turn_ui"),
-		"register_player_ability_frame": Callable(self, "_register_player_ability_frame"),
-		"register_player_ability_slots": Callable(self, "_register_player_ability_slots"),
-	})
+	_scene_view_renderer._apply_room_data(self)
 
 
 func _apply_floor_textures() -> void:
@@ -117,13 +112,7 @@ func _apply_ability_frames(
 	generated_nodes: Array[Node],
 	track_player_slots: bool = false
 ) -> void:
-	var callbacks := {}
-	if track_player_slots:
-		callbacks = {
-			"register_player_ability_frame": Callable(self, "_register_player_ability_frame"),
-			"register_player_ability_slots": Callable(self, "_register_player_ability_slots"),
-		}
-	_scene_view_renderer._apply_ability_frames(self, abilities, template, generated_nodes, callbacks)
+	_scene_view_renderer._apply_ability_frames(self, abilities, template, generated_nodes, track_player_slots)
 
 
 func _apply_monster_ability_frames() -> void:
@@ -240,66 +229,106 @@ func _physics_process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	var is_handled := _player_ability_input_controller.handle_unhandled_input(self, event, {
-		"activation_in_progress": _activation_in_progress,
-		"turn_transition_in_progress": _battle_turn_orchestrator.is_turn_transition_in_progress(),
-		"awaiting_reward_selection": _is_awaiting_ability_reward_selection,
-		"resolve_reward_click": Callable(self, "_resolve_ability_reward_click"),
-		"select_reward": Callable(self, "_select_ability_reward"),
-		"has_player_dice_at_screen_point": Callable(self, "_has_player_dice_at_screen_point"),
-		"resolve_target_descriptor": Callable(self, "_resolve_target_descriptor_at_screen_point"),
-		"activate_selected_ability": Callable(self, "_activate_selected_ability"),
-	})
-	if is_handled:
+	if Engine.is_editor_hint() or _activation_in_progress or _turn_transition_in_progress:
+		return
+	if battle_room_data == null:
+		return
+	if event is InputEventMouseButton and not event.pressed:
+		return
+	if _is_awaiting_ability_reward_selection and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		var reward_click := _resolve_ability_reward_click((event as InputEventMouseButton).position)
+		if not reward_click.is_empty():
+			_select_ability_reward(reward_click)
+			get_viewport().set_input_as_handled()
+			return
+	if not battle_room_data.is_player_turn() or battle_room_data.is_battle_over():
+		return
+
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
+		_cancel_selected_ability()
 		get_viewport().set_input_as_handled()
+		return
+
+	if not (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT):
+		return
+
+	var mouse_event := event as InputEventMouseButton
+	if _has_player_dice_at_screen_point(mouse_event.position):
+		return
+
+	var clicked_frame_state := _find_player_ability_frame_at_screen_point(mouse_event.position)
+	if not clicked_frame_state.is_empty():
+		if _is_ability_state_ready(clicked_frame_state):
+			_select_player_ability(clicked_frame_state)
+			get_viewport().set_input_as_handled()
+			return
+
+	if _selected_ability_state.is_empty():
+		return
+
+	var target_descriptor := _resolve_target_descriptor_at_screen_point(
+		_selected_ability_state.get("ability") as AbilityDefinition,
+		mouse_event.position
+	)
+	if target_descriptor.is_empty():
+		return
+
+	_activate_selected_ability(target_descriptor)
+	get_viewport().set_input_as_handled()
 
 
 func _refresh_player_ability_snap_state() -> void:
-	_player_ability_input_controller.refresh_player_ability_snap_state(self)
+	_player_ability_input_controller._refresh_player_ability_snap_state(self)
 
 
 func _is_player_ability_frame_at_base(frame: MeshInstance3D) -> bool:
-	return _player_ability_input_controller.is_player_ability_frame_at_base(self, frame)
+	return _player_ability_input_controller._is_player_ability_frame_at_base(self, frame)
 
 
 func _register_player_ability_frame(frame: MeshInstance3D, ability: AbilityDefinition, ability_index: int) -> void:
-	_player_ability_input_controller.register_player_ability_frame(self, frame, ability, ability_index)
+	_player_ability_input_controller._register_player_ability_frame(self, frame, ability, ability_index)
 
 
 func _register_player_ability_slots(frame: MeshInstance3D, ability: AbilityDefinition, ability_index: int) -> void:
-	_player_ability_input_controller.register_player_ability_slots(self, frame, ability, ability_index, Callable(self, "_get_dice_place_nodes"))
+	_player_ability_input_controller._register_player_ability_slots(self, frame, ability, ability_index)
 
 
 func _get_board_dice() -> Array[Dice]:
-	return _player_ability_input_controller.get_board_dice(self)
+	var dice_list: Array[Dice] = []
+	if _board == null:
+		return dice_list
+	for child in _board.get_children():
+		if child is Dice and is_instance_valid(child):
+			dice_list.append(child as Dice)
+	return dice_list
 
 
 func _find_dice_for_slot(slot_state: Dictionary, dice_list: Array[Dice]) -> Dice:
-	return _player_ability_input_controller.find_dice_for_slot(slot_state, dice_list)
+	return _player_ability_input_controller._find_dice_for_slot(slot_state, dice_list)
 
 
 func _find_snap_candidate(slot_state: Dictionary, dice_list: Array[Dice], used_dice: Dictionary) -> Dice:
-	return _player_ability_input_controller.find_snap_candidate(self, slot_state, dice_list, used_dice)
+	return _player_ability_input_controller._find_snap_candidate(self, slot_state, dice_list, used_dice)
 
 
 func _dice_matches_slot(dice: Dice, slot_state: Dictionary) -> bool:
-	return _player_ability_input_controller.dice_matches_slot(dice, slot_state)
+	return _player_ability_input_controller._dice_matches_slot(self, dice, slot_state)
 
 
 func _get_slot_target_position(dice_place: MeshInstance3D, dice: Dice) -> Vector3:
-	return _player_ability_input_controller.get_slot_target_position(dice_place, dice)
+	return _player_ability_input_controller._get_slot_target_position(dice_place, dice)
 
 
 func _update_player_ability_visuals(dice_list: Array[Dice]) -> void:
-	_player_ability_input_controller.update_player_ability_visuals(self, dice_list)
+	_player_ability_input_controller._update_player_ability_visuals(self, dice_list)
 
 
 func _get_active_drag_dice(dice_list: Array[Dice]) -> Dice:
-	return _player_ability_input_controller.get_active_drag_dice(dice_list)
+	return _player_ability_input_controller._get_active_drag_dice(dice_list)
 
 
 func _should_highlight_slot_for_dice(slot_state: Dictionary, assigned_dice: Dice, active_drag_dice: Dice) -> bool:
-	return _player_ability_input_controller.should_highlight_slot_for_dice(slot_state, assigned_dice, active_drag_dice)
+	return _player_ability_input_controller._should_highlight_slot_for_dice(self, slot_state, assigned_dice, active_drag_dice)
 
 
 func _set_mesh_tint(mesh_instance: MeshInstance3D, color: Color) -> void:
@@ -307,31 +336,31 @@ func _set_mesh_tint(mesh_instance: MeshInstance3D, color: Color) -> void:
 
 
 func _find_player_ability_frame_at_screen_point(screen_point: Vector2) -> Dictionary:
-	return _player_ability_input_controller.find_player_ability_frame_at_screen_point(self, screen_point)
+	return _player_ability_input_controller._find_player_ability_frame_at_screen_point(self, screen_point)
 
 
 func _select_player_ability(frame_state: Dictionary) -> void:
-	_player_ability_input_controller.select_player_ability(self, frame_state)
+	_player_ability_input_controller._select_player_ability(self, frame_state)
 
 
 func _cancel_selected_ability(skip_visual_reset: bool = false) -> void:
-	_player_ability_input_controller.cancel_selected_ability(self, skip_visual_reset)
+	_player_ability_input_controller._cancel_selected_ability(self, skip_visual_reset)
 
 
 func _update_selected_ability_follow() -> void:
-	_player_ability_input_controller.update_selected_ability_follow(self)
+	_player_ability_input_controller._update_selected_ability_follow(self)
 
 
 func _is_ability_state_ready(frame_state: Dictionary) -> bool:
-	return _player_ability_input_controller.is_ability_state_ready(self, frame_state)
+	return _player_ability_input_controller._is_ability_state_ready(self, frame_state)
 
 
 func _collect_ready_dice_for_frame(frame: MeshInstance3D) -> Array[Dice]:
-	return _player_ability_input_controller.collect_ready_dice_for_frame(self, frame)
+	return _player_ability_input_controller._collect_ready_dice_for_frame(self, frame)
 
 
 func _resolve_target_descriptor_at_screen_point(ability: AbilityDefinition, screen_point: Vector2) -> Dictionary:
-	return _battle_targeting_service.resolve_target_descriptor_at_screen_point(self, ability, screen_point, _monster_sprite_states)
+	return _battle_targeting_service._resolve_target_descriptor_at_screen_point(self, ability, screen_point)
 
 
 func _activate_selected_ability(target_descriptor: Dictionary) -> void:
@@ -368,7 +397,7 @@ func _execute_monster_ability(
 
 
 func _resolve_activation_target_origin(target_descriptor: Dictionary, base_origin: Vector3) -> Vector3:
-	return _battle_targeting_service.resolve_activation_target_origin(self, target_descriptor, base_origin, _monster_sprite_states)
+	return _battle_targeting_service._resolve_activation_target_origin(self, target_descriptor, base_origin)
 
 
 func _initialize_battle_state() -> void:
@@ -441,50 +470,32 @@ func _select_ability_reward(entry: Dictionary) -> void:
 	_post_battle_reward_flow._select_ability_reward(self, entry)
 
 
-func _build_turn_orchestrator_context() -> Dictionary:
-	return {
-		"host": self,
-		"board": _board,
-		"battle_room": battle_room_data,
-		"provide_board_dice": Callable(self, "_get_board_dice"),
-		"update_turn_ui": Callable(self, "_update_turn_ui"),
-		"cancel_selected_ability": Callable(self, "_cancel_selected_ability"),
-		"execute_monster_ability": Callable(self, "_execute_monster_ability"),
-		"on_battle_over": Callable(self, "_on_turn_orchestrator_battle_over"),
-	}
-
-
-func _on_turn_orchestrator_battle_over() -> void:
-	await _handle_post_battle_reward_dice()
-	_update_turn_ui()
-
-
 func _start_current_turn() -> void:
-	_battle_turn_orchestrator.start_current_turn(_build_turn_orchestrator_context())
+	_battle_turn_orchestrator._start_current_turn(self)
 
 
 func _throw_current_turn_dice() -> void:
-	_battle_turn_orchestrator.throw_current_turn_dice(_build_turn_orchestrator_context())
+	_battle_turn_orchestrator._throw_current_turn_dice(self)
 
 
 func _build_dice_throw_request(dice_definition: DiceDefinition, metadata: Dictionary) -> DiceThrowRequest:
-	return _battle_turn_orchestrator.build_dice_throw_request(dice_definition, metadata)
+	return _battle_turn_orchestrator._build_dice_throw_request(self, dice_definition, metadata)
 
 
 func _clear_board_dice() -> void:
-	_battle_turn_orchestrator.clear_board_dice(_build_turn_orchestrator_context())
+	_battle_turn_orchestrator._clear_board_dice(self)
 
 
 func _get_turn_dice(owner: StringName, monster_index: int = -1) -> Array[Dice]:
-	return _battle_turn_orchestrator.get_turn_dice(_build_turn_orchestrator_context(), owner, monster_index)
+	return _battle_turn_orchestrator._get_turn_dice(self, owner, monster_index)
 
 
 func _are_current_monster_turn_dice_stopped() -> bool:
-	return _battle_turn_orchestrator.are_current_monster_turn_dice_stopped(_build_turn_orchestrator_context())
+	return _battle_turn_orchestrator._are_current_monster_turn_dice_stopped(self)
 
 
 func _on_end_turn_button_pressed() -> void:
-	_battle_turn_orchestrator.on_end_turn_button_pressed(_build_turn_orchestrator_context())
+	_battle_turn_orchestrator._on_end_turn_button_pressed(self)
 
 
 func _on_event_button_pressed() -> void:
@@ -494,16 +505,16 @@ func _on_event_button_pressed() -> void:
 
 
 func _advance_to_next_turn() -> void:
-	_battle_turn_orchestrator.advance_to_next_turn(_build_turn_orchestrator_context())
+	_battle_turn_orchestrator._advance_to_next_turn(self)
 
 
 func _run_current_monster_turn() -> void:
-	await _battle_turn_orchestrator.run_current_monster_turn(_build_turn_orchestrator_context())
+	await _battle_turn_orchestrator._run_current_monster_turn(self)
 
 
 func _update_turn_ui() -> void:
 	if _end_turn_button != null:
-		_end_turn_button.disabled = battle_room_data == null or not battle_room_data.is_player_turn() or _activation_in_progress or _battle_turn_orchestrator.is_turn_transition_in_progress() or battle_room_data.is_battle_over()
+		_end_turn_button.disabled = battle_room_data == null or not battle_room_data.is_player_turn() or _activation_in_progress or battle_room_data.is_battle_over()
 	if _turn_status_label == null:
 		return
 	if battle_room_data == null:
@@ -526,16 +537,16 @@ func _update_turn_ui() -> void:
 
 
 func _project_mouse_to_horizontal_plane(plane_y: float) -> Vector3:
-	return _battle_targeting_service.project_mouse_to_horizontal_plane(self, _camera, plane_y)
+	return _battle_targeting_service._project_mouse_to_horizontal_plane(self, plane_y)
 
 
 func _screen_point_hits_mesh(mesh_instance: MeshInstance3D, screen_point: Vector2) -> bool:
-	return _battle_targeting_service.screen_point_hits_mesh(self, _camera, mesh_instance, screen_point)
+	return _battle_targeting_service._screen_point_hits_mesh(self, mesh_instance, screen_point)
 
 
 func _has_player_dice_at_screen_point(screen_point: Vector2) -> bool:
-	return _battle_targeting_service.has_player_dice_at_screen_point(self, _camera, screen_point)
+	return _battle_targeting_service._has_player_dice_at_screen_point(self, screen_point)
 
 
 func _project_mesh_screen_rect(mesh_instance: MeshInstance3D) -> Rect2:
-	return _battle_targeting_service.project_mesh_screen_rect(_camera, mesh_instance)
+	return _battle_targeting_service._project_mesh_screen_rect(self, mesh_instance)
