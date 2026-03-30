@@ -7,7 +7,6 @@ const GLOBAL_MAP_SWORDS_ICON := preload("res://assets/global_map/swords.png")
 const GLOBAL_MAP_EVENT_ICON := preload("res://assets/global_map/question_mark.png")
 const GLOBAL_MAP_DICE_SKIN := preload("res://assets/dice_edges/bones_dice_skin.png")
 const REWARD_ARTIFACT_ICON := preload("res://assets/dice_edges/artifact_+.png")
-const REWARD_CARD_ICON := preload("res://assets/dice_edges/card_+.png")
 const REWARD_CUBE_ICON := preload("res://assets/dice_edges/cube_+.png")
 const REWARD_CUBE_UP_ICON := preload("res://assets/dice_edges/cube_up.png")
 const REWARD_CARD_UP_ICON := preload("res://assets/dice_edges/card_up.png")
@@ -112,14 +111,13 @@ func _build_default_reward_cube_definition() -> DiceDefinition:
 	var dice_definition := DiceDefinitionScript.new()
 	dice_definition.dice_name = "reward_cube"
 	dice_definition.base_color = Color(0.76, 0.76, 0.76, 1.0)
-	# TODO: удалить при завершении фазы дебага кубика награды.
 	dice_definition.faces = [
-		_build_face("card_+", REWARD_CARD_ICON),
-		_build_face("card_+", REWARD_CARD_ICON),
-		_build_face("card_+", REWARD_CARD_ICON),
-		_build_face("card_+", REWARD_CARD_ICON),
-		_build_face("card_+", REWARD_CARD_ICON),
-		_build_face("card_+", REWARD_CARD_ICON),
+		_build_face("card_up", REWARD_CARD_UP_ICON),
+		_build_face("card_up", REWARD_CARD_UP_ICON),
+		_build_face("card_up", REWARD_CARD_UP_ICON),
+		_build_face("card_up", REWARD_CARD_UP_ICON),
+		_build_face("card_up", REWARD_CARD_UP_ICON),
+		_build_face("card_up", REWARD_CARD_UP_ICON),
 	]
 	return dice_definition
 
