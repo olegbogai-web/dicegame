@@ -29,7 +29,8 @@ const POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER := 1.0
 const POST_BATTLE_REWARD_DICE_DELAY_SECONDS := 1.0
 const REWARD_CARD_FACE_ID := &"card_+"
 const ABILITY_REWARD_OPTIONS_COUNT := 3
-const ABILITY_REWARD_CARD_SPACING_X := 3.2
+const ABILITY_REWARD_CARD_MIN_SPACING_X := 3.2
+const ABILITY_REWARD_CARD_GAP_X := 0.35
 const ABILITY_DEFINITIONS_DIRECTORY := "res://content/abilities/definitions"
 const RARITY_COMMON_WEIGHT := 50.0
 const RARITY_UNCOMMON_WEIGHT := 30.0
@@ -1271,6 +1272,19 @@ func _pick_ability_by_rarity_with_fallback(
 		return candidates[_ability_reward_rng.randi_range(0, candidates.size() - 1)]
 	return null
 
+func _compute_reward_card_spacing_x() -> float:
+	if _ability_reward_template == null:
+		return ABILITY_REWARD_CARD_MIN_SPACING_X
+	var frame_base := _ability_reward_template.get_node_or_null(^"ability_frame_base") as MeshInstance3D
+	if frame_base == null or frame_base.mesh == null:
+		return ABILITY_REWARD_CARD_MIN_SPACING_X
+	var card_size := frame_base.mesh.get_aabb().size
+	var world_scale := frame_base.global_transform.basis.get_scale()
+	var card_width := card_size.x * absf(world_scale.x)
+	if card_width <= 0.0:
+		return ABILITY_REWARD_CARD_MIN_SPACING_X
+	return maxf(ABILITY_REWARD_CARD_MIN_SPACING_X, card_width + ABILITY_REWARD_CARD_GAP_X)
+
 
 func _render_ability_reward_cards(entries: Array[Dictionary]) -> void:
 	_clear_ability_reward_cards()
@@ -1280,7 +1294,8 @@ func _render_ability_reward_cards(entries: Array[Dictionary]) -> void:
 	_ability_reward_entries.clear()
 	if entries.is_empty():
 		return
-	var offsets := _build_centered_offsets(entries.size(), ABILITY_REWARD_CARD_SPACING_X)
+	var spacing_x := _compute_reward_card_spacing_x()
+	var offsets := _build_centered_offsets(entries.size(), spacing_x)
 	for index in entries.size():
 		var card_root := _ability_reward_template if index == 0 else (_ability_reward_template.duplicate() as Node3D)
 		if card_root.get_parent() == null:
