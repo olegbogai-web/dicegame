@@ -1296,14 +1296,16 @@ func _render_ability_reward_cards(entries: Array[Dictionary]) -> void:
 		return
 	var spacing_x := _compute_reward_card_spacing_x()
 	var offsets := _build_centered_offsets(entries.size(), spacing_x)
+	var template_basis := _ability_reward_template.transform.basis
+	var template_origin := _ability_reward_template.transform.origin
 	for index in entries.size():
 		var card_root := _ability_reward_template if index == 0 else (_ability_reward_template.duplicate() as Node3D)
 		if card_root.get_parent() == null:
 			add_child(card_root)
 		card_root.visible = true
 		card_root.transform = Transform3D(
-			_ability_reward_template.transform.basis,
-			_ability_reward_template.transform.origin + Vector3(offsets[index], 0.0, 0.0)
+			template_basis,
+			template_origin + Vector3(offsets[index], 0.0, 0.0)
 		)
 		var ability := entries[index].get("ability") as AbilityDefinition
 		_apply_reward_card_visual(card_root, ability)
