@@ -16,25 +16,17 @@ const STATUS_ICON_SPACING_X := 0.18
 func _apply_room_data(owner: Node) -> void:
 	if owner.battle_room_data == null:
 		return
-	owner._cancel_selected_ability(true)
-	owner._player_ability_frame_states.clear()
-	owner._monster_ability_frame_states.clear()
-	owner._monster_sprite_states.clear()
 	_apply_floor_textures(owner)
 	_apply_player_sprite(owner)
 	_apply_monster_sprites(owner)
-	owner._player_ability_slot_states.clear()
 	_apply_ability_frames(
 		owner,
 		owner.battle_room_data.get_player_abilities(),
 		owner._player_ability_template,
-		owner._generated_player_ability_frames,
-		true
+		owner._generated_player_ability_frames
 	)
 	_apply_monster_ability_frames(owner)
 	_apply_player_artifacts(owner)
-	owner._refresh_player_ability_snap_state()
-	owner._update_turn_ui()
 
 
 func _apply_floor_textures(owner: Node) -> void:
@@ -93,8 +85,7 @@ func _apply_ability_frames(
 	owner: Node,
 	abilities: Array[AbilityDefinition],
 	template: MeshInstance3D,
-	generated_nodes: Array[Node],
-	track_player_slots: bool = false
+	generated_nodes: Array[Node]
 ) -> void:
 	_clear_generated_nodes(owner, generated_nodes)
 
@@ -113,9 +104,6 @@ func _apply_ability_frames(
 		frame.transform = Transform3D(frame.transform.basis, anchor + Vector3(0.0, 0.0, offsets[index]))
 		_apply_ability_icon(owner, frame, ability)
 		_apply_dice_places(frame, owner.battle_room_data.get_required_dice_slots(ability))
-		if track_player_slots:
-			owner._register_player_ability_frame(frame, ability, index)
-			owner._register_player_ability_slots(frame, ability, index)
 
 
 func _apply_monster_ability_frames(owner: Node) -> void:
