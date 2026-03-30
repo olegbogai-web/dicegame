@@ -17,6 +17,7 @@ const RARITY_COMMON_WEIGHT := 50.0
 const RARITY_UNCOMMON_WEIGHT := 30.0
 const RARITY_RARE_WEIGHT := 20.0
 const RARITY_UNIQUE_WEIGHT := 10.0
+const GLOBAL_MAP_SCENE_PATH := "res://scenes/global_map_room.tscn"
 
 
 func _handle_post_battle_reward_dice(owner: Node) -> void:

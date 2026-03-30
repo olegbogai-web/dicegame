@@ -10,7 +10,6 @@ const GlobalMapMarkerRoomLinkResolver = preload("res://content/global_map/routin
 const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
 const BattleRoom = preload("res://content/rooms/subclasses/battle_room.gd")
 const Player = preload("res://content/entities/player.gd")
-const PlayerBaseStat = preload("res://content/entities/player_base_stat.gd")
 const BoardController = preload("res://ui/scripts/board_controller.gd")
 const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
@@ -347,12 +346,9 @@ func _build_global_map_throw_request(definition: DiceDefinition) -> DiceThrowReq
 func _resolve_or_create_runtime_player() -> Player:
 	var saved_player = GlobalMapRuntimeState.load_runtime_player()
 	if saved_player != null:
+		saved_player.ensure_runtime_initialized_from_base_stat()
 		return saved_player
-	var base_stat := PlayerBaseStat.new()
-	base_stat.player_id = "global_map_runtime_player"
-	base_stat.display_name = "GlobalMapRuntimePlayer"
-	base_stat.starting_abilities = []
-	var player := Player.new(base_stat)
+	var player := BattleRoom.build_default_player()
 	GlobalMapRuntimeState.save_runtime_player(player)
 	return player
 
