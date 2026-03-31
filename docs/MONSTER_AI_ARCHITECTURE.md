@@ -599,3 +599,16 @@ Monster AI может только:
 - удобное масштабирование на большое количество монстров;
 - переиспользование уже существующего визуального pipeline игрока;
 - минимальный риск превращения monster AI в монолит.
+
+## 14. Обновление: профиль ИИ `chimera` (март 2026)
+
+Добавлен monster-specific профиль `content/monster_ai/profiles/chimera_ai_profile.gd` с приоритетами:
+- сначала `strengthening` (не более 1 раза за ход);
+- затем `clawed_series` без лимита применений;
+- затем завершение хода.
+
+Новые функции в profile-слое:
+- `decide_next_action(monster_index, battle_room, available_dice)` — реализует приоритеты Химеры;
+- `_build_strengthening_turn_key(battle_room, combatant_id)` — формирует ключ «монстр+ход» для ограничения `strengthening` до 1 применения за ход;
+- `_can_use_strengthening_with_any_three_dice(ability, available_dice)` — проверяет достижимость `strengthening` через экономичный 3-sum алгоритм по всем комбинациям из трех кубов;
+- `_find_ability_by_id(abilities, ability_id)` — локальный резолвер способностей монстра по `ability_id`.
