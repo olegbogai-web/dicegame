@@ -35,7 +35,7 @@ const CUBE_RARITY_RARE_WEIGHT := 15.0
 const CUBE_RARITY_UNIQUE_WEIGHT := 10.0
 const CUBE_REWARD_VISUAL_ROTATION_DEGREES := Vector3(45.0, 10.0, -120.0)
 const CUBE_REWARD_VISUAL_POSITION_OFFSET := Vector3(0.0, 0.75, 0.0)
-const CUBE_REWARD_VISUAL_SCALE_MULTIPLIER := Vector3(3.0, 3.0, 3.0)
+const CUBE_REWARD_VISUAL_SCALE_MULTIPLIER := Vector3(1.5, 1.5, 1.5)
 const BASE_CUBE_SCENE_PATH := "res://content/resources/base_cube.tscn"
 const GLOBAL_MAP_SCENE_PATH := "res://scenes/global_map_room.tscn"
 
@@ -719,7 +719,7 @@ func _apply_cube_reward_visual(owner: Node, card_root: Node3D, cube_definition: 
 		return
 	var title_label := card_root.get_node_or_null(^"ability_text") as Label3D
 	if title_label != null:
-		title_label.text = cube_definition.dice_name if cube_definition != null else ""
+		title_label.text = cube_definition.display_name if cube_definition != null else ""
 	var description_label := card_root.get_node_or_null(^"abilitu_description") as Label3D
 	if description_label != null:
 		description_label.text = _build_cube_reward_description(cube_definition)
@@ -795,6 +795,8 @@ func _remove_embedded_cube_reward_node(card_root: Node3D) -> void:
 func _build_cube_reward_description(cube_definition: DiceDefinition) -> String:
 	if cube_definition == null:
 		return ""
+	if not cube_definition.description.is_empty():
+		return cube_definition.description
 	return "Редкость: %s · Область: %s" % [_format_cube_rarity(cube_definition.rarity), _format_cube_scope(cube_definition.scope)]
 
 

@@ -36,6 +36,8 @@ text_color = Color(0.95, 0.98, 1, 1)
 [resource]
 script = ExtResource("1_dice")
 dice_name = "lucky_six"
+display_name = "Счастливая шестерка"
+description = "Вечная шестерка. Слишком хорошо, чтобы быть честным."
 scope = 0
 rarity = 2
 size_multiplier = Vector3(2.52, 2.52, 2.52)

@@ -36,6 +36,8 @@ text_color = Color(0.95, 0.98, 1, 1)
 [resource]
 script = ExtResource("1_dice")
 dice_name = "lucky_five"
+display_name = "Счастливая пятерка"
+description = "На этом кубе в всегда выпадает пять. Приятно."
 scope = 0
 rarity = 1
 size_multiplier = Vector3(2.52, 2.52, 2.52)

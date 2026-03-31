@@ -21,6 +21,8 @@ enum Scope {
 }
 
 @export var dice_name := "dice"
+@export var display_name := "Новый куб"
+@export_multiline var description := ""
 @export var rarity: Rarity = Rarity.COMMON
 @export var scope: Scope = Scope.COMBAT
 @export var base_size: Vector3 = Vector3(0.2, 0.2, 0.2)
