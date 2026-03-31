@@ -124,7 +124,7 @@ func _find_post_battle_reward_die(owner: Node) -> Dice:
 func _grant_money_from_reward_rolls(owner: Node, rolled_dice: Array) -> void:
 	if owner == null or owner.battle_room_data == null:
 		return
-	var player := owner.battle_room_data.player_instance
+	var player = owner.battle_room_data.player_instance
 	if player == null:
 		return
 	var granted_coins := 0

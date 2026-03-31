@@ -252,7 +252,7 @@ offset_bottom = 261.0
 scale = Vector2(0.26151982, 0.24725613)
 texture = ExtResource("10_tw8gb")
 
-[node name="money_ui" parent="." instance=ExtResource("11_money_ui")]
+[node name="money_ui" parent="." unique_id=759518485 instance=ExtResource("11_money_ui")]
 
 [node name="ability_reward" parent="." unique_id=769588038 instance=ExtResource("10_df7hy")]
 transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 4, 0)
