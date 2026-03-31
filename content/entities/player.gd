@@ -3,10 +3,13 @@ class_name Player
 
 const ON_GRANT_MAX_HP_BONUS_META_KEY := &"on_grant_max_hp_bonus"
 
+signal coins_changed(total_coins: int)
+
 var player_id := ""
 var base_stat: PlayerBaseStat
 var current_hp := 0
 var current_armor := 0
+var current_coins := 0
 var dice_loadout: Array[DiceDefinition] = []
 var runtime_cube_global_map: Array[DiceDefinition] = []
 var runtime_reward_cube: DiceDefinition
@@ -40,6 +43,7 @@ func reset_for_run() -> void:
 	if base_stat == null:
 		current_hp = 0
 		current_armor = 0
+		current_coins = 0
 		dice_loadout.clear()
 		runtime_cube_global_map.clear()
 		runtime_reward_cube = null
@@ -52,9 +56,11 @@ func reset_for_run() -> void:
 		runtime_max_hp_bonus = 0
 		run_flags.clear()
 		_is_runtime_initialized = false
+		_emit_coins_changed()
 		return
 	current_hp = base_stat.get_resolved_starting_hp()
 	current_armor = base_stat.starting_armor
+	current_coins = maxi(base_stat.starting_coins, 0)
 	dice_loadout = base_stat.starting_dice.duplicate()
 	runtime_cube_global_map = base_stat.get_resolved_base_cube_global_map().duplicate(true)
 	runtime_reward_cube = base_stat.get_resolved_base_reward_cube().duplicate(true)
@@ -71,6 +77,7 @@ func reset_for_run() -> void:
 	runtime_max_hp_bonus = 0
 	run_flags.clear()
 	_is_runtime_initialized = true
+	_emit_coins_changed()
 
 
 func ensure_runtime_initialized_from_base_stat() -> void:
@@ -107,6 +114,31 @@ func get_max_hp() -> int:
 	if base_stat == null:
 		return 0
 	return maxi(base_stat.max_hp + runtime_max_hp_bonus, 0)
+
+
+func add_coins(amount: int) -> int:
+	var resolved_amount := maxi(amount, 0)
+	if resolved_amount <= 0:
+		return current_coins
+	current_coins += resolved_amount
+	_emit_coins_changed()
+	return current_coins
+
+
+func spend_coins(amount: int) -> bool:
+	var resolved_amount := maxi(amount, 0)
+	if resolved_amount <= 0:
+		return true
+	if current_coins < resolved_amount:
+		return false
+	current_coins -= resolved_amount
+	_emit_coins_changed()
+	return true
+
+
+func set_coins(amount: int) -> void:
+	current_coins = maxi(amount, 0)
+	_emit_coins_changed()
 
 
 func grant_artifact(artifact_definition: ArtifactDefinition) -> void:
@@ -172,3 +204,7 @@ func _apply_on_grant_effects(artifact_definition: ArtifactDefinition) -> void:
 		return
 	runtime_max_hp_bonus += max_hp_bonus
 	current_hp = mini(current_hp + max_hp_bonus, get_max_hp())
+
+
+func _emit_coins_changed() -> void:
+	coins_changed.emit(current_coins)
