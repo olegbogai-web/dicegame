@@ -11,6 +11,9 @@ var dice_loadout: Array[DiceDefinition] = []
 var runtime_cube_global_map: Array[DiceDefinition] = []
 var runtime_reward_cube: DiceDefinition
 var runtime_money_cube: DiceDefinition
+var runtime_reward_cubes: Array[DiceDefinition] = []
+var runtime_money_cubes: Array[DiceDefinition] = []
+var runtime_event_cubes: Array[DiceDefinition] = []
 var ability_loadout: Array[AbilityDefinition] = []
 var artifacts_runtime: Array[ArtifactDefinition] = []
 var runtime_max_hp_bonus := 0
@@ -41,6 +44,9 @@ func reset_for_run() -> void:
 		runtime_cube_global_map.clear()
 		runtime_reward_cube = null
 		runtime_money_cube = null
+		runtime_reward_cubes.clear()
+		runtime_money_cubes.clear()
+		runtime_event_cubes.clear()
 		ability_loadout.clear()
 		artifacts_runtime.clear()
 		runtime_max_hp_bonus = 0
@@ -53,6 +59,13 @@ func reset_for_run() -> void:
 	runtime_cube_global_map = base_stat.get_resolved_base_cube_global_map().duplicate(true)
 	runtime_reward_cube = base_stat.get_resolved_base_reward_cube().duplicate(true)
 	runtime_money_cube = base_stat.get_resolved_base_money_cube().duplicate(true)
+	runtime_reward_cubes = []
+	runtime_money_cubes = []
+	runtime_event_cubes = []
+	if runtime_reward_cube != null:
+		runtime_reward_cubes.append(runtime_reward_cube)
+	if runtime_money_cube != null:
+		runtime_money_cubes.append(runtime_money_cube)
 	ability_loadout = base_stat.starting_abilities.duplicate()
 	artifacts_runtime.clear()
 	runtime_max_hp_bonus = 0
@@ -113,6 +126,42 @@ func get_active_artifact_definitions() -> Array[ArtifactDefinition]:
 		if artifact_runtime != null:
 			resolved.append(artifact_runtime)
 	return resolved
+
+
+func grant_runtime_cube(cube_definition: DiceDefinition) -> void:
+	if cube_definition == null:
+		return
+	var cloned_cube := cube_definition.duplicate(true) as DiceDefinition
+	if cloned_cube == null:
+		return
+	match cloned_cube.scope:
+		DiceDefinition.Scope.COMBAT:
+			dice_loadout.append(cloned_cube)
+		DiceDefinition.Scope.GLOBAL_MAP:
+			runtime_cube_global_map.append(cloned_cube)
+		DiceDefinition.Scope.REWARD:
+			runtime_reward_cubes.append(cloned_cube)
+			runtime_reward_cube = runtime_reward_cubes[0] if not runtime_reward_cubes.is_empty() else null
+		DiceDefinition.Scope.MONEY:
+			runtime_money_cubes.append(cloned_cube)
+			runtime_money_cube = runtime_money_cubes[0] if not runtime_money_cubes.is_empty() else null
+		DiceDefinition.Scope.EVENT:
+			runtime_event_cubes.append(cloned_cube)
+
+
+func get_runtime_cubes_by_scope(scope: int) -> Array[DiceDefinition]:
+	match scope:
+		DiceDefinition.Scope.COMBAT:
+			return dice_loadout
+		DiceDefinition.Scope.GLOBAL_MAP:
+			return runtime_cube_global_map
+		DiceDefinition.Scope.REWARD:
+			return runtime_reward_cubes
+		DiceDefinition.Scope.MONEY:
+			return runtime_money_cubes
+		DiceDefinition.Scope.EVENT:
+			return runtime_event_cubes
+	return []
 
 
 func _apply_on_grant_effects(artifact_definition: ArtifactDefinition) -> void:

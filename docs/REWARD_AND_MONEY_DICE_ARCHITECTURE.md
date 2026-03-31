@@ -41,8 +41,10 @@
 
 - `runtime_reward_cube` инициализируется копией `base_reward_cube`;
 - `runtime_money_cube` инициализируется копией `base_money_cube`.
+- `runtime_reward_cubes` и `runtime_money_cubes` инициализируются как коллекции runtime-кубов для соответствующих scope;
+- добавлены отдельные коллекции по scope (`dice_loadout`, `runtime_cube_global_map`, `runtime_reward_cubes`, `runtime_money_cubes`, `runtime_event_cubes`) и API `Player.grant_runtime_cube` / `Player.get_runtime_cubes_by_scope`, чтобы не смешивать кубы разных подсистем в рантайме.
 
-Ключевое правило: в течение текущего забега `runtime_reward_cube` и `runtime_money_cube` могут изменяться.
+Ключевое правило: в течение текущего забега runtime-наборы кубов могут меняться и накапливаться (дубликаты не-unique разрешены), при этом `unique`-кубы не дублируются.
 
 ---
 
@@ -146,6 +148,33 @@
 - `_pick_artifact_by_rarity_with_fallback`;
 - `_render_artifact_reward_cards` и `_apply_artifact_reward_visual`;
 - `_resolve_artifact_reward_click` и `_select_artifact_reward`.
+
+## 4.4. Runtime-алгоритм награды кубами (`cube_+`)
+
+Если после победы на `reward dice` выпадает грань `cube_+`:
+
+1. генерируются 2 варианта кубов для выбора игроком;
+2. для каждого слота сначала бросается редкость (веса: `обычное 50`, `необычное 25`, `редкое 15`, `уникальное 10`);
+3. затем случайно выбирается куб нужной редкости из `res://content/dice/definitions`;
+4. если в текущей редкости нет валидных кубов, выполняется fallback по редкостям вниз (`уникальное -> редкое -> необычное -> обычное`);
+5. не-уникальные кубы могут повторяться (в том числе в рамках одного забега);
+6. одинаковый `unique`-куб не может быть выдан повторно, если уже есть у игрока в любом runtime scope или уже выпал в текущем выборе;
+7. игрок выбирает один из двух вариантов (`ЛКМ`), после чего куб добавляется через `Player.grant_runtime_cube` строго в коллекцию своего `scope` (`COMBAT/GLOBAL_MAP/REWARD/MONEY/EVENT`);
+8. визуал выбора переиспользует карточку артефакта: вместо спрайта показывается preview реального `Dice`-узла с рамкой `artefact_frame_reward`, поворотом `X=45, Y=10, Z=-120`, смещением `+0.75` по `Y`, масштабом `x3`, без физики;
+9. после выбора выполняется переход на глобальную карту.
+
+### Текущие runtime-функции (cube reward)
+
+В `content/combat/reward/post_battle_reward_flow.gd` за `cube_+` flow отвечают:
+
+- `_show_cube_reward_options`;
+- `_build_cube_reward_options`;
+- `_load_rewardable_cube_definitions`;
+- `_collect_owned_unique_cube_ids`;
+- `_roll_cube_reward_rarity`;
+- `_pick_cube_by_rarity_with_fallback`;
+- `_render_cube_reward_cards` и `_apply_cube_reward_visual`;
+- `_resolve_cube_reward_click` и `_select_cube_reward`.
 
 ## 5. Базовая конфигурация куба денег
 
