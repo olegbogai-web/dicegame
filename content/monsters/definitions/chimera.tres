@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="MonsterDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/monsters/resources/monster_definition.gd" id="1_monster"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_definition.gd" id="2_ability"]
+[ext_resource type="Script" path="res://content/dice/resources/dice_definition.gd" id="3_dice"]
+[ext_resource type="Texture2D" path="res://assets/entity/monsters/chimera.png" id="4_sprite"]
+[ext_resource type="Resource" path="res://content/abilities/definitions/clawed_series_upgrade_2.tres" id="5_clawed"]
+[ext_resource type="Resource" path="res://content/abilities/definitions/strengthening_upgrade_2.tres" id="6_strengthening"]
+[ext_resource type="Resource" path="res://content/dice/definitions/lucky_one.tres" id="7_lucky_one"]
+[ext_resource type="Resource" path="res://content/resources/base_cube.tres" id="8_base_cube"]
+[ext_resource type="Resource" path="res://content/monster_ai/profiles/chimera_ai_profile.tres" id="9_ai"]
+
+[resource]
+script = ExtResource("1_monster")
+monster_id = "chimera"
+display_name = "Химера"
+sprite = ExtResource("4_sprite")
+max_health = 100
+dice_count = 6
+combat_dice_loadout = Array[ExtResource("3_dice")]([
+ExtResource("8_base_cube"),
+ExtResource("8_base_cube"),
+ExtResource("8_base_cube"),
+ExtResource("8_base_cube"),
+ExtResource("8_base_cube"),
+ExtResource("7_lucky_one")
+])
+ai_profile = ExtResource("9_ai")
+abilities = Array[ExtResource("2_ability")]([ExtResource("5_clawed"), ExtResource("6_strengthening")])

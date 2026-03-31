@@ -55,6 +55,7 @@ var _is_global_map_roll_pending := false
 var _is_waiting_for_roll_results := false
 var _rolled_global_map_dice: Array[Dice] = []
 var _pending_room_scene_path := ""
+var _pending_marker_type := ""
 var _event_unavailable_mark: MeshInstance3D
 var _dynamic_path_dashes: Array[Node3D] = []
 var _path_segments: Array[Dictionary] = []
@@ -152,6 +153,7 @@ func _try_pick_dynamic_marker(mouse_position: Vector2) -> bool:
 		return false
 	_apply_global_map_dice_evolution_for_choice(String(picked_marker.get("type", "")))
 	_pending_room_scene_path = String(picked_marker.get("scene_path", ""))
+	_pending_marker_type = String(picked_marker.get("type", ""))
 	var marker_path_points = picked_marker.get("path_points", [])
 	if marker_path_points is Array and not (marker_path_points as Array).is_empty():
 		_path_points = _to_vector3_array(marker_path_points as Array)
@@ -201,7 +203,7 @@ func _on_target_marker_reached() -> void:
 	await _play_enter_room_animation()
 	_persist_current_state()
 	var next_scene_path := _pending_room_scene_path if not _pending_room_scene_path.is_empty() else START_EVENT_ROOM_SCENE_PATH
-	_prepare_pending_runtime_battle_room(next_scene_path)
+	_prepare_pending_runtime_battle_room(next_scene_path, _pending_marker_type)
 	_owner.get_tree().change_scene_to_file(next_scene_path)
 
 
@@ -368,7 +370,7 @@ func _resolve_or_create_runtime_player() -> Player:
 	return player
 
 
-func _prepare_pending_runtime_battle_room(next_scene_path: String) -> void:
+func _prepare_pending_runtime_battle_room(next_scene_path: String, marker_type: String = "") -> void:
 	if next_scene_path != GlobalMapMarkerRoomLinkResolver.TEST_BATTLE_ROOM_SCENE_PATH:
 		GlobalMapRuntimeState.save_pending_battle_room(null)
 		return
@@ -378,7 +380,10 @@ func _prepare_pending_runtime_battle_room(next_scene_path: String) -> void:
 		GlobalMapRuntimeState.save_pending_battle_room(null)
 		return
 	GlobalMapRuntimeState.save_runtime_player(runtime_player)
-	GlobalMapRuntimeState.save_pending_battle_room(BattleRoom.create_runtime_battle_room(runtime_player, _rng))
+	var encounter_tag := StringName(marker_type.strip_edges().to_lower())
+	GlobalMapRuntimeState.save_pending_battle_room(
+		BattleRoom.create_runtime_battle_room(runtime_player, _rng, encounter_tag)
+	)
 
 
 func _format_faces_for_debug(definition: DiceDefinition) -> String:

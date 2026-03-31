@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="MonsterAiProfile" format=3]
+
+[ext_resource type="Script" path="res://content/monster_ai/resources/monster_ai_profile.gd" id="1_base"]
+[ext_resource type="Script" path="res://content/monster_ai/profiles/chimera_ai_profile.gd" id="2_profile"]
+
+[resource]
+script = ExtResource("2_profile")
