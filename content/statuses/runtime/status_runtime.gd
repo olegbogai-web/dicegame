@@ -51,7 +51,11 @@ static func resolve_ability_effect_magnitude(
 
 	var resolved_base_magnitude := effect.magnitude
 	var selected_die_multiplier := int(effect.parameters.get("selected_die_multiplier", 0))
-	if selected_die_multiplier != 0 and consumed_dice is Array and not consumed_dice.is_empty():
+	var selected_die_multiplier_numerator := int(effect.parameters.get("selected_die_multiplier_numerator", 0))
+	var selected_die_multiplier_denominator := int(effect.parameters.get("selected_die_multiplier_denominator", 1))
+	if selected_die_multiplier_denominator <= 0:
+		selected_die_multiplier_denominator = 1
+	if (selected_die_multiplier != 0 or selected_die_multiplier_numerator != 0) and consumed_dice is Array and not consumed_dice.is_empty():
 		var selected_die = consumed_dice[0]
 		if selected_die != null and is_instance_valid(selected_die):
 			var selected_die_value := maxi(selected_die.get_top_face_value(), 0)
@@ -61,7 +65,11 @@ static func resolve_ability_effect_magnitude(
 					{"container": source_container, "stat_key": &"dice_face_value_outgoing", "scope": &"source"},
 				]
 			)
-			resolved_base_magnitude = maxi(die_result.get("value", 0), 0) * selected_die_multiplier
+			var resolved_die_value := maxi(die_result.get("value", 0), 0)
+			if selected_die_multiplier_numerator != 0:
+				resolved_base_magnitude = int(resolved_die_value * selected_die_multiplier_numerator / selected_die_multiplier_denominator)
+			else:
+				resolved_base_magnitude = resolved_die_value * selected_die_multiplier
 
 	if effect.effect_type == &"damage":
 		var damage_result := resolve_passive_modifier_pipeline(

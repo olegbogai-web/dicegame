@@ -1,17 +1,17 @@
-[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://dg8chslp78ydq"]
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
 
-[ext_resource type="Script" uid="uid://lfpdg732cjt" path="res://content/abilities/resources/ability_condition.gd" id="1_1w68m"]
 [ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" uid="uid://lfpdg732cjt" path="res://content/abilities/resources/ability_condition.gd" id="1_hikop"]
 [ext_resource type="Script" uid="uid://cijja5c0f6ibw" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
 [ext_resource type="Script" uid="uid://vqakigfsnb18" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
 [ext_resource type="Script" uid="uid://c2t7x3op44t3s" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
 [ext_resource type="Script" uid="uid://drneiu6png0u3" path="res://content/abilities/resources/ability_effect_definition.gd" id="6_effect"]
-[ext_resource type="Texture2D" uid="uid://65x6gn03ijhl" path="res://assets/ability/death_blow.png" id="7_icon"]
+[ext_resource type="Texture2D" uid="uid://bhs16rr556r37" path="res://assets/ability/clawed_series.png" id="7_icon"]
 
 [sub_resource type="Resource" id="AbilityDiceCondition_pay"]
 script = ExtResource("3_dice_condition")
-min_value = 6
-max_value = 6
+max_value = 3
+required_count = 3
 required_tags = PackedStringArray()
 forbidden_tags = PackedStringArray()
 accepted_face_ids = PackedStringArray()
@@ -23,8 +23,8 @@ dice_conditions = Array[ExtResource("3_dice_condition")]([SubResource("AbilityDi
 
 [sub_resource type="Resource" id="AbilityEffect_damage"]
 script = ExtResource("6_effect")
-effect_id = "death_blow_damage"
-magnitude = 15
+effect_id = "clawed_series_damage"
+magnitude = 3
 dice_query_tags = PackedStringArray()
 
 [sub_resource type="Resource" id="AbilityTargetRule_enemy"]
@@ -34,13 +34,14 @@ forbidden_tags = PackedStringArray()
 
 [resource]
 script = ExtResource("1_ability")
-ability_id = "death_blow"
-display_name = "Смертельный удар"
-description = "Наносит 15 урона; активируется шестеркой."
+ability_id = "clawed_series"
+display_name = "Когтистая серия+"
+description = "Требует 3 куба со значением 3 или меньше. Наносит 4 удара по 3 урона (итого 12)."
 icon = ExtResource("7_icon")
 tags = PackedStringArray("attack")
+upgrade_level = 1
 max_upgrade_level = 1
 cost = SubResource("AbilityCost_main")
 target_rule = SubResource("AbilityTargetRule_enemy")
-effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_damage")])
-follow_up_ability_ids = PackedStringArray("res://content/abilities/definitions/death_blow_upgrade_1.tres", "res://content/abilities/definitions/death_blow_upgrade_2.tres")
+effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_damage"), SubResource("AbilityEffect_damage"), SubResource("AbilityEffect_damage"), SubResource("AbilityEffect_damage")])
+follow_up_ability_ids = PackedStringArray()
