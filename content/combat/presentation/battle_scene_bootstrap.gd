@@ -9,8 +9,6 @@ func configure_from_battle_room(owner: Node, next_battle_room: BattleRoom) -> vo
 	owner._has_spawned_post_battle_reward_dice = false
 	owner._is_waiting_post_battle_reward_dice = false
 	owner._has_processed_post_battle_reward_result = false
-	owner._has_spawned_bonus_money_dice = false
-	owner._is_waiting_bonus_money_transition = false
 	owner._clear_ability_reward_cards()
 	if owner.is_node_ready():
 		owner._apply_room_data()
@@ -47,8 +45,6 @@ func _initialize_battle_state(owner: Node) -> void:
 		owner._has_spawned_post_battle_reward_dice = false
 		owner._is_waiting_post_battle_reward_dice = false
 		owner._has_processed_post_battle_reward_result = false
-		owner._has_spawned_bonus_money_dice = false
-		owner._is_waiting_bonus_money_transition = false
 		owner._clear_ability_reward_cards()
 		owner.battle_room_data.start_battle()
 	owner._start_current_turn()
