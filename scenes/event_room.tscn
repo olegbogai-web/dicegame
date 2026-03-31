@@ -6,7 +6,6 @@
 [ext_resource type="PackedScene" uid="uid://0ssqyi084mdh" path="res://scenes/board.tscn" id="4_m2rf8"]
 [ext_resource type="Script" uid="uid://cin4ncie8xw8v" path="res://scenes/scripts/event_room_controller.gd" id="5_controller"]
 [ext_resource type="Resource" path="res://content/events/definitions/test_event.tres" id="6_event"]
-[ext_resource type="Texture2D" uid="uid://c2npj028il5ih" path="res://assets/ui/coin.png" id="7_coin"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_6yyso"]
 render_priority = 0
@@ -28,12 +27,6 @@ shader = ExtResource("1_k00fv")
 shader_parameter/background = ExtResource("2_qvg7m")
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_6yyso"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_coin"]
-transparency = 1
-albedo_texture = ExtResource("7_coin")
-
-[sub_resource type="PlaneMesh" id="PlaneMesh_coin"]
 
 [node name="Node3D" type="Node3D" unique_id=978277730]
 script = ExtResource("5_controller")
@@ -135,16 +128,3 @@ transform = Transform3D(2.2522278, 0, 0, 0, 4.428, 0, 0, 0, 2.24339, 0, -2.68730
 transform = Transform3D(9.050745, 0, 0, 0, 0.6366414, 0, 0, 0, 5.063, 0.030438095, 0.00056300004, 0)
 material_override = SubResource("ShaderMaterial_x62gx")
 mesh = SubResource("PlaneMesh_6yyso")
-
-[node name="coin" type="MeshInstance3D" parent="." unique_id=1598423210]
-transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 11.010382, 0.01, -6.9212484)
-material_override = SubResource("StandardMaterial3D_coin")
-mesh = SubResource("PlaneMesh_coin")
-
-[node name="number_of_coins" type="Label3D" parent="coin" unique_id=921335078]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 3.429618, 0, 0)
-pixel_size = 0.04
-modulate = Color(0.8980392, 0.84313726, 0.3254902, 1)
-outline_modulate = Color(0.8392157, 0.32156864, 0.011764706, 1)
-text = "0"
-outline_size = 10

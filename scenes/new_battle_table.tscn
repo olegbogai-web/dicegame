@@ -293,5 +293,5 @@ transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 3.42
 pixel_size = 0.04
 modulate = Color(0.8980392, 0.84313726, 0.3254902, 1)
 outline_modulate = Color(0.8392157, 0.32156864, 0.011764706, 1)
-text = "0"
+text = "111111"
 outline_size = 10
