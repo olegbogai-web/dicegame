@@ -48,6 +48,8 @@ var _generated_ability_reward_nodes: Array[Node3D] = []
 var _ability_reward_entries: Array[Dictionary] = []
 var _generated_artifact_reward_nodes: Array[Node3D] = []
 var _artifact_reward_entries: Array[Dictionary] = []
+var _generated_cube_reward_nodes: Array[Node3D] = []
+var _cube_reward_entries: Array[Dictionary] = []
 var _is_awaiting_ability_reward_selection := false
 var _scene_bootstrap := BattleSceneBootstrap.new()
 var _scene_view_renderer := BattleSceneViewRenderer.new()
@@ -62,6 +64,7 @@ func _ready() -> void:
 	set_physics_process(true)
 	_ability_reward_rng.randomize()
 	_post_battle_reward_flow._clear_artifact_reward_cards(self)
+	_post_battle_reward_flow._clear_cube_reward_cards(self)
 	if _end_turn_button != null and not _end_turn_button.pressed.is_connected(_on_end_turn_button_pressed):
 		_end_turn_button.pressed.connect(_on_end_turn_button_pressed)
 	if _event_button != null and not _event_button.pressed.is_connected(_on_event_button_pressed):
@@ -358,8 +361,16 @@ func _show_artifact_reward_options() -> void:
 	_post_battle_reward_flow._show_artifact_reward_options(self)
 
 
+func _show_cube_reward_options() -> void:
+	_post_battle_reward_flow._show_cube_reward_options(self)
+
+
 func _build_artifact_reward_options(count: int) -> Array[Dictionary]:
 	return _post_battle_reward_flow._build_artifact_reward_options(self, count)
+
+
+func _build_cube_reward_options(count: int) -> Array[Dictionary]:
+	return _post_battle_reward_flow._build_cube_reward_options(self, count)
 
 
 func _build_ability_reward_options(count: int) -> Array[Dictionary]:
@@ -410,6 +421,10 @@ func _clear_ability_reward_cards() -> void:
 
 func _clear_artifact_reward_cards() -> void:
 	_post_battle_reward_flow._clear_artifact_reward_cards(self)
+
+
+func _clear_cube_reward_cards() -> void:
+	_post_battle_reward_flow._clear_cube_reward_cards(self)
 
 
 func _resolve_reward_click(screen_point: Vector2) -> Dictionary:
