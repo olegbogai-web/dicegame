@@ -7,6 +7,7 @@ const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_m
 const POST_BATTLE_REWARD_DICE_SIZE_MULTIPLIER := Vector3(4.0, 4.0, 4.0)
 const POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER := 0.75
 const POST_BATTLE_REWARD_DICE_DELAY_SECONDS := 1.0
+const POST_BATTLE_MONEY_TRANSITION_DELAY_SECONDS := 2.0
 const REWARD_CARD_NEW_FACE_ID := &"card_+"
 const REWARD_CARD_UP_FACE_ID := &"card_up"
 const REWARD_ARTIFACT_FACE_ID := &"artifact_+"
@@ -56,16 +57,12 @@ func _handle_post_battle_reward_dice(owner: Node) -> void:
 	if player == null:
 		return
 	var reward_cubes = player.runtime_reward_cubes
-	var money_cubes = player.runtime_money_cubes
-	if reward_cubes.is_empty() and money_cubes.is_empty():
+	if reward_cubes.is_empty():
 		return
 	var requests: Array[DiceThrowRequest] = []
 	for reward_cube in reward_cubes:
 		if reward_cube != null:
 			requests.append(owner._build_dice_throw_request(reward_cube, {"owner": &"reward"}))
-	for money_cube in money_cubes:
-		if money_cube != null:
-			requests.append(owner._build_dice_throw_request(money_cube, {"owner": &"reward"}))
 	if requests.is_empty():
 		return
 	for request in requests:
@@ -84,6 +81,9 @@ func _try_resolve_post_battle_reward_dice_result(owner: Node) -> void:
 	if not owner._has_spawned_post_battle_reward_dice or owner._has_processed_post_battle_reward_result:
 		return
 	var all_reward_dice = owner._get_turn_dice(&"reward")
+	if owner._has_spawned_bonus_money_dice:
+		_try_resolve_bonus_money_dice_result(owner, all_reward_dice)
+		return
 	var reward_dice := _find_post_battle_reward_die(owner)
 	if reward_dice == null and all_reward_dice.is_empty():
 		return
@@ -91,13 +91,16 @@ func _try_resolve_post_battle_reward_dice_result(owner: Node) -> void:
 		if dice == null or not dice.has_completed_first_stop():
 			return
 	owner._has_processed_post_battle_reward_result = true
-	_grant_money_from_reward_rolls(owner, all_reward_dice)
 	var reward_face := ""
 	if reward_dice != null:
 		var reward_top_face := reward_dice.get_top_face()
 		if reward_top_face != null:
 			reward_face = reward_top_face.text_value
 	print("[Debug][RewardFlow] На кубе награды выпало: %s." % reward_face)
+	if StringName(reward_face) == REWARD_MONEY_FACE_ID:
+		var bonus_money_rolls := _count_reward_money_faces(all_reward_dice)
+		_throw_bonus_money_dice(owner, bonus_money_rolls)
+		return
 	if StringName(reward_face) == REWARD_CARD_NEW_FACE_ID:
 		_show_ability_reward_options(owner)
 	elif StringName(reward_face) == REWARD_CARD_UP_FACE_ID:
@@ -121,48 +124,98 @@ func _find_post_battle_reward_die(owner: Node) -> Dice:
 	return null
 
 
-func _grant_money_from_reward_rolls(owner: Node, rolled_dice: Array) -> void:
+func _count_reward_money_faces(rolled_dice: Array) -> int:
+	var reward_money_faces := 0
+	for dice in rolled_dice:
+		var typed_dice := dice as Dice
+		if typed_dice == null:
+			continue
+		var dice_definition := typed_dice.get_meta(&"definition", null) as DiceDefinition
+		if dice_definition == null or dice_definition.scope != DiceDefinition.Scope.REWARD:
+			continue
+		var top_face := typed_dice.get_top_face()
+		if top_face != null and StringName(top_face.text_value) == REWARD_MONEY_FACE_ID:
+			reward_money_faces += 1
+	return reward_money_faces
+
+
+func _throw_bonus_money_dice(owner: Node, roll_count: int) -> void:
+	if owner == null or owner.battle_room_data == null or owner._board == null:
+		return
+	var player = owner.battle_room_data.player_instance
+	if player == null:
+		return
+	if roll_count <= 0:
+		_queue_delayed_global_map_transition(owner, POST_BATTLE_MONEY_TRANSITION_DELAY_SECONDS)
+		return
+	var requests: Array[DiceThrowRequest] = []
+	for roll_index in range(roll_count):
+		if player.runtime_money_cubes.is_empty():
+			break
+		var money_cube := player.runtime_money_cubes[roll_index % player.runtime_money_cubes.size()]
+		if money_cube == null:
+			continue
+		requests.append(owner._build_dice_throw_request(money_cube, {
+			"owner": &"reward",
+			"reward_money_bonus": true
+		}))
+	if requests.is_empty():
+		_queue_delayed_global_map_transition(owner, POST_BATTLE_MONEY_TRANSITION_DELAY_SECONDS)
+		return
+	for request in requests:
+		request.extra_size_multiplier = POST_BATTLE_REWARD_DICE_SIZE_MULTIPLIER
+	var spawned_dice = owner._board.throw_dice(requests)
+	for dice_body in spawned_dice:
+		if dice_body == null:
+			continue
+		dice_body.linear_velocity.y *= POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER
+	owner._has_spawned_bonus_money_dice = true
+
+
+func _try_resolve_bonus_money_dice_result(owner: Node, rolled_dice: Array) -> void:
 	if owner == null or owner.battle_room_data == null:
 		return
 	var player = owner.battle_room_data.player_instance
 	if player == null:
 		return
+	var bonus_dice := _collect_bonus_money_dice(rolled_dice)
+	if bonus_dice.is_empty():
+		return
+	for bonus_die in bonus_dice:
+		if bonus_die == null or not bonus_die.has_completed_first_stop():
+			return
 	var granted_coins := 0
-	var rolled_reward_money_faces := 0
+	for bonus_die in bonus_dice:
+		var top_face := bonus_die.get_top_face()
+		if top_face == null:
+			continue
+		granted_coins += maxi(top_face.text_value.to_int(), 0)
+	if granted_coins > 0:
+		player.add_coins(granted_coins)
+		print("[Debug][RewardFlow] Начислено монет за добычу money: +%d (итого: %d)." % [granted_coins, player.current_coins])
+	owner._has_spawned_bonus_money_dice = false
+	_queue_delayed_global_map_transition(owner, POST_BATTLE_MONEY_TRANSITION_DELAY_SECONDS)
+
+
+func _collect_bonus_money_dice(rolled_dice: Array) -> Array[Dice]:
+	var bonus_dice: Array[Dice] = []
 	for dice in rolled_dice:
 		var typed_dice := dice as Dice
 		if typed_dice == null:
 			continue
-		var top_face := typed_dice.get_top_face()
-		if top_face == null:
+		if not bool(typed_dice.get_meta(&"reward_money_bonus", false)):
 			continue
-		var top_value := top_face.text_value
-		var dice_definition := typed_dice.get_meta(&"definition", null) as DiceDefinition
-		if dice_definition != null and dice_definition.scope == DiceDefinition.Scope.MONEY:
-			granted_coins += maxi(top_value.to_int(), 0)
-		elif StringName(top_value) == REWARD_MONEY_FACE_ID:
-			rolled_reward_money_faces += 1
-	if rolled_reward_money_faces > 0 and not player.runtime_money_cubes.is_empty():
-		granted_coins += _roll_bonus_coins_from_money_cube(player.runtime_money_cubes, rolled_reward_money_faces, owner)
-	if granted_coins <= 0:
+		bonus_dice.append(typed_dice)
+	return bonus_dice
+
+
+func _queue_delayed_global_map_transition(owner: Node, delay_seconds: float) -> void:
+	if owner == null or owner._is_waiting_bonus_money_transition:
 		return
-	player.add_coins(granted_coins)
-	print("[Debug][RewardFlow] Начислено монет после боя: +%d (итого: %d)." % [granted_coins, player.current_coins])
-
-
-func _roll_bonus_coins_from_money_cube(money_cubes: Array[DiceDefinition], rolls_count: int, owner: Node) -> int:
-	if money_cubes.is_empty() or rolls_count <= 0:
-		return 0
-	var bonus := 0
-	for roll_index in rolls_count:
-		var source_cube := money_cubes[roll_index % money_cubes.size()]
-		if source_cube == null or source_cube.faces.is_empty():
-			continue
-		var random_face := source_cube.faces[owner._ability_reward_rng.randi_range(0, source_cube.faces.size() - 1)]
-		if random_face == null:
-			continue
-		bonus += maxi(random_face.text_value.to_int(), 0)
-	return bonus
+	owner._is_waiting_bonus_money_transition = true
+	await owner.get_tree().create_timer(delay_seconds).timeout
+	owner._is_waiting_bonus_money_transition = false
+	_return_to_saved_global_map(owner)
 
 
 func _show_ability_reward_options(owner: Node) -> void:
