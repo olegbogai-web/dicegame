@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="MonsterDefinition" format=3]
+
+[ext_resource type="Script" uid="uid://ba5hefomauwar" path="res://content/monsters/resources/monster_definition.gd" id="1_monster"]
+[ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" path="res://content/dice/resources/dice_definition.gd" id="2_dice"]
+[ext_resource type="Texture2D" path="res://assets/entity/monsters/chimera.png" id="3_sprite"]
+[ext_resource type="Resource" uid="uid://cg7bawimcd68m" path="res://content/abilities/definitions/clawed_series_upgrade_2.tres" id="4_clawed_series"]
+[ext_resource type="Resource" uid="uid://bkcy0qub780o2" path="res://content/abilities/definitions/strengthening_upgrade_2.tres" id="5_strengthening"]
+[ext_resource type="Resource" path="res://content/monster_ai/profiles/chimera_ai_profile.tres" id="6_ai"]
+[ext_resource type="Resource" path="res://content/resources/base_cube.tres" id="7_base_cube"]
+[ext_resource type="Resource" path="res://content/dice/definitions/lucky_one.tres" id="8_lucky_one"]
+
+[resource]
+script = ExtResource("1_monster")
+monster_id = "chimera"
+display_name = "Химера"
+description = "Элитный монстр, который старается сначала усилиться, а затем разрывать цель когтями."
+sprite = ExtResource("3_sprite")
+tags = PackedStringArray("elite")
+max_health = 100
+dice_count = 6
+dice_loadout = Array[ExtResource("2_dice")]([ExtResource("7_base_cube"), ExtResource("7_base_cube"), ExtResource("7_base_cube"), ExtResource("7_base_cube"), ExtResource("7_base_cube"), ExtResource("8_lucky_one")])
+ai_profile = ExtResource("6_ai")
+abilities = Array[ExtResource("1_ability")]([ExtResource("4_clawed_series"), ExtResource("5_strengthening")])

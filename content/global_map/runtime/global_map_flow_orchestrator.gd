@@ -55,6 +55,7 @@ var _is_global_map_roll_pending := false
 var _is_waiting_for_roll_results := false
 var _rolled_global_map_dice: Array[Dice] = []
 var _pending_room_scene_path := ""
+var _pending_room_marker_type := ""
 var _event_unavailable_mark: MeshInstance3D
 var _dynamic_path_dashes: Array[Node3D] = []
 var _path_segments: Array[Dictionary] = []
@@ -138,6 +139,7 @@ func handle_input(event: InputEvent) -> void:
 		return
 
 	_pending_room_scene_path = START_EVENT_ROOM_SCENE_PATH
+	_pending_room_marker_type = GlobalMapDiceEvolutionService.EVENT_FACE_TAG
 	_path_points = _start_path_points.duplicate()
 	_path_index = 0
 	_state.hero_move_started = true
@@ -152,6 +154,7 @@ func _try_pick_dynamic_marker(mouse_position: Vector2) -> bool:
 		return false
 	_apply_global_map_dice_evolution_for_choice(String(picked_marker.get("type", "")))
 	_pending_room_scene_path = String(picked_marker.get("scene_path", ""))
+	_pending_room_marker_type = String(picked_marker.get("type", ""))
 	var marker_path_points = picked_marker.get("path_points", [])
 	if marker_path_points is Array and not (marker_path_points as Array).is_empty():
 		_path_points = _to_vector3_array(marker_path_points as Array)
@@ -378,7 +381,7 @@ func _prepare_pending_runtime_battle_room(next_scene_path: String) -> void:
 		GlobalMapRuntimeState.save_pending_battle_room(null)
 		return
 	GlobalMapRuntimeState.save_runtime_player(runtime_player)
-	GlobalMapRuntimeState.save_pending_battle_room(BattleRoom.create_runtime_battle_room(runtime_player, _rng))
+	GlobalMapRuntimeState.save_pending_battle_room(BattleRoom.create_runtime_battle_room(runtime_player, _pending_room_marker_type, _rng))
 
 
 func _format_faces_for_debug(definition: DiceDefinition) -> String:
