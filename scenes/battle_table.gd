@@ -27,6 +27,7 @@ const ACTIVATION_ANIMATION_DURATION := 0.5
 @onready var _artifact_template: TextureRect = $UI/artefact
 @onready var _ability_reward_template: Node3D = $ability_reward
 @onready var _artifact_reward_template: MeshInstance3D = $artefact_frame_reward
+@onready var _coin_counter_label: Label3D = $coin/number_of_coins
 
 var battle_room_data: BattleRoom
 var _generated_monster_sprites: Array[Node] = []
@@ -58,6 +59,7 @@ var _battle_targeting_service := BattleTargetingService.new()
 var _battle_turn_orchestrator := BattleTurnOrchestrator.new()
 var _battle_action_orchestrator := BattleActionOrchestrator.new()
 var _post_battle_reward_flow := PostBattleRewardFlow.new()
+var _bound_runtime_player: Player
 
 
 func _ready() -> void:
@@ -77,7 +79,8 @@ func _ready() -> void:
 			configure_from_battle_room(BattleRoomScript.create_test_battle_room())
 	else:
 		_apply_room_data()
-	_initialize_battle_state()
+		_initialize_battle_state()
+	_bind_runtime_player_money_counter()
 
 
 func configure_from_battle_room(next_battle_room: BattleRoom) -> void:
@@ -343,6 +346,7 @@ func _resolve_activation_target_origin(target_descriptor: Dictionary, base_origi
 
 func _initialize_battle_state() -> void:
 	_scene_bootstrap._initialize_battle_state(self)
+	_bind_runtime_player_money_counter()
 
 
 func _try_resolve_post_battle_reward_dice_result() -> void:
@@ -518,6 +522,32 @@ func _update_turn_ui() -> void:
 		_turn_status_label.text = "Ход %d · Ход монстра %d%s" % [battle_room_data.turn_counter, battle_room_data.current_monster_turn_index + 1, suffix]
 		return
 	_turn_status_label.text = "Ожидание боя"
+
+
+func _bind_runtime_player_money_counter() -> void:
+	if battle_room_data == null:
+		_update_money_counter_label(0)
+		return
+	var runtime_player := battle_room_data.player_instance
+	if runtime_player == _bound_runtime_player:
+		_update_money_counter_label(runtime_player.runtime_money if runtime_player != null else 0)
+		return
+	if _bound_runtime_player != null and _bound_runtime_player.runtime_money_changed.is_connected(_on_runtime_player_money_changed):
+		_bound_runtime_player.runtime_money_changed.disconnect(_on_runtime_player_money_changed)
+	_bound_runtime_player = runtime_player
+	if _bound_runtime_player != null and not _bound_runtime_player.runtime_money_changed.is_connected(_on_runtime_player_money_changed):
+		_bound_runtime_player.runtime_money_changed.connect(_on_runtime_player_money_changed)
+	_update_money_counter_label(_bound_runtime_player.runtime_money if _bound_runtime_player != null else 0)
+
+
+func _on_runtime_player_money_changed(new_value: int) -> void:
+	_update_money_counter_label(new_value)
+
+
+func _update_money_counter_label(new_value: int) -> void:
+	if _coin_counter_label == null:
+		return
+	_coin_counter_label.text = str(maxi(new_value, 0))
 
 
 func _project_mouse_to_horizontal_plane(plane_y: float) -> Vector3:
