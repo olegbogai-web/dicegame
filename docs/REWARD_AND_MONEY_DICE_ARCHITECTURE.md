@@ -54,8 +54,9 @@
 
 1. бросается `reward dice`;
 2. одновременно с ним бросается `money dice`;
-3. если на `reward dice` выпала грань `монеты`, выполняется **дополнительный бросок** `money dice`;
-4. итоговые монеты суммируются.
+3. если на `reward dice` выпала грань `монеты`, выполняется **дополнительный физический бросок** `money dice` из `player.runtime_money_cubes`;
+4. начисление монет происходит только после остановки всех соответствующих money-кубов (базовый post-battle бросок + дополнительный бросок по `money`);
+5. для `money`-грани, после начисления монет, переход на глобальную карту выполняется с задержкой `2.0` секунды.
 
 Это правило относится только к триггеру броска и не задает подробности экономики.
 
@@ -175,6 +176,27 @@
 - `_pick_cube_by_rarity_with_fallback`;
 - `_render_cube_reward_cards` и `_apply_cube_reward_visual`;
 - `_resolve_cube_reward_click` и `_select_cube_reward`.
+
+## 4.5. Runtime-алгоритм денежной награды (`money`)
+
+Если после победы на `reward dice` выпадает грань `money`:
+
+1. выполняется дополнительный физический бросок money-куба(ов) из `player.runtime_money_cubes`;
+2. система дожидается остановки дополнительно брошенных кубов;
+3. монеты суммируются по верхним граням всех money-кубов, участвовавших в post-battle (стартовый и дополнительный броски);
+4. монеты начисляются в `Player.current_coins`;
+5. через `2.0` секунды выполняется переход на глобальную карту.
+
+### Текущие runtime-функции (money reward)
+
+В `content/combat/reward/post_battle_reward_flow.gd` за flow `money` отвечают:
+
+- `_grant_money_from_reward_rolls`;
+- `_sum_money_from_dice_results`;
+- `_count_reward_money_faces`;
+- `_roll_bonus_coins_from_runtime_money_dice`;
+- `_wait_until_all_dice_stopped`;
+- `_return_to_saved_global_map` (с поддержкой `delay_seconds`).
 
 ## 5. Базовая конфигурация куба денег
 
