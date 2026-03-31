@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://0ssqyi084mdh" path="res://scenes/board.tscn" id="4_m2rf8"]
 [ext_resource type="Script" uid="uid://cin4ncie8xw8v" path="res://scenes/scripts/event_room_controller.gd" id="5_controller"]
 [ext_resource type="Resource" path="res://content/events/definitions/test_event.tres" id="6_event"]
+[ext_resource type="PackedScene" path="res://ui/scenes/money_ui.tscn" id="99_money_ui"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_6yyso"]
 render_priority = 0
@@ -128,3 +129,5 @@ transform = Transform3D(2.2522278, 0, 0, 0, 4.428, 0, 0, 0, 2.24339, 0, -2.68730
 transform = Transform3D(9.050745, 0, 0, 0, 0.6366414, 0, 0, 0, 5.063, 0.030438095, 0.00056300004, 0)
 material_override = SubResource("ShaderMaterial_x62gx")
 mesh = SubResource("PlaneMesh_6yyso")
+
+[node name="money_ui" parent="." instance=ExtResource("99_money_ui")]
