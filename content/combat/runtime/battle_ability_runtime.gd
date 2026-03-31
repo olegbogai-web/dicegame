@@ -145,7 +145,7 @@ static func _collect_dice_for_condition(
 	if candidates.size() < min_count:
 		return []
 	for selected_count in range(min_count, max_count + 1):
-		var selected_for_count := _collect_dice_with_count(dice_condition, candidates, selected_count)
+		var selected_for_count := _collect_dice_with_count(dice_condition, candidates, selected_count, 0)
 		if selected_for_count.is_empty():
 			continue
 		if dice_condition.matches_total_value(_sum_dice_values(selected_for_count)):
@@ -156,13 +156,114 @@ static func _collect_dice_for_condition(
 static func _collect_dice_with_count(
 	dice_condition: AbilityDiceCondition,
 	candidates: Array[Dice],
-	required_count: int
+	required_count: int,
+	start_index: int = 0
 ) -> Array[Dice]:
+	if required_count <= 0:
+		return []
+	if _has_total_value_constraint(dice_condition):
+		return _collect_dice_with_count_and_total(dice_condition, candidates, required_count, start_index)
 	if dice_condition.requires_same_value:
 		return _collect_same_value_dice(candidates, required_count)
 	if dice_condition.requires_unique_values:
 		return _collect_unique_value_dice(candidates, required_count)
 	return candidates.slice(0, required_count)
+
+
+static func _collect_dice_with_count_and_total(
+	dice_condition: AbilityDiceCondition,
+	candidates: Array[Dice],
+	required_count: int,
+	start_index: int
+) -> Array[Dice]:
+	var selected: Array[Dice] = []
+	var used_values := {}
+	var result := _search_dice_combination_for_total(
+		dice_condition,
+		candidates,
+		required_count,
+		start_index,
+		selected,
+		0,
+		used_values
+	)
+	return result
+
+
+static func _search_dice_combination_for_total(
+	dice_condition: AbilityDiceCondition,
+	candidates: Array[Dice],
+	required_count: int,
+	start_index: int,
+	selected: Array[Dice],
+	selected_total: int,
+	used_values: Dictionary
+) -> Array[Dice]:
+	if selected.size() == required_count:
+		return selected.duplicate() if dice_condition.matches_total_value(selected_total) else []
+	if start_index >= candidates.size():
+		return []
+	if selected.size() + (candidates.size() - start_index) < required_count:
+		return []
+
+	var remaining_slots := required_count - selected.size()
+	var max_possible_total := selected_total + _sum_top_values_from_index(candidates, start_index, remaining_slots)
+	if dice_condition.max_total_value > 0 and selected_total > dice_condition.max_total_value:
+		return []
+	if dice_condition.min_total_value > 0 and max_possible_total < dice_condition.min_total_value:
+		return []
+
+	for candidate_index in range(start_index, candidates.size()):
+		var dice := candidates[candidate_index]
+		if dice == null or not is_instance_valid(dice):
+			continue
+		var top_face_value := dice.get_top_face_value()
+		if dice_condition.requires_unique_values and used_values.has(top_face_value):
+			continue
+		if dice_condition.requires_same_value and not selected.is_empty() and selected[0].get_top_face_value() != top_face_value:
+			continue
+		selected.append(dice)
+		var added_unique_value := false
+		if dice_condition.requires_unique_values:
+			used_values[top_face_value] = true
+			added_unique_value = true
+		var nested_result := _search_dice_combination_for_total(
+			dice_condition,
+			candidates,
+			required_count,
+			candidate_index + 1,
+			selected,
+			selected_total + top_face_value,
+			used_values
+		)
+		if not nested_result.is_empty():
+			return nested_result
+		selected.pop_back()
+		if added_unique_value:
+			used_values.erase(top_face_value)
+	return []
+
+
+static func _sum_top_values_from_index(candidates: Array[Dice], start_index: int, count: int) -> int:
+	if count <= 0:
+		return 0
+	var total := 0
+	var taken := 0
+	for index in range(start_index, candidates.size()):
+		var dice := candidates[index]
+		if dice == null or not is_instance_valid(dice):
+			continue
+		total += maxi(dice.get_top_face_value(), 0)
+		taken += 1
+		if taken >= count:
+			break
+	return total
+
+
+static func _has_total_value_constraint(dice_condition: AbilityDiceCondition) -> bool:
+	if dice_condition == null:
+		return false
+	return dice_condition.min_total_value > 0 or dice_condition.max_total_value > 0
 
 
 static func _collect_same_value_dice(candidates: Array[Dice], required_count: int) -> Array[Dice]:

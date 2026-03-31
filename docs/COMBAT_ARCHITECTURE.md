@@ -645,6 +645,12 @@ UI может реализовывать drag-and-drop, подсветку и в
 - `_run_current_monster_turn`;
 - `_on_end_turn_button_pressed`.
 
+Дополнение (runtime-расширение monster dice loadout):
+
+- `throw_current_turn_dice` обязан сначала проверять `monster_view.dice_loadout` и бросать конкретные `DiceDefinition` из loadout;
+- fallback на `monster_view.dice_count` и `base_cube` разрешен только если loadout пуст;
+- это позволяет контентно задавать смешанные наборы кубов монстра (например, обычные + lucky dice) без форков UI/scene кода.
+
 #### F. В `content/combat/runtime/battle_action_orchestrator.gd`
 
 Ответственность: активация способностей игрока/монстра и синхронизация с анимацией.
@@ -657,6 +663,17 @@ UI может реализовывать drag-and-drop, подсветку и в
 - `_find_monster_ability_frame_state`;
 - `_execute_monster_ability`;
 - `_apply_combatant_views_after_ability_resolution`.
+
+#### F.1. В `content/combat/runtime/battle_ability_runtime.gd`
+
+Ответственность: deterministic/exhaustive подбор кубов под `AbilityDiceCondition`, включая условия по сумме.
+
+Новые runtime-функции (обязательны для корректного поиска комбинаций):
+
+- `_collect_dice_with_count_and_total`;
+- `_search_dice_combination_for_total`;
+- `_sum_top_values_from_index`;
+- `_has_total_value_constraint`.
 
 #### G. В `content/combat/reward/post_battle_reward_flow.gd`
 

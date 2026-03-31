@@ -92,6 +92,14 @@
 
 Подробная архитектура принятия решений монстров описана отдельно в [docs/MONSTER_AI_ARCHITECTURE.md](./MONSTER_AI_ARCHITECTURE.md), чтобы не смешивать `BattleRoom` lifecycle и monster-specific AI rules. В частности, именно там зафиксированы правило старта AI только после полной остановки кубов, общий policy конца хода, отдельные сервисы переноса кубов и общий visual/action pipeline использования способности.
 
+Дополнение по runtime-контенту монстров:
+
+- `MonsterDefinition.get_resolved_combat_dice_loadout()` — возвращает валидный COMBAT-loadout монстра;
+- `MonsterDefinition.get_resolved_dice_count()` — вычисляет итоговое количество кубов с fallback на legacy `dice_count`;
+- `BattleRoom.create_runtime_battle_room(player, rng, encounter_tag)` — принимает тип encounter (`mob`/`elite_mob`) и собирает соответствующий runtime-контент;
+- `BattleRoom._build_runtime_monster_definitions(encounter_tag)` — изолирует выбор списка монстров под тип encounter;
+- `BattleRoom._pick_runtime_floor_texture(rng, encounter_tag)` — выбирает пол комнаты; для `elite_mob` использует равновероятный пул из `дерево.png`, `dangeon_floor_1.png`, `dangeon_floor_2.png`.
+
 Архитектура post-battle куба награды и куба денег описана отдельно в [docs/REWARD_AND_MONEY_DICE_ARCHITECTURE.md](./REWARD_AND_MONEY_DICE_ARCHITECTURE.md), чтобы не смешивать lifecycle `BattleRoom` с правилами хранения run-кубов в базовых/рантайм статах игрока и с правилами выдачи награды после победы.
 
 Это должно жить либо в `Combat`, либо в presentation/UI слое.
