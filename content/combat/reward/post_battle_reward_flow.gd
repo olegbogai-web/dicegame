@@ -34,7 +34,7 @@ const CUBE_RARITY_UNCOMMON_WEIGHT := 25.0
 const CUBE_RARITY_RARE_WEIGHT := 15.0
 const CUBE_RARITY_UNIQUE_WEIGHT := 10.0
 const CUBE_REWARD_VISUAL_ROTATION_DEGREES := Vector3(45.0, 10.0, -120.0)
-const CUBE_REWARD_VISUAL_POSITION_OFFSET := Vector3(0.0, 0.75, 0.0)
+const CUBE_REWARD_VISUAL_POSITION_OFFSET := Vector3(0.0, 0.3, 0.0)
 const CUBE_REWARD_VISUAL_SCALE_MULTIPLIER := Vector3(1.5, 1.5, 1.5)
 const BASE_CUBE_SCENE_PATH := "res://content/resources/base_cube.tscn"
 const GLOBAL_MAP_SCENE_PATH := "res://scenes/global_map_room.tscn"
@@ -54,8 +54,8 @@ func _handle_post_battle_reward_dice(owner: Node) -> void:
 	var player = owner.battle_room_data.player_instance
 	if player == null:
 		return
-	var reward_cubes := player.runtime_reward_cubes
-	var money_cubes := player.runtime_money_cubes
+	var reward_cubes = player.runtime_reward_cubes
+	var money_cubes = player.runtime_money_cubes
 	if reward_cubes.is_empty() and money_cubes.is_empty():
 		return
 	var requests: Array[DiceThrowRequest] = []
