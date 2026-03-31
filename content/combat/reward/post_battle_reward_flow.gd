@@ -90,6 +90,7 @@ func _try_resolve_post_battle_reward_dice_result(owner: Node) -> void:
 		if dice == null or not dice.has_completed_first_stop():
 			return
 	owner._has_processed_post_battle_reward_result = true
+	_apply_money_dice_reward(owner, all_reward_dice)
 	var reward_face := ""
 	var reward_top_face := reward_dice.get_top_face()
 	if reward_top_face != null:
@@ -104,6 +105,41 @@ func _try_resolve_post_battle_reward_dice_result(owner: Node) -> void:
 	elif StringName(reward_face) == REWARD_CUBE_FACE_ID:
 		_show_cube_reward_options(owner)
 
+
+
+
+func _apply_money_dice_reward(owner: Node, reward_dice: Array) -> void:
+	if owner == null or owner.battle_room_data == null:
+		return
+	var player := owner.battle_room_data.player_instance
+	if player == null:
+		return
+	var added_coins := 0
+	for dice_node in reward_dice:
+		var dice := dice_node as Dice
+		if dice == null:
+			continue
+		var dice_definition := dice.get_meta(&"definition", null) as DiceDefinition
+		if dice_definition == null or dice_definition.scope != DiceDefinition.Scope.MONEY:
+			continue
+		var top_face := dice.get_top_face()
+		if top_face == null:
+			continue
+		var face_value := _parse_money_face_value(top_face.text_value)
+		if face_value <= 0:
+			continue
+		added_coins += face_value
+	if added_coins <= 0:
+		return
+	var total_coins := player.add_coins(added_coins)
+	print("[Debug][RewardFlow] Игрок получил %d монет. Текущий баланс: %d." % [added_coins, total_coins])
+
+
+func _parse_money_face_value(raw_value: String) -> int:
+	var normalized := raw_value.strip_edges()
+	if normalized.is_valid_int():
+		return maxi(int(normalized), 0)
+	return 0
 
 func _find_post_battle_reward_die(owner: Node) -> Dice:
 	var reward_dice = owner._get_turn_dice(&"reward")

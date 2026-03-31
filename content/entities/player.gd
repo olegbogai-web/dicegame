@@ -3,6 +3,8 @@ class_name Player
 
 const ON_GRANT_MAX_HP_BONUS_META_KEY := &"on_grant_max_hp_bonus"
 
+signal coins_changed(new_value: int)
+
 var player_id := ""
 var base_stat: PlayerBaseStat
 var current_hp := 0
@@ -17,6 +19,7 @@ var runtime_event_cubes: Array[DiceDefinition] = []
 var ability_loadout: Array[AbilityDefinition] = []
 var artifacts_runtime: Array[ArtifactDefinition] = []
 var runtime_max_hp_bonus := 0
+var runtime_coins := 0
 var run_flags: Dictionary = {}
 var metadata: Dictionary = {}
 var _is_runtime_initialized := false
@@ -50,8 +53,10 @@ func reset_for_run() -> void:
 		ability_loadout.clear()
 		artifacts_runtime.clear()
 		runtime_max_hp_bonus = 0
+		runtime_coins = 0
 		run_flags.clear()
 		_is_runtime_initialized = false
+		coins_changed.emit(runtime_coins)
 		return
 	current_hp = base_stat.get_resolved_starting_hp()
 	current_armor = base_stat.starting_armor
@@ -69,8 +74,10 @@ func reset_for_run() -> void:
 	ability_loadout = base_stat.starting_abilities.duplicate()
 	artifacts_runtime.clear()
 	runtime_max_hp_bonus = 0
+	runtime_coins = maxi(base_stat.starting_coins, 0)
 	run_flags.clear()
 	_is_runtime_initialized = true
+	coins_changed.emit(runtime_coins)
 
 
 func ensure_runtime_initialized_from_base_stat() -> void:
@@ -172,3 +179,27 @@ func _apply_on_grant_effects(artifact_definition: ArtifactDefinition) -> void:
 		return
 	runtime_max_hp_bonus += max_hp_bonus
 	current_hp = mini(current_hp + max_hp_bonus, get_max_hp())
+
+
+func get_current_coins() -> int:
+	return runtime_coins
+
+
+func add_coins(amount: int) -> int:
+	var resolved_amount := maxi(amount, 0)
+	if resolved_amount <= 0:
+		return runtime_coins
+	runtime_coins += resolved_amount
+	coins_changed.emit(runtime_coins)
+	return runtime_coins
+
+
+func spend_coins(amount: int) -> bool:
+	var resolved_amount := maxi(amount, 0)
+	if resolved_amount <= 0:
+		return true
+	if runtime_coins < resolved_amount:
+		return false
+	runtime_coins -= resolved_amount
+	coins_changed.emit(runtime_coins)
+	return true
