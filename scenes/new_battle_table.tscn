@@ -12,6 +12,7 @@
 [ext_resource type="Texture2D" uid="uid://cr5mbqdxoaee3" path="res://assets/entity/monsters/test_player.png" id="9_v3i8a"]
 [ext_resource type="PackedScene" uid="uid://damoph5umarop" path="res://scenes/ability_reward.tscn" id="10_df7hy"]
 [ext_resource type="Texture2D" uid="uid://dxvwoyqvt34rk" path="res://assets/artefacts/necklace_strength.png" id="10_tw8gb"]
+[ext_resource type="PackedScene" uid="uid://da7pxwcgh4x4h" path="res://ui/scenes/money_ui.tscn" id="11_money_ui"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gpgk3"]
 albedo_texture = ExtResource("3_5yklm")
@@ -228,7 +229,6 @@ material_override = SubResource("StandardMaterial3D_y5gjq")
 mesh = SubResource("PlaneMesh_v2h1w")
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=151234001]
-visible = false
 
 [node name="EndTurnButton" type="Button" parent="UI" unique_id=151234002]
 offset_left = 406.0
@@ -244,13 +244,6 @@ offset_right = 360.0
 offset_bottom = 116.0
 text = "Ожидание боя"
 
-[node name="EventButton" type="Button" parent="UI" unique_id=738125698]
-offset_left = 406.0
-offset_top = 76.0
-offset_right = 596.0
-offset_bottom = 120.0
-text = "Событие"
-
 [node name="artefact" type="TextureRect" parent="UI" unique_id=1203260053]
 offset_left = 8.999999
 offset_top = 5.0
@@ -258,6 +251,8 @@ offset_right = 265.0
 offset_bottom = 261.0
 scale = Vector2(0.26151982, 0.24725613)
 texture = ExtResource("10_tw8gb")
+
+[node name="money_ui" parent="." instance=ExtResource("11_money_ui")]
 
 [node name="ability_reward" parent="." unique_id=769588038 instance=ExtResource("10_df7hy")]
 transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 4, 0)
