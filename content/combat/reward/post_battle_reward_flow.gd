@@ -190,7 +190,7 @@ func _roll_bonus_coins_from_runtime_money_dice(owner: Node, money_cubes: Array[D
 		return 0
 	for request in requests:
 		request.extra_size_multiplier = POST_BATTLE_REWARD_DICE_SIZE_MULTIPLIER
-	var spawned_dice := owner._board.throw_dice(requests)
+	var spawned_dice = owner._board.throw_dice(requests)
 	for dice_body in spawned_dice:
 		if dice_body == null:
 			continue
