@@ -12,6 +12,7 @@
 [ext_resource type="Texture2D" uid="uid://cr5mbqdxoaee3" path="res://assets/entity/monsters/test_player.png" id="9_v3i8a"]
 [ext_resource type="PackedScene" uid="uid://damoph5umarop" path="res://scenes/ability_reward.tscn" id="10_df7hy"]
 [ext_resource type="Texture2D" uid="uid://dxvwoyqvt34rk" path="res://assets/artefacts/necklace_strength.png" id="10_tw8gb"]
+[ext_resource type="Texture2D" uid="uid://c2npj028il5ih" path="res://assets/ui/coin.png" id="13_aextr"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gpgk3"]
 albedo_texture = ExtResource("3_5yklm")
@@ -89,6 +90,12 @@ transparency = 1
 albedo_texture = ExtResource("10_tw8gb")
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_kitqn"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kitqn"]
+transparency = 1
+albedo_texture = ExtResource("13_aextr")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_14ef2"]
 
 [node name="battle_table" type="Node3D" unique_id=2051974326]
 script = ExtResource("2_runtime")
@@ -228,6 +235,7 @@ material_override = SubResource("StandardMaterial3D_y5gjq")
 mesh = SubResource("PlaneMesh_v2h1w")
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=151234001]
+visible = false
 
 [node name="EndTurnButton" type="Button" parent="UI" unique_id=151234002]
 offset_left = 406.0
@@ -260,9 +268,11 @@ texture = ExtResource("10_tw8gb")
 
 [node name="ability_reward" parent="." unique_id=769588038 instance=ExtResource("10_df7hy")]
 transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 4, 0)
+visible = false
 
 [node name="artefact_frame_reward" type="MeshInstance3D" parent="." unique_id=1132208606]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.02, -0.5158154)
+visible = false
 sorting_offset = 3.0
 material_override = SubResource("StandardMaterial3D_ojcrh")
 mesh = SubResource("PlaneMesh_aextr")
@@ -272,3 +282,16 @@ transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0, 0.01, 0)
 sorting_offset = 5.0
 material_override = SubResource("StandardMaterial3D_2v2t6")
 mesh = SubResource("PlaneMesh_kitqn")
+
+[node name="coin" type="MeshInstance3D" parent="." unique_id=1036548424]
+transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 11.010382, 0.01, -6.9212484)
+material_override = SubResource("StandardMaterial3D_kitqn")
+mesh = SubResource("PlaneMesh_14ef2")
+
+[node name="number_of_coins" type="Label3D" parent="coin" unique_id=1339183544]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 3.429618, 0, 0)
+pixel_size = 0.04
+modulate = Color(0.8980392, 0.84313726, 0.3254902, 1)
+outline_modulate = Color(0.8392157, 0.32156864, 0.011764706, 1)
+text = "111111"
+outline_size = 10
