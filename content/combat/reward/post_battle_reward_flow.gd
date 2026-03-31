@@ -11,6 +11,7 @@ const REWARD_CARD_NEW_FACE_ID := &"card_+"
 const REWARD_CARD_UP_FACE_ID := &"card_up"
 const REWARD_ARTIFACT_FACE_ID := &"artifact_+"
 const REWARD_CUBE_FACE_ID := &"cube_+"
+const REWARD_MONEY_FACE_ID := &"money"
 const ABILITY_REWARD_OPTIONS_COUNT := 3
 const ARTIFACT_REWARD_OPTIONS_COUNT := 2
 const CUBE_REWARD_OPTIONS_COUNT := 2
@@ -82,18 +83,20 @@ func _handle_post_battle_reward_dice(owner: Node) -> void:
 func _try_resolve_post_battle_reward_dice_result(owner: Node) -> void:
 	if not owner._has_spawned_post_battle_reward_dice or owner._has_processed_post_battle_reward_result:
 		return
-	var reward_dice := _find_post_battle_reward_die(owner)
-	if reward_dice == null:
-		return
 	var all_reward_dice = owner._get_turn_dice(&"reward")
+	var reward_dice := _find_post_battle_reward_die(owner)
+	if reward_dice == null and all_reward_dice.is_empty():
+		return
 	for dice in all_reward_dice:
 		if dice == null or not dice.has_completed_first_stop():
 			return
 	owner._has_processed_post_battle_reward_result = true
+	_grant_money_from_reward_rolls(owner, all_reward_dice)
 	var reward_face := ""
-	var reward_top_face := reward_dice.get_top_face()
-	if reward_top_face != null:
-		reward_face = reward_top_face.text_value
+	if reward_dice != null:
+		var reward_top_face := reward_dice.get_top_face()
+		if reward_top_face != null:
+			reward_face = reward_top_face.text_value
 	print("[Debug][RewardFlow] На кубе награды выпало: %s." % reward_face)
 	if StringName(reward_face) == REWARD_CARD_NEW_FACE_ID:
 		_show_ability_reward_options(owner)
@@ -116,6 +119,50 @@ func _find_post_battle_reward_die(owner: Node) -> Dice:
 		if dice_definition.dice_name == "reward_cube":
 			return dice
 	return null
+
+
+func _grant_money_from_reward_rolls(owner: Node, rolled_dice: Array) -> void:
+	if owner == null or owner.battle_room_data == null:
+		return
+	var player := owner.battle_room_data.player_instance
+	if player == null:
+		return
+	var granted_coins := 0
+	var rolled_reward_money_faces := 0
+	for dice in rolled_dice:
+		var typed_dice := dice as Dice
+		if typed_dice == null:
+			continue
+		var top_face := typed_dice.get_top_face()
+		if top_face == null:
+			continue
+		var top_value := top_face.text_value
+		var dice_definition := typed_dice.get_meta(&"definition", null) as DiceDefinition
+		if dice_definition != null and dice_definition.scope == DiceDefinition.Scope.MONEY:
+			granted_coins += maxi(top_value.to_int(), 0)
+		elif StringName(top_value) == REWARD_MONEY_FACE_ID:
+			rolled_reward_money_faces += 1
+	if rolled_reward_money_faces > 0 and not player.runtime_money_cubes.is_empty():
+		granted_coins += _roll_bonus_coins_from_money_cube(player.runtime_money_cubes, rolled_reward_money_faces, owner)
+	if granted_coins <= 0:
+		return
+	player.add_coins(granted_coins)
+	print("[Debug][RewardFlow] Начислено монет после боя: +%d (итого: %d)." % [granted_coins, player.current_coins])
+
+
+func _roll_bonus_coins_from_money_cube(money_cubes: Array[DiceDefinition], rolls_count: int, owner: Node) -> int:
+	if money_cubes.is_empty() or rolls_count <= 0:
+		return 0
+	var bonus := 0
+	for roll_index in rolls_count:
+		var source_cube := money_cubes[roll_index % money_cubes.size()]
+		if source_cube == null or source_cube.faces.is_empty():
+			continue
+		var random_face := source_cube.faces[owner._ability_reward_rng.randi_range(0, source_cube.faces.size() - 1)]
+		if random_face == null:
+			continue
+		bonus += maxi(random_face.text_value.to_int(), 0)
+	return bonus
 
 
 func _show_ability_reward_options(owner: Node) -> void:

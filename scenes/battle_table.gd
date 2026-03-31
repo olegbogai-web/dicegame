@@ -10,7 +10,7 @@ const BattleTurnOrchestrator = preload("res://content/combat/runtime/battle_turn
 const BattleActionOrchestrator = preload("res://content/combat/runtime/battle_action_orchestrator.gd")
 const PostBattleRewardFlow = preload("res://content/combat/reward/post_battle_reward_flow.gd")
 const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
-const EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
+const MoneyUi = preload("res://ui/scripts/money_ui.gd")
 
 const ACTIVATION_ANIMATION_DURATION := 0.5
 
@@ -23,10 +23,10 @@ const ACTIVATION_ANIMATION_DURATION := 0.5
 @onready var _monster_ability_template: MeshInstance3D = $ability_frame2
 @onready var _end_turn_button: Button = $UI/EndTurnButton
 @onready var _turn_status_label: Label = $UI/TurnStatusLabel
-@onready var _event_button: Button = $UI/EventButton
 @onready var _artifact_template: TextureRect = $UI/artefact
 @onready var _ability_reward_template: Node3D = $ability_reward
 @onready var _artifact_reward_template: MeshInstance3D = $artefact_frame_reward
+@onready var _money_ui: MoneyUi = $money_ui
 
 var battle_room_data: BattleRoom
 var _generated_monster_sprites: Array[Node] = []
@@ -67,8 +67,6 @@ func _ready() -> void:
 	_post_battle_reward_flow._clear_cube_reward_cards(self)
 	if _end_turn_button != null and not _end_turn_button.pressed.is_connected(_on_end_turn_button_pressed):
 		_end_turn_button.pressed.connect(_on_end_turn_button_pressed)
-	if _event_button != null and not _event_button.pressed.is_connected(_on_event_button_pressed):
-		_event_button.pressed.connect(_on_event_button_pressed)
 	if battle_room_data == null:
 		var pending_runtime_battle_room := GlobalMapRuntimeState.consume_pending_battle_room()
 		if pending_runtime_battle_room != null:
@@ -77,11 +75,13 @@ func _ready() -> void:
 			configure_from_battle_room(BattleRoomScript.create_test_battle_room())
 	else:
 		_apply_room_data()
-	_initialize_battle_state()
+		_initialize_battle_state()
+	_bind_money_ui_to_player()
 
 
 func configure_from_battle_room(next_battle_room: BattleRoom) -> void:
 	_scene_bootstrap.configure_from_battle_room(self, next_battle_room)
+	_bind_money_ui_to_player()
 
 
 func set_floor_textures(left_texture: Texture2D, right_texture: Texture2D) -> void:
@@ -272,6 +272,12 @@ func _register_player_ability_slots(frame: MeshInstance3D, ability: AbilityDefin
 
 func _set_mesh_tint(mesh_instance: MeshInstance3D, color: Color) -> void:
 	_scene_view_renderer._set_mesh_tint(mesh_instance, color)
+
+
+func _bind_money_ui_to_player() -> void:
+	if _money_ui == null or battle_room_data == null:
+		return
+	_money_ui.bind_player(battle_room_data.player_instance)
 
 
 func _find_player_ability_frame_at_screen_point(screen_point: Vector2) -> Dictionary:
@@ -469,12 +475,6 @@ func _are_current_monster_turn_dice_stopped() -> bool:
 
 func _on_end_turn_button_pressed() -> void:
 	_battle_turn_orchestrator.on_end_turn_button_pressed(_build_turn_orchestrator_context())
-
-
-func _on_event_button_pressed() -> void:
-	var result := get_tree().change_scene_to_file(EVENT_ROOM_SCENE_PATH)
-	if result != OK:
-		push_warning("Failed to open event room scene: %s" % EVENT_ROOM_SCENE_PATH)
 
 
 func _advance_to_next_turn() -> void:
