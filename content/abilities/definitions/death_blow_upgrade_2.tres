@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://dg8chslp78ydq"]
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
 
 [ext_resource type="Script" uid="uid://lfpdg732cjt" path="res://content/abilities/resources/ability_condition.gd" id="1_1w68m"]
 [ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
@@ -12,6 +12,7 @@
 script = ExtResource("3_dice_condition")
 min_value = 6
 max_value = 6
+required_count = 2
 required_tags = PackedStringArray()
 forbidden_tags = PackedStringArray()
 accepted_face_ids = PackedStringArray()
@@ -24,7 +25,7 @@ dice_conditions = Array[ExtResource("3_dice_condition")]([SubResource("AbilityDi
 [sub_resource type="Resource" id="AbilityEffect_damage"]
 script = ExtResource("6_effect")
 effect_id = "death_blow_damage"
-magnitude = 15
+magnitude = 30
 dice_query_tags = PackedStringArray()
 
 [sub_resource type="Resource" id="AbilityTargetRule_enemy"]
@@ -35,12 +36,13 @@ forbidden_tags = PackedStringArray()
 [resource]
 script = ExtResource("1_ability")
 ability_id = "death_blow"
-display_name = "Смертельный удар"
-description = "Наносит 15 урона; активируется шестеркой."
+display_name = "Смертельный удар+"
+description = "Требует 2 куба со значением 6. Наносит 30 урона."
 icon = ExtResource("7_icon")
 tags = PackedStringArray("attack")
+upgrade_level = 1
 max_upgrade_level = 1
 cost = SubResource("AbilityCost_main")
 target_rule = SubResource("AbilityTargetRule_enemy")
 effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_damage")])
-follow_up_ability_ids = PackedStringArray("res://content/abilities/definitions/death_blow_upgrade_1.tres", "res://content/abilities/definitions/death_blow_upgrade_2.tres")
+follow_up_ability_ids = PackedStringArray()
