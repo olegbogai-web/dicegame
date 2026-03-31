@@ -82,6 +82,9 @@ func configure(
 	_ensure_event_unavailable_mark()
 	_build_start_path_points()
 	_restore_persisted_state()
+	var runtime_player := _resolve_or_create_runtime_player()
+	if _board != null and runtime_player != null:
+		_board.bind_runtime_player(runtime_player)
 	_schedule_global_map_dice_roll_if_needed()
 
 

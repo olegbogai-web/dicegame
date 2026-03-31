@@ -11,6 +11,7 @@ const REWARD_CARD_NEW_FACE_ID := &"card_+"
 const REWARD_CARD_UP_FACE_ID := &"card_up"
 const REWARD_ARTIFACT_FACE_ID := &"artifact_+"
 const REWARD_CUBE_FACE_ID := &"cube_+"
+const MONEY_CUBE_DICE_NAME := &"money_cube"
 const ABILITY_REWARD_OPTIONS_COUNT := 3
 const ARTIFACT_REWARD_OPTIONS_COUNT := 2
 const CUBE_REWARD_OPTIONS_COUNT := 2
@@ -89,6 +90,7 @@ func _try_resolve_post_battle_reward_dice_result(owner: Node) -> void:
 	for dice in all_reward_dice:
 		if dice == null or not dice.has_completed_first_stop():
 			return
+	_apply_money_cube_results(owner, all_reward_dice)
 	owner._has_processed_post_battle_reward_result = true
 	var reward_face := ""
 	var reward_top_face := reward_dice.get_top_face()
@@ -103,6 +105,29 @@ func _try_resolve_post_battle_reward_dice_result(owner: Node) -> void:
 		_show_artifact_reward_options(owner)
 	elif StringName(reward_face) == REWARD_CUBE_FACE_ID:
 		_show_cube_reward_options(owner)
+
+
+func _apply_money_cube_results(owner: Node, reward_dice: Array) -> void:
+	if owner == null or owner.battle_room_data == null:
+		return
+	var player := owner.battle_room_data.player_instance
+	if player == null:
+		return
+	var gained_coins := 0
+	for dice in reward_dice:
+		if dice == null:
+			continue
+		var dice_definition := dice.get_meta(&"definition", null) as DiceDefinition
+		if dice_definition == null or StringName(dice_definition.dice_name) != MONEY_CUBE_DICE_NAME:
+			continue
+		var top_face := dice.get_top_face()
+		if top_face == null:
+			continue
+		gained_coins += maxi(top_face.text_value.to_int(), 0)
+	if gained_coins <= 0:
+		return
+	var updated_coins := player.add_coins(gained_coins)
+	print("[Debug][RewardFlow] Получено монет: %d. Всего монет: %d." % [gained_coins, updated_coins])
 
 
 func _find_post_battle_reward_die(owner: Node) -> Dice:
