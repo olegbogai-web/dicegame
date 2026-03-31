@@ -203,6 +203,29 @@ content/global_map/
 - Сервис обновляет профиль граней через policy-объекты.
 - `GlobalMapRoom` только получает новый snapshot и переотрисовывает выбор.
 
+#### Текущая продуктовая политика эволюции (обязательная)
+
+- Триггер эволюции: **в момент, когда игрок выбрал комнату назначения** на глобальной карте.
+- Эволюция применяется ко **всем кубам** глобальной карты игрока.
+- В рамках одной эволюции у каждого куба меняется **ровно одна грань** (первая подходящая грань выбранного типа).
+- Базовая цепочка переходов:
+  - `event(question_mark) -> mob(swords)`;
+  - `mob(swords) -> elite(elite_mob)`;
+  - `elite(elite_mob) -> shop(shop)`;
+  - `shop(shop) -> boss(boss)`.
+- На каждом шаге цепочки действует шанс отклонения: с вероятностью `20%` вместо штатного перехода новая грань становится `event(question_mark)`.
+- Шанс отклонения должен храниться в отдельной константе `EVOLUTION_TO_EVENT_CHANCE`, без in-place hardcode в вызывающем коде.
+
+#### Контракт сервиса эволюции
+
+`content/global_map/dice/global_map_dice_evolution_service.gd`:
+
+- `evolve_all_global_map_dice(global_map_dice, completed_room_face_tag, rng)` — entry point эволюции для выбора комнаты;
+- `_resolve_evolved_tag(source_tag, rng)` — policy выбора следующего тега с учетом шанса отклонения;
+- `_replace_single_face(dice_definition, source_tag, target_tag)` — замена одной грани в конкретном кубе;
+- `_apply_face_visual(face, face_tag)` — синхронизация `text_value/icon/content_type` у грани;
+- `_normalize_tag(raw_tag)` — нормализация и поддержка алиасов тегов room-type.
+
 ### 7.3. Внешние модификаторы
 
 На кубик влияют:
@@ -287,4 +310,3 @@ content/global_map/
 - изменения кубика карты происходят через отдельный evolution/modifier слой;
 - повышение сложности после босса выполняется внешним progression-сервисом;
 - добавление нового типа комнаты не требует переписывать `GlobalMapRoom`.
-
