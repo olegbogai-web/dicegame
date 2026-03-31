@@ -102,19 +102,10 @@ func _ensure_battle_room_data() -> void:
 
 func _apply_room_data() -> void:
 	_scene_view_renderer._apply_room_data(self)
-	_bind_runtime_player_to_board()
 
 
 func _apply_floor_textures() -> void:
 	_scene_view_renderer._apply_floor_textures(self)
-
-
-func _bind_runtime_player_to_board() -> void:
-	if _board == null or battle_room_data == null:
-		return
-	if battle_room_data.player_instance == null:
-		return
-	_board.bind_runtime_player(battle_room_data.player_instance)
 
 
 func _apply_player_sprite() -> void:
