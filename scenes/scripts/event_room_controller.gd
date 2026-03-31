@@ -8,7 +8,6 @@ const DiceDefinitionScript = preload("res://content/dice/resources/dice_definiti
 const DiceFaceDefinitionScript = preload("res://content/dice/resources/dice_face_definition.gd")
 const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd")
 const EventOutcomeDefinitionScript = preload("res://content/events/resources/event_outcome_definition.gd")
-const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 const GLOBAL_MAP_SCENE_PATH := "res://scenes/global_map_room.tscn"
 
@@ -35,7 +34,6 @@ const CONTINUE_BUTTON_TEXT := "Идти дальше"
 @onready var _background: MeshInstance3D = $background
 @onready var _board: BoardController = $board
 @onready var _choices_root: Node3D = $choices
-@onready var _coin_counter_label: Label3D = $coin/number_of_coins
 
 var _choice_entries: Array[Dictionary] = []
 var _hovered_choice_background: MeshInstance3D
@@ -45,7 +43,6 @@ var _event_dice: Dice
 var _is_resolving := false
 var _is_waiting_for_continue := false
 var _continue_button_background: MeshInstance3D
-var _bound_runtime_player: Player
 
 
 func _ready() -> void:
@@ -58,38 +55,8 @@ func _ready() -> void:
 
 	if _camera != null:
 		_camera.current = true
-	_bind_runtime_player_money_counter()
 	_collect_choice_entries()
 	_apply_event_definition()
-
-
-func _exit_tree() -> void:
-	if _bound_runtime_player != null and _bound_runtime_player.runtime_money_changed.is_connected(_on_runtime_player_money_changed):
-		_bound_runtime_player.runtime_money_changed.disconnect(_on_runtime_player_money_changed)
-	_bound_runtime_player = null
-
-
-func _bind_runtime_player_money_counter() -> void:
-	var runtime_player := GlobalMapRuntimeState.load_runtime_player()
-	if runtime_player == _bound_runtime_player:
-		_update_money_counter_label(runtime_player.runtime_money if runtime_player != null else 0)
-		return
-	if _bound_runtime_player != null and _bound_runtime_player.runtime_money_changed.is_connected(_on_runtime_player_money_changed):
-		_bound_runtime_player.runtime_money_changed.disconnect(_on_runtime_player_money_changed)
-	_bound_runtime_player = runtime_player
-	if _bound_runtime_player != null and not _bound_runtime_player.runtime_money_changed.is_connected(_on_runtime_player_money_changed):
-		_bound_runtime_player.runtime_money_changed.connect(_on_runtime_player_money_changed)
-	_update_money_counter_label(_bound_runtime_player.runtime_money if _bound_runtime_player != null else 0)
-
-
-func _on_runtime_player_money_changed(new_value: int) -> void:
-	_update_money_counter_label(new_value)
-
-
-func _update_money_counter_label(new_value: int) -> void:
-	if _coin_counter_label == null:
-		return
-	_coin_counter_label.text = str(maxi(new_value, 0))
 
 
 func _collect_choice_entries() -> void:
