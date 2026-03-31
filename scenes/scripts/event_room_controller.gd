@@ -8,6 +8,7 @@ const DiceDefinitionScript = preload("res://content/dice/resources/dice_definiti
 const DiceFaceDefinitionScript = preload("res://content/dice/resources/dice_face_definition.gd")
 const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd")
 const EventOutcomeDefinitionScript = preload("res://content/events/resources/event_outcome_definition.gd")
+const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 const GLOBAL_MAP_SCENE_PATH := "res://scenes/global_map_room.tscn"
 
@@ -55,6 +56,9 @@ func _ready() -> void:
 
 	if _camera != null:
 		_camera.current = true
+	var runtime_player := GlobalMapRuntimeState.load_runtime_player()
+	if _board != null and runtime_player != null:
+		_board.bind_runtime_player(runtime_player)
 	_collect_choice_entries()
 	_apply_event_definition()
 

@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://dn66rechaasvk" path="res://assets/material/дерево.png" id="1_vhfsq"]
 [ext_resource type="Script" uid="uid://dg8vg8qhsqsb4" path="res://ui/scripts/board_controller.gd" id="2_x7kp1"]
 [ext_resource type="PackedScene" uid="uid://boqsu0xoab2wo" path="res://content/resources/base_cube.tscn" id="3_j2v5c"]
+[ext_resource type="Texture2D" uid="uid://c2npj028il5ih" path="res://assets/ui/coin.png" id="4_coin"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
 size = Vector3(8, 0.2, 4)
@@ -118,3 +119,29 @@ offset_top = 24.0
 offset_right = 390.0
 offset_bottom = 68.0
 text = "Тестовый бой"
+
+[node name="CoinsHUD" type="Control" parent="UI" unique_id=933445112]
+offset_left = 1139.0
+offset_top = 22.0
+offset_right = 1259.0
+offset_bottom = 74.0
+mouse_filter = 2
+
+[node name="coin" type="TextureRect" parent="UI/CoinsHUD" unique_id=2050029191]
+offset_right = 52.0
+offset_bottom = 52.0
+texture = ExtResource("4_coin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="number_of_coins" type="Label" parent="UI/CoinsHUD" unique_id=271628513]
+offset_left = 62.0
+offset_top = 10.0
+offset_right = 120.0
+offset_bottom = 50.0
+theme_override_colors/font_color = Color(0.8980392, 0.84313726, 0.3254902, 1)
+theme_override_colors/font_outline_color = Color(0.8392157, 0.32156864, 0.011764706, 1)
+theme_override_constants/outline_size = 6
+text = "0"
+horizontal_alignment = 2
+vertical_alignment = 1
