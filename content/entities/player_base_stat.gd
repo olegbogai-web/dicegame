@@ -31,7 +31,6 @@ const DiceFaceDefinitionScript = preload("res://content/dice/resources/dice_face
 @export var base_money_cube: DiceDefinition
 @export var starting_abilities: Array[AbilityDefinition] = []
 @export var artifacts_base: Array[ArtifactDefinition] = []
-@export_range(0, 999999, 1) var starting_coins := 0
 @export var metadata: Dictionary = {}
 
 

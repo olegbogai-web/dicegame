@@ -7,7 +7,6 @@
 [ext_resource type="PackedScene" uid="uid://0ssqyi084mdh" path="res://scenes/board.tscn" id="5_isgup"]
 [ext_resource type="Script" uid="uid://8eck2f2ar140" path="res://content/global_map/global_map_room.gd" id="6_map_controller"]
 [ext_resource type="Texture2D" uid="uid://fc0r3npu6dl1" path="res://assets/global_map/point.png" id="7_aqsb5"]
-[ext_resource type="PackedScene" path="res://ui/scenes/money_ui.tscn" id="99_money_ui"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vux7t"]
 albedo_texture = ExtResource("1_7nkcx")
@@ -79,5 +78,3 @@ light_energy = 0.5
 transform = Transform3D(0.85, 0, 0, 0, 0.85, 0, 0, 0, 0.85, -14.513, 0.02, 0.41672575)
 material_override = SubResource("StandardMaterial3D_f4nsl")
 mesh = SubResource("PlaneMesh_5qcje")
-
-[node name="money_ui" parent="." instance=ExtResource("99_money_ui")]
