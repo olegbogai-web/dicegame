@@ -1,13 +1,8 @@
 [gd_scene format=3 uid="uid://da7pxwcgh4x4h"]
 
 [ext_resource type="Texture2D" uid="uid://c2npj028il5ih" path="res://assets/ui/coin.png" id="1_oc30r"]
-[ext_resource type="Script" path="res://ui/scripts/money_ui_controller.gd" id="2_money"]
 
-[node name="money_ui" type="CanvasLayer" unique_id=899722087]
-layer = 100
-script = ExtResource("2_money")
-
-[node name="container" type="Control" parent="."]
+[node name="money_ui" type="Control" unique_id=899722087]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -15,7 +10,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TextureRect" type="TextureRect" parent="container" unique_id=17831411]
+[node name="TextureRect" type="TextureRect" parent="." unique_id=17831411]
 layout_mode = 0
 offset_left = 1742.0001
 offset_top = 13.0
@@ -24,7 +19,7 @@ offset_bottom = 269.0
 scale = Vector2(0.21138568, 0.20126887)
 texture = ExtResource("1_oc30r")
 
-[node name="number_of_coins" type="Label" parent="container" unique_id=1532399350]
+[node name="Label" type="Label" parent="." unique_id=1532399350]
 layout_mode = 0
 offset_left = 1809.0
 offset_top = 7.9999995
@@ -35,4 +30,4 @@ theme_override_colors/font_color = Color(0.9764706, 1, 0.07450981, 1)
 theme_override_colors/font_outline_color = Color(0.6666667, 0.29411766, 0.14901961, 1)
 theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 20
-text = "0"
+text = "34"

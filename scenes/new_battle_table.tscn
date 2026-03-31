@@ -12,7 +12,6 @@
 [ext_resource type="Texture2D" uid="uid://cr5mbqdxoaee3" path="res://assets/entity/monsters/test_player.png" id="9_v3i8a"]
 [ext_resource type="PackedScene" uid="uid://damoph5umarop" path="res://scenes/ability_reward.tscn" id="10_df7hy"]
 [ext_resource type="Texture2D" uid="uid://dxvwoyqvt34rk" path="res://assets/artefacts/necklace_strength.png" id="10_tw8gb"]
-[ext_resource type="PackedScene" path="res://ui/scenes/money_ui.tscn" id="99_money_ui"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gpgk3"]
 albedo_texture = ExtResource("3_5yklm")
@@ -276,5 +275,3 @@ transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0, 0.01, 0)
 sorting_offset = 5.0
 material_override = SubResource("StandardMaterial3D_2v2t6")
 mesh = SubResource("PlaneMesh_kitqn")
-
-[node name="money_ui" parent="." instance=ExtResource("99_money_ui")]
