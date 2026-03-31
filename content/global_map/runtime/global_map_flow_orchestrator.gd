@@ -7,6 +7,7 @@ const GlobalMapEventIconPresenter = preload("res://content/global_map/presentati
 const GlobalMapMarkerPresenter = preload("res://content/global_map/presentation/global_map_marker_presenter.gd")
 const GlobalMapMarkerSpawnService = preload("res://content/global_map/runtime/global_map_marker_spawn_service.gd")
 const GlobalMapMarkerRoomLinkResolver = preload("res://content/global_map/routing/global_map_marker_room_link_resolver.gd")
+const GlobalMapDiceEvolutionService = preload("res://content/global_map/dice/global_map_dice_evolution_service.gd")
 const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
 const BattleRoom = preload("res://content/rooms/subclasses/battle_room.gd")
 const Player = preload("res://content/entities/player.gd")
@@ -43,6 +44,7 @@ var _event_presenter := GlobalMapEventIconPresenter.new()
 var _marker_presenter := GlobalMapMarkerPresenter.new()
 var _marker_spawn_service := GlobalMapMarkerSpawnService.new()
 var _marker_link_resolver := GlobalMapMarkerRoomLinkResolver.new()
+var _dice_evolution_service := GlobalMapDiceEvolutionService.new()
 var _state := GlobalMapRuntimeState.new()
 var _rng := RandomNumberGenerator.new()
 var _path_points: Array[Vector3] = []
@@ -148,6 +150,7 @@ func _try_pick_dynamic_marker(mouse_position: Vector2) -> bool:
 	var marker_node := picked_marker.get("node") as Node3D
 	if marker_node == null:
 		return false
+	_apply_global_map_dice_evolution_for_choice(String(picked_marker.get("type", "")))
 	_pending_room_scene_path = String(picked_marker.get("scene_path", ""))
 	var marker_path_points = picked_marker.get("path_points", [])
 	if marker_path_points is Array and not (marker_path_points as Array).is_empty():
@@ -157,6 +160,18 @@ func _try_pick_dynamic_marker(mouse_position: Vector2) -> bool:
 	_path_index = 0
 	_state.hero_move_started = true
 	return true
+
+
+func _apply_global_map_dice_evolution_for_choice(selected_marker_type: String) -> void:
+	var player := _resolve_or_create_runtime_player()
+	if player == null:
+		return
+	_dice_evolution_service.evolve_all_global_map_dice(
+		player.runtime_cube_global_map,
+		selected_marker_type,
+		_rng
+	)
+	GlobalMapRuntimeState.save_runtime_player(player)
 
 
 func _is_event_icon_clicked(mouse_position: Vector2) -> bool:
