@@ -3,7 +3,6 @@ class_name BoardController
 
 const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd")
 const Dice = preload("res://content/dice/dice.gd")
-const Player = preload("res://content/entities/player.gd")
 
 @export_category("Board References")
 @export var floor_path: NodePath = ^"floor"
@@ -31,9 +30,6 @@ const Player = preload("res://content/entities/player.gd")
 @onready var _floor: Node3D = get_node_or_null(floor_path)
 @onready var _throw_button: Button = %ThrowDiceButton
 @onready var _test_battle_button: Button = %TestBattleButton
-@onready var _coins_value_label: Label = $UI/CoinsHUD/number_of_coins
-
-var _runtime_player: Player
 
 var _rng := RandomNumberGenerator.new()
 
@@ -44,19 +40,6 @@ func _ready() -> void:
 		_throw_button.pressed.connect(_on_throw_button_pressed)
 	if _test_battle_button != null and not _test_battle_button.pressed.is_connected(_on_test_battle_button_pressed):
 		_test_battle_button.pressed.connect(_on_test_battle_button_pressed)
-	_set_coin_amount(0)
-
-
-func bind_runtime_player(player: Player) -> void:
-	if _runtime_player == player:
-		_refresh_coin_display()
-		return
-	if _runtime_player != null and _runtime_player.coins_changed.is_connected(_on_runtime_player_coins_changed):
-		_runtime_player.coins_changed.disconnect(_on_runtime_player_coins_changed)
-	_runtime_player = player
-	if _runtime_player != null and not _runtime_player.coins_changed.is_connected(_on_runtime_player_coins_changed):
-		_runtime_player.coins_changed.connect(_on_runtime_player_coins_changed)
-	_refresh_coin_display()
 
 
 func throw_dice(requests: Array[DiceThrowRequest]) -> Array[RigidBody3D]:
@@ -136,23 +119,6 @@ func _on_test_battle_button_pressed() -> void:
 	var result := get_tree().change_scene_to_file(test_battle_scene_path)
 	if result != OK:
 		push_warning("Failed to open test battle scene: %s" % test_battle_scene_path)
-
-
-func _on_runtime_player_coins_changed(new_amount: int) -> void:
-	_set_coin_amount(new_amount)
-
-
-func _refresh_coin_display() -> void:
-	if _runtime_player == null:
-		_set_coin_amount(0)
-		return
-	_set_coin_amount(_runtime_player.get_current_coins())
-
-
-func _set_coin_amount(value: int) -> void:
-	if _coins_value_label == null:
-		return
-	_coins_value_label.text = str(maxi(value, 0))
 
 
 func _find_spawn_transform(
