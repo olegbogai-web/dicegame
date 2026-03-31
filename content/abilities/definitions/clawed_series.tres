@@ -24,7 +24,7 @@ dice_conditions = Array[ExtResource("3_dice_condition")]([SubResource("AbilityDi
 [sub_resource type="Resource" id="AbilityEffect_damage"]
 script = ExtResource("6_effect")
 effect_id = "clawed_series_damage"
-magnitude = 15
+magnitude = 5
 dice_query_tags = PackedStringArray()
 
 [sub_resource type="Resource" id="AbilityTargetRule_enemy"]
@@ -41,5 +41,5 @@ icon = ExtResource("7_icon")
 tags = PackedStringArray("attack")
 cost = SubResource("AbilityCost_main")
 target_rule = SubResource("AbilityTargetRule_enemy")
-effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_damage")])
+effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_damage"), SubResource("AbilityEffect_damage"), SubResource("AbilityEffect_damage")])
 follow_up_ability_ids = PackedStringArray()
