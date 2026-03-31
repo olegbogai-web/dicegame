@@ -3,10 +3,13 @@ class_name Player
 
 const ON_GRANT_MAX_HP_BONUS_META_KEY := &"on_grant_max_hp_bonus"
 
+signal runtime_money_changed(new_value: int)
+
 var player_id := ""
 var base_stat: PlayerBaseStat
 var current_hp := 0
 var current_armor := 0
+var runtime_money := 0
 var dice_loadout: Array[DiceDefinition] = []
 var runtime_cube_global_map: Array[DiceDefinition] = []
 var runtime_reward_cube: DiceDefinition
@@ -40,6 +43,7 @@ func reset_for_run() -> void:
 	if base_stat == null:
 		current_hp = 0
 		current_armor = 0
+		runtime_money = 0
 		dice_loadout.clear()
 		runtime_cube_global_map.clear()
 		runtime_reward_cube = null
@@ -52,9 +56,11 @@ func reset_for_run() -> void:
 		runtime_max_hp_bonus = 0
 		run_flags.clear()
 		_is_runtime_initialized = false
+		runtime_money_changed.emit(runtime_money)
 		return
 	current_hp = base_stat.get_resolved_starting_hp()
 	current_armor = base_stat.starting_armor
+	runtime_money = maxi(base_stat.starting_money, 0)
 	dice_loadout = base_stat.starting_dice.duplicate()
 	runtime_cube_global_map = base_stat.get_resolved_base_cube_global_map().duplicate(true)
 	runtime_reward_cube = base_stat.get_resolved_base_reward_cube().duplicate(true)
@@ -71,6 +77,7 @@ func reset_for_run() -> void:
 	runtime_max_hp_bonus = 0
 	run_flags.clear()
 	_is_runtime_initialized = true
+	runtime_money_changed.emit(runtime_money)
 
 
 func ensure_runtime_initialized_from_base_stat() -> void:
@@ -162,6 +169,23 @@ func get_runtime_cubes_by_scope(scope: int) -> Array[DiceDefinition]:
 		DiceDefinition.Scope.EVENT:
 			return runtime_event_cubes
 	return []
+
+
+func add_runtime_money(value: int) -> int:
+	if value <= 0:
+		return 0
+	runtime_money += value
+	runtime_money_changed.emit(runtime_money)
+	return value
+
+
+func spend_runtime_money(value: int) -> int:
+	if value <= 0:
+		return 0
+	var spent := mini(runtime_money, value)
+	runtime_money -= spent
+	runtime_money_changed.emit(runtime_money)
+	return spent
 
 
 func _apply_on_grant_effects(artifact_definition: ArtifactDefinition) -> void:

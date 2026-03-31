@@ -11,6 +11,8 @@ const REWARD_CARD_NEW_FACE_ID := &"card_+"
 const REWARD_CARD_UP_FACE_ID := &"card_up"
 const REWARD_ARTIFACT_FACE_ID := &"artifact_+"
 const REWARD_CUBE_FACE_ID := &"cube_+"
+const MONEY_CUBE_DICE_NAME := "money_cube"
+const REWARD_CUBE_DICE_NAME := "reward_cube"
 const ABILITY_REWARD_OPTIONS_COUNT := 3
 const ARTIFACT_REWARD_OPTIONS_COUNT := 2
 const CUBE_REWARD_OPTIONS_COUNT := 2
@@ -90,6 +92,7 @@ func _try_resolve_post_battle_reward_dice_result(owner: Node) -> void:
 		if dice == null or not dice.has_completed_first_stop():
 			return
 	owner._has_processed_post_battle_reward_result = true
+	_resolve_money_reward(owner, all_reward_dice)
 	var reward_face := ""
 	var reward_top_face := reward_dice.get_top_face()
 	if reward_top_face != null:
@@ -113,9 +116,33 @@ func _find_post_battle_reward_die(owner: Node) -> Dice:
 		var dice_definition := dice.get_meta(&"definition", null) as DiceDefinition
 		if dice_definition == null:
 			continue
-		if dice_definition.dice_name == "reward_cube":
+		if dice_definition.dice_name == REWARD_CUBE_DICE_NAME:
 			return dice
 	return null
+
+
+func _resolve_money_reward(owner: Node, reward_dice: Array) -> void:
+	if owner == null or owner.battle_room_data == null:
+		return
+	var player := owner.battle_room_data.player_instance
+	if player == null:
+		return
+	var total_rolled_money := 0
+	for die in reward_dice:
+		var reward_die := die as Dice
+		if reward_die == null:
+			continue
+		var dice_definition := reward_die.get_meta(&"definition", null) as DiceDefinition
+		if dice_definition == null or dice_definition.dice_name != MONEY_CUBE_DICE_NAME:
+			continue
+		var top_face := reward_die.get_top_face()
+		if top_face == null:
+			continue
+		total_rolled_money += maxi(int(top_face.text_value), 0)
+	if total_rolled_money <= 0:
+		return
+	player.add_runtime_money(total_rolled_money)
+	print("[Debug][RewardFlow] Игрок получил %d монет. Всего монет: %d." % [total_rolled_money, player.runtime_money])
 
 
 func _show_ability_reward_options(owner: Node) -> void:
