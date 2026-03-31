@@ -6,10 +6,8 @@ const DUNGEON_FLOOR_TEXTURE_1 := preload("res://assets/material/dangeon_floor_1.
 const DUNGEON_FLOOR_TEXTURE_2 := preload("res://assets/material/dangeon_floor_2.png")
 const TEST_PLAYER_TEXTURE := preload("res://assets/entity/monsters/test_player.png")
 const TEST_MONSTER_DEFINITION := preload("res://content/monsters/definitions/test_monster.tres")
-const CHIMERA_MONSTER_DEFINITION := preload("res://content/monsters/definitions/chimera.tres")
 const COMMON_ATTACK_ABILITY := preload("res://content/abilities/definitions/common_attack.tres")
 const HEAL_ABILITY := preload("res://content/abilities/definitions/heal.tres")
-const GlobalMapDiceEvolutionService = preload("res://content/global_map/dice/global_map_dice_evolution_service.gd")
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
 const BattleEffectRuntime = preload("res://content/combat/runtime/battle_effect_runtime.gd")
@@ -34,7 +32,6 @@ class CombatantViewData:
 	var current_hp := 0
 	var max_hp := 0
 	var dice_count := 0
-	var dice_loadout: Array[DiceDefinition] = []
 	var ai_profile: MonsterAiProfile
 	var combatant_id: StringName = &""
 	var side: StringName = &""
@@ -46,7 +43,6 @@ class CombatantViewData:
 		next_current_hp: int = 0,
 		next_max_hp: int = 0,
 		next_dice_count: int = 0,
-		next_dice_loadout: Array[DiceDefinition] = [],
 		next_ai_profile: MonsterAiProfile = null,
 		next_combatant_id: StringName = &"",
 		next_side: StringName = &""
@@ -57,7 +53,6 @@ class CombatantViewData:
 		current_hp = maxi(next_current_hp, 0)
 		max_hp = maxi(next_max_hp, 0)
 		dice_count = maxi(next_dice_count, 0)
-		dice_loadout = _sanitize_dice_loadout(next_dice_loadout)
 		ai_profile = next_ai_profile
 		combatant_id = next_combatant_id
 		side = next_side
@@ -67,13 +62,6 @@ class CombatantViewData:
 		for ability in next_abilities:
 			if ability != null:
 				sanitized.append(ability)
-		return sanitized
-
-	static func _sanitize_dice_loadout(next_dice_loadout: Array[DiceDefinition]) -> Array[DiceDefinition]:
-		var sanitized: Array[DiceDefinition] = []
-		for dice_definition in next_dice_loadout:
-			if dice_definition != null:
-				sanitized.append(dice_definition)
 		return sanitized
 
 	func get_health_ratio() -> float:
@@ -153,7 +141,6 @@ func set_player_data(player: Player, sprite: Texture2D) -> void:
 	var current_hp := 0
 	var max_hp := 0
 	var dice_count := 0
-	var dice_loadout: Array[DiceDefinition] = []
 	var ai_profile: MonsterAiProfile
 	if player_instance != null:
 		abilities.assign(player_instance.ability_loadout)
@@ -168,7 +155,6 @@ func set_player_data(player: Player, sprite: Texture2D) -> void:
 		current_hp,
 		max_hp,
 		dice_count,
-		dice_loadout,
 		ai_profile,
 		&"player",
 		&"player"
@@ -193,8 +179,7 @@ func set_monsters_from_definitions(next_monster_definitions: Array[MonsterDefini
 				MONSTER_SPRITE_SCALE,
 				monster_definition.max_health,
 				monster_definition.max_health,
-				monster_definition.get_combat_dice_count(),
-				monster_definition.get_combat_dice_loadout(),
+				monster_definition.dice_count,
 				monster_definition.ai_profile,
 				StringName("%s_%d" % [monster_definition.monster_id, monster_views.size()]),
 				&"enemy"
@@ -457,7 +442,7 @@ static func create_test_battle_room() -> BattleRoom:
 	return room
 
 
-static func create_runtime_battle_room(player: Player, marker_type: String = "", rng: RandomNumberGenerator = null) -> BattleRoom:
+static func create_runtime_battle_room(player: Player, rng: RandomNumberGenerator = null) -> BattleRoom:
 	var room := BattleRoom.new()
 	room.room_id = "runtime_battle_room"
 	var runtime_player := player
@@ -468,32 +453,17 @@ static func create_runtime_battle_room(player: Player, marker_type: String = "",
 	var resolved_rng := rng if rng != null else RandomNumberGenerator.new()
 	if rng == null:
 		resolved_rng.randomize()
-	var runtime_setup := _build_runtime_encounter_setup(marker_type, resolved_rng)
-	var floor_texture: Texture2D = runtime_setup.get("floor_texture", DEFAULT_FLOOR_TEXTURE)
+	var floor_texture := _pick_runtime_floor_texture(resolved_rng)
 	room.set_floor_textures(floor_texture, floor_texture)
 	room.set_player_data(runtime_player, TEST_PLAYER_TEXTURE)
-	var monster_definitions: Array[MonsterDefinition] = runtime_setup.get("monsters", [TEST_MONSTER_DEFINITION])
-	room.set_monsters_from_definitions(monster_definitions)
+	room.set_monsters_from_definitions([TEST_MONSTER_DEFINITION])
 	return room
 
 
-static func _build_runtime_encounter_setup(marker_type: String, rng: RandomNumberGenerator) -> Dictionary:
-	var normalized_marker_type := marker_type.strip_edges().to_lower()
-	if normalized_marker_type == GlobalMapDiceEvolutionService.ELITE_FACE_TAG:
-		return {
-			"floor_texture": _pick_runtime_floor_texture(rng, [DEFAULT_FLOOR_TEXTURE, DUNGEON_FLOOR_TEXTURE_1, DUNGEON_FLOOR_TEXTURE_2]),
-			"monsters": [CHIMERA_MONSTER_DEFINITION],
-		}
-	return {
-		"floor_texture": _pick_runtime_floor_texture(rng, [DUNGEON_FLOOR_TEXTURE_1, DUNGEON_FLOOR_TEXTURE_2]),
-		"monsters": [TEST_MONSTER_DEFINITION],
-	}
-
-
-static func _pick_runtime_floor_texture(rng: RandomNumberGenerator, floor_pool: Array[Texture2D]) -> Texture2D:
-	if floor_pool.is_empty():
-		return DEFAULT_FLOOR_TEXTURE
-	return floor_pool[rng.randi_range(0, floor_pool.size() - 1)]
+static func _pick_runtime_floor_texture(rng: RandomNumberGenerator) -> Texture2D:
+	if rng.randi_range(0, 1) == 0:
+		return DUNGEON_FLOOR_TEXTURE_1
+	return DUNGEON_FLOOR_TEXTURE_2
 
 
 static func build_default_player() -> Player:

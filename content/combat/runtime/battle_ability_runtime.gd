@@ -145,59 +145,12 @@ static func _collect_dice_for_condition(
 	if candidates.size() < min_count:
 		return []
 	for selected_count in range(min_count, max_count + 1):
-		var selected_for_count: Array[Dice] = []
-		if _has_total_value_constraint(dice_condition):
-			selected_for_count = _collect_dice_with_total_value(dice_condition, candidates, selected_count)
-		else:
-			selected_for_count = _collect_dice_with_count(dice_condition, candidates, selected_count)
+		var selected_for_count := _collect_dice_with_count(dice_condition, candidates, selected_count)
 		if selected_for_count.is_empty():
 			continue
 		if dice_condition.matches_total_value(_sum_dice_values(selected_for_count)):
 			return selected_for_count
 	return []
-
-
-static func _has_total_value_constraint(dice_condition: AbilityDiceCondition) -> bool:
-	if dice_condition == null:
-		return false
-	return dice_condition.min_total_value > 0 or dice_condition.max_total_value > 0
-
-
-static func _collect_dice_with_total_value(
-	dice_condition: AbilityDiceCondition,
-	candidates: Array[Dice],
-	required_count: int
-) -> Array[Dice]:
-	if required_count <= 0 or candidates.size() < required_count:
-		return []
-	var selected: Array[Dice] = []
-	if _collect_dice_with_total_value_backtrack(dice_condition, candidates, required_count, 0, selected):
-		return selected
-	return []
-
-
-static func _collect_dice_with_total_value_backtrack(
-	dice_condition: AbilityDiceCondition,
-	candidates: Array[Dice],
-	required_count: int,
-	start_index: int,
-	selected: Array[Dice]
-) -> bool:
-	if selected.size() == required_count:
-		var total := _sum_dice_values(selected)
-		return dice_condition.matches_total_value(total)
-
-	var remaining_slots := required_count - selected.size()
-	var max_start := candidates.size() - remaining_slots
-	for candidate_index in range(start_index, max_start + 1):
-		var candidate := candidates[candidate_index]
-		if candidate == null:
-			continue
-		selected.append(candidate)
-		if _collect_dice_with_total_value_backtrack(dice_condition, candidates, required_count, candidate_index + 1, selected):
-			return true
-		selected.pop_back()
-	return false
 
 
 static func _collect_dice_with_count(

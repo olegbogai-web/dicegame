@@ -703,19 +703,3 @@ UI может реализовывать drag-and-drop, подсветку и в
 3. делегирует действия в orchestrator-слои.
 
 Это делает безопасным переход от тестовой комнаты к production-flow глобальной карты без переписывания UI-экрана боя.
-
-## 16. Обновление: runtime-поддержка составного набора кубов монстра (март 2026)
-
-Для отказа от хардкода количества однотипных кубов добавлена поддержка `dice_loadout` у монстров.
-
-Новые/обновленные функции runtime-слоя:
-- `MonsterDefinition.get_combat_dice_loadout()` — возвращает валидный combat-набор кубов монстра;
-- `MonsterDefinition.get_combat_dice_count()` — возвращает размер `dice_loadout` (или fallback в `dice_count`);
-- `BattleTurnOrchestrator.throw_current_turn_dice(...)` — при ходе монстра бросает кубы из `monster_view.dice_loadout`, fallback — legacy `dice_count`.
-
-Также в `BattleAbilityRuntime` добавлены функции для корректного подбора стоимости с ограничением по сумме:
-- `_has_total_value_constraint(dice_condition)`;
-- `_collect_dice_with_total_value(...)`;
-- `_collect_dice_with_total_value_backtrack(...)`.
-
-Это устраняет класс ошибок, когда greedy-подбор не находил валидную комбинацию кубов при наличии ограничения по total value.

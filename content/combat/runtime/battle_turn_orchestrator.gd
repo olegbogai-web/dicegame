@@ -39,20 +39,11 @@ func throw_current_turn_dice(context: Dictionary) -> void:
 			requests.append(build_dice_throw_request(dice_definition, {"owner": &"player"}))
 	elif battle_room_data.is_monster_turn() and battle_room_data.can_target_monster(battle_room_data.current_monster_turn_index):
 		var monster_view = battle_room_data.monster_views[battle_room_data.current_monster_turn_index]
-		if monster_view.dice_loadout.is_empty():
-			for _index in range(monster_view.dice_count):
-				requests.append(build_dice_throw_request(null, {
-					"owner": &"monster",
-					"monster_index": battle_room_data.current_monster_turn_index,
-				}))
-		else:
-			for dice_definition in monster_view.dice_loadout:
-				if dice_definition == null:
-					continue
-				requests.append(build_dice_throw_request(dice_definition, {
-					"owner": &"monster",
-					"monster_index": battle_room_data.current_monster_turn_index,
-				}))
+		for _index in range(monster_view.dice_count):
+			requests.append(build_dice_throw_request(null, {
+				"owner": &"monster",
+				"monster_index": battle_room_data.current_monster_turn_index,
+			}))
 	if not requests.is_empty():
 		board.throw_dice(requests)
 
