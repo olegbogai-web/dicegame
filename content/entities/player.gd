@@ -9,9 +9,6 @@ var current_hp := 0
 var current_armor := 0
 var dice_loadout: Array[DiceDefinition] = []
 var runtime_cube_global_map: Array[DiceDefinition] = []
-var runtime_cube_event: Array[DiceDefinition] = []
-var runtime_reward_cubes: Array[DiceDefinition] = []
-var runtime_money_cubes: Array[DiceDefinition] = []
 var runtime_reward_cube: DiceDefinition
 var runtime_money_cube: DiceDefinition
 var ability_loadout: Array[AbilityDefinition] = []
@@ -42,9 +39,6 @@ func reset_for_run() -> void:
 		current_armor = 0
 		dice_loadout.clear()
 		runtime_cube_global_map.clear()
-		runtime_cube_event.clear()
-		runtime_reward_cubes.clear()
-		runtime_money_cubes.clear()
 		runtime_reward_cube = null
 		runtime_money_cube = null
 		ability_loadout.clear()
@@ -57,17 +51,8 @@ func reset_for_run() -> void:
 	current_armor = base_stat.starting_armor
 	dice_loadout = base_stat.starting_dice.duplicate()
 	runtime_cube_global_map = base_stat.get_resolved_base_cube_global_map().duplicate(true)
-	runtime_cube_event.clear()
-	runtime_reward_cubes = []
-	runtime_money_cubes = []
-	var resolved_reward_cube := base_stat.get_resolved_base_reward_cube().duplicate(true)
-	if resolved_reward_cube != null:
-		runtime_reward_cubes.append(resolved_reward_cube)
-	var resolved_money_cube := base_stat.get_resolved_base_money_cube().duplicate(true)
-	if resolved_money_cube != null:
-		runtime_money_cubes.append(resolved_money_cube)
-	runtime_reward_cube = runtime_reward_cubes[0] if not runtime_reward_cubes.is_empty() else null
-	runtime_money_cube = runtime_money_cubes[0] if not runtime_money_cubes.is_empty() else null
+	runtime_reward_cube = base_stat.get_resolved_base_reward_cube().duplicate(true)
+	runtime_money_cube = base_stat.get_resolved_base_money_cube().duplicate(true)
 	ability_loadout = base_stat.starting_abilities.duplicate()
 	artifacts_runtime.clear()
 	runtime_max_hp_bonus = 0
@@ -128,53 +113,6 @@ func get_active_artifact_definitions() -> Array[ArtifactDefinition]:
 		if artifact_runtime != null:
 			resolved.append(artifact_runtime)
 	return resolved
-
-
-func grant_runtime_dice(dice_definition: DiceDefinition) -> bool:
-	if dice_definition == null:
-		return false
-	var runtime_dice := dice_definition.duplicate(true)
-	if runtime_dice == null:
-		return false
-	if runtime_dice.rarity == DiceDefinition.Rarity.UNIQUE and _has_unique_runtime_dice(runtime_dice):
-		return false
-	match runtime_dice.scope:
-		DiceDefinition.Scope.COMBAT:
-			dice_loadout.append(runtime_dice)
-		DiceDefinition.Scope.GLOBAL_MAP:
-			runtime_cube_global_map.append(runtime_dice)
-		DiceDefinition.Scope.REWARD:
-			runtime_reward_cubes.append(runtime_dice)
-			runtime_reward_cube = runtime_reward_cubes[0] if not runtime_reward_cubes.is_empty() else null
-		DiceDefinition.Scope.MONEY:
-			runtime_money_cubes.append(runtime_dice)
-			runtime_money_cube = runtime_money_cubes[0] if not runtime_money_cubes.is_empty() else null
-		DiceDefinition.Scope.EVENT:
-			runtime_cube_event.append(runtime_dice)
-		_:
-			return false
-	return true
-
-
-func _has_unique_runtime_dice(candidate: DiceDefinition) -> bool:
-	if candidate == null:
-		return false
-	for combat_dice in dice_loadout:
-		if combat_dice != null and combat_dice.dice_name == candidate.dice_name:
-			return true
-	for map_dice in runtime_cube_global_map:
-		if map_dice != null and map_dice.dice_name == candidate.dice_name:
-			return true
-	for reward_dice in runtime_reward_cubes:
-		if reward_dice != null and reward_dice.dice_name == candidate.dice_name:
-			return true
-	for money_dice in runtime_money_cubes:
-		if money_dice != null and money_dice.dice_name == candidate.dice_name:
-			return true
-	for event_dice in runtime_cube_event:
-		if event_dice != null and event_dice.dice_name == candidate.dice_name:
-			return true
-	return false
 
 
 func _apply_on_grant_effects(artifact_definition: ArtifactDefinition) -> void:
