@@ -5,7 +5,7 @@ const Dice = preload("res://content/dice/dice.gd")
 const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
 
 const POST_BATTLE_REWARD_DICE_SIZE_MULTIPLIER := Vector3(4.0, 4.0, 4.0)
-const POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER := 0.75
+const POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER := 0.65
 const POST_BATTLE_REWARD_DICE_DELAY_SECONDS := 1.0
 const POST_MONEY_REWARD_RETURN_DELAY_SECONDS := 2.0
 const REWARD_CARD_NEW_FACE_ID := &"card_+"
@@ -346,7 +346,7 @@ func _build_ability_upgrade_options(owner: Node) -> Array[Dictionary]:
 func _build_ability_upgrade_reroll_options_for_fully_upgraded_loadout(owner: Node, player: Player, ability_catalog: Dictionary) -> Array[Dictionary]:
 	if player == null or player.ability_loadout.is_empty():
 		return []
-	var random_index := owner._ability_reward_rng.randi_range(0, player.ability_loadout.size() - 1)
+	var random_index = owner._ability_reward_rng.randi_range(0, player.ability_loadout.size() - 1)
 	var selected_ability := player.ability_loadout[random_index] as AbilityDefinition
 	if selected_ability == null:
 		return []
@@ -1094,7 +1094,7 @@ func _select_ability_reward(owner: Node, entry: Dictionary) -> void:
 				_clear_ability_reward_cards(owner)
 				return
 		if player.ability_loadout.size() >= MAX_PLAYER_ABILITIES:
-			var replace_index := owner._ability_reward_rng.randi_range(0, player.ability_loadout.size() - 1)
+			var replace_index = owner._ability_reward_rng.randi_range(0, player.ability_loadout.size() - 1)
 			player.ability_loadout[replace_index] = selected_ability
 		else:
 			player.ability_loadout.append(selected_ability)
