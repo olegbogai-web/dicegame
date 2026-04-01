@@ -22,23 +22,25 @@ func handle_input_event(
 	if Engine.is_editor_hint():
 		return
 
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		if event.pressed:
-			if not allow_drag_without_sleep and not dice.sleeping:
-				return
-			print("DEBUG dice press: %s" % dice.name)
-			_start_dragging(dice, camera, position, drag_lift_height)
-		else:
-			print("DEBUG dice release: %s" % dice.name)
-			stop_dragging(dice)
+	if not event is InputEventMouseButton:
+		return
+
+	var mouse_event := event as InputEventMouseButton
+	if mouse_event.button_index != MOUSE_BUTTON_LEFT or not mouse_event.pressed:
+		return
+
+	if _is_dragging:
+		stop_dragging(dice)
+		return
+
+	if not allow_drag_without_sleep and not dice.sleeping:
+		return
+
+	_start_dragging(dice, camera, position, drag_lift_height)
 
 
 func physics_process(dice: RigidBody3D) -> void:
 	if not _is_dragging:
-		return
-
-	if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-		stop_dragging(dice)
 		return
 
 	_update_drag_position(dice)
