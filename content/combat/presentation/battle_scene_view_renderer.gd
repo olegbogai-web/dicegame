@@ -387,7 +387,7 @@ func _clear_runtime_status_visuals(_owner: Node, combatant_sprite: MeshInstance3
 		return
 	for child in combatant_sprite.get_children():
 		if child is MeshInstance3D and String(child.name).begins_with(STATUS_RUNTIME_NODE_PREFIX):
-			child.queue_free()
+			child.free()
 
 
 func _apply_statuses_to_sprite(owner: Node, combatant_sprite: MeshInstance3D, descriptor: Dictionary) -> void:
