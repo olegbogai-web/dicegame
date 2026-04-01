@@ -395,6 +395,8 @@ func _load_player_reward_abilities() -> Array[AbilityDefinition]:
 	for ability in _load_all_abilities_from_directory():
 		if ability.owner_scope != AbilityDefinition.OwnerScope.PLAYER and ability.owner_scope != AbilityDefinition.OwnerScope.ANY:
 			continue
+		if ability.upgrade_level > 0:
+			continue
 		abilities.append(ability)
 	return abilities
 
