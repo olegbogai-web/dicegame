@@ -15,6 +15,7 @@ const REWARD_CUBE_FACE_ID := &"cube_+"
 const REWARD_MONEY_FACE_ID := &"money"
 const BONUS_MONEY_THROW_OWNER := &"reward_bonus_money"
 const ABILITY_REWARD_OPTIONS_COUNT := 3
+const MAX_PLAYER_ABILITIES := 5
 const ARTIFACT_REWARD_OPTIONS_COUNT := 2
 const CUBE_REWARD_OPTIONS_COUNT := 2
 const ABILITY_REWARD_CARD_MIN_SPACING_X := 3.2
@@ -321,7 +322,7 @@ func _build_ability_upgrade_options(owner: Node) -> Array[Dictionary]:
 			"upgrade_options": upgrade_options,
 		})
 	if upgradable_entries.is_empty():
-		return []
+		return _build_ability_upgrade_reroll_options_for_fully_upgraded_loadout(owner, player, ability_catalog)
 	var rolled_entry: Dictionary = upgradable_entries[owner._ability_reward_rng.randi_range(0, upgradable_entries.size() - 1)]
 	var rolled_index := int(rolled_entry.get("ability_index", -1))
 	var rolled_options: Array[AbilityDefinition] = []
@@ -338,6 +339,28 @@ func _build_ability_upgrade_options(owner: Node) -> Array[Dictionary]:
 			"ability": option,
 			"reward_kind": "ability_upgrade",
 			"replace_index": rolled_index,
+		})
+	return generated
+
+
+func _build_ability_upgrade_reroll_options_for_fully_upgraded_loadout(owner: Node, player: Player, ability_catalog: Dictionary) -> Array[Dictionary]:
+	if player == null or player.ability_loadout.is_empty():
+		return []
+	var random_index := owner._ability_reward_rng.randi_range(0, player.ability_loadout.size() - 1)
+	var selected_ability := player.ability_loadout[random_index] as AbilityDefinition
+	if selected_ability == null:
+		return []
+	var parallel_options := _resolve_parallel_upgrade_options(selected_ability, ability_catalog)
+	if parallel_options.is_empty():
+		return []
+	var generated: Array[Dictionary] = []
+	for option in parallel_options:
+		if option == null:
+			continue
+		generated.append({
+			"ability": option,
+			"reward_kind": "ability_upgrade",
+			"replace_index": random_index,
 		})
 	return generated
 
@@ -489,6 +512,41 @@ func _resolve_follow_up_abilities(base_ability: AbilityDefinition, ability_catal
 			continue
 		resolved.append(follow_up_ability)
 	return resolved
+
+
+func _resolve_parallel_upgrade_options(current_ability: AbilityDefinition, ability_catalog: Dictionary) -> Array[AbilityDefinition]:
+	var resolved: Array[AbilityDefinition] = []
+	if current_ability == null:
+		return resolved
+	var base_ability := _find_base_ability_for_family(current_ability, ability_catalog)
+	if base_ability != null:
+		resolved = _resolve_follow_up_abilities(base_ability, ability_catalog)
+	var includes_current := false
+	for ability in resolved:
+		if ability == null:
+			continue
+		if ability.resource_path == current_ability.resource_path:
+			includes_current = true
+			break
+	if not includes_current:
+		resolved.append(current_ability)
+	return resolved
+
+
+func _find_base_ability_for_family(ability: AbilityDefinition, ability_catalog: Dictionary) -> AbilityDefinition:
+	if ability == null:
+		return null
+	if ability.upgrade_level <= 0:
+		return ability
+	for candidate in ability_catalog.values():
+		var typed_candidate := candidate as AbilityDefinition
+		if typed_candidate == null:
+			continue
+		if typed_candidate.ability_id != ability.ability_id:
+			continue
+		if typed_candidate.upgrade_level == 0:
+			return typed_candidate
+	return ability
 
 
 func _collect_owned_ability_ids(player: Player) -> Dictionary:
@@ -1033,7 +1091,11 @@ func _select_ability_reward(owner: Node, entry: Dictionary) -> void:
 			if owned != null and owned.ability_id == selected_ability.ability_id:
 				_clear_ability_reward_cards(owner)
 				return
-		player.ability_loadout.append(selected_ability)
+		if player.ability_loadout.size() >= MAX_PLAYER_ABILITIES:
+			var replace_index := owner._ability_reward_rng.randi_range(0, player.ability_loadout.size() - 1)
+			player.ability_loadout[replace_index] = selected_ability
+		else:
+			player.ability_loadout.append(selected_ability)
 	owner.battle_room_data.player_view.abilities = player.ability_loadout.duplicate()
 	print("[Debug][RewardFlow] Игрок выбрал способность: %s." % selected_ability.display_name)
 	owner._player_ability_frame_states.clear()
