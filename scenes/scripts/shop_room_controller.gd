@@ -24,13 +24,13 @@ const PRICE_OFFSET_Y := 0.0
 const PRICE_OFFSET_Z := 2.21
 const LOW_FUNDS_TINT := Color(0.75, 0.5, 0.5, 1.0)
 const AVAILABLE_TINT := Color(1.0, 1.0, 1.0, 1.0)
-const SOLD_TINT := Color(0.45, 0.45, 0.45, 1.0)
 const MODAL_ROW_Y_OFFSET := 2.9
 
 @onready var _camera: Camera3D = $background/Camera3D
 @onready var _ability_template: Node3D = $ability_reward
 @onready var _ability_price_template: MeshInstance3D = $ability_reward/price_icon_ability
 @onready var _artifact_reward_template: MeshInstance3D = $artefact_frame_reward
+@onready var _sold_template: MeshInstance3D = $ability_reward/sold
 @onready var _card_upgrade_mesh: MeshInstance3D = $card_up_icon
 @onready var _card_upgrade_price: MeshInstance3D = $card_up_icon/price_card_up
 @onready var _card_remove_mesh: MeshInstance3D = $"card_-_icon"
@@ -396,11 +396,16 @@ func _clear_modal_cards() -> void:
 
 func _refresh_offers_visual_state() -> void:
 	for offer in _offer_entries:
+		var card := offer.get("card") as Node3D
+		var sold_badge := _ensure_sold_badge(card)
+		var is_sold := bool(offer.get("is_sold", false))
+		if sold_badge != null:
+			sold_badge.visible = is_sold
 		var hit_mesh := offer.get("hit_mesh") as MeshInstance3D
 		if hit_mesh == null:
 			continue
-		if bool(offer.get("is_sold", false)):
-			_set_mesh_tint(hit_mesh, SOLD_TINT)
+		if is_sold:
+			_set_mesh_tint(hit_mesh, AVAILABLE_TINT)
 			continue
 		var price := int(offer.get("price", 0))
 		if _runtime_player == null or _runtime_player.current_coins < price:
@@ -433,6 +438,20 @@ func _setup_fixed_price_badges() -> void:
 	if _card_remove_price != null:
 		_card_remove_price.name = "price_icon_ability"
 		_ensure_price_badge_children(_card_remove_price)
+
+
+func _ensure_sold_badge(card_root: Node3D) -> MeshInstance3D:
+	if card_root == null:
+		return null
+	var sold_badge := card_root.get_node_or_null(^"sold") as MeshInstance3D
+	if sold_badge == null and _sold_template != null:
+		sold_badge = _sold_template.duplicate() as MeshInstance3D
+		if sold_badge != null:
+			sold_badge.name = "sold"
+			card_root.add_child(sold_badge)
+	if sold_badge != null:
+		sold_badge.visible = false
+	return sold_badge
 
 
 func _ensure_price_badge(card_root: Node3D) -> void:
