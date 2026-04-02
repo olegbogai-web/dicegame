@@ -16,6 +16,7 @@
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gpgk3"]
 albedo_texture = ExtResource("3_5yklm")
+metallic_specular = 0.0
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_ub6me"]
 
@@ -25,6 +26,7 @@ size = Vector3(2.6182098, 1, 2.3716002)
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tapwp"]
 transparency = 1
 albedo_texture = ExtResource("7_tc2nu")
+metallic_specular = 0.0
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_4fpdg"]
 
@@ -42,6 +44,7 @@ albedo_color = Color(1, 0.07450981, 0, 1)
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5hv8y"]
 transparency = 1
 albedo_texture = ExtResource("9_v3i8a")
+metallic_specular = 0.0
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_v2ddd"]
 
@@ -65,6 +68,7 @@ albedo_texture = ExtResource("7_ojcrh")
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h74a6"]
 transparency = 1
 albedo_texture = ExtResource("4_euvx7")
+metallic_specular = 0.0
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_4tpf0"]
 
@@ -76,12 +80,14 @@ albedo_texture = ExtResource("5_ovkts")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_y5gjq"]
 albedo_texture = ExtResource("6_4mdnn")
+metallic_specular = 0.0
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_v2h1w"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ojcrh"]
 transparency = 1
 albedo_texture = ExtResource("5_ovkts")
+metallic_specular = 0.0
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_aextr"]
 
@@ -165,6 +171,7 @@ outline_size = 4
 
 [node name="state" type="MeshInstance3D" parent="player_sprite" unique_id=1255840162]
 transform = Transform3D(0.15, 0, 0, 0, 1.26, 0, 0, 0, 0.155, -1.0534961, 0, 0.91429996)
+visible = false
 material_override = SubResource("StandardMaterial3D_aextr")
 mesh = SubResource("PlaneMesh_df7hy")
 
