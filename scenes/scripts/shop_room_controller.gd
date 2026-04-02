@@ -26,8 +26,6 @@ const LOW_FUNDS_TINT := Color(0.75, 0.5, 0.5, 1.0)
 const AVAILABLE_TINT := Color(1.0, 1.0, 1.0, 1.0)
 const MODAL_SELECTION_Y := 5.0
 const MODAL_SELECTION_Z := 0.0
-const SERVICE_SOLD_BADGE_LOCAL_POS := Vector3(0.0, 0.01, 0.0)
-const SERVICE_SOLD_BADGE_LOCAL_SCALE := Vector3(0.42, 0.42, 0.42)
 
 @onready var _camera: Camera3D = $background/Camera3D
 @onready var _ability_template: Node3D = $ability_reward
@@ -35,8 +33,10 @@ const SERVICE_SOLD_BADGE_LOCAL_SCALE := Vector3(0.42, 0.42, 0.42)
 @onready var _artifact_reward_template: MeshInstance3D = $artefact_frame_reward
 @onready var _sold_template: MeshInstance3D = $ability_reward/sold
 @onready var _card_upgrade_mesh: MeshInstance3D = $card_up_icon
+@onready var _card_upgrade_sold_template: MeshInstance3D = $card_up_icon/sold
 @onready var _card_upgrade_price: MeshInstance3D = $card_up_icon/price_card_up
 @onready var _card_remove_mesh: MeshInstance3D = $"card_-_icon"
+@onready var _card_remove_sold_template: MeshInstance3D = $"card_-_icon/sold"
 @onready var _card_remove_price: MeshInstance3D = $"card_-_icon/price_card_-"
 @onready var _leave_button: Button = $ui/leave_shop_button
 
@@ -465,11 +465,10 @@ func _configure_sold_badge_transform(offer: Dictionary, sold_badge: MeshInstance
 	if sold_badge == null:
 		return
 	var offer_type := str(offer.get("offer_type", ""))
-	if offer_type == "card_upgrade" or offer_type == "card_remove":
-		sold_badge.transform = Transform3D(
-			Basis.IDENTITY.scaled(SERVICE_SOLD_BADGE_LOCAL_SCALE),
-			SERVICE_SOLD_BADGE_LOCAL_POS
-		)
+	if offer_type == "card_upgrade" and _card_upgrade_sold_template != null:
+		sold_badge.transform = _card_upgrade_sold_template.transform
+	elif offer_type == "card_remove" and _card_remove_sold_template != null:
+		sold_badge.transform = _card_remove_sold_template.transform
 
 
 func _ensure_price_badge(card_root: Node3D) -> void:
