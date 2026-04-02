@@ -26,8 +26,6 @@ const LOW_FUNDS_TINT := Color(0.75, 0.5, 0.5, 1.0)
 const AVAILABLE_TINT := Color(1.0, 1.0, 1.0, 1.0)
 const MODAL_SELECTION_Y := 5.0
 const MODAL_SELECTION_Z := 0.0
-const SERVICE_SOLD_BADGE_LOCAL_POS := Vector3(0.0, 0.01, 0.0)
-const SERVICE_SOLD_BADGE_LOCAL_SCALE := Vector3(0.42, 0.42, 0.42)
 
 @onready var _camera: Camera3D = $background/Camera3D
 @onready var _ability_template: Node3D = $ability_reward
@@ -406,7 +404,6 @@ func _refresh_offers_visual_state() -> void:
 		var sold_badge := _ensure_sold_badge(card)
 		var is_sold := bool(offer.get("is_sold", false))
 		if sold_badge != null:
-			_configure_sold_badge_transform(offer, sold_badge)
 			sold_badge.visible = is_sold
 		var hit_mesh := offer.get("hit_mesh") as MeshInstance3D
 		if hit_mesh == null:
@@ -459,17 +456,6 @@ func _ensure_sold_badge(card_root: Node3D) -> MeshInstance3D:
 	if sold_badge != null:
 		sold_badge.visible = false
 	return sold_badge
-
-
-func _configure_sold_badge_transform(offer: Dictionary, sold_badge: MeshInstance3D) -> void:
-	if sold_badge == null:
-		return
-	var offer_type := str(offer.get("offer_type", ""))
-	if offer_type == "card_upgrade" or offer_type == "card_remove":
-		sold_badge.transform = Transform3D(
-			Basis.IDENTITY.scaled(SERVICE_SOLD_BADGE_LOCAL_SCALE),
-			SERVICE_SOLD_BADGE_LOCAL_POS
-		)
 
 
 func _ensure_price_badge(card_root: Node3D) -> void:
