@@ -6,6 +6,10 @@
 [ext_resource type="Texture2D" uid="uid://c2npj028il5ih" path="res://assets/ui/coin.png" id="4_8r1wq"]
 [ext_resource type="Texture2D" uid="uid://cjetkxe0bjs5c" path="res://assets/dice_edges/card_up.png" id="5_ajxib"]
 [ext_resource type="Texture2D" uid="uid://bk71xlos8ep1m" path="res://assets/dice_edges/card_-.png" id="6_y6sft"]
+[ext_resource type="Script" path="res://scenes/scripts/shop_room_controller.gd" id="7_1r1x1"]
+[ext_resource type="PackedScene" path="res://ui/scenes/money_ui.tscn" id="8_money"]
+[ext_resource type="Texture2D" path="res://assets/ui/base_frame_text.png" id="9_artf"]
+[ext_resource type="Texture2D" path="res://assets/artefacts/banana.png" id="10_arti"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1l46r"]
 albedo_texture = ExtResource("1_xfvoa")
@@ -36,7 +40,22 @@ albedo_texture = ExtResource("5_ajxib")
 transparency = 1
 albedo_texture = ExtResource("6_y6sft")
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_artf"]
+transparency = 1
+albedo_texture = ExtResource("9_artf")
+metallic_specular = 0.0
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_artf"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_arti"]
+transparency = 1
+albedo_texture = ExtResource("10_arti")
+metallic_specular = 0.0
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_arti"]
+
 [node name="shop" type="Node3D" unique_id=979683358]
+script = ExtResource("7_1r1x1")
 
 [node name="background" type="MeshInstance3D" parent="." unique_id=1012328117]
 transform = Transform3D(16, 0, 0, 0, 1, 0, 0, 0, 9, 0, 0, 0)
@@ -101,3 +120,27 @@ transform = Transform3D(0.675, 0, 0, 0, 1, 0, 0, 0, 0.19, 0, 0, 1.1112527)
 material_override = SubResource("StandardMaterial3D_032fp")
 gi_lightmap_texel_scale = 0.6564
 mesh = SubResource("PlaneMesh_2fc2m")
+
+[node name="artefact_frame_reward" type="MeshInstance3D" parent="." unique_id=1132208606]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.02, -0.5158154)
+visible = false
+sorting_offset = 3.0
+material_override = SubResource("StandardMaterial3D_artf")
+mesh = SubResource("PlaneMesh_artf")
+
+[node name="artefact_icon_reward" type="MeshInstance3D" parent="artefact_frame_reward" unique_id=1496693985]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0, 0.01, 0)
+sorting_offset = 5.0
+material_override = SubResource("StandardMaterial3D_arti")
+mesh = SubResource("PlaneMesh_arti")
+
+[node name="money_ui" parent="." unique_id=759518485 instance=ExtResource("8_money")]
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="LeaveShopButton" type="Button" parent="UI"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 240.0
+offset_bottom = 64.0
+text = "Покинуть магазин"

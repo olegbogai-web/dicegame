@@ -167,3 +167,35 @@
 - [docs/ROOM_ARCHITECTURE.md](./ROOM_ARCHITECTURE.md)
 - [docs/GLOBAL_MAP_ARCHITECTURE.md](./GLOBAL_MAP_ARCHITECTURE.md)
 - [docs/CARD_UPGRADE_ARCHITECTURE.md](./CARD_UPGRADE_ARCHITECTURE.md)
+
+---
+
+## 10. Текущая реализация (shop scene / controller)
+
+Ниже зафиксированы функции, добавленные для runtime-магазина в `scenes/scripts/shop_room_controller.gd`:
+
+- генерация витрины и цен:
+  - `_build_shop_offers()`;
+  - `_calculate_ability_price()`;
+  - `_calculate_artifact_price()`;
+  - `_calculate_cube_price()`;
+  - `_normalize_price()`.
+- roll/fallback редкости:
+  - `_roll_ability_rarity()`;
+  - `_roll_artifact_rarity()`;
+  - `_roll_cube_rarity()`;
+  - `_pick_ability_by_rarity_with_fallback()`;
+  - `_pick_artifact_by_rarity_with_fallback()`;
+  - `_pick_cube_by_rarity_with_fallback()`.
+- интерактивные покупки:
+  - `_try_purchase()`;
+  - `_process_offer_purchase()`;
+  - `_update_offer_visual()`.
+- сервисы магазина:
+  - `_build_upgrade_entries()`;
+  - `_build_reroll_upgrade_entries()`;
+  - `_offer_remove_choice()`.
+
+Дополнительно добавлена runtime-операция в `content/entities/player.gd`:
+
+- `remove_runtime_ability_at(ability_index: int) -> AbilityDefinition` — удаление способности из рантайм-loadout.
