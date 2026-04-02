@@ -115,26 +115,38 @@ material_override = SubResource("StandardMaterial3D_44xle")
 mesh = SubResource("PlaneMesh_24it5")
 
 [node name="card_up_icon" type="MeshInstance3D" parent="." unique_id=905339768]
-transform = Transform3D(1.6487005, 0, 0, 0, 1.4999999, 0, 0, 0, 1.6190054, 8.699356, 0.10000001, -4.1605577)
+transform = Transform3D(2.139, 0, 0, 0, 1.946, 0, 0, 0, 2.1, 8.699356, 0.10000001, -4.1605577)
 material_override = SubResource("StandardMaterial3D_1v8qu")
 mesh = SubResource("PlaneMesh_44xle")
 
 [node name="price_card_up" type="MeshInstance3D" parent="card_up_icon" unique_id=199243613]
-transform = Transform3D(0.675, 0, 0, 0, 1, 0, 0, 0, 0.19, 0, 0, 1.1112527)
+transform = Transform3D(0.52027714, 0, 0, 0, 0.77081174, 0, 0, 0, 0.14648144, 0, 0, 0.85672605)
 material_override = SubResource("StandardMaterial3D_032fp")
 gi_lightmap_texel_scale = 0.6564
 mesh = SubResource("PlaneMesh_2fc2m")
 
+[node name="sold" type="MeshInstance3D" parent="card_up_icon" unique_id=1470248700]
+transform = Transform3D(0.5971425, 0, 0.39302617, 0, 0.714, 0, -0.7593266, 0, 0.30907997, -0.23642206, 0.15, -0.08363926)
+sorting_offset = 10.0
+material_override = SubResource("StandardMaterial3D_44xle")
+mesh = SubResource("PlaneMesh_24it5")
+
 [node name="card_-_icon" type="MeshInstance3D" parent="." unique_id=876216291]
-transform = Transform3D(1.6487005, 0, 0, 0, 1.4999999, 0, 0, 0, 1.6190054, 8.699356, 0.10000001, 3.4276032)
+transform = Transform3D(2.139, 0, 0, 0, 1.946, 0, 0, 0, 2.1, 8.699356, 0.10000001, 3.4276032)
 material_override = SubResource("StandardMaterial3D_24it5")
 mesh = SubResource("PlaneMesh_44xle")
 
 [node name="price_card_-" type="MeshInstance3D" parent="card_-_icon" unique_id=2094225205]
-transform = Transform3D(0.675, 0, 0, 0, 1, 0, 0, 0, 0.19, 0, 0, 1.1112527)
+transform = Transform3D(0.5202772, 0, 0, 0, 0.77081174, 0, 0, 0, 0.14648144, 0, 0, 0.85672534)
 material_override = SubResource("StandardMaterial3D_032fp")
 gi_lightmap_texel_scale = 0.6564
 mesh = SubResource("PlaneMesh_2fc2m")
+
+[node name="sold" type="MeshInstance3D" parent="card_-_icon" unique_id=509797965]
+transform = Transform3D(0.5971425, 0, 0.39302617, 0, 0.714, 0, -0.7593266, 0, 0.30907997, -0.33582416, 0.15, 0.042760447)
+sorting_offset = 10.0
+material_override = SubResource("StandardMaterial3D_44xle")
+mesh = SubResource("PlaneMesh_24it5")
 
 [node name="artefact_frame_reward" type="MeshInstance3D" parent="." unique_id=1132208606]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.02, -0.5158154)
