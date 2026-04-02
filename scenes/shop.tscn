@@ -5,9 +5,10 @@
 [ext_resource type="Texture2D" uid="uid://ct5v12n5ys8b4" path="res://assets/ui/place_for_coin.png" id="3_1l46r"]
 [ext_resource type="Texture2D" uid="uid://c2npj028il5ih" path="res://assets/ui/coin.png" id="4_8r1wq"]
 [ext_resource type="Texture2D" uid="uid://cjetkxe0bjs5c" path="res://assets/dice_edges/card_up.png" id="5_ajxib"]
+[ext_resource type="Texture2D" uid="uid://tejhpf08cui0" path="res://assets/ui/sold.png" id="6_1v8qu"]
 [ext_resource type="Texture2D" uid="uid://bk71xlos8ep1m" path="res://assets/dice_edges/card_-.png" id="6_y6sft"]
 [ext_resource type="Texture2D" uid="uid://bjpqv8q13kqq7" path="res://assets/ui/base_frame_mid.png" id="7_artifact_frame"]
-[ext_resource type="Script" path="res://scenes/scripts/shop_room_controller.gd" id="7_shop_controller"]
+[ext_resource type="Script" uid="uid://bhfx324xckibg" path="res://scenes/scripts/shop_room_controller.gd" id="7_shop_controller"]
 [ext_resource type="PackedScene" uid="uid://da7pxwcgh4x4h" path="res://ui/scenes/money_ui.tscn" id="8_money_ui"]
 [ext_resource type="Texture2D" uid="uid://cy0obo6lpmc3" path="res://assets/states/strength.png" id="9_artifact_icon"]
 
@@ -30,6 +31,13 @@ albedo_texture = ExtResource("4_8r1wq")
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_heatd"]
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_44xle"]
+render_priority = 3
+transparency = 1
+albedo_texture = ExtResource("6_1v8qu")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_24it5"]
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1v8qu"]
 transparency = 1
 albedo_texture = ExtResource("5_ajxib")
@@ -40,19 +48,19 @@ albedo_texture = ExtResource("5_ajxib")
 transparency = 1
 albedo_texture = ExtResource("6_y6sft")
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_artifact_frame"]
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_artifact_frame"]
 transparency = 1
 albedo_texture = ExtResource("7_artifact_frame")
 metallic_specular = 0.0
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_artifact_icon"]
+[sub_resource type="PlaneMesh" id="PlaneMesh_artifact_frame"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_artifact_icon"]
 transparency = 1
 albedo_texture = ExtResource("9_artifact_icon")
 metallic_specular = 0.0
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_artifact_icon"]
 
 [node name="shop" type="Node3D" unique_id=979683358]
 script = ExtResource("7_shop_controller")
@@ -99,6 +107,11 @@ text = "99
 font_size = 100
 outline_size = 30
 
+[node name="sold" type="MeshInstance3D" parent="ability_reward" unique_id=197413319]
+transform = Transform3D(0.7548481, 0, 0.53256226, 0, 0.90334237, 0, -0.9598651, 0, 0.34012565, -0.005628586, 0.029188812, -0.06920838)
+material_override = SubResource("StandardMaterial3D_44xle")
+mesh = SubResource("PlaneMesh_24it5")
+
 [node name="card_up_icon" type="MeshInstance3D" parent="." unique_id=905339768]
 transform = Transform3D(1.6487005, 0, 0, 0, 1.4999999, 0, 0, 0, 1.6190054, 8.699356, 0.10000001, -4.1605577)
 material_override = SubResource("StandardMaterial3D_1v8qu")
@@ -134,7 +147,7 @@ sorting_offset = 5.0
 material_override = SubResource("StandardMaterial3D_artifact_icon")
 mesh = SubResource("PlaneMesh_artifact_icon")
 
-[node name="money_ui" parent="." instance=ExtResource("8_money_ui")]
+[node name="money_ui" parent="." unique_id=1143036009 instance=ExtResource("8_money_ui")]
 
 [node name="ui" type="CanvasLayer" parent="." unique_id=1330071111]
 

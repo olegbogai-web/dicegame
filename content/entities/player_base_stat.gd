@@ -24,7 +24,7 @@ const DiceFaceDefinitionScript = preload("res://content/dice/resources/dice_face
 @export_range(1, 999, 1) var max_hp := DEFAULT_MAX_HP
 @export_range(0, 999, 1) var starting_hp := DEFAULT_MAX_HP
 @export_range(0, 999, 1) var starting_armor := 0
-@export_range(0, 999999, 1) var starting_coins := 0
+@export_range(0, 999999, 1) var starting_coins := 1000
 @export var starting_dice: Array[DiceDefinition] = []
 @export var base_cube_global_map: Array[DiceDefinition] = []
 @export var base_reward_cube: DiceDefinition
