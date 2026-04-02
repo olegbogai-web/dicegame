@@ -181,14 +181,6 @@ func grant_runtime_cube(cube_definition: DiceDefinition) -> void:
 			runtime_event_cubes.append(cloned_cube)
 
 
-func remove_runtime_ability_at(ability_index: int) -> AbilityDefinition:
-	if ability_index < 0 or ability_index >= ability_loadout.size():
-		return null
-	var removed_ability := ability_loadout[ability_index] as AbilityDefinition
-	ability_loadout.remove_at(ability_index)
-	return removed_ability
-
-
 func get_runtime_cubes_by_scope(scope: int) -> Array[DiceDefinition]:
 	match scope:
 		DiceDefinition.Scope.COMBAT:
