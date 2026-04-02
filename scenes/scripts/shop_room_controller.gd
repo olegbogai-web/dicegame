@@ -26,6 +26,8 @@ const LOW_FUNDS_TINT := Color(0.75, 0.5, 0.5, 1.0)
 const AVAILABLE_TINT := Color(1.0, 1.0, 1.0, 1.0)
 const MODAL_SELECTION_Y := 5.0
 const MODAL_SELECTION_Z := 0.0
+const MODAL_OVERLAY_SORTING_OFFSET := 50.0
+const MODAL_OVERLAY_RENDER_PRIORITY := 50
 
 @onready var _camera: Camera3D = $background/Camera3D
 @onready var _ability_template: Node3D = $ability_reward
@@ -381,6 +383,7 @@ func _render_modal_cards(entries: Array[Dictionary]) -> void:
 		add_child(card)
 		card.visible = true
 		card.transform.origin = Vector3(centered_offsets[index], MODAL_SELECTION_Y, MODAL_SELECTION_Z)
+		_apply_modal_overlay_order(card)
 		_apply_ability_visual(card, entry.get("ability") as AbilityDefinition)
 		var price_badge := card.get_node_or_null(^"price_icon_ability") as MeshInstance3D
 		if price_badge != null:
@@ -389,6 +392,15 @@ func _render_modal_cards(entries: Array[Dictionary]) -> void:
 		_ability_reward_entries.append(entry)
 		_generated_ability_reward_nodes.append(card)
 	_is_awaiting_ability_reward_selection = true
+
+
+func _apply_modal_overlay_order(card: Node3D) -> void:
+	if card == null:
+		return
+	for visual in card.find_children("*", "VisualInstance3D", true, false):
+		(visual as VisualInstance3D).sorting_offset = MODAL_OVERLAY_SORTING_OFFSET
+	for label in card.find_children("*", "Label3D", true, false):
+		(label as Label3D).render_priority = MODAL_OVERLAY_RENDER_PRIORITY
 
 
 func _clear_modal_cards() -> void:
