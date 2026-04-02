@@ -167,3 +167,39 @@
 - [docs/ROOM_ARCHITECTURE.md](./ROOM_ARCHITECTURE.md)
 - [docs/GLOBAL_MAP_ARCHITECTURE.md](./GLOBAL_MAP_ARCHITECTURE.md)
 - [docs/CARD_UPGRADE_ARCHITECTURE.md](./CARD_UPGRADE_ARCHITECTURE.md)
+
+---
+
+## 10. Текущая реализация `ShopRoomController` (scene-level orchestration)
+
+Для текущей сцены `res://scenes/shop.tscn` добавлен контроллер `res://scenes/scripts/shop_room_controller.gd`.
+Он действует как orchestration-слой UI/runtime, не меняя контент-ресурсы способностей/артефактов/кубов.
+
+### Ключевые функции контроллера
+
+- Генерация витрины:
+  - `_generate_shop_inventory`;
+  - `_generate_ability_offers`;
+  - `_generate_artifact_offers`;
+  - `_generate_cube_offers`;
+  - `_generate_service_offers`.
+- Ценообразование:
+  - `_compute_ability_price` по формуле `(rarity + 1) * rand(3..8)`;
+  - `_compute_artifact_price` по формуле `(rarity + 2) * rand(6..11)`;
+  - `_compute_cube_price` по формуле `(rarity + 2) * rand(5..7)`.
+- Покупка и валидация:
+  - `_try_purchase_offer` (проверка монет, списание, выдача награды, sold-флаг);
+  - `_refresh_offers_visual_state` (доступность/недостаток монет/продано).
+- Сервисные flow:
+  - `_open_upgrade_modal` + `_build_upgrade_modal_entries` + `_resolve_service_selection` для `card_up`;
+  - `_open_remove_modal` + `_build_remove_modal_entries` + `_resolve_service_selection` для `card_-`.
+- Навигация:
+  - `_on_leave_shop_pressed` (выход в сохраненную сцену глобальной карты).
+
+### Переиспользуемые существующие решения
+
+- `PostBattleRewardFlow` используется как provider существующей логики:
+  - загрузка контентных пулов (ability/artifact/dice);
+  - бросок редкости и fallback к меньшей редкости;
+  - helpers по upgrade-веткам способностей.
+- `GlobalMapRuntimeState` используется для загрузки/сохранения runtime-игрока и возврата на глобальную карту.
