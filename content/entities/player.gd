@@ -2,6 +2,7 @@ extends RefCounted
 class_name Player
 
 const ON_GRANT_MAX_HP_BONUS_META_KEY := &"on_grant_max_hp_bonus"
+const MAX_ABILITY_SLOTS := 5
 
 signal coins_changed(total_coins: int)
 
@@ -72,7 +73,9 @@ func reset_for_run() -> void:
 		runtime_reward_cubes.append(runtime_reward_cube)
 	if runtime_money_cube != null:
 		runtime_money_cubes.append(runtime_money_cube)
-	ability_loadout = base_stat.starting_abilities.duplicate()
+	ability_loadout.clear()
+	for starting_ability in base_stat.starting_abilities:
+		grant_ability(starting_ability)
 	artifacts_runtime.clear()
 	runtime_max_hp_bonus = 0
 	run_flags.clear()
@@ -146,6 +149,19 @@ func grant_artifact(artifact_definition: ArtifactDefinition) -> void:
 		return
 	artifacts_runtime.append(artifact_definition)
 	_apply_on_grant_effects(artifact_definition)
+
+
+func grant_ability(ability_definition: AbilityDefinition, rng: RandomNumberGenerator = null) -> void:
+	if ability_definition == null:
+		return
+	if ability_loadout.size() >= MAX_ABILITY_SLOTS:
+		var random_source := rng
+		if random_source == null:
+			random_source = RandomNumberGenerator.new()
+			random_source.randomize()
+		var remove_index := random_source.randi_range(0, ability_loadout.size() - 1)
+		ability_loadout.remove_at(remove_index)
+	ability_loadout.append(ability_definition)
 
 
 func get_active_artifact_definitions() -> Array[ArtifactDefinition]:

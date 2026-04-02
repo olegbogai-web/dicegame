@@ -116,7 +116,7 @@ func _try_purchase_offer(entry: Dictionary) -> void:
 		"ability":
 			var ability := entry.get("ability") as AbilityDefinition
 			if ability != null:
-				_runtime_player.ability_loadout.append(ability)
+				_runtime_player.grant_ability(ability, _ability_reward_rng)
 		"artifact":
 			var artifact := entry.get("artifact") as ArtifactDefinition
 			if artifact != null:

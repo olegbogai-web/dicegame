@@ -15,7 +15,6 @@ const REWARD_CUBE_FACE_ID := &"cube_+"
 const REWARD_MONEY_FACE_ID := &"money"
 const BONUS_MONEY_THROW_OWNER := &"reward_bonus_money"
 const ABILITY_REWARD_OPTIONS_COUNT := 3
-const MAX_PLAYER_ABILITIES := 5
 const ARTIFACT_REWARD_OPTIONS_COUNT := 2
 const CUBE_REWARD_OPTIONS_COUNT := 2
 const ABILITY_REWARD_CARD_MIN_SPACING_X := 3.2
@@ -1093,11 +1092,7 @@ func _select_ability_reward(owner: Node, entry: Dictionary) -> void:
 			if owned != null and owned.ability_id == selected_ability.ability_id:
 				_clear_ability_reward_cards(owner)
 				return
-		if player.ability_loadout.size() >= MAX_PLAYER_ABILITIES:
-			var replace_index = owner._ability_reward_rng.randi_range(0, player.ability_loadout.size() - 1)
-			player.ability_loadout[replace_index] = selected_ability
-		else:
-			player.ability_loadout.append(selected_ability)
+		player.grant_ability(selected_ability, owner._ability_reward_rng)
 	owner.battle_room_data.player_view.abilities = player.ability_loadout.duplicate()
 	print("[Debug][RewardFlow] Игрок выбрал способность: %s." % selected_ability.display_name)
 	owner._player_ability_frame_states.clear()
