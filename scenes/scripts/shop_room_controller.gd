@@ -657,7 +657,7 @@ func _build_cube_shop_options(count: int) -> Array[DiceDefinition]:
 	return generated
 
 
-func _roll_weighted_rarity(weights: Array) -> int:
+func _roll_weighted_rarity(weights: Array[float]) -> int:
 	var total := 0.0
 	for value in weights:
 		total += value
