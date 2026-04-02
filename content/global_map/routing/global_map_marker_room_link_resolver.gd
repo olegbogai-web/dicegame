@@ -5,7 +5,6 @@ const GlobalMapDiceEvolutionService = preload("res://content/global_map/dice/glo
 
 const TEST_EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
 const TEST_BATTLE_ROOM_SCENE_PATH := "res://scenes/new_battle_table.tscn"
-const TEST_SHOP_ROOM_SCENE_PATH := "res://scenes/shop.tscn"
 const EVENT_ICON := preload("res://assets/global_map/question_mark.png")
 const MOB_ICON := preload("res://assets/global_map/swords.png")
 const ELITE_ICON := preload("res://assets/global_map/elit_mob.png")
@@ -23,7 +22,7 @@ func resolve_marker_for_face(face: DiceFaceDefinition) -> Dictionary:
 		GlobalMapDiceEvolutionService.ELITE_FACE_TAG:
 			return _build_marker_data(TEST_BATTLE_ROOM_SCENE_PATH, ELITE_ICON, GlobalMapDiceEvolutionService.ELITE_FACE_TAG)
 		GlobalMapDiceEvolutionService.SHOP_FACE_TAG:
-			return _build_marker_data(TEST_SHOP_ROOM_SCENE_PATH, SHOP_ICON, GlobalMapDiceEvolutionService.SHOP_FACE_TAG)
+			return _build_marker_data(TEST_EVENT_ROOM_SCENE_PATH, SHOP_ICON, GlobalMapDiceEvolutionService.SHOP_FACE_TAG)
 		GlobalMapDiceEvolutionService.BOSS_FACE_TAG:
 			return _build_marker_data(TEST_BATTLE_ROOM_SCENE_PATH, BOSS_ICON, GlobalMapDiceEvolutionService.BOSS_FACE_TAG)
 		GlobalMapDiceEvolutionService.EVENT_FACE_TAG:
