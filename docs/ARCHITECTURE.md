@@ -121,6 +121,7 @@
 Ссылка: [docs/ROOM_ARCHITECTURE.md](./ROOM_ARCHITECTURE.md)
 
 Для прикладной логики боевых комнат и их связи с lifecycle забега см. также: [docs/BATTLE_ROOM_LOGIC.md](./BATTLE_ROOM_LOGIC.md)
+Для прикладной логики магазина, генерации витрины, цен и покупок см. также: [docs/SHOP_ARCHITECTURE.md](./SHOP_ARCHITECTURE.md)
 
 ---
 
@@ -160,6 +161,8 @@
 - требования к поддержке upgraded-способностей у монстров.
 
 Ссылка: [docs/CARD_UPGRADE_ARCHITECTURE.md](./CARD_UPGRADE_ARCHITECTURE.md)
+
+Для shop-варианта улучшения карты и механики удаления карты см. также: [docs/SHOP_ARCHITECTURE.md](./SHOP_ARCHITECTURE.md)
 
 ---
 
