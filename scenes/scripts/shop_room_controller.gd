@@ -24,6 +24,7 @@ const PRICE_OFFSET_Y := 0.0
 const PRICE_OFFSET_Z := 2.21
 const LOW_FUNDS_TINT := Color(0.75, 0.5, 0.5, 1.0)
 const AVAILABLE_TINT := Color(1.0, 1.0, 1.0, 1.0)
+const MODAL_ROW_Y_OFFSET := 2.9
 
 @onready var _camera: Camera3D = $background/Camera3D
 @onready var _ability_template: Node3D = $ability_reward
@@ -73,14 +74,19 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not mouse_button.pressed or mouse_button.button_index != MOUSE_BUTTON_LEFT:
 		return
 	var picked_offer := _resolve_offer_click(mouse_button.position)
-	if _selection_mode == "upgrade" or _selection_mode == "remove":
-		get_viewport().set_input_as_handled()
 	if picked_offer.is_empty():
 		return
 	_try_purchase_offer(picked_offer)
 
 
 func _resolve_offer_click(screen_point: Vector2) -> Dictionary:
+	for index in range(_offer_entries.size() - 1, -1, -1):
+		var entry: Dictionary = _offer_entries[index]
+		if bool(entry.get("is_sold", false)):
+			continue
+		var hit_mesh := entry.get("hit_mesh") as MeshInstance3D
+		if _screen_point_hits_mesh(hit_mesh, screen_point):
+			return entry
 	if _selection_mode == "upgrade" or _selection_mode == "remove":
 		for index in range(_ability_reward_entries.size() - 1, -1, -1):
 			var modal_entry: Dictionary = _ability_reward_entries[index]
@@ -93,14 +99,6 @@ func _resolve_offer_click(screen_point: Vector2) -> Dictionary:
 					"offer_type": _selection_mode,
 					"selection_entry": modal_entry,
 				}
-		return {}
-	for index in range(_offer_entries.size() - 1, -1, -1):
-		var entry: Dictionary = _offer_entries[index]
-		if bool(entry.get("is_sold", false)):
-			continue
-		var hit_mesh := entry.get("hit_mesh") as MeshInstance3D
-		if _screen_point_hits_mesh(hit_mesh, screen_point):
-			return entry
 	return {}
 
 
@@ -146,7 +144,6 @@ func _open_upgrade_modal(service_entry: Dictionary) -> void:
 		return
 	_selection_mode = "upgrade"
 	_selection_service_entry = service_entry
-	_set_shop_controls_blocked(true)
 	_render_modal_cards(options)
 
 
@@ -157,7 +154,6 @@ func _open_remove_modal(service_entry: Dictionary) -> void:
 		return
 	_selection_mode = "remove"
 	_selection_service_entry = service_entry
-	_set_shop_controls_blocked(true)
 	_render_modal_cards(options)
 
 
@@ -180,7 +176,6 @@ func _resolve_service_selection(entry: Dictionary) -> void:
 	_clear_modal_cards()
 	_selection_mode = ""
 	_selection_service_entry = {}
-	_set_shop_controls_blocked(false)
 	_refresh_offers_visual_state()
 	GlobalMapRuntimeState.save_runtime_player(_runtime_player)
 
@@ -373,18 +368,13 @@ func _render_modal_cards(entries: Array[Dictionary]) -> void:
 	if entries.is_empty():
 		return
 	var spacing := _compute_card_spacing_x()
-	var offsets := _build_centered_offsets(entries.size(), spacing)
-	var template_basis := _ability_template.transform.basis
-	var template_origin := _ability_template.transform.origin
+	var start := _ability_template.transform.origin + Vector3(spacing * 0.5, MODAL_ROW_Y_OFFSET, 0.0)
 	for index in range(entries.size()):
 		var entry := entries[index]
 		var card := (_ability_template.duplicate() as Node3D)
 		add_child(card)
 		card.visible = true
-		card.transform = Transform3D(
-			template_basis,
-			template_origin + Vector3(offsets[index], 0.0, 0.0)
-		)
+		card.transform.origin = start + Vector3(float(index) * spacing, 0.0, 0.0)
 		_apply_ability_visual(card, entry.get("ability") as AbilityDefinition)
 		var price_badge := card.get_node_or_null(^"price_icon_ability") as MeshInstance3D
 		if price_badge != null:
@@ -402,11 +392,6 @@ func _clear_modal_cards() -> void:
 	_generated_ability_reward_nodes.clear()
 	_ability_reward_entries.clear()
 	_is_awaiting_ability_reward_selection = false
-
-
-func _set_shop_controls_blocked(is_blocked: bool) -> void:
-	if _leave_button != null:
-		_leave_button.disabled = is_blocked
 
 
 func _refresh_offers_visual_state() -> void:
