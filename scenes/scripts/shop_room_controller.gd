@@ -30,6 +30,7 @@ const MODAL_ROW_Y_OFFSET := 2.9
 @onready var _camera: Camera3D = $background/Camera3D
 @onready var _ability_template: Node3D = $ability_reward
 @onready var _ability_price_template: MeshInstance3D = $ability_reward/price_icon_ability
+@onready var _artifact_reward_template: MeshInstance3D = $artefact_frame_reward
 @onready var _card_upgrade_mesh: MeshInstance3D = $card_up_icon
 @onready var _card_upgrade_price: MeshInstance3D = $card_up_icon/price_card_up
 @onready var _card_remove_mesh: MeshInstance3D = $"card_-_icon"
@@ -515,33 +516,11 @@ func _apply_ability_visual(card: Node3D, ability: AbilityDefinition) -> void:
 
 
 func _apply_artifact_visual(card: Node3D, artifact: ArtifactDefinition) -> void:
-	if card == null:
-		return
-	var title := card.get_node_or_null(^"ability_text") as Label3D
-	if title != null:
-		title.text = artifact.display_name if artifact != null else ""
-	var description := card.get_node_or_null(^"abilitu_description") as Label3D
-	if description != null:
-		description.text = artifact.description if artifact != null else ""
-	var icon := card.get_node_or_null(^"ability_icon") as MeshInstance3D
-	if icon != null and artifact != null and artifact.sprite != null:
-		icon.visible = true
-		_apply_texture_to_mesh(icon, artifact.sprite)
+	_reward_flow._apply_artifact_reward_visual(self, card, artifact)
 
 
 func _apply_cube_visual(card: Node3D, cube: DiceDefinition) -> void:
-	if card == null:
-		return
-	var title := card.get_node_or_null(^"ability_text") as Label3D
-	if title != null:
-		title.text = cube.display_name if cube != null else ""
-	var description := card.get_node_or_null(^"abilitu_description") as Label3D
-	if description != null:
-		description.text = cube.description if cube != null else ""
-	var icon := card.get_node_or_null(^"ability_icon") as MeshInstance3D
-	if icon != null and cube != null and cube.texture != null:
-		icon.visible = true
-		_apply_texture_to_mesh(icon, cube.texture)
+	_reward_flow._apply_cube_reward_visual(self, card, cube)
 
 
 func _pick_artifact_without_duplicates(artifacts: Array[ArtifactDefinition], rarity: StringName, blocked_unique: Dictionary, offered_ids: Dictionary) -> ArtifactDefinition:
