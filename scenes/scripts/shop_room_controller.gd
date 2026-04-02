@@ -349,7 +349,12 @@ func _set_price_label_text(price_root: Node3D, text: String) -> void:
 		label.outline_size = 30
 		label.modulate = Color(0.976, 1.0, 0.0745, 1.0)
 		label.outline_modulate = Color(0.66, 0.29, 0.149, 1.0)
-		label.transform = Transform3D(0.608, 0, 0, 0, -0.00000004, 0.9999996, 0, -0.9999999, -0.00000004, 0.2105, 0.0712, -0.019)
+		var label_basis := Basis(
+			Vector3(0.608, 0.0, 0.0),
+			Vector3(0.0, -0.00000004, 0.9999996),
+			Vector3(0.0, -0.9999999, -0.00000004)
+		)
+		label.transform = Transform3D(label_basis, Vector3(0.2105, 0.0712, -0.019))
 		price_root.add_child(label)
 	label.text = text
 
