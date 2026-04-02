@@ -23,8 +23,7 @@ static func run_turn(host: Node, context: Dictionary) -> StringName:
 	await _wait_until_turn_dice_stop(host, context)
 
 	while battle_room != null and battle_room.is_monster_turn() and not battle_room.is_battle_over():
-		var turn_dice: Array[Dice] = _call_dice_provider(context)
-		var available_dice := BattleAbilityRuntime.filter_ready_dice(turn_dice, true)
+		var available_dice := await _resolve_ready_dice_for_decision(host, context)
 		if available_dice.is_empty():
 			_log_debug("turn finished: no_dice (monster=%s index=%d)" % [String(monster_view.combatant_id), monster_index])
 			return &"no_dice"
@@ -54,10 +53,20 @@ static func run_turn(host: Node, context: Dictionary) -> StringName:
 			_log_debug("turn aborted: missing_execute_ability (monster=%s index=%d)" % [String(monster_view.combatant_id), monster_index])
 			return &"missing_execute_ability"
 		await execute_ability.call(monster_index, decision.ability, decision.target_descriptor, consumed_dice)
-		await _wait_until_turn_dice_stop(host, context)
 
 	_log_debug("turn interrupted: owner no longer active for monster index=%d" % monster_index)
 	return &"turn_interrupted"
+
+
+static func _resolve_ready_dice_for_decision(host: Node, context: Dictionary) -> Array[Dice]:
+	var turn_dice: Array[Dice] = _call_dice_provider(context)
+	var available_dice := BattleAbilityRuntime.filter_ready_dice(turn_dice, true)
+	if not available_dice.is_empty() or turn_dice.is_empty():
+		return available_dice
+
+	await _wait_until_turn_dice_stop(host, context)
+	turn_dice = _call_dice_provider(context)
+	return BattleAbilityRuntime.filter_ready_dice(turn_dice, true)
 
 
 static func _wait_until_turn_dice_stop(host: Node, context: Dictionary) -> void:
