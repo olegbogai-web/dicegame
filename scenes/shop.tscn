@@ -6,8 +6,10 @@
 [ext_resource type="Texture2D" uid="uid://c2npj028il5ih" path="res://assets/ui/coin.png" id="4_8r1wq"]
 [ext_resource type="Texture2D" uid="uid://cjetkxe0bjs5c" path="res://assets/dice_edges/card_up.png" id="5_ajxib"]
 [ext_resource type="Texture2D" uid="uid://bk71xlos8ep1m" path="res://assets/dice_edges/card_-.png" id="6_y6sft"]
+[ext_resource type="Texture2D" uid="uid://bjpqv8q13kqq7" path="res://assets/ui/base_frame_mid.png" id="7_artifact_frame"]
 [ext_resource type="Script" path="res://scenes/scripts/shop_room_controller.gd" id="7_shop_controller"]
 [ext_resource type="PackedScene" uid="uid://da7pxwcgh4x4h" path="res://ui/scenes/money_ui.tscn" id="8_money_ui"]
+[ext_resource type="Texture2D" uid="uid://cy0obo6lpmc3" path="res://assets/states/strength.png" id="9_artifact_icon"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1l46r"]
 albedo_texture = ExtResource("1_xfvoa")
@@ -37,6 +39,20 @@ albedo_texture = ExtResource("5_ajxib")
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_24it5"]
 transparency = 1
 albedo_texture = ExtResource("6_y6sft")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_artifact_frame"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_artifact_frame"]
+transparency = 1
+albedo_texture = ExtResource("7_artifact_frame")
+metallic_specular = 0.0
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_artifact_icon"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_artifact_icon"]
+transparency = 1
+albedo_texture = ExtResource("9_artifact_icon")
+metallic_specular = 0.0
 
 [node name="shop" type="Node3D" unique_id=979683358]
 script = ExtResource("7_shop_controller")
@@ -104,6 +120,19 @@ transform = Transform3D(0.675, 0, 0, 0, 1, 0, 0, 0, 0.19, 0, 0, 1.1112527)
 material_override = SubResource("StandardMaterial3D_032fp")
 gi_lightmap_texel_scale = 0.6564
 mesh = SubResource("PlaneMesh_2fc2m")
+
+[node name="artefact_frame_reward" type="MeshInstance3D" parent="." unique_id=1132208606]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.02, -0.5158154)
+visible = false
+sorting_offset = 3.0
+material_override = SubResource("StandardMaterial3D_artifact_frame")
+mesh = SubResource("PlaneMesh_artifact_frame")
+
+[node name="artefact_icon_reward" type="MeshInstance3D" parent="artefact_frame_reward" unique_id=1496693985]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0, 0.01, 0)
+sorting_offset = 5.0
+material_override = SubResource("StandardMaterial3D_artifact_icon")
+mesh = SubResource("PlaneMesh_artifact_icon")
 
 [node name="money_ui" parent="." instance=ExtResource("8_money_ui")]
 
