@@ -3,8 +3,7 @@ extends Resource
 class_name PlayerBaseStat
 
 const DEFAULT_MAX_HP := 30
-const GLOBAL_MAP_SWORDS_ICON := preload("res://assets/global_map/swords.png")
-const GLOBAL_MAP_EVENT_ICON := preload("res://assets/global_map/question_mark.png")
+const GLOBAL_MAP_SHOP_ICON := preload("res://assets/global_map/shop.png")
 const GLOBAL_MAP_DICE_SKIN := preload("res://assets/dice_edges/bones_dice_skin.png")
 const REWARD_ARTIFACT_ICON := preload("res://assets/dice_edges/artifact_+.png")
 const REWARD_CUBE_ICON := preload("res://assets/dice_edges/cube_+.png")
@@ -104,9 +103,8 @@ func _build_global_map_dice_definition() -> DiceDefinition:
 
 func _build_global_map_faces() -> Array[DiceFaceDefinition]:
 	var faces: Array[DiceFaceDefinition] = []
-	for _index in 5:
-		faces.append(_build_face("swords", GLOBAL_MAP_SWORDS_ICON))
-	faces.append(_build_face("question_mark", GLOBAL_MAP_EVENT_ICON))
+	for _index in 6:
+		faces.append(_build_face("shop", GLOBAL_MAP_SHOP_ICON))
 	return faces
 
 
