@@ -6,6 +6,8 @@
 [ext_resource type="Texture2D" uid="uid://c2npj028il5ih" path="res://assets/ui/coin.png" id="4_8r1wq"]
 [ext_resource type="Texture2D" uid="uid://cjetkxe0bjs5c" path="res://assets/dice_edges/card_up.png" id="5_ajxib"]
 [ext_resource type="Texture2D" uid="uid://bk71xlos8ep1m" path="res://assets/dice_edges/card_-.png" id="6_y6sft"]
+[ext_resource type="Script" path="res://scenes/scripts/shop_room_controller.gd" id="7_shop_controller"]
+[ext_resource type="PackedScene" uid="uid://da7pxwcgh4x4h" path="res://ui/scenes/money_ui.tscn" id="8_money_ui"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1l46r"]
 albedo_texture = ExtResource("1_xfvoa")
@@ -37,6 +39,7 @@ transparency = 1
 albedo_texture = ExtResource("6_y6sft")
 
 [node name="shop" type="Node3D" unique_id=979683358]
+script = ExtResource("7_shop_controller")
 
 [node name="background" type="MeshInstance3D" parent="." unique_id=1012328117]
 transform = Transform3D(16, 0, 0, 0, 1, 0, 0, 0, 9, 0, 0, 0)
@@ -101,3 +104,14 @@ transform = Transform3D(0.675, 0, 0, 0, 1, 0, 0, 0, 0.19, 0, 0, 1.1112527)
 material_override = SubResource("StandardMaterial3D_032fp")
 gi_lightmap_texel_scale = 0.6564
 mesh = SubResource("PlaneMesh_2fc2m")
+
+[node name="money_ui" parent="." instance=ExtResource("8_money_ui")]
+
+[node name="ui" type="CanvasLayer" parent="." unique_id=1330071111]
+
+[node name="leave_shop_button" type="Button" parent="ui" unique_id=1454116647]
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 274.0
+offset_bottom = 84.0
+text = "Покинуть магазин"
