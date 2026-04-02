@@ -95,7 +95,7 @@ material_override = SubResource("StandardMaterial3D_m4ofw")
 mesh = SubResource("PlaneMesh_heatd")
 
 [node name="Label3D" type="Label3D" parent="ability_reward/price_icon_ability" unique_id=533579307]
-transform = Transform3D(0.6081628, 0, 0, 0, -4.371138e-08, 0.9999996, 0, -0.9999999, -4.371138e-08, 0.21058917, 0.071274295, -0.019444704)
+transform = Transform3D(0.875247, 0, 0, 0, -4.371138e-08, 0.9999996, 0, -0.9999999, -4.371138e-08, 0.21058917, 0.071274295, -0.019444704)
 sorting_offset = 0.5
 pixel_size = 0.01
 render_priority = 1
@@ -108,7 +108,8 @@ font_size = 100
 outline_size = 30
 
 [node name="sold" type="MeshInstance3D" parent="ability_reward" unique_id=197413319]
-transform = Transform3D(0.7548481, 0, 0.53256226, 0, 0.90334237, 0, -0.9598651, 0, 0.34012565, -0.005628586, 0.029188812, -0.06920838)
+transform = Transform3D(0.7548481, 0, 0.53256226, 0, 0.90334237, 0, -0.9598651, 0, 0.34012565, 0.031, 0.15, -0.117)
+sorting_offset = 10.0
 material_override = SubResource("StandardMaterial3D_44xle")
 mesh = SubResource("PlaneMesh_24it5")
 
