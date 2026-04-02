@@ -24,7 +24,8 @@ const PRICE_OFFSET_Y := 0.0
 const PRICE_OFFSET_Z := 2.21
 const LOW_FUNDS_TINT := Color(0.75, 0.5, 0.5, 1.0)
 const AVAILABLE_TINT := Color(1.0, 1.0, 1.0, 1.0)
-const MODAL_ROW_Y_OFFSET := 2.9
+const MODAL_SELECTION_Y := 5.0
+const MODAL_SELECTION_Z := 0.0
 
 @onready var _camera: Camera3D = $background/Camera3D
 @onready var _ability_template: Node3D = $ability_reward
@@ -73,6 +74,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	var mouse_button := event as InputEventMouseButton
 	if not mouse_button.pressed or mouse_button.button_index != MOUSE_BUTTON_LEFT:
 		return
+	if _selection_mode == "upgrade" or _selection_mode == "remove":
+		get_viewport().set_input_as_handled()
 	var picked_offer := _resolve_offer_click(mouse_button.position)
 	if picked_offer.is_empty():
 		return
@@ -80,13 +83,6 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _resolve_offer_click(screen_point: Vector2) -> Dictionary:
-	for index in range(_offer_entries.size() - 1, -1, -1):
-		var entry: Dictionary = _offer_entries[index]
-		if bool(entry.get("is_sold", false)):
-			continue
-		var hit_mesh := entry.get("hit_mesh") as MeshInstance3D
-		if _screen_point_hits_mesh(hit_mesh, screen_point):
-			return entry
 	if _selection_mode == "upgrade" or _selection_mode == "remove":
 		for index in range(_ability_reward_entries.size() - 1, -1, -1):
 			var modal_entry: Dictionary = _ability_reward_entries[index]
@@ -99,6 +95,14 @@ func _resolve_offer_click(screen_point: Vector2) -> Dictionary:
 					"offer_type": _selection_mode,
 					"selection_entry": modal_entry,
 				}
+		return {}
+	for index in range(_offer_entries.size() - 1, -1, -1):
+		var entry: Dictionary = _offer_entries[index]
+		if bool(entry.get("is_sold", false)):
+			continue
+		var hit_mesh := entry.get("hit_mesh") as MeshInstance3D
+		if _screen_point_hits_mesh(hit_mesh, screen_point):
+			return entry
 	return {}
 
 
@@ -368,13 +372,13 @@ func _render_modal_cards(entries: Array[Dictionary]) -> void:
 	if entries.is_empty():
 		return
 	var spacing := _compute_card_spacing_x()
-	var start := _ability_template.transform.origin + Vector3(spacing * 0.5, MODAL_ROW_Y_OFFSET, 0.0)
+	var centered_offsets := _build_centered_offsets(entries.size(), spacing)
 	for index in range(entries.size()):
 		var entry := entries[index]
 		var card := (_ability_template.duplicate() as Node3D)
 		add_child(card)
 		card.visible = true
-		card.transform.origin = start + Vector3(float(index) * spacing, 0.0, 0.0)
+		card.transform.origin = Vector3(centered_offsets[index], MODAL_SELECTION_Y, MODAL_SELECTION_Z)
 		_apply_ability_visual(card, entry.get("ability") as AbilityDefinition)
 		var price_badge := card.get_node_or_null(^"price_icon_ability") as MeshInstance3D
 		if price_badge != null:
