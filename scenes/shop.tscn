@@ -34,6 +34,7 @@ albedo_texture = ExtResource("4_8r1wq")
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_44xle"]
 render_priority = 3
 transparency = 1
+no_depth_test = true
 albedo_texture = ExtResource("6_1v8qu")
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_24it5"]
