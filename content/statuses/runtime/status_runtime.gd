@@ -71,6 +71,15 @@ static func resolve_ability_effect_magnitude(
 			else:
 				resolved_base_magnitude = resolved_die_value * selected_die_multiplier
 
+			_log_debug(
+				"ability magnitude from die value: effect=%s die=%d resolved_die=%d magnitude=%d" % [
+					String(effect.effect_id),
+					selected_die_value,
+					resolved_die_value,
+					resolved_base_magnitude,
+				]
+			)
+
 	if effect.effect_type == &"damage":
 		var damage_result := resolve_passive_modifier_pipeline(
 			resolved_base_magnitude,
@@ -520,3 +529,9 @@ static func _get_status_stacks(container: StatusContainer, status_id: StringName
 	if instance == null or not instance.is_effectively_active():
 		return 0
 	return instance.stacks
+
+
+static func _log_debug(message: String) -> void:
+	if not OS.is_debug_build():
+		return
+	print("[StatusRuntime] %s" % message)
