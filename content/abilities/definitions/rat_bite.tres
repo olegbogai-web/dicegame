@@ -21,8 +21,10 @@ dice_conditions = Array[ExtResource("3_dice_condition")]([SubResource("AbilityDi
 [sub_resource type="Resource" id="AbilityEffect_damage_by_selected_die"]
 script = ExtResource("6_effect")
 effect_id = "rat_bite_damage"
-selected_die_multiplier = 1
 dice_query_tags = PackedStringArray()
+parameters = {
+"selected_die_multiplier": 1
+}
 
 [sub_resource type="Resource" id="AbilityTargetRule_enemy"]
 script = ExtResource("4_target_rule")
