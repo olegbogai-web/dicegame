@@ -2,6 +2,7 @@ extends RefCounted
 class_name GlobalMapMarkerRoomLinkResolver
 
 const GlobalMapDiceEvolutionService = preload("res://content/global_map/dice/global_map_dice_evolution_service.gd")
+const GLOBAL_MAP_RESOLVER_LOG_PREFIX := "[GlobalMapResolve]"
 
 const TEST_EVENT_ROOM_SCENE_PATH := "res://scenes/event_room.tscn"
 const TEST_BATTLE_ROOM_SCENE_PATH := "res://scenes/new_battle_table.tscn"
@@ -15,8 +16,10 @@ const BOSS_ICON := preload("res://assets/global_map/boss.png")
 
 func resolve_marker_for_face(face: DiceFaceDefinition) -> Dictionary:
 	if face == null:
+		print("%s face=null -> event" % GLOBAL_MAP_RESOLVER_LOG_PREFIX)
 		return _build_event_marker_data()
 	var normalized_tag := face.text_value.strip_edges().to_lower()
+	print("%s face=%s" % [GLOBAL_MAP_RESOLVER_LOG_PREFIX, normalized_tag])
 	match normalized_tag:
 		GlobalMapDiceEvolutionService.MOB_FACE_TAG:
 			return _build_marker_data(TEST_BATTLE_ROOM_SCENE_PATH, MOB_ICON, GlobalMapDiceEvolutionService.MOB_FACE_TAG)

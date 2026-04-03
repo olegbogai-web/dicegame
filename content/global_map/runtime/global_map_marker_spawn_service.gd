@@ -4,6 +4,7 @@ class_name GlobalMapMarkerSpawnService
 const DEFAULT_WALL_MARGIN := 1.0
 const DEFAULT_MIN_DISTANCE := 1.5
 const DEFAULT_MAX_ATTEMPTS := 60
+const GLOBAL_MAP_SPAWN_LOG_PREFIX := "[GlobalMapSpawn]"
 
 var _rng := RandomNumberGenerator.new()
 
@@ -26,6 +27,7 @@ func build_spawn_points(
 
 	var bounds := _resolve_background_bounds(background_node)
 	if bounds.is_empty():
+		print("%s skip: empty background bounds" % GLOBAL_MAP_SPAWN_LOG_PREFIX)
 		return spawned_points
 
 	var min_x: float = bounds["min_x"]
@@ -37,6 +39,7 @@ func build_spawn_points(
 	var safe_min_z := min_z + wall_margin
 	var safe_max_z := max_z - wall_margin
 	if safe_min_x > safe_max_x or safe_min_z > safe_max_z:
+		print("%s skip: invalid safe area x(%.2f..%.2f) z(%.2f..%.2f)" % [GLOBAL_MAP_SPAWN_LOG_PREFIX, safe_min_x, safe_max_x, safe_min_z, safe_max_z])
 		return spawned_points
 
 	for _index in marker_count:
@@ -51,8 +54,10 @@ func build_spawn_points(
 			max_attempts
 		)
 		if candidate == null:
+			print("%s marker[%d] not found" % [GLOBAL_MAP_SPAWN_LOG_PREFIX, _index])
 			continue
 		spawned_points.append(candidate as Vector3)
+		print("%s marker[%d]=%s" % [GLOBAL_MAP_SPAWN_LOG_PREFIX, _index, candidate])
 
 	return spawned_points
 

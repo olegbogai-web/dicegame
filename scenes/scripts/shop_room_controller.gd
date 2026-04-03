@@ -26,6 +26,7 @@ const LOW_FUNDS_TINT := Color(0.75, 0.5, 0.5, 1.0)
 const AVAILABLE_TINT := Color(1.0, 1.0, 1.0, 1.0)
 const MODAL_SELECTION_Y := 5.0
 const MODAL_SELECTION_Z := 0.0
+const SHOP_LOG_PREFIX := "[Shop]"
 
 @onready var _camera: Camera3D = $background/Camera3D
 @onready var _ability_template: Node3D = $ability_reward
@@ -59,6 +60,38 @@ var _selection_mode := ""
 var _selection_service_entry: Dictionary = {}
 
 
+func _log_debug(message: String) -> void:
+	print("%s %s" % [SHOP_LOG_PREFIX, message])
+
+
+func _log_offer_snapshot(stage: String) -> void:
+	var parts: PackedStringArray = []
+	for offer in _offer_entries:
+		var offer_id := str(offer.get("offer_id", "?"))
+		var offer_type := str(offer.get("offer_type", "?"))
+		var price := int(offer.get("price", 0))
+		var sold := bool(offer.get("is_sold", false))
+		parts.append("%s:%s:%d:%s" % [offer_id, offer_type, price, "sold" if sold else "open"])
+	_log_debug("%s | offers=%d | %s" % [stage, _offer_entries.size(), " | ".join(parts)])
+
+
+func _ability_debug_id(ability: AbilityDefinition) -> String:
+	if ability == null:
+		return "null"
+	return "%s/%s" % [ability.ability_id, ability.display_name]
+
+
+func _artifact_debug_id(artifact: ArtifactDefinition) -> String:
+	if artifact == null:
+		return "null"
+	return "%s/%s" % [artifact.artifact_id, artifact.display_name]
+
+
+func _cube_debug_id(cube: DiceDefinition) -> String:
+	if cube == null:
+		return "null"
+	return "%s/r%d" % [cube.resource_path.get_file(), cube.rarity]
+
 func _ready() -> void:
 	_rng.randomize()
 	_ability_reward_rng.randomize()
@@ -66,6 +99,7 @@ func _ready() -> void:
 	_setup_fixed_price_badges()
 	_generate_shop_inventory()
 	_refresh_offers_visual_state()
+	_log_offer_snapshot("init")
 	if _leave_button != null and not _leave_button.pressed.is_connected(_on_leave_shop_pressed):
 		_leave_button.pressed.connect(_on_leave_shop_pressed)
 
@@ -81,6 +115,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	var picked_offer := _resolve_offer_click(mouse_button.position)
 	if picked_offer.is_empty():
 		return
+	_log_debug("click offer=%s type=%s mode=%s" % [str(picked_offer.get("offer_id", "modal")), str(picked_offer.get("offer_type", "")), _selection_mode])
 	_try_purchase_offer(picked_offer)
 
 
@@ -110,27 +145,34 @@ func _resolve_offer_click(screen_point: Vector2) -> Dictionary:
 
 func _try_purchase_offer(entry: Dictionary) -> void:
 	if _runtime_player == null:
+		_log_debug("purchase skipped: runtime player is null")
 		return
 	var offer_type := str(entry.get("offer_type", ""))
 	if offer_type == "upgrade" or offer_type == "remove":
+		_log_debug("modal select mode=%s" % offer_type)
 		_resolve_service_selection(entry)
 		return
 	var price := int(entry.get("price", 0))
 	if not _runtime_player.spend_coins(price):
+		_log_debug("purchase denied offer=%s price=%d coins=%d" % [str(entry.get("offer_id", "?")), price, _runtime_player.current_coins])
 		return
+	_log_debug("purchase paid offer=%s type=%s price=%d coins_left=%d" % [str(entry.get("offer_id", "?")), offer_type, price, _runtime_player.current_coins])
 	match offer_type:
 		"ability":
 			var ability := entry.get("ability") as AbilityDefinition
 			if ability != null:
 				_runtime_player.grant_ability(ability, _ability_reward_rng)
+				_log_debug("grant ability %s" % _ability_debug_id(ability))
 		"artifact":
 			var artifact := entry.get("artifact") as ArtifactDefinition
 			if artifact != null:
 				_runtime_player.grant_artifact(artifact)
+				_log_debug("grant artifact %s" % _artifact_debug_id(artifact))
 		"cube":
 			var cube := entry.get("cube") as DiceDefinition
 			if cube != null:
 				_runtime_player.grant_runtime_cube(cube)
+				_log_debug("grant cube %s" % _cube_debug_id(cube))
 		"card_upgrade":
 			_open_upgrade_modal(entry)
 			return
@@ -140,6 +182,7 @@ func _try_purchase_offer(entry: Dictionary) -> void:
 	entry["is_sold"] = true
 	_update_offer_entry(entry)
 	_refresh_offers_visual_state()
+	_log_offer_snapshot("after_purchase")
 	GlobalMapRuntimeState.save_runtime_player(_runtime_player)
 
 
@@ -147,9 +190,11 @@ func _open_upgrade_modal(service_entry: Dictionary) -> void:
 	var options := _build_upgrade_modal_entries()
 	if options.is_empty():
 		_runtime_player.add_coins(int(service_entry.get("price", 0)))
+		_log_debug("upgrade modal: no options, refund=%d" % int(service_entry.get("price", 0)))
 		return
 	_selection_mode = "upgrade"
 	_selection_service_entry = service_entry
+	_log_debug("open upgrade modal options=%d" % options.size())
 	_render_modal_cards(options)
 
 
@@ -157,25 +202,31 @@ func _open_remove_modal(service_entry: Dictionary) -> void:
 	var options := _build_remove_modal_entries()
 	if options.is_empty():
 		_runtime_player.add_coins(int(service_entry.get("price", 0)))
+		_log_debug("remove modal: no options, refund=%d" % int(service_entry.get("price", 0)))
 		return
 	_selection_mode = "remove"
 	_selection_service_entry = service_entry
+	_log_debug("open remove modal options=%d" % options.size())
 	_render_modal_cards(options)
 
 
 func _resolve_service_selection(entry: Dictionary) -> void:
 	var selection_entry := entry.get("selection_entry", {}) as Dictionary
 	if selection_entry.is_empty():
+		_log_debug("modal selection skipped: empty entry")
 		return
 	if _selection_mode == "upgrade":
 		var replace_index := int(selection_entry.get("replace_index", -1))
 		var ability := selection_entry.get("ability") as AbilityDefinition
 		if replace_index >= 0 and replace_index < _runtime_player.ability_loadout.size() and ability != null:
 			_runtime_player.ability_loadout[replace_index] = ability
+			_log_debug("upgrade applied idx=%d -> %s" % [replace_index, _ability_debug_id(ability)])
 	elif _selection_mode == "remove":
 		var remove_index := int(selection_entry.get("remove_index", -1))
 		if remove_index >= 0 and remove_index < _runtime_player.ability_loadout.size():
+			var removed := _runtime_player.ability_loadout[remove_index] as AbilityDefinition
 			_runtime_player.ability_loadout.remove_at(remove_index)
+			_log_debug("remove applied idx=%d ability=%s" % [remove_index, _ability_debug_id(removed)])
 	if not _selection_service_entry.is_empty():
 		_selection_service_entry["is_sold"] = true
 		_update_offer_entry(_selection_service_entry)
@@ -183,15 +234,18 @@ func _resolve_service_selection(entry: Dictionary) -> void:
 	_selection_mode = ""
 	_selection_service_entry = {}
 	_refresh_offers_visual_state()
+	_log_offer_snapshot("after_service_selection")
 	GlobalMapRuntimeState.save_runtime_player(_runtime_player)
 
 
 func _generate_shop_inventory() -> void:
+	_log_debug("generate inventory start")
 	_clear_generated_offers()
 	_generate_ability_offers()
 	_generate_artifact_offers()
 	_generate_cube_offers()
 	_generate_service_offers()
+	_log_offer_snapshot("inventory_generated")
 
 
 func _generate_ability_offers() -> void:
@@ -223,6 +277,7 @@ func _generate_ability_offers() -> void:
 			"card": card,
 			"hit_mesh": card.get_node_or_null(^"ability_frame_base") as MeshInstance3D,
 		})
+		_log_debug("offer ability slot=%d %s price=%d" % [slot, _ability_debug_id(picked), price])
 
 
 func _generate_artifact_offers() -> void:
@@ -256,6 +311,7 @@ func _generate_artifact_offers() -> void:
 			"card": card,
 			"hit_mesh": card.get_node_or_null(^"ability_frame_base") as MeshInstance3D,
 		})
+		_log_debug("offer artifact slot=%d %s price=%d" % [slot, _artifact_debug_id(artifact), price])
 
 
 func _generate_cube_offers() -> void:
@@ -289,6 +345,7 @@ func _generate_cube_offers() -> void:
 			"card": card,
 			"hit_mesh": card.get_node_or_null(^"ability_frame_base") as MeshInstance3D,
 		})
+		_log_debug("offer cube slot=%d %s price=%d" % [slot, _cube_debug_id(cube), price])
 
 
 func _generate_service_offers() -> void:
@@ -310,6 +367,8 @@ func _generate_service_offers() -> void:
 		"card": _card_remove_mesh,
 		"hit_mesh": _card_remove_mesh,
 	})
+	_log_debug("offer service card_upgrade price=%d" % CARD_UP_FIXED_PRICE)
+	_log_debug("offer service card_remove price=%d" % CARD_REMOVE_FIXED_PRICE)
 
 
 func _build_upgrade_modal_entries() -> Array[Dictionary]:
@@ -390,6 +449,7 @@ func _render_modal_cards(entries: Array[Dictionary]) -> void:
 		_ability_reward_entries.append(entry)
 		_generated_ability_reward_nodes.append(card)
 	_is_awaiting_ability_reward_selection = true
+	_log_debug("render modal mode=%s cards=%d" % [_selection_mode, entries.size()])
 
 
 func _set_modal_card_render_priority(card: Node3D) -> void:
@@ -687,6 +747,7 @@ func _resolve_or_create_runtime_player() -> Player:
 
 
 func _on_leave_shop_pressed() -> void:
+	_log_debug("leave shop coins=%d" % (_runtime_player.current_coins if _runtime_player != null else -1))
 	GlobalMapRuntimeState.save_runtime_player(_runtime_player)
 	var map_scene := GlobalMapRuntimeState.load_map_scene_path()
 	if map_scene.is_empty():
