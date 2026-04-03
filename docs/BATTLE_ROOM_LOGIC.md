@@ -138,6 +138,11 @@
 
 Рекомендуемая точка интеграции — отдельный bootstrap-сервис презентационного слоя (`battle_scene_bootstrap`), который получает run-state и подготавливает `BattleRoom`/`BattleScreenContext` до загрузки визуала.
 
+Текущее правило runtime-spawn для `BattleRoom.create_runtime_battle_room(...)`:
+- обычный бой (`marker_type != elite`) спавнит `rat` (`content/monsters/definitions/rat.tres`);
+- элитный бой (`marker_type == elite`) спавнит `chimera`;
+- тестовый монстр (`test_monster`) больше не используется в обычном runtime-бою и остается только fallback-заглушкой на случай, если encounter setup вернул пустой/невалидный список монстров.
+
 ## 5. Пайплайн работы боевой комнаты
 
 ## 5.1. Подготовка комнаты
