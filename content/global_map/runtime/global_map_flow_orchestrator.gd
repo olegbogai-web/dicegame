@@ -86,6 +86,7 @@ func configure(
 	_build_start_path_points()
 	_restore_persisted_state()
 	_schedule_global_map_dice_roll_if_needed()
+	print("%s ready hero=%s markers=%d" % [GLOBAL_MAP_DICE_LOG_PREFIX, _hero_movement.get_ground_position(), _marker_presenter.get_all_marker_positions().size()])
 
 
 func process(delta: float) -> void:
@@ -143,6 +144,7 @@ func handle_input(event: InputEvent) -> void:
 	_path_points = _start_path_points.duplicate()
 	_path_index = 0
 	_state.hero_move_started = true
+	print("%s pick start_event path=%d" % [GLOBAL_MAP_DICE_LOG_PREFIX, _path_points.size()])
 
 
 func _try_pick_dynamic_marker(mouse_position: Vector2) -> bool:
@@ -155,6 +157,7 @@ func _try_pick_dynamic_marker(mouse_position: Vector2) -> bool:
 	_apply_global_map_dice_evolution_for_choice(String(picked_marker.get("type", "")))
 	_pending_room_scene_path = String(picked_marker.get("scene_path", ""))
 	_pending_room_marker_type = String(picked_marker.get("type", ""))
+	print("%s pick marker type=%s scene=%s" % [GLOBAL_MAP_DICE_LOG_PREFIX, _pending_room_marker_type, _pending_room_scene_path])
 	var marker_path_points = picked_marker.get("path_points", [])
 	if marker_path_points is Array and not (marker_path_points as Array).is_empty():
 		_path_points = _to_vector3_array(marker_path_points as Array)
@@ -174,6 +177,7 @@ func _apply_global_map_dice_evolution_for_choice(selected_marker_type: String) -
 		selected_marker_type,
 		_rng
 	)
+	print("%s evolve choice=%s cubes=%d" % [GLOBAL_MAP_DICE_LOG_PREFIX, selected_marker_type, player.runtime_cube_global_map.size()])
 	GlobalMapRuntimeState.save_runtime_player(player)
 
 
@@ -204,6 +208,7 @@ func _on_target_marker_reached() -> void:
 	await _play_enter_room_animation()
 	_persist_current_state()
 	var next_scene_path := _pending_room_scene_path if not _pending_room_scene_path.is_empty() else START_EVENT_ROOM_SCENE_PATH
+	print("%s reached marker type=%s next=%s" % [GLOBAL_MAP_DICE_LOG_PREFIX, _pending_room_marker_type, next_scene_path])
 	_prepare_pending_runtime_battle_room(next_scene_path)
 	_owner.get_tree().change_scene_to_file(next_scene_path)
 
@@ -246,6 +251,7 @@ func _restore_persisted_state() -> void:
 	var saved_event_reached = snapshot.get("event_reached", false)
 	_state.event_reached = bool(saved_event_reached)
 	_set_event_unavailable(_state.event_reached)
+	print("%s restore markers=%d event_reached=%s" % [GLOBAL_MAP_DICE_LOG_PREFIX, _marker_presenter.get_all_marker_positions().size(), str(_state.event_reached)])
 	_path_points.clear()
 	_path_index = 0
 
@@ -257,11 +263,13 @@ func _persist_current_state() -> void:
 			if not marker_data is Dictionary:
 				continue
 			(marker_data as Dictionary)["unavailable"] = true
+		print("%s mark unavailable count=%d" % [GLOBAL_MAP_DICE_LOG_PREFIX, marker_snapshot.size()])
 	GlobalMapRuntimeState.save_snapshot({
 		"hero_world_position": _hero_movement.get_ground_position(),
 		"markers": marker_snapshot,
 		"event_reached": _state.event_reached,
 	})
+	print("%s save hero=%s markers=%d event_reached=%s" % [GLOBAL_MAP_DICE_LOG_PREFIX, _hero_movement.get_ground_position(), marker_snapshot.size(), str(_state.event_reached)])
 
 
 func _schedule_global_map_dice_roll_if_needed() -> void:
@@ -329,6 +337,7 @@ func _deferred_roll_global_map_dice() -> void:
 		if dice_body is Dice:
 			_rolled_global_map_dice.append(dice_body as Dice)
 	_is_waiting_for_roll_results = not _rolled_global_map_dice.is_empty()
+	print("%s roll queued cubes=%d waiting=%s" % [GLOBAL_MAP_DICE_LOG_PREFIX, _rolled_global_map_dice.size(), str(_is_waiting_for_roll_results)])
 
 
 func _spawn_markers_for_roll_result() -> void:
@@ -342,6 +351,7 @@ func _spawn_markers_for_roll_result() -> void:
 	if marker_points.is_empty():
 		push_warning("%s Не удалось разместить новые метки на карте." % GLOBAL_MAP_DICE_LOG_PREFIX)
 		return
+	print("%s marker points=%s" % [GLOBAL_MAP_DICE_LOG_PREFIX, str(marker_points)])
 	var marker_specs: Array[Dictionary] = []
 	for index in range(min(_rolled_global_map_dice.size(), marker_points.size())):
 		var dice := _rolled_global_map_dice[index]
@@ -349,6 +359,7 @@ func _spawn_markers_for_roll_result() -> void:
 		marker_data["position"] = marker_points[index]
 		marker_data["visible"] = true
 		marker_specs.append(marker_data)
+		print("%s marker[%d] type=%s pos=%s" % [GLOBAL_MAP_DICE_LOG_PREFIX, index, String(marker_data.get("type", "")), marker_points[index]])
 	var created_markers := _marker_presenter.show_markers(marker_specs, false)
 	_build_paths_for_markers(created_markers)
 
@@ -437,17 +448,21 @@ func _build_paths_for_markers(markers: Array[Dictionary]) -> void:
 	var marker_positions := _collect_marker_positions(markers)
 	var background_bounds := _resolve_background_bounds()
 	if background_bounds.is_empty():
+		print("%s path build skipped: empty background bounds" % GLOBAL_MAP_DICE_LOG_PREFIX)
 		return
 	for marker_data in markers:
 		var marker_node := marker_data.get("node") as Node3D
 		if marker_node == null or not is_instance_valid(marker_node):
 			continue
+		print("%s build path marker type=%s pos=%s" % [GLOBAL_MAP_DICE_LOG_PREFIX, String(marker_data.get("type", "")), marker_node.global_position])
 		var path_points := _build_wavy_path_to_marker(marker_node.global_position, marker_positions, background_bounds)
 		if path_points.is_empty():
 			_marker_presenter.set_marker_path_points(marker_node, [marker_node.global_position])
+			print("%s path fallback direct marker=%s" % [GLOBAL_MAP_DICE_LOG_PREFIX, marker_node.global_position])
 			continue
 		_spawn_dash_path(path_points)
 		_marker_presenter.set_marker_path_points(marker_node, path_points)
+		print("%s path ready points=%d" % [GLOBAL_MAP_DICE_LOG_PREFIX, path_points.size()])
 
 func _collect_marker_positions(markers: Array[Dictionary]) -> Array[Vector3]:
 	var marker_positions: Array[Vector3] = []
