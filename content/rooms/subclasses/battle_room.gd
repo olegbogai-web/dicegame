@@ -6,6 +6,7 @@ const DUNGEON_FLOOR_TEXTURE_1 := preload("res://assets/material/dangeon_floor_1.
 const DUNGEON_FLOOR_TEXTURE_2 := preload("res://assets/material/dangeon_floor_2.png")
 const TEST_PLAYER_TEXTURE := preload("res://assets/entity/monsters/test_player.png")
 const TEST_MONSTER_DEFINITION := preload("res://content/monsters/definitions/test_monster.tres")
+const RAT_MONSTER_DEFINITION := preload("res://content/monsters/definitions/rat.tres")
 const CHIMERA_MONSTER_DEFINITION := preload("res://content/monsters/definitions/chimera.tres")
 const COMMON_ATTACK_ABILITY := preload("res://content/abilities/definitions/common_attack.tres")
 const HEAL_ABILITY := preload("res://content/abilities/definitions/heal.tres")
@@ -472,14 +473,12 @@ static func create_runtime_battle_room(player: Player, marker_type: String = "",
 	var floor_texture: Texture2D = runtime_setup.get("floor_texture", DEFAULT_FLOOR_TEXTURE)
 	room.set_floor_textures(floor_texture, floor_texture)
 	room.set_player_data(runtime_player, TEST_PLAYER_TEXTURE)
-	var raw_monsters = runtime_setup.get("monsters", [TEST_MONSTER_DEFINITION])
-	var monster_definitions: Array[MonsterDefinition] = []
-	if raw_monsters is Array:
-		for raw_monster in raw_monsters:
-			if raw_monster is MonsterDefinition:
-				monster_definitions.append(raw_monster as MonsterDefinition)
+	var raw_monsters = runtime_setup.get("monsters", [])
+	var monster_definitions := _collect_valid_monster_definitions(raw_monsters)
 	if monster_definitions.is_empty():
+		print("[Debug][BattleRoom] Runtime encounter has no valid monsters. Fallback to test monster.")
 		monster_definitions.append(TEST_MONSTER_DEFINITION)
+	print("[Debug][BattleRoom] Runtime encounter marker=%s monsters=%s." % [marker_type, _build_monster_spawn_debug_list(monster_definitions)])
 	room.set_monsters_from_definitions(monster_definitions)
 	return room
 
@@ -493,8 +492,30 @@ static func _build_runtime_encounter_setup(marker_type: String, rng: RandomNumbe
 		}
 	return {
 		"floor_texture": _pick_runtime_floor_texture(rng, [DUNGEON_FLOOR_TEXTURE_1, DUNGEON_FLOOR_TEXTURE_2]),
-		"monsters": [TEST_MONSTER_DEFINITION],
+		"monsters": [RAT_MONSTER_DEFINITION],
 	}
+
+
+static func _collect_valid_monster_definitions(raw_monsters) -> Array[MonsterDefinition]:
+	var monster_definitions: Array[MonsterDefinition] = []
+	if not (raw_monsters is Array):
+		return monster_definitions
+	for raw_monster in raw_monsters:
+		if raw_monster is MonsterDefinition:
+			monster_definitions.append(raw_monster as MonsterDefinition)
+	return monster_definitions
+
+
+static func _build_monster_spawn_debug_list(monsters: Array[MonsterDefinition]) -> String:
+	if monsters.is_empty():
+		return "[]"
+	var labels: Array[String] = []
+	for monster_definition in monsters:
+		if monster_definition == null:
+			labels.append("null")
+			continue
+		labels.append(monster_definition.monster_id)
+	return "[" + ", ".join(labels) + "]"
 
 
 static func _pick_runtime_floor_texture(rng: RandomNumberGenerator, floor_pool: Array[Texture2D]) -> Texture2D:

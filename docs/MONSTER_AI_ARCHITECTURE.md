@@ -612,3 +612,14 @@ Monster AI может только:
 - `_build_strengthening_turn_key(battle_room, combatant_id)` — формирует ключ «монстр+ход» для ограничения `strengthening` до 1 применения за ход;
 - `_can_use_strengthening_with_any_three_dice(ability, available_dice)` — проверяет достижимость `strengthening` через экономичный 3-sum алгоритм по всем комбинациям из трех кубов;
 - `_find_ability_by_id(abilities, ability_id)` — локальный резолвер способностей монстра по `ability_id`.
+
+## 15. Обновление: профиль ИИ `rat` (апрель 2026)
+
+Добавлен monster-specific профиль `content/monster_ai/profiles/rat_ai_profile.gd` для монстра `rat` с простым приоритетом:
+- пока доступна способность `rat_bite`, монстр атакует игрока;
+- как только `rat_bite` недоступна (например, закончились подходящие кубы), монстр завершает ход.
+
+Новые функции в profile-слое:
+- `decide_next_action(monster_index, battle_room, available_dice)` — реализует правило «всегда пытаться использовать rat_bite по игроку» и fallback в `end_turn`;
+- `_find_ability_by_id(abilities, ability_id)` — локальный резолвер `rat_bite` в списке способностей монстра;
+- `_log_debug(message)` — единая debug-точка логирования решений `RatAiProfile`.
