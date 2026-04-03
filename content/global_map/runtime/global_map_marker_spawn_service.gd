@@ -4,7 +4,6 @@ class_name GlobalMapMarkerSpawnService
 const DEFAULT_WALL_MARGIN := 1.0
 const DEFAULT_MIN_DISTANCE := 1.5
 const DEFAULT_MAX_ATTEMPTS := 60
-const GLOBAL_MAP_SPAWN_LOG_PREFIX := "[GlobalMapSpawn]"
 
 var _rng := RandomNumberGenerator.new()
 
@@ -23,12 +22,10 @@ func build_spawn_points(
 ) -> Array[Vector3]:
 	var spawned_points: Array[Vector3] = []
 	if background_node == null or marker_count <= 0:
-		_debug("spawn skipped marker_count=%d background=%s" % [marker_count, str(background_node != null)])
 		return spawned_points
 
 	var bounds := _resolve_background_bounds(background_node)
 	if bounds.is_empty():
-		_debug("spawn skipped: no bounds")
 		return spawned_points
 
 	var min_x: float = bounds["min_x"]
@@ -40,7 +37,6 @@ func build_spawn_points(
 	var safe_min_z := min_z + wall_margin
 	var safe_max_z := max_z - wall_margin
 	if safe_min_x > safe_max_x or safe_min_z > safe_max_z:
-		_debug("spawn skipped: invalid safe bounds")
 		return spawned_points
 
 	for _index in marker_count:
@@ -55,13 +51,9 @@ func build_spawn_points(
 			max_attempts
 		)
 		if candidate == null:
-			_debug("spawn fail slot=%d attempts=%d" % [_index, max_attempts])
 			continue
 		spawned_points.append(candidate as Vector3)
-		var point := candidate as Vector3
-		_debug("spawn ok slot=%d pos=(%.2f,%.2f,%.2f)" % [_index, point.x, point.y, point.z])
 
-	_debug("spawn done requested=%d created=%d" % [marker_count, spawned_points.size()])
 	return spawned_points
 
 
@@ -116,7 +108,3 @@ func _resolve_background_bounds(background_node: Node3D) -> Dictionary:
 		"min_z": center.z - half_size_z,
 		"max_z": center.z + half_size_z,
 	}
-
-
-func _debug(message: String) -> void:
-	print("%s %s" % [GLOBAL_MAP_SPAWN_LOG_PREFIX, message])
