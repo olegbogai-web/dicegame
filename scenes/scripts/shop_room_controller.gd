@@ -26,6 +26,7 @@ const LOW_FUNDS_TINT := Color(0.75, 0.5, 0.5, 1.0)
 const AVAILABLE_TINT := Color(1.0, 1.0, 1.0, 1.0)
 const MODAL_SELECTION_Y := 5.0
 const MODAL_SELECTION_Z := 0.0
+const MODAL_SORTING_OFFSET := 100.0
 
 @onready var _camera: Camera3D = $background/Camera3D
 @onready var _ability_template: Node3D = $ability_reward
@@ -381,6 +382,7 @@ func _render_modal_cards(entries: Array[Dictionary]) -> void:
 		add_child(card)
 		card.visible = true
 		card.transform.origin = Vector3(centered_offsets[index], MODAL_SELECTION_Y, MODAL_SELECTION_Z)
+		_set_modal_card_sorting(card)
 		_apply_ability_visual(card, entry.get("ability") as AbilityDefinition)
 		var price_badge := card.get_node_or_null(^"price_icon_ability") as MeshInstance3D
 		if price_badge != null:
@@ -398,6 +400,17 @@ func _clear_modal_cards() -> void:
 	_generated_ability_reward_nodes.clear()
 	_ability_reward_entries.clear()
 	_is_awaiting_ability_reward_selection = false
+
+
+func _set_modal_card_sorting(card: Node3D) -> void:
+	if card == null:
+		return
+	var geometries := card.find_children("*", "GeometryInstance3D", true, false)
+	for geometry_node in geometries:
+		var geometry := geometry_node as GeometryInstance3D
+		if geometry == null:
+			continue
+		geometry.sorting_offset = MODAL_SORTING_OFFSET
 
 
 func _refresh_offers_visual_state() -> void:
