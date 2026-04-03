@@ -86,6 +86,14 @@ func configure(
 	_build_start_path_points()
 	_restore_persisted_state()
 	_schedule_global_map_dice_roll_if_needed()
+	_debug("configure hero=(%.2f,%.2f,%.2f) event=(%.2f,%.2f,%.2f)" % [
+		_hero_movement.get_ground_position().x,
+		_hero_movement.get_ground_position().y,
+		_hero_movement.get_ground_position().z,
+		_event_icon.global_position.x if _event_icon != null else 0.0,
+		_event_icon.global_position.y if _event_icon != null else 0.0,
+		_event_icon.global_position.z if _event_icon != null else 0.0,
+	])
 
 
 func process(delta: float) -> void:
@@ -143,6 +151,7 @@ func handle_input(event: InputEvent) -> void:
 	_path_points = _start_path_points.duplicate()
 	_path_index = 0
 	_state.hero_move_started = true
+	_debug("pick start_event path_points=%d" % _path_points.size())
 
 
 func _try_pick_dynamic_marker(mouse_position: Vector2) -> bool:
@@ -162,6 +171,15 @@ func _try_pick_dynamic_marker(mouse_position: Vector2) -> bool:
 		_path_points = [marker_node.global_position]
 	_path_index = 0
 	_state.hero_move_started = true
+	var marker_position := marker_node.global_position
+	_debug("pick marker type=%s scene=%s pos=(%.2f,%.2f,%.2f) path_points=%d" % [
+		_pending_room_marker_type,
+		_pending_room_scene_path,
+		marker_position.x,
+		marker_position.y,
+		marker_position.z,
+		_path_points.size(),
+	])
 	return true
 
 
@@ -175,6 +193,7 @@ func _apply_global_map_dice_evolution_for_choice(selected_marker_type: String) -
 		_rng
 	)
 	GlobalMapRuntimeState.save_runtime_player(player)
+	_debug("dice evolve selected=%s dice_count=%d" % [selected_marker_type, player.runtime_cube_global_map.size()])
 
 
 func _is_event_icon_clicked(mouse_position: Vector2) -> bool:
@@ -225,6 +244,7 @@ func _update_event_hover(mouse_position: Vector2) -> void:
 
 func _restore_persisted_state() -> void:
 	if not GlobalMapRuntimeState.has_snapshot():
+		_debug("restore skipped: no snapshot")
 		return
 	var snapshot := GlobalMapRuntimeState.load_snapshot()
 	_state.hero_move_started = false
@@ -233,12 +253,14 @@ func _restore_persisted_state() -> void:
 	if saved_position is Vector3:
 		_hero_movement.set_world_position(saved_position as Vector3)
 	var saved_markers = snapshot.get("markers", [])
+	var restored_marker_count := 0
 	if saved_markers is Array and not saved_markers.is_empty():
 		var marker_specs: Array[Dictionary] = []
 		for marker_data in saved_markers:
 			if marker_data is Dictionary:
 				marker_specs.append(marker_data)
 		var restored_markers := _marker_presenter.show_markers(marker_specs)
+		restored_marker_count = restored_markers.size()
 		_rebuild_dynamic_paths(restored_markers)
 	else:
 		_marker_presenter.clear_dynamic_markers()
@@ -248,20 +270,38 @@ func _restore_persisted_state() -> void:
 	_set_event_unavailable(_state.event_reached)
 	_path_points.clear()
 	_path_index = 0
+	_debug("restore done hero=(%.2f,%.2f,%.2f) markers=%d event_reached=%s event_unavailable=%s" % [
+		_hero_movement.get_ground_position().x,
+		_hero_movement.get_ground_position().y,
+		_hero_movement.get_ground_position().z,
+		restored_marker_count,
+		str(_state.event_reached),
+		str(_state.event_reached),
+	])
 
 
 func _persist_current_state() -> void:
 	var marker_snapshot := _marker_presenter.export_markers_state()
+	var forced_unavailable := 0
 	if _state.is_transition_in_progress:
 		for marker_data in marker_snapshot:
 			if not marker_data is Dictionary:
 				continue
 			(marker_data as Dictionary)["unavailable"] = true
+			forced_unavailable += 1
 	GlobalMapRuntimeState.save_snapshot({
 		"hero_world_position": _hero_movement.get_ground_position(),
 		"markers": marker_snapshot,
 		"event_reached": _state.event_reached,
 	})
+	_debug("persist hero=(%.2f,%.2f,%.2f) markers=%d forced_unavailable=%d event_reached=%s" % [
+		_hero_movement.get_ground_position().x,
+		_hero_movement.get_ground_position().y,
+		_hero_movement.get_ground_position().z,
+		marker_snapshot.size(),
+		forced_unavailable,
+		str(_state.event_reached),
+	])
 
 
 func _schedule_global_map_dice_roll_if_needed() -> void:
@@ -329,6 +369,7 @@ func _deferred_roll_global_map_dice() -> void:
 		if dice_body is Dice:
 			_rolled_global_map_dice.append(dice_body as Dice)
 	_is_waiting_for_roll_results = not _rolled_global_map_dice.is_empty()
+	_debug("dice roll spawned=%d waiting=%s" % [_rolled_global_map_dice.size(), str(_is_waiting_for_roll_results)])
 
 
 func _spawn_markers_for_roll_result() -> void:
@@ -349,7 +390,15 @@ func _spawn_markers_for_roll_result() -> void:
 		marker_data["position"] = marker_points[index]
 		marker_data["visible"] = true
 		marker_specs.append(marker_data)
+		_debug("marker spawned face=%s type=%s pos=(%.2f,%.2f,%.2f)" % [
+			dice.get_top_face().text_value if dice.get_top_face() != null else "unknown",
+			String(marker_data.get("type", "")),
+			marker_points[index].x,
+			marker_points[index].y,
+			marker_points[index].z,
+		])
 	var created_markers := _marker_presenter.show_markers(marker_specs, false)
+	_debug("markers total=%d" % created_markers.size())
 	_build_paths_for_markers(created_markers)
 
 
@@ -433,10 +482,12 @@ func _has_available_markers(saved_markers: Array) -> bool:
 
 func _build_paths_for_markers(markers: Array[Dictionary]) -> void:
 	if markers.is_empty():
+		_debug("path build skipped: no markers")
 		return
 	var marker_positions := _collect_marker_positions(markers)
 	var background_bounds := _resolve_background_bounds()
 	if background_bounds.is_empty():
+		_debug("path build skipped: no background bounds")
 		return
 	for marker_data in markers:
 		var marker_node := marker_data.get("node") as Node3D
@@ -445,9 +496,20 @@ func _build_paths_for_markers(markers: Array[Dictionary]) -> void:
 		var path_points := _build_wavy_path_to_marker(marker_node.global_position, marker_positions, background_bounds)
 		if path_points.is_empty():
 			_marker_presenter.set_marker_path_points(marker_node, [marker_node.global_position])
+			_debug("path fallback marker=(%.2f,%.2f,%.2f)" % [
+				marker_node.global_position.x,
+				marker_node.global_position.y,
+				marker_node.global_position.z,
+			])
 			continue
 		_spawn_dash_path(path_points)
 		_marker_presenter.set_marker_path_points(marker_node, path_points)
+		_debug("path built marker=(%.2f,%.2f,%.2f) points=%d" % [
+			marker_node.global_position.x,
+			marker_node.global_position.y,
+			marker_node.global_position.z,
+			path_points.size(),
+		])
 
 func _collect_marker_positions(markers: Array[Dictionary]) -> Array[Vector3]:
 	var marker_positions: Array[Vector3] = []
@@ -474,6 +536,7 @@ func _rebuild_dynamic_paths(markers: Array[Dictionary]) -> void:
 		var marker_node := marker_data.get("node") as Node3D
 		if marker_node != null and is_instance_valid(marker_node):
 			_marker_presenter.set_marker_path_points(marker_node, path_points)
+	_debug("path rebuild markers=%d segments=%d dashes=%d" % [markers.size(), _path_segments.size(), _dynamic_path_dashes.size()])
 
 
 func _clear_dynamic_paths() -> void:
@@ -498,6 +561,7 @@ func _build_wavy_path_to_marker(target: Vector3, marker_positions: Array[Vector3
 			continue
 		_register_path_segments(path_points)
 		return path_points
+	_debug("path fail target=(%.2f,%.2f,%.2f) attempts=%d" % [target.x, target.y, target.z, PATH_MAX_BUILD_ATTEMPTS])
 	return []
 
 
@@ -664,3 +728,7 @@ func _to_vector3_array(values: Array) -> Array[Vector3]:
 		if value is Vector3:
 			result.append(value as Vector3)
 	return result
+
+
+func _debug(message: String) -> void:
+	print("%s %s" % [GLOBAL_MAP_DICE_LOG_PREFIX, message])
