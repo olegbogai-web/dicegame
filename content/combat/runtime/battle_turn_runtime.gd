@@ -141,6 +141,7 @@ static func _trigger_turn_start_statuses(battle_room) -> void:
 				"side": &"player",
 			}
 		)
+		_trigger_turn_start_artifacts(battle_room)
 		return
 	if battle_room.current_turn_owner == &"monster" and battle_room.can_target_monster(battle_room.current_monster_turn_index):
 		StatusRuntime.trigger_turn_start(
@@ -157,6 +158,17 @@ static func _trigger_battle_start_artifacts(battle_room) -> void:
 		return
 	ArtifactRuntime.trigger_event(
 		ArtifactRuntime.EVENT_BATTLE_START,
+		battle_room,
+		{"side": &"player"},
+		battle_room.player_instance.get_active_artifact_definitions()
+	)
+
+
+static func _trigger_turn_start_artifacts(battle_room) -> void:
+	if battle_room == null or battle_room.player_instance == null:
+		return
+	ArtifactRuntime.trigger_event(
+		ArtifactRuntime.EVENT_TURN_START,
 		battle_room,
 		{"side": &"player"},
 		battle_room.player_instance.get_active_artifact_definitions()

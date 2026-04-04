@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="ArtifactDefinition" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://content/artifacts/resources/artifact_definition.gd" id="1_artifact"]
+[ext_resource type="Script" path="res://content/artifacts/resources/artifact_trigger_definition.gd" id="2_trigger"]
+[ext_resource type="Texture2D" path="res://assets/artefacts/snake_tooth.png" id="3_icon"]
+[ext_resource type="Resource" path="res://content/statuses/definitions/regeneration.tres" id="4_regeneration_status"]
+
+[sub_resource type="Resource" id="ArtifactTrigger_snake_tooth_on_turn_start"]
+script = ExtResource("2_trigger")
+trigger_id = "snake_tooth_on_turn_start"
+event_name = &"on_turn_start"
+effect_type = &"convert_status_to_status"
+target_scope = &"self"
+priority = 0
+phase_order = 0
+parameters = {
+"apply_status_definition": ExtResource("4_regeneration_status"),
+"remove_stacks": 2,
+"remove_status_id": &"poison"
+}
+
+[resource]
+script = ExtResource("1_artifact")
+artifact_id = "snake_tooth"
+display_name = "Зуб древней змеи"
+description = "В начале хода снимает до 2 стаков «Яда». За каждый снятый стак накладывает 1 стак «Регенерации»."
+rarity = &"unique"
+sprite = ExtResource("3_icon")
+tags = PackedStringArray("status", "poison", "regeneration", "turn_start")
+modifiers = []
+triggers = Array[ExtResource("2_trigger")]([SubResource("ArtifactTrigger_snake_tooth_on_turn_start")])
+metadata = {
+&"debug_note": "snake_tooth_converts_poison_into_regeneration"
+}

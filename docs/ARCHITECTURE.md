@@ -146,7 +146,7 @@
 
 Ссылка: [docs/ARTIFACT_ARCHITECTURE.md](./ARTIFACT_ARCHITECTURE.md)
 
-Текущий контент HP-артефактов по контракту `on_grant_max_hp_bonus`: `banana` (+10), `apple` (+20), `watermelon` (+30).
+Текущий контент HP-артефактов по контракту `on_grant_max_hp_bonus`: `banana` (+10), `apple` (+20), `watermelon` (+30). Также добавлен `snake_tooth` (уникальный): в начале хода конвертирует до 2 стаков `poison` в `regeneration` в соотношении 1:1.
 
 ## Архитектура post-battle кубов награды и денег
 
