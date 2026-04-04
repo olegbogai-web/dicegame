@@ -2,6 +2,7 @@ extends RefCounted
 class_name MonsterTurnRuntime
 
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
+const DICE_STOP_WAIT_TIMEOUT_SEC := 5.0
 
 
 static func run_turn(host: Node, context: Dictionary) -> StringName:
@@ -20,7 +21,12 @@ static func run_turn(host: Node, context: Dictionary) -> StringName:
 		return &"monster_view_missing"
 	_log_debug("turn started: monster=%s index=%d" % [String(monster_view.combatant_id), monster_index])
 
-	await _wait_until_turn_dice_stop(host, context)
+	var initial_wait_result := await _wait_until_turn_dice_stop(host, context)
+	if initial_wait_result == &"no_dice_left":
+		_log_debug("turn finished: no_dice_before_ai_start (monster=%s index=%d)" % [String(monster_view.combatant_id), monster_index])
+		return &"no_dice"
+	if initial_wait_result == &"timeout":
+		_log_debug("turn warning: dice wait timeout before ai start (monster=%s index=%d)" % [String(monster_view.combatant_id), monster_index])
 
 	while battle_room != null and battle_room.is_monster_turn() and not battle_room.is_battle_over():
 		var available_dice := await _resolve_ready_dice_for_decision(host, context)
@@ -64,17 +70,31 @@ static func _resolve_ready_dice_for_decision(host: Node, context: Dictionary) ->
 	if not available_dice.is_empty() or turn_dice.is_empty():
 		return available_dice
 
-	await _wait_until_turn_dice_stop(host, context)
+	var wait_result := await _wait_until_turn_dice_stop(host, context)
 	turn_dice = _call_dice_provider(context)
-	return BattleAbilityRuntime.filter_ready_dice(turn_dice, true)
+	available_dice = BattleAbilityRuntime.filter_ready_dice(turn_dice, true)
+	if wait_result == &"timeout" and available_dice.is_empty() and not turn_dice.is_empty():
+		_log_debug("dice wait timeout fallback: using non-settled turn dice (%d)" % turn_dice.size())
+		return turn_dice
+	return available_dice
 
 
-static func _wait_until_turn_dice_stop(host: Node, context: Dictionary) -> void:
+static func _wait_until_turn_dice_stop(host: Node, context: Dictionary) -> StringName:
 	var are_dice_stopped: Callable = context.get("are_turn_dice_stopped", Callable())
 	if not are_dice_stopped.is_valid():
-		return
+		return &"missing_stop_predicate"
+	var wait_started_at_msec := Time.get_ticks_msec()
 	while host != null and is_instance_valid(host) and host.is_inside_tree() and not are_dice_stopped.call():
+		var turn_dice := _call_dice_provider(context)
+		if turn_dice.is_empty():
+			_log_debug("dice wait interrupted: no_turn_dice_left")
+			return &"no_dice_left"
+		var wait_elapsed_sec := float(Time.get_ticks_msec() - wait_started_at_msec) / 1000.0
+		if wait_elapsed_sec >= DICE_STOP_WAIT_TIMEOUT_SEC:
+			_log_debug("dice wait timeout reached: %.2fs (continue turn safely)" % wait_elapsed_sec)
+			return &"timeout"
 		await host.get_tree().physics_frame
+	return &"stopped"
 
 
 static func _call_dice_provider(context: Dictionary) -> Array[Dice]:
