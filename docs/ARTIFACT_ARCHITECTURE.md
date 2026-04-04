@@ -154,3 +154,8 @@ UI-часть использует 3D-шаблон `artefact_frame_reward` с д
   - тип эффекта: триггерный (`on_battle_start`);
   - действие триггера: применяет к игроку `1` стак статуса `Сила` через общий pipeline событий/эффектов;
   - реализация должна оставаться data-driven: эффект задается в `ArtifactDefinition.triggers`, а не в `Combat`/`BattleRoom` через проверки конкретного `artifact_id`.
+- `Зуб древней змеи` (`artifact_id = ancient_snake_tooth`):
+  - редкость: `unique`;
+  - тип эффекта: триггерный (`on_turn_end`);
+  - действие триггера: снимает у игрока до `2` стаков `Яда`, затем накладывает `Регенерацию` в размере `1` стака за каждый снятый стак;
+  - реализован через data-driven trigger `effect_type = convert_status_on_remove` в `ArtifactRuntime`, без проверок конкретного `artifact_id` в боевых/room/UI классах.
