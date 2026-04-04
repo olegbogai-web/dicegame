@@ -182,11 +182,23 @@ static func _apply_effect_to_target(
 		&"apply_status":
 			var status_definition := _resolve_status_definition(effect)
 			if status_definition == null:
+				_log_debug("apply_status skipped: no status definition for effect=%s" % String(effect.effect_id))
 				return false
 			var status_stacks := maxi(int(effect.parameters.get("stacks", 1)), 1)
 			var status_target := _to_status_descriptor(target_descriptor)
 			if status_target.is_empty():
+				_log_debug("apply_status skipped: unresolved target descriptor kind=%s" % String(target_kind))
 				return false
+			_log_debug(
+				"apply_status request: ability=%s effect=%s status=%s base_stacks=%d source=%s target=%s" % [
+					String(ability.ability_id),
+					String(effect.effect_id),
+					String(status_definition.status_id),
+					status_stacks,
+					JSON.stringify(source_descriptor),
+					JSON.stringify(status_target),
+				]
+			)
 			return StatusRuntime.apply_status(battle_room, status_target, status_definition, status_stacks, source_descriptor)
 	return false
 
@@ -241,3 +253,9 @@ static func _to_status_descriptor(target_descriptor: Dictionary) -> Dictionary:
 			"index": int(target_descriptor.get("index", -1)),
 		}
 	return {}
+
+
+static func _log_debug(message: String) -> void:
+	if not OS.is_debug_build():
+		return
+	print("[BattleEffectRuntime] %s" % message)
