@@ -493,7 +493,12 @@ func _build_turn_orchestrator_context() -> Dictionary:
 		"update_turn_ui": Callable(self, "_update_turn_ui"),
 		"cancel_selected_ability": Callable(self, "_cancel_selected_ability"),
 		"execute_monster_ability": Callable(self, "_execute_monster_ability"),
+		"are_monster_visuals_busy": Callable(self, "_are_monster_visuals_busy"),
 	}
+
+
+func _are_monster_visuals_busy() -> bool:
+	return _activation_in_progress
 
 
 func _update_turn_ui() -> void:
