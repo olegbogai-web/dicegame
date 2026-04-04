@@ -734,6 +734,7 @@ UI может реализовывать drag-and-drop, подсветку и в
 - `MonsterDefinition.get_combat_dice_loadout()` — возвращает валидный combat-набор кубов монстра;
 - `MonsterDefinition.get_combat_dice_count()` — возвращает размер `dice_loadout` (или fallback в `dice_count`);
 - `BattleTurnOrchestrator.throw_current_turn_dice(...)` — при ходе монстра бросает кубы из `monster_view.dice_loadout`, fallback — legacy `dice_count`.
+- `BattleTurnOrchestrator._run_monster_turn_watchdog(...)` — fail-safe: принудительно завершает ход текущего монстра, если в течение `3.0` секунд не происходит прогресса (монстр не исполняет способности/ход зависает), чтобы гарантировать передачу хода игроку.
 
 Также в `BattleAbilityRuntime` добавлены функции для корректного подбора стоимости с ограничением по сумме:
 - `_has_total_value_constraint(dice_condition)`;
