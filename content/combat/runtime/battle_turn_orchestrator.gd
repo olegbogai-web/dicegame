@@ -19,6 +19,7 @@ func start_current_turn(context: Dictionary) -> void:
 		context.get("update_turn_ui", Callable()).call()
 		return
 	throw_current_turn_dice(context)
+	battle_room_data.trigger_turn_start_effects_for_current_owner()
 	context.get("update_turn_ui", Callable()).call()
 	if battle_room_data.is_monster_turn():
 		run_current_monster_turn(context)
