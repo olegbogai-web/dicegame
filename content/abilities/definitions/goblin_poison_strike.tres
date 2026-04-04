@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://vqakigfsnb18" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
 [ext_resource type="Script" uid="uid://c2t7x3op44t3s" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
 [ext_resource type="Script" uid="uid://drneiu6png0u3" path="res://content/abilities/resources/ability_effect_definition.gd" id="6_effect"]
-[ext_resource type="Texture2D" path="res://assets/entity/monsters/goblin_poison_strike.png" id="7_icon"]
+[ext_resource type="Texture2D" path="res://assets/ability/goblin_poison_strike.png" id="7_icon"]
 [ext_resource type="Resource" path="res://content/statuses/definitions/poison.tres" id="8_poison_status"]
 
 [sub_resource type="Resource" id="AbilityDiceCondition_pay"]
