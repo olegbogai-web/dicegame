@@ -32,6 +32,7 @@ static func play_ability_use_animation(
 	dice_assignments: Array[Dictionary],
 	activation_duration: float,
 	selected_frame_lift_y: float,
+	pre_activate_delay_sec: float,
 	on_activate: Callable,
 	on_finished: Callable = Callable()
 ) -> void:
@@ -43,6 +44,8 @@ static func play_ability_use_animation(
 		return
 
 	await move_dice_to_places(host, dice_assignments)
+	if pre_activate_delay_sec > 0.0 and host != null and is_instance_valid(host) and host.is_inside_tree():
+		await host.get_tree().create_timer(pre_activate_delay_sec).timeout
 
 	var half_duration := activation_duration * 0.5
 	var lift_origin := Vector3(base_origin.x, base_origin.y + selected_frame_lift_y, base_origin.z)

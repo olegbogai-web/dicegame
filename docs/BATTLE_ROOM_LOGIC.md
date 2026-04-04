@@ -103,9 +103,15 @@
 - `content/combat/runtime/battle_turn_runtime.gd` — старт боя, проверка завершения боя и переключение очередности ходов;
 - `content/combat/runtime/battle_effect_runtime.gd` — резолв целей и применение эффектов способности к участникам;
 - `content/monster_ai/monster_turn_runtime.gd` — orchestration monster turn поверх общего контракта боя;
-- `content/combat/runtime/battle_activation_animation_runtime.gd` — presentation-only анимация переноса и потребления кубов.
+- `content/combat/runtime/battle_activation_animation_runtime.gd` — presentation-only анимация переноса и потребления кубов;
+- `content/combat/runtime/battle_turn_orchestrator.gd` — синхронизация момента turn handoff с фактическим завершением monster-визуалов.
 
 `BattleRoom` при этом хранит только encounter/runtime state и делегирует исполнение этим сервисам.
+
+Обязательный инвариант handoff:
+
+- ход игрока не может стартовать «раньше UI»;
+- переход `monster -> player` допускается только после подтверждения, что monster action-визуалы завершены, и после короткой буферной задержки передачи хода.
 
 ---
 

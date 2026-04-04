@@ -3,6 +3,7 @@ class_name BattleActionOrchestrator
 
 const Dice = preload("res://content/dice/dice.gd")
 const BattleActivationAnimationRuntime = preload("res://content/combat/runtime/battle_activation_animation_runtime.gd")
+const MONSTER_PRE_ACTIVATE_DELAY_SEC := 0.3
 
 
 func _activate_selected_ability(owner: Node, target_descriptor: Dictionary) -> void:
@@ -19,7 +20,13 @@ func _activate_selected_ability(owner: Node, target_descriptor: Dictionary) -> v
 	owner._refresh_player_ability_snap_state()
 
 
-func _play_ability_use_visual(owner: Node, frame_state: Dictionary, target_descriptor: Dictionary, consumed_dice: Array[Dice]) -> void:
+func _play_ability_use_visual(
+	owner: Node,
+	frame_state: Dictionary,
+	target_descriptor: Dictionary,
+	consumed_dice: Array[Dice],
+	pre_activate_delay_sec: float = 0.0
+) -> void:
 	var frame := frame_state.get("frame") as MeshInstance3D
 	var ability := frame_state.get("ability") as AbilityDefinition
 	if frame == null or ability == null:
@@ -45,6 +52,7 @@ func _play_ability_use_visual(owner: Node, frame_state: Dictionary, target_descr
 		dice_assignments,
 		owner.ACTIVATION_ANIMATION_DURATION,
 		owner._player_ability_input_controller.SELECTED_FRAME_LIFT_Y,
+		pre_activate_delay_sec,
 		on_activate,
 		on_finished
 	)
@@ -99,7 +107,7 @@ func _execute_monster_ability(
 			if is_instance_valid(dice):
 				dice.queue_free()
 		return
-	await _play_ability_use_visual(owner, frame_state, target_descriptor, consumed_dice)
+	await _play_ability_use_visual(owner, frame_state, target_descriptor, consumed_dice, MONSTER_PRE_ACTIVATE_DELAY_SEC)
 
 
 func _apply_combatant_views_after_ability_resolution(owner: Node) -> void:

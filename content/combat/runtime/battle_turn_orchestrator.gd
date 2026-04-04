@@ -6,6 +6,8 @@ const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 const MonsterTurnRuntime = preload("res://content/monster_ai/monster_turn_runtime.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
+const TURN_TRANSFER_DELAY_SEC := 0.3
+const VISUAL_SYNC_TIMEOUT_SEC := 2.0
 
 var _turn_transition_in_progress := false
 
@@ -117,6 +119,7 @@ func run_current_monster_turn(context: Dictionary) -> void:
 	await MonsterTurnRuntime.run_turn(owner_node, {
 		"battle_room": battle_room_data,
 		"monster_index": current_monster_index,
+		"post_ability_delay_sec": 0.5,
 		"provide_turn_dice": func() -> Array[Dice]:
 			return get_turn_dice(context, &"monster", current_monster_index),
 		"are_turn_dice_stopped": func() -> bool:
@@ -126,6 +129,8 @@ func run_current_monster_turn(context: Dictionary) -> void:
 	})
 	if battle_room_data == null or owner_node == null or not owner_node.is_inside_tree() or not battle_room_data.is_monster_turn() or battle_room_data.is_battle_over():
 		return
+	await _wait_until_monster_visuals_complete(context)
+	await _wait_delay(owner_node, TURN_TRANSFER_DELAY_SEC)
 	advance_to_next_turn(context)
 
 
@@ -149,3 +154,26 @@ func _get_board_dice(board: BoardController) -> Array[Dice]:
 		if child is Dice and is_instance_valid(child):
 			dice_list.append(child as Dice)
 	return dice_list
+
+
+func _wait_until_monster_visuals_complete(context: Dictionary) -> void:
+	var owner_node: Node = context.get("owner_node")
+	if owner_node == null or not is_instance_valid(owner_node) or not owner_node.is_inside_tree():
+		return
+	var are_visuals_busy: Callable = context.get("are_monster_visuals_busy", Callable())
+	if not are_visuals_busy.is_valid():
+		return
+	var wait_started_at_msec := Time.get_ticks_msec()
+	while owner_node != null and is_instance_valid(owner_node) and owner_node.is_inside_tree() and are_visuals_busy.call():
+		var elapsed_sec := float(Time.get_ticks_msec() - wait_started_at_msec) / 1000.0
+		if elapsed_sec >= VISUAL_SYNC_TIMEOUT_SEC:
+			break
+		await owner_node.get_tree().physics_frame
+
+
+func _wait_delay(owner_node: Node, seconds: float) -> void:
+	if owner_node == null or not is_instance_valid(owner_node) or not owner_node.is_inside_tree():
+		return
+	if seconds <= 0.0:
+		return
+	await owner_node.get_tree().create_timer(seconds).timeout

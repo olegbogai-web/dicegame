@@ -3,6 +3,7 @@ class_name MonsterTurnRuntime
 
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 const DICE_STOP_WAIT_TIMEOUT_SEC := 5.0
+const POST_ABILITY_DELAY_SEC := 0.5
 
 
 static func run_turn(host: Node, context: Dictionary) -> StringName:
@@ -59,6 +60,7 @@ static func run_turn(host: Node, context: Dictionary) -> StringName:
 			_log_debug("turn aborted: missing_execute_ability (monster=%s index=%d)" % [String(monster_view.combatant_id), monster_index])
 			return &"missing_execute_ability"
 		await execute_ability.call(monster_index, decision.ability, decision.target_descriptor, consumed_dice)
+		await _wait_delay(host, context)
 
 	_log_debug("turn interrupted: owner no longer active for monster index=%d" % monster_index)
 	return &"turn_interrupted"
@@ -102,6 +104,15 @@ static func _call_dice_provider(context: Dictionary) -> Array[Dice]:
 	if not provide_turn_dice.is_valid():
 		return []
 	return provide_turn_dice.call()
+
+
+static func _wait_delay(host: Node, context: Dictionary) -> void:
+	if host == null or not is_instance_valid(host) or not host.is_inside_tree():
+		return
+	var delay_sec := maxf(float(context.get("post_ability_delay_sec", POST_ABILITY_DELAY_SEC)), 0.0)
+	if delay_sec <= 0.0:
+		return
+	await host.get_tree().create_timer(delay_sec).timeout
 
 
 static func _log_debug(message: String) -> void:
