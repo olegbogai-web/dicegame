@@ -188,6 +188,13 @@ static func trigger_event(context: Dictionary) -> Dictionary:
 	)
 	trigger_entries.sort_custom(Callable(StatusRuntime, "_compare_effect_entries"))
 	context["trigger_entries"] = trigger_entries
+	_log_debug(
+		"trigger_event: event=%s owner=%s entries=%d" % [
+			String(event_name),
+			JSON.stringify(owner_descriptor),
+			trigger_entries.size(),
+		]
+	)
 
 	for entry in trigger_entries:
 		var effect := entry.get("effect") as StatusEffectDefinition
@@ -414,6 +421,14 @@ static func _apply_direct_magnitude(
 ) -> void:
 	var magnitude := maxi(int(round(float(entry.get("scaled_value", effect.value)))), 0)
 	if magnitude <= 0:
+		_log_debug(
+			"direct_%s skipped: status=%s effect=%s scaled=%s" % [
+				"damage" if is_damage else "heal",
+				String(entry.get("status_id", &"")),
+				String(entry.get("effect_id", &"")),
+				str(entry.get("scaled_value", effect.value)),
+			]
+		)
 		return
 	var battle_room = context.get("battle_room", null)
 	if battle_room == null:
@@ -421,6 +436,18 @@ static func _apply_direct_magnitude(
 	var owner_descriptor := context.get("owner_descriptor", {}) as Dictionary
 	var owner_side := StringName(owner_descriptor.get("side", &""))
 	var targets := _resolve_targets(battle_room, owner_descriptor, owner_side, effect.target_scope)
+	_log_debug(
+		"direct_%s trigger: status=%s effect=%s stacks=%d magnitude=%d owner=%s target_scope=%s targets=%d" % [
+			"damage" if is_damage else "heal",
+			String(entry.get("status_id", &"")),
+			String(entry.get("effect_id", &"")),
+			int(entry.get("stacks", 0)),
+			magnitude,
+			JSON.stringify(owner_descriptor),
+			String(effect.target_scope),
+			targets.size(),
+		]
+	)
 	for target in targets:
 		if StringName(target.get("side", &"")) == &"player":
 			if is_damage:
