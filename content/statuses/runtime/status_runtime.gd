@@ -376,6 +376,12 @@ static func _execute_trigger_effect(
 		return
 	if effect.effect_type == &"apply_status":
 		_apply_status_to_scope(context, effect, entry)
+		return
+	if effect.effect_type == &"remove_status":
+		_remove_status_from_scope(context, effect, entry)
+		return
+	if effect.effect_type == &"damage_per_used_die":
+		_apply_damage_per_used_die(context, effect, entry)
 
 
 static func _apply_direct_magnitude(
@@ -463,6 +469,98 @@ static func _apply_status_to_scope(
 	var resolved_stacks := maxi(int(effect.parameters.get("stacks", entry_stacks)), 1)
 	for target in _resolve_targets(battle_room, owner_descriptor, owner_side, effect.target_scope):
 		apply_status(battle_room, target, status_definition, resolved_stacks, owner_descriptor)
+
+
+static func _remove_status_from_scope(
+	context: Dictionary,
+	effect: StatusEffectDefinition,
+	entry: Dictionary
+) -> void:
+	if effect.status_id.is_empty():
+		return
+	var battle_room = context.get("battle_room", null)
+	if battle_room == null:
+		return
+	var owner_descriptor := context.get("owner_descriptor", {}) as Dictionary
+	var owner_side := StringName(owner_descriptor.get("side", &""))
+	var resolved_remove_stacks := int(effect.parameters.get("stacks", 1))
+	_log_debug(
+		"remove_status trigger: status=%s remove=%d owner=%s" % [
+			effect.status_id,
+			resolved_remove_stacks,
+			String(owner_side),
+		]
+	)
+	for target in _resolve_targets(battle_room, owner_descriptor, owner_side, effect.target_scope):
+		remove_status(
+			battle_room,
+			target,
+			StringName(effect.status_id),
+			resolved_remove_stacks,
+			EVENT_STATUS_EXPIRED
+		)
+
+
+static func _apply_damage_per_used_die(
+	context: Dictionary,
+	effect: StatusEffectDefinition,
+	entry: Dictionary
+) -> void:
+	var metadata := context.get("metadata", {}) as Dictionary
+	var used_dice_count := maxi(int(metadata.get("consumed_dice_count", 0)), 0)
+	if used_dice_count <= 0:
+		_log_debug(
+			"damage_per_used_die skipped: status=%s effect=%s used_dice=%d" % [
+				String(entry.get("status_id", &"")),
+				String(entry.get("effect_id", &"")),
+				used_dice_count,
+			]
+		)
+		return
+	var battle_room = context.get("battle_room", null)
+	if battle_room == null:
+		return
+	var owner_descriptor := context.get("owner_descriptor", {}) as Dictionary
+	var owner_side := StringName(owner_descriptor.get("side", &""))
+	var per_die_magnitude := maxi(int(round(float(entry.get("scaled_value", effect.value)))), 0)
+	var total_magnitude := per_die_magnitude * used_dice_count
+	if total_magnitude <= 0:
+		return
+	_log_debug(
+		"damage_per_used_die trigger: status=%s stacks=%d per_die=%d used_dice=%d total=%d owner=%s" % [
+			String(entry.get("status_id", &"")),
+			int(entry.get("stacks", 0)),
+			per_die_magnitude,
+			used_dice_count,
+			total_magnitude,
+			String(owner_side),
+		]
+	)
+	for target in _resolve_targets(battle_room, owner_descriptor, owner_side, effect.target_scope):
+		if StringName(target.get("side", &"")) == &"player":
+			if not battle_room.apply_damage_to_descriptor({"side": &"player"}, total_magnitude):
+				continue
+			trigger_event(build_event_context(TRIGGER_DAMAGE_TAKEN, {
+				"battle_room": battle_room,
+				"owner_descriptor": target,
+				"source_descriptor": owner_descriptor,
+				"target_descriptor": target,
+				"magnitude": total_magnitude,
+				"metadata": {"origin": &"status"},
+			}))
+			continue
+		var monster_index := int(target.get("index", -1))
+		var monster_descriptor := {"side": &"enemy", "index": monster_index}
+		if not battle_room.apply_damage_to_descriptor(monster_descriptor, total_magnitude):
+			continue
+		trigger_event(build_event_context(TRIGGER_DAMAGE_TAKEN, {
+			"battle_room": battle_room,
+			"owner_descriptor": target,
+			"source_descriptor": owner_descriptor,
+			"target_descriptor": target,
+			"magnitude": total_magnitude,
+			"metadata": {"origin": &"status"},
+		}))
 
 
 static func _resolve_targets(battle_room, owner_descriptor: Dictionary, owner_side: StringName, target_scope: StringName) -> Array[Dictionary]:
