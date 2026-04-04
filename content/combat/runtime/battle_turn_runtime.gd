@@ -137,13 +137,16 @@ static func _trigger_turn_end_statuses(battle_room) -> void:
 
 static func _trigger_turn_start_statuses(battle_room) -> void:
 	if battle_room.current_turn_owner == &"player":
+		# Сначала запускаем артефакты начала хода, чтобы эффекты конвертации
+		# (например poison -> regeneration) были учтены в статусах этого же on_turn_start.
+		# Иначе регенерация лечит на "старых" стаках и визуально выглядит как недолечивание.
+		_trigger_turn_start_artifacts(battle_room)
 		StatusRuntime.trigger_turn_start(
 			battle_room,
 			{
 				"side": &"player",
 			}
 		)
-		_trigger_turn_start_artifacts(battle_room)
 		return
 	if battle_room.current_turn_owner == &"monster" and battle_room.can_target_monster(battle_room.current_monster_turn_index):
 		StatusRuntime.trigger_turn_start(
