@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://damoph5umarop"]
 
-[ext_resource type="Texture2D" uid="uid://b6ojmoowtta8k" path="res://assets/ui/base_frame_mid_v2.png" id="1_46ibs"]
+[ext_resource type="Texture2D" uid="uid://b6ojmoowtta8k" path="res://assets/ui/base_frame_normal.png" id="1_46ibs"]
 [ext_resource type="Texture2D" uid="uid://cc0r8hvl0nlh5" path="res://assets/ability/common_attack.png" id="2_fqkki"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ad61j"]

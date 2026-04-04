@@ -1,11 +1,12 @@
-[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://c7q3ykcwkmbdx"]
 
 [ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" uid="uid://lfpdg732cjt" path="res://content/abilities/resources/ability_condition.gd" id="1_lonxt"]
 [ext_resource type="Script" uid="uid://cijja5c0f6ibw" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
 [ext_resource type="Script" uid="uid://vqakigfsnb18" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
 [ext_resource type="Script" uid="uid://c2t7x3op44t3s" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
 [ext_resource type="Script" uid="uid://drneiu6png0u3" path="res://content/abilities/resources/ability_effect_definition.gd" id="6_effect"]
-[ext_resource type="Texture2D" path="res://assets/ability/rat_bite.png" id="7_icon"]
+[ext_resource type="Texture2D" uid="uid://cljyqi614pnu7" path="res://assets/ability/rat_bite.png" id="7_icon"]
 
 [sub_resource type="Resource" id="AbilityDiceCondition_pay"]
 script = ExtResource("3_dice_condition")
@@ -45,7 +46,8 @@ max_upgrade_level = 1
 cost = SubResource("AbilityCost_main")
 target_rule = SubResource("AbilityTargetRule_enemy")
 effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_damage_by_selected_die")])
+follow_up_ability_ids = PackedStringArray()
 ai_hints = {
-"priority": 15,
-"debug_note": "rat_bite_scales_with_selected_die"
+"debug_note": "rat_bite_scales_with_selected_die",
+"priority": 15
 }
