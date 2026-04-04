@@ -943,8 +943,19 @@ func _apply_base_frame_texture_to_mesh(mesh_instance: MeshInstance3D, texture: T
 		material = (material as StandardMaterial3D).duplicate()
 	else:
 		return
-	(material as StandardMaterial3D).albedo_texture = texture
-	mesh_instance.material_override = material
+	var standard_material := material as StandardMaterial3D
+	standard_material.albedo_texture = texture
+	if texture == BASE_FRAME_SILVER_TEXTURE:
+		standard_material.emission_enabled = true
+		standard_material.emission = Color(0.85, 0.92, 1.0)
+		standard_material.emission_energy_multiplier = 0.75
+	elif texture == BASE_FRAME_GOLD_TEXTURE:
+		standard_material.emission_enabled = true
+		standard_material.emission = Color(1.0, 0.9, 0.55)
+		standard_material.emission_energy_multiplier = 1.0
+	else:
+		standard_material.emission_enabled = false
+	mesh_instance.material_override = standard_material
 
 
 func _ensure_embedded_artifact_reward_frame(owner: Node, card_root: Node3D, ability_icon: MeshInstance3D) -> MeshInstance3D:
