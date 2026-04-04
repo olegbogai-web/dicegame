@@ -618,6 +618,7 @@ func _apply_price_visual(price_badge: MeshInstance3D, price: int) -> void:
 func _apply_ability_visual(card: Node3D, ability: AbilityDefinition) -> void:
 	if card == null:
 		return
+	_reward_flow._apply_reward_card_base_frame_visual(self, card, ability.rarity if ability != null else null)
 	var title := card.get_node_or_null(^"ability_text") as Label3D
 	if title != null:
 		title.text = ability.display_name if ability != null else ""
