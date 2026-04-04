@@ -618,7 +618,6 @@ func _apply_price_visual(price_badge: MeshInstance3D, price: int) -> void:
 func _apply_ability_visual(card: Node3D, ability: AbilityDefinition) -> void:
 	if card == null:
 		return
-	_apply_offer_base_frame_visual(card, ability.rarity if ability != null else -1)
 	var title := card.get_node_or_null(^"ability_text") as Label3D
 	if title != null:
 		title.text = ability.display_name if ability != null else ""
@@ -638,10 +637,6 @@ func _apply_artifact_visual(card: Node3D, artifact: ArtifactDefinition) -> void:
 
 func _apply_cube_visual(card: Node3D, cube: DiceDefinition) -> void:
 	_reward_flow._apply_cube_reward_visual(self, card, cube)
-
-
-func _apply_offer_base_frame_visual(card: Node3D, rarity_value: Variant) -> void:
-	_reward_flow._apply_reward_card_base_frame_visual(card, rarity_value)
 
 
 func _pick_artifact_without_duplicates(artifacts: Array[ArtifactDefinition], rarity: StringName, blocked_unique: Dictionary, offered_ids: Dictionary) -> ArtifactDefinition:
