@@ -77,6 +77,16 @@ Monster AI может только:
 - fallback-логику;
 - явные сигналы «закончить ход».
 
+### 2.2.1. Краткий реестр приоритетов monster-only способностей
+
+Чтобы при доработках AI-профилей не терялась очередность monster-комбо, фиксируем актуальные приоритеты новых monster-only карт:
+
+- `goblin_inflict_poison` (`content/abilities/definitions/goblin_inflict_poison.tres`) — setup-способность: сначала вешает на себя `poisoner` (1), чтобы усилить следующие наложения `poison`;
+- `goblin_poison_strike` (`content/abilities/definitions/goblin_poison_strike.tres`) — follow-up удар: 2 урона + `poison` (2) по врагу, с масштабированием стеков через `poisoner`;
+- рекомендуемый порядок в AI: сначала setup (`goblin_inflict_poison`), затем атакующий follow-up (`goblin_poison_strike`), если стоимость по кубам доступна.
+
+Для отладки профилей обязательно сохранять reason/debug-сигналы на обе ветки решения (выбор setup, выбор follow-up, невозможность оплатить).
+
 ### 2.3. `battle_table` должен оставаться тонким orchestration-слоем
 
 В `battle_table` должны оставаться только вызовы уровня:

@@ -1,0 +1,61 @@
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
+
+[ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" uid="uid://cijja5c0f6ibw" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
+[ext_resource type="Script" uid="uid://vqakigfsnb18" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
+[ext_resource type="Script" uid="uid://c2t7x3op44t3s" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
+[ext_resource type="Script" uid="uid://drneiu6png0u3" path="res://content/abilities/resources/ability_effect_definition.gd" id="6_effect"]
+[ext_resource type="Texture2D" path="res://assets/entity/monsters/goblin_inflict_poison.png" id="7_icon"]
+[ext_resource type="Resource" path="res://content/statuses/definitions/poisoner.tres" id="8_poisoner_status"]
+
+[sub_resource type="Resource" id="AbilityDiceCondition_pay"]
+script = ExtResource("3_dice_condition")
+required_tags = PackedStringArray()
+forbidden_tags = PackedStringArray()
+accepted_face_ids = PackedStringArray()
+consume_order = PackedStringArray()
+
+[sub_resource type="Resource" id="AbilityCost_main"]
+script = ExtResource("2_cost")
+dice_conditions = Array[ExtResource("3_dice_condition")]([SubResource("AbilityDiceCondition_pay")])
+
+[sub_resource type="Resource" id="AbilityEffect_poisoner"]
+script = ExtResource("6_effect")
+effect_id = "goblin_inflict_poison_apply_poisoner"
+effect_type = &"apply_status"
+status_id = "poisoner"
+dice_query_tags = PackedStringArray()
+parameters = {
+"stacks": 1,
+"status_definition": ExtResource("8_poisoner_status")
+}
+
+[sub_resource type="Resource" id="AbilityTargetRule_self"]
+script = ExtResource("4_target_rule")
+side = 3
+selection = 0
+min_targets = 0
+max_targets = 0
+allow_self = true
+required_tags = PackedStringArray()
+forbidden_tags = PackedStringArray()
+
+[resource]
+script = ExtResource("1_ability")
+ability_id = "goblin_inflict_poison"
+display_name = "Нанести яд"
+description = "Требует 1 любой куб. Накладывает на себя состояние «Отравитель» (1)."
+flavor_text = "Лучше не знать, откуда они берут свой «яд» прямо во время боя."
+icon = ExtResource("7_icon")
+tags = PackedStringArray("buff", "poison", "goblin")
+owner_scope = 1
+rarity = 1
+max_upgrade_level = 1
+cost = SubResource("AbilityCost_main")
+target_rule = SubResource("AbilityTargetRule_self")
+effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_poisoner")])
+follow_up_ability_ids = PackedStringArray()
+ai_hints = {
+"debug_note": "goblin_inflict_poison_enables_poison_strike",
+"priority": 30
+}

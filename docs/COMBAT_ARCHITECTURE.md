@@ -117,6 +117,16 @@
   - стоимость: 1 любой боевой куб;
   - эффект: `damage = value(selected_die)` (урон равен значению выбранного куба);
   - flavor: «Лучше быть осторожнее с этими зубами».
+- `goblin_inflict_poison` / «Нанести яд» (`content/abilities/definitions/goblin_inflict_poison.tres`):
+  - owner scope: только монстр (`owner_scope = MONSTER`);
+  - стоимость: 1 любой боевой куб;
+  - эффект: накладывает на самого монстра `poisoner` (1), усиливая будущие наложения `poison`;
+  - flavor: «Лучше не знать, откуда они берут свой «яд» прямо во время боя».
+- `goblin_poison_strike` / «Отравляющий удар» (`content/abilities/definitions/goblin_poison_strike.tres`):
+  - owner scope: только монстр (`owner_scope = MONSTER`);
+  - стоимость: ровно 2 куба со значением 4+;
+  - эффект: наносит 2 урона и накладывает `poison` (2) на цель;
+  - flavor: «Палка, смазанная говном. Просто и эффективно».
 
 ---
 
