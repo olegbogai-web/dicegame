@@ -119,6 +119,7 @@
 - `Банан` (`artifact_id = banana`): при получении `+10` к текущему и максимальному HP (`metadata.on_grant_max_hp_bonus = 10`).
 - `Яблоко` (`artifact_id = apple`): при получении `+20` к текущему и максимальному HP (`metadata.on_grant_max_hp_bonus = 20`).
 - `Арбуз` (`artifact_id = watermelon`): при получении `+30` к текущему и максимальному HP (`metadata.on_grant_max_hp_bonus = 30`).
+- `Зуб древней змеи` (`artifact_id = snake_tooth`, `rarity = unique`): на `on_turn_start` у игрока снимает до `2` стаков `poison` и за каждый снятый стак накладывает `1` стак `regeneration` через data-driven trigger `convert_status_to_status`.
 
 
 ## Интеграция с post-battle reward (`artifact_+`)
