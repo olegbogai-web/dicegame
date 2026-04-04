@@ -14,7 +14,6 @@ static func start_battle(battle_room) -> Dictionary:
 	battle_room.current_monster_turn_index = -1
 	battle_room.turn_counter = 1
 	_trigger_battle_start_artifacts(battle_room)
-	_trigger_turn_start_statuses(battle_room)
 	return get_current_turn_context(battle_room)
 
 
@@ -65,7 +64,6 @@ static func advance_turn(battle_room) -> Dictionary:
 			return get_current_turn_context(battle_room)
 		battle_room.current_turn_owner = &"monster"
 		battle_room.current_monster_turn_index = monster_order[0]
-		_trigger_turn_start_statuses(battle_room)
 		return get_current_turn_context(battle_room)
 
 	if battle_room.current_turn_owner == &"monster":
@@ -73,15 +71,20 @@ static func advance_turn(battle_room) -> Dictionary:
 		var next_order_position = current_order.find(battle_room.current_monster_turn_index) + 1
 		if next_order_position > 0 and next_order_position < current_order.size():
 			battle_room.current_monster_turn_index = current_order[next_order_position]
-			_trigger_turn_start_statuses(battle_room)
 			return get_current_turn_context(battle_room)
 		battle_room.current_turn_owner = &"player"
 		battle_room.current_monster_turn_index = -1
 		battle_room.turn_counter += 1
-		_trigger_turn_start_statuses(battle_room)
 		return get_current_turn_context(battle_room)
 
 	return start_battle(battle_room)
+
+
+static func trigger_current_turn_start_effects(battle_room) -> void:
+	if battle_room == null or battle_room.battle_status != &"active":
+		return
+	_trigger_turn_start_statuses(battle_room)
+	update_battle_result_if_finished(battle_room)
 
 
 static func update_battle_result_if_finished(battle_room) -> bool:
@@ -135,13 +138,13 @@ static func _trigger_turn_end_statuses(battle_room) -> void:
 
 static func _trigger_turn_start_statuses(battle_room) -> void:
 	if battle_room.current_turn_owner == &"player":
+		_trigger_turn_start_artifacts(battle_room)
 		StatusRuntime.trigger_turn_start(
 			battle_room,
 			{
 				"side": &"player",
 			}
 		)
-		_trigger_turn_start_artifacts(battle_room)
 		return
 	if battle_room.current_turn_owner == &"monster" and battle_room.can_target_monster(battle_room.current_monster_turn_index):
 		StatusRuntime.trigger_turn_start(
