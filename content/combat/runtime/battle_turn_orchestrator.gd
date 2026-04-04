@@ -18,6 +18,10 @@ func start_current_turn(context: Dictionary) -> void:
 	if battle_room_data.is_battle_over():
 		context.get("update_turn_ui", Callable()).call()
 		return
+	battle_room_data.trigger_current_turn_start_effects()
+	if battle_room_data.is_battle_over():
+		context.get("update_turn_ui", Callable()).call()
+		return
 	throw_current_turn_dice(context)
 	context.get("update_turn_ui", Callable()).call()
 	if battle_room_data.is_monster_turn():
