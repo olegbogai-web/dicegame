@@ -22,7 +22,8 @@ func start_current_turn(context: Dictionary) -> void:
 		context.get("update_turn_ui", Callable()).call()
 		return
 	throw_current_turn_dice(context)
-	battle_room_data.trigger_turn_start_effects_for_current_owner()
+	if battle_room_data.is_monster_turn():
+		battle_room_data.trigger_turn_start_effects_for_current_owner()
 	context.get("update_turn_ui", Callable()).call()
 	if battle_room_data.is_monster_turn():
 		run_current_monster_turn(context)
@@ -59,6 +60,8 @@ func throw_current_turn_dice(context: Dictionary) -> void:
 				}))
 	if not requests.is_empty():
 		board.throw_dice(requests)
+	if battle_room_data.is_player_turn():
+		battle_room_data.trigger_turn_start_effects_for_current_owner()
 
 
 func build_dice_throw_request(dice_definition: DiceDefinition, metadata: Dictionary) -> DiceThrowRequest:
