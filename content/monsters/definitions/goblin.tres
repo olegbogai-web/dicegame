@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="MonsterDefinition" format=3]
+
+[ext_resource type="Script" uid="uid://ba5hefomauwar" path="res://content/monsters/resources/monster_definition.gd" id="1_monster"]
+[ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" path="res://content/dice/resources/dice_definition.gd" id="2_dice"]
+[ext_resource type="Texture2D" path="res://assets/entity/monsters/goblin.png" id="3_sprite"]
+[ext_resource type="Resource" path="res://content/abilities/definitions/goblin_poison_strike.tres" id="4_poison_strike"]
+[ext_resource type="Resource" path="res://content/abilities/definitions/goblin_inflict_poison.tres" id="5_inflict_poison"]
+[ext_resource type="Resource" path="res://content/monster_ai/profiles/goblin_ai_profile.tres" id="6_ai"]
+[ext_resource type="Resource" path="res://content/resources/base_cube.tres" id="7_base_cube"]
+
+[resource]
+script = ExtResource("1_monster")
+monster_id = "goblin"
+display_name = "Гоблин"
+description = "Хитрый монстр, который сначала старается выполнить отравляющий удар, а затем расходует остаток кубов на нанесение яда."
+sprite = ExtResource("3_sprite")
+tags = PackedStringArray("normal", "goblin")
+max_health = 30
+dice_count = 3
+dice_loadout = Array[ExtResource("2_dice")]([ExtResource("7_base_cube"), ExtResource("7_base_cube"), ExtResource("7_base_cube")])
+ai_profile = ExtResource("6_ai")
+abilities = Array[ExtResource("1_ability")]([ExtResource("4_poison_strike"), ExtResource("5_inflict_poison")])

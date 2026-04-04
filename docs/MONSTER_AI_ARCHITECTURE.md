@@ -633,3 +633,21 @@ Monster AI может только:
 - `decide_next_action(monster_index, battle_room, available_dice)` — реализует правило «всегда пытаться использовать rat_bite по игроку» и fallback в `end_turn`;
 - `_find_ability_by_id(abilities, ability_id)` — локальный резолвер `rat_bite` в списке способностей монстра;
 - `_log_debug(message)` — единая debug-точка логирования решений `RatAiProfile`.
+
+
+## 16. Обновление: профиль ИИ `goblin` (апрель 2026)
+
+Добавлен monster-specific профиль `content/monster_ai/profiles/goblin_ai_profile.gd` для монстра `goblin` с приоритетами:
+- сначала `goblin_poison_strike` ("Отравляющий удар") по игроку, пока способность доступна по кубам;
+- если `goblin_poison_strike` недоступна, но доступна `goblin_inflict_poison` ("Нанести яд"), монстр тратит кубы на self-buff;
+- когда ни одна из двух способностей больше не может быть оплачена, монстр завершает ход.
+
+Новые функции в profile-слое:
+- `decide_next_action(monster_index, battle_room, available_dice)` — реализует двухступенчатый приоритет (strike-first, then-inflict-poison);
+- `_find_ability_by_id(abilities, ability_id)` — локальный резолвер способностей `goblin_poison_strike`/`goblin_inflict_poison`;
+- `_log_debug(message)` — единая debug-точка логирования решений `GoblinAiProfile`.
+
+Для debugging добавлены reason-коды решений:
+- `goblin_poison_strike_priority` — выбран приоритетный удар;
+- `goblin_inflict_poison_fallback` — fallback на self-buff после недоступности удара;
+- `no_priority_abilities` — завершение хода при отсутствии валидных оплат по кубам.

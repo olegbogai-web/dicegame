@@ -7,6 +7,7 @@ const DUNGEON_FLOOR_TEXTURE_2 := preload("res://assets/material/dangeon_floor_2.
 const TEST_PLAYER_TEXTURE := preload("res://assets/entity/monsters/test_player.png")
 const TEST_MONSTER_DEFINITION := preload("res://content/monsters/definitions/test_monster.tres")
 const RAT_MONSTER_DEFINITION := preload("res://content/monsters/definitions/rat.tres")
+const GOBLIN_MONSTER_DEFINITION := preload("res://content/monsters/definitions/goblin.tres")
 const CHIMERA_MONSTER_DEFINITION := preload("res://content/monsters/definitions/chimera.tres")
 const COMMON_ATTACK_ABILITY := preload("res://content/abilities/definitions/common_attack.tres")
 const HEAL_ABILITY := preload("res://content/abilities/definitions/heal.tres")
@@ -24,6 +25,14 @@ const PLAYER_ABILITY_FRAME_POSITION := Vector3(-7.5, 0.01, 0.0)
 const MONSTER_ABILITY_FRAME_POSITION := Vector3(7.4, 0.01, 0.0)
 const STACK_SPACING_Z := 2.8
 const DICE_PLACE_Z_POSITIONS := [-0.557, -0.007, 0.55]
+
+const NORMAL_RUNTIME_MONSTER_POOL: Array[MonsterDefinition] = [
+	RAT_MONSTER_DEFINITION,
+	GOBLIN_MONSTER_DEFINITION,
+]
+const ELITE_RUNTIME_MONSTER_POOL: Array[MonsterDefinition] = [
+	CHIMERA_MONSTER_DEFINITION,
+]
 
 
 class CombatantViewData:
@@ -486,14 +495,37 @@ static func create_runtime_battle_room(player: Player, marker_type: String = "",
 static func _build_runtime_encounter_setup(marker_type: String, rng: RandomNumberGenerator) -> Dictionary:
 	var normalized_marker_type := marker_type.strip_edges().to_lower()
 	if normalized_marker_type == GlobalMapDiceEvolutionService.ELITE_FACE_TAG:
+		var elite_monster := _pick_random_runtime_monster_definition(rng, ELITE_RUNTIME_MONSTER_POOL, CHIMERA_MONSTER_DEFINITION)
+		print("[Debug][BattleRoom] Elite encounter selected monster=%s." % _resolve_monster_debug_label(elite_monster))
 		return {
 			"floor_texture": _pick_runtime_floor_texture(rng, [DEFAULT_FLOOR_TEXTURE, DUNGEON_FLOOR_TEXTURE_1, DUNGEON_FLOOR_TEXTURE_2]),
-			"monsters": [CHIMERA_MONSTER_DEFINITION],
+			"monsters": [elite_monster],
 		}
+	var normal_monster := _pick_random_runtime_monster_definition(rng, NORMAL_RUNTIME_MONSTER_POOL, RAT_MONSTER_DEFINITION)
+	print("[Debug][BattleRoom] Normal encounter selected monster=%s." % _resolve_monster_debug_label(normal_monster))
 	return {
 		"floor_texture": _pick_runtime_floor_texture(rng, [DUNGEON_FLOOR_TEXTURE_1, DUNGEON_FLOOR_TEXTURE_2]),
-		"monsters": [RAT_MONSTER_DEFINITION],
+		"monsters": [normal_monster],
 	}
+
+
+static func _pick_random_runtime_monster_definition(rng: RandomNumberGenerator, monster_pool: Array[MonsterDefinition], fallback_monster: MonsterDefinition) -> MonsterDefinition:
+	var valid_pool := _collect_valid_monster_definitions(monster_pool)
+	if valid_pool.is_empty():
+		print("[Debug][BattleRoom] Runtime monster pool is empty. Fallback=%s." % _resolve_monster_debug_label(fallback_monster))
+		return fallback_monster
+	var selected_index := rng.randi_range(0, valid_pool.size() - 1)
+	var selected_monster := valid_pool[selected_index]
+	print("[Debug][BattleRoom] Runtime monster pool size=%d selected_index=%d selected_monster=%s." % [valid_pool.size(), selected_index, _resolve_monster_debug_label(selected_monster)])
+	return selected_monster
+
+
+static func _resolve_monster_debug_label(monster_definition: MonsterDefinition) -> String:
+	if monster_definition == null:
+		return "null"
+	if not monster_definition.monster_id.is_empty():
+		return monster_definition.monster_id
+	return "unknown_monster"
 
 
 static func _collect_valid_monster_definitions(raw_monsters) -> Array[MonsterDefinition]:
