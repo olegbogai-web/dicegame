@@ -41,6 +41,10 @@ const CUBE_REWARD_VISUAL_POSITION_OFFSET := Vector3(0.0, 0.3, 0.0)
 const CUBE_REWARD_VISUAL_SCALE_MULTIPLIER := Vector3(1.5, 1.5, 1.5)
 const BASE_CUBE_SCENE_PATH := "res://content/resources/base_cube.tscn"
 const GLOBAL_MAP_SCENE_PATH := "res://scenes/global_map_room.tscn"
+const BASE_FRAME_NORMAL := preload("res://assets/ui/base_frame_normal.png")
+const BASE_FRAME_COPPER := preload("res://assets/ui/base_frame_copper_.png")
+const BASE_FRAME_SILVER := preload("res://assets/ui/base_frame_silver.png")
+const BASE_FRAME_GOLD := preload("res://assets/ui/base_frame_gold.png")
 
 
 func _handle_post_battle_reward_dice(owner: Node) -> void:
@@ -839,6 +843,7 @@ func _apply_reward_card_visual(owner: Node, card_root: Node3D, ability: AbilityD
 	if card_root == null:
 		return
 	_remove_embedded_artifact_reward_frame(card_root)
+	_apply_reward_card_base_frame_visual(card_root, ability.rarity if ability != null else -1)
 	var icon_mesh := card_root.get_node_or_null(^"ability_icon") as MeshInstance3D
 	if icon_mesh != null:
 		icon_mesh.visible = true
@@ -856,6 +861,7 @@ func _apply_artifact_reward_visual(owner: Node, card_root: Node3D, artifact: Art
 	if card_root == null:
 		return
 	_remove_embedded_cube_reward_node(card_root)
+	_apply_reward_card_base_frame_visual(card_root, artifact.rarity if artifact != null else &"")
 	var title_label := card_root.get_node_or_null(^"ability_text") as Label3D
 	if title_label != null:
 		title_label.text = artifact.display_name if artifact != null else ""
@@ -876,6 +882,7 @@ func _apply_artifact_reward_visual(owner: Node, card_root: Node3D, artifact: Art
 func _apply_cube_reward_visual(owner: Node, card_root: Node3D, cube_definition: DiceDefinition) -> void:
 	if card_root == null:
 		return
+	_apply_reward_card_base_frame_visual(card_root, cube_definition.rarity if cube_definition != null else -1)
 	var title_label := card_root.get_node_or_null(^"ability_text") as Label3D
 	if title_label != null:
 		title_label.text = cube_definition.display_name if cube_definition != null else ""
@@ -957,6 +964,50 @@ func _build_cube_reward_description(cube_definition: DiceDefinition) -> String:
 	if not cube_definition.description.is_empty():
 		return cube_definition.description
 	return "Редкость: %s · Область: %s" % [_format_cube_rarity(cube_definition.rarity), _format_cube_scope(cube_definition.scope)]
+
+
+func _resolve_base_frame_by_rarity(rarity_value: Variant) -> Texture2D:
+	if rarity_value is StringName:
+		match rarity_value as StringName:
+			&"uncommon":
+				return BASE_FRAME_COPPER
+			&"rare":
+				return BASE_FRAME_SILVER
+			&"unique":
+				return BASE_FRAME_GOLD
+		return BASE_FRAME_NORMAL
+	if rarity_value is int:
+		match int(rarity_value):
+			1:
+				return BASE_FRAME_COPPER
+			2:
+				return BASE_FRAME_SILVER
+			3:
+				return BASE_FRAME_GOLD
+		return BASE_FRAME_NORMAL
+	return BASE_FRAME_NORMAL
+
+
+func _apply_reward_card_base_frame_visual(card_root: Node3D, rarity_value: Variant) -> void:
+	if card_root == null:
+		return
+	var frame := card_root.get_node_or_null(^"ability_frame_base") as MeshInstance3D
+	if frame == null:
+		return
+	_apply_texture_to_mesh_instance(frame, _resolve_base_frame_by_rarity(rarity_value))
+
+
+func _apply_texture_to_mesh_instance(mesh_instance: MeshInstance3D, texture: Texture2D) -> void:
+	if mesh_instance == null or texture == null:
+		return
+	var material := mesh_instance.material_override
+	if material == null:
+		material = StandardMaterial3D.new()
+	elif material is StandardMaterial3D:
+		material = (material as StandardMaterial3D).duplicate()
+	if material is StandardMaterial3D:
+		(material as StandardMaterial3D).albedo_texture = texture
+	mesh_instance.material_override = material
 
 
 func _format_cube_rarity(rarity: int) -> String:
