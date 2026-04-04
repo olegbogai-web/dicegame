@@ -438,10 +438,6 @@ func advance_turn() -> Dictionary:
 	return BattleTurnRuntime.advance_turn(self)
 
 
-func trigger_current_turn_start_effects() -> void:
-	BattleTurnRuntime.trigger_current_turn_start_effects(self)
-
-
 func activate_player_ability(ability: AbilityDefinition, target_descriptor: Dictionary) -> Dictionary:
 	return activate_current_turn_ability(ability, target_descriptor)
 
