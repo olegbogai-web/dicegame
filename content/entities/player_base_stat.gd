@@ -15,6 +15,7 @@ const REWARD_MONEY_ICON := preload("res://assets/dice_edges/money.png")
 const MONEY_DICE_SKIN := preload("res://assets/dice_edges/money_dice_skin.png")
 const DiceDefinitionScript = preload("res://content/dice/resources/dice_definition.gd")
 const DiceFaceDefinitionScript = preload("res://content/dice/resources/dice_face_definition.gd")
+const DEFAULT_BASE_ARTIFACT_ANCIENT_SNAKE_TOOTH := preload("res://content/artifacts/definitions/ancient_snake_tooth.tres")
 
 @export_category("Identity")
 @export var player_id := ""
@@ -148,7 +149,7 @@ func _build_default_money_faces() -> Array[DiceFaceDefinition]:
 
 
 func _build_default_artifacts_base() -> Array[ArtifactDefinition]:
-	return []
+	return [DEFAULT_BASE_ARTIFACT_ANCIENT_SNAKE_TOOTH]
 
 
 func _build_money_face(value: String) -> DiceFaceDefinition:

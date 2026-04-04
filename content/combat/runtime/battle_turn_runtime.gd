@@ -54,6 +54,7 @@ static func advance_turn(battle_room) -> Dictionary:
 		return get_current_turn_context(battle_room)
 	if battle_room.battle_status != &"active":
 		return get_current_turn_context(battle_room)
+	_trigger_turn_end_artifacts(battle_room)
 	_trigger_turn_end_statuses(battle_room)
 	if update_battle_result_if_finished(battle_room):
 		return get_current_turn_context(battle_room)
@@ -157,6 +158,17 @@ static func _trigger_battle_start_artifacts(battle_room) -> void:
 		return
 	ArtifactRuntime.trigger_event(
 		ArtifactRuntime.EVENT_BATTLE_START,
+		battle_room,
+		{"side": &"player"},
+		battle_room.player_instance.get_active_artifact_definitions()
+	)
+
+
+static func _trigger_turn_end_artifacts(battle_room) -> void:
+	if battle_room == null or battle_room.player_instance == null:
+		return
+	ArtifactRuntime.trigger_event(
+		ArtifactRuntime.EVENT_TURN_END,
 		battle_room,
 		{"side": &"player"},
 		battle_room.player_instance.get_active_artifact_definitions()
