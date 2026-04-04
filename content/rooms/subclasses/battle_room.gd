@@ -434,6 +434,10 @@ func is_battle_over() -> bool:
 	return BattleTurnRuntime.is_battle_over(self)
 
 
+func trigger_turn_start_effects_for_current_owner() -> void:
+	BattleTurnRuntime.trigger_turn_start_effects_for_current_owner(self)
+
+
 func advance_turn() -> Dictionary:
 	return BattleTurnRuntime.advance_turn(self)
 
