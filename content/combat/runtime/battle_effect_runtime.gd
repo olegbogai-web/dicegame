@@ -51,6 +51,7 @@ static func activate_current_turn_ability(battle_room, ability: AbilityDefinitio
 			"ability": ability,
 			"metadata": {
 				"affected_targets": affected_targets,
+				"consumed_dice_count": consumed_dice.size(),
 			},
 		}
 	))
