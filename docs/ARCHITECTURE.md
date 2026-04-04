@@ -80,6 +80,8 @@
 
 Ссылка: [docs/STATE_ARCHITECTURE.md](./STATE_ARCHITECTURE.md)
 
+Примечание по актуальному контенту: добавлено состояние `regeneration` («Регенерация») с ассетом `assets/states/regeneration.png`; на `on_turn_start` состояние сначала лечит владельца на `1 HP` за стак, затем уменьшает себя на `1` стак.
+
 ---
 
 ## Архитектура подсистемы Monster AI

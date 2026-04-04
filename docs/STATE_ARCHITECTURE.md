@@ -203,3 +203,9 @@
   - триггер эффекта: `passive`;
   - длительность: боевая (`duration_model = battle`), не сбрасывается в конце хода;
   - стэкинг: суммирование (`stacking_policy = add`).
+- `Регенерация` (`status_id = regeneration`):
+  - тип: событийный триггер начала хода владельца;
+  - эффект: в `on_turn_start` восстанавливает `1 HP` за каждый стак (`heal`, `target_scope = self`);
+  - затухание: в этот же `on_turn_start` после исцеления снимается `1` стак (`remove_status`, `phase_order` у decay больше, чем у heal);
+  - стэкинг: суммирование (`stacking_policy = add`);
+  - ассет: `assets/states/regeneration.png`.
