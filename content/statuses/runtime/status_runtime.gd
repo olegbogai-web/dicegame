@@ -88,6 +88,13 @@ static func resolve_ability_effect_magnitude(
 				{"container": target_container, "stat_key": &"ability_damage_incoming", "scope": &"target"},
 			]
 		)
+		_log_debug(
+			"damage passive modifier: base=%d resolved=%d entries=%d" % [
+				resolved_base_magnitude,
+				int(damage_result.get("value", 0)),
+				(damage_result.get("entries", []) as Array).size(),
+			]
+		)
 		return maxi(damage_result.get("value", 0), 0)
 
 	if effect.effect_type == &"healing":
@@ -96,6 +103,13 @@ static func resolve_ability_effect_magnitude(
 			[
 				{"container": source_container, "stat_key": &"ability_healing_outgoing", "scope": &"source"},
 				{"container": target_container, "stat_key": &"ability_healing_incoming", "scope": &"target"},
+			]
+		)
+		_log_debug(
+			"healing passive modifier: base=%d resolved=%d entries=%d" % [
+				resolved_base_magnitude,
+				int(healing_result.get("value", 0)),
+				(healing_result.get("entries", []) as Array).size(),
 			]
 		)
 		return maxi(healing_result.get("value", 0), 0)
