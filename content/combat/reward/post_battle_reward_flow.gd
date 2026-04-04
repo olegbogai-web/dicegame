@@ -3,6 +3,10 @@ class_name PostBattleRewardFlow
 
 const Dice = preload("res://content/dice/dice.gd")
 const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
+const BASE_FRAME_NORMAL_TEXTURE = preload("res://assets/ui/base_frame_normal.png")
+const BASE_FRAME_COPPER_TEXTURE = preload("res://assets/ui/base_frame_copper_.png")
+const BASE_FRAME_SILVER_TEXTURE = preload("res://assets/ui/base_frame_silver.png")
+const BASE_FRAME_GOLD_TEXTURE = preload("res://assets/ui/base_frame_gold.png")
 
 const POST_BATTLE_REWARD_DICE_SIZE_MULTIPLIER := Vector3(4.0, 4.0, 4.0)
 const POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER := 0.65
@@ -839,6 +843,7 @@ func _apply_reward_card_visual(owner: Node, card_root: Node3D, ability: AbilityD
 	if card_root == null:
 		return
 	_remove_embedded_artifact_reward_frame(card_root)
+	_apply_reward_card_base_frame_visual(owner, card_root, ability.rarity if ability != null else null)
 	var icon_mesh := card_root.get_node_or_null(^"ability_icon") as MeshInstance3D
 	if icon_mesh != null:
 		icon_mesh.visible = true
@@ -856,6 +861,7 @@ func _apply_artifact_reward_visual(owner: Node, card_root: Node3D, artifact: Art
 	if card_root == null:
 		return
 	_remove_embedded_cube_reward_node(card_root)
+	_apply_reward_card_base_frame_visual(owner, card_root, artifact.rarity if artifact != null else null)
 	var title_label := card_root.get_node_or_null(^"ability_text") as Label3D
 	if title_label != null:
 		title_label.text = artifact.display_name if artifact != null else ""
@@ -876,6 +882,7 @@ func _apply_artifact_reward_visual(owner: Node, card_root: Node3D, artifact: Art
 func _apply_cube_reward_visual(owner: Node, card_root: Node3D, cube_definition: DiceDefinition) -> void:
 	if card_root == null:
 		return
+	_apply_reward_card_base_frame_visual(owner, card_root, cube_definition.rarity if cube_definition != null else null)
 	var title_label := card_root.get_node_or_null(^"ability_text") as Label3D
 	if title_label != null:
 		title_label.text = cube_definition.display_name if cube_definition != null else ""
@@ -896,6 +903,48 @@ func _apply_cube_reward_visual(owner: Node, card_root: Node3D, cube_definition: 
 	if cube_visual == null:
 		return
 	icon_frame.add_child(cube_visual)
+
+
+func _apply_reward_card_base_frame_visual(_owner: Node, card_root: Node3D, rarity_value: Variant) -> void:
+	if card_root == null:
+		return
+	var base_texture := _resolve_base_frame_by_rarity(rarity_value)
+	_apply_base_frame_texture_to_mesh(card_root.get_node_or_null(^"ability_frame_base") as MeshInstance3D, base_texture)
+	_apply_base_frame_texture_to_mesh(card_root.get_node_or_null(^"artifact_reward_icon_frame") as MeshInstance3D, base_texture)
+
+
+func _resolve_base_frame_by_rarity(rarity_value: Variant) -> Texture2D:
+	if rarity_value is int:
+		var rarity_int := int(rarity_value)
+		if rarity_int == AbilityDefinition.Rarity.UNCOMMON or rarity_int == DiceDefinition.Rarity.UNCOMMON:
+			return BASE_FRAME_COPPER_TEXTURE
+		if rarity_int == AbilityDefinition.Rarity.RARE or rarity_int == DiceDefinition.Rarity.RARE:
+			return BASE_FRAME_SILVER_TEXTURE
+		if rarity_int == AbilityDefinition.Rarity.UNIQUE or rarity_int == DiceDefinition.Rarity.UNIQUE:
+			return BASE_FRAME_GOLD_TEXTURE
+		return BASE_FRAME_NORMAL_TEXTURE
+	var rarity_text := String(rarity_value).to_lower()
+	if rarity_text == "uncommon":
+		return BASE_FRAME_COPPER_TEXTURE
+	if rarity_text == "rare":
+		return BASE_FRAME_SILVER_TEXTURE
+	if rarity_text == "unique":
+		return BASE_FRAME_GOLD_TEXTURE
+	return BASE_FRAME_NORMAL_TEXTURE
+
+
+func _apply_base_frame_texture_to_mesh(mesh_instance: MeshInstance3D, texture: Texture2D) -> void:
+	if mesh_instance == null or texture == null:
+		return
+	var material := mesh_instance.material_override
+	if material == null:
+		material = StandardMaterial3D.new()
+	elif material is StandardMaterial3D:
+		material = (material as StandardMaterial3D).duplicate()
+	else:
+		return
+	(material as StandardMaterial3D).albedo_texture = texture
+	mesh_instance.material_override = material
 
 
 func _ensure_embedded_artifact_reward_frame(owner: Node, card_root: Node3D, ability_icon: MeshInstance3D) -> MeshInstance3D:

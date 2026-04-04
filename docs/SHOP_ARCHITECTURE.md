@@ -43,6 +43,18 @@
 
 Весовые таблицы редкости должны лежать в отдельном policy/config слое, а не в `ShopRoom`.
 
+### 3.1. Визуальная механика рамки по редкости
+
+Для всех офферов, которые показывают карточку предмета/способности/куба в магазине, обязателен единый выбор ассета `base_frame` по редкости:
+
+- `обычное` -> `base_frame_normal`;
+- `неизвестная`/`null` редкость -> `base_frame_normal` (fallback по умолчанию);
+- `необычное` -> `base_frame_copper_`;
+- `редкое` -> `base_frame_silver`;
+- `уникальное` -> `base_frame_gold`.
+
+Это изменение влияет только на видимую рамку карточки и не меняет генерацию, цены, шанс редкости, правила покупки или runtime-эффекты.
+
 ---
 
 ## 4. Экономика и цены
@@ -209,6 +221,10 @@
 - Сервисные flow:
   - `_open_upgrade_modal` + `_build_upgrade_modal_entries` + `_resolve_service_selection` для `card_up`;
   - `_open_remove_modal` + `_build_remove_modal_entries` + `_resolve_service_selection` для `card_-`.
+- Визуальная рамка по редкости (новая механика):
+  - `_resolve_base_frame_by_rarity` — возвращает asset-path рамки по редкости с fallback в `base_frame_normal`;
+  - `_apply_offer_base_frame_visual` — применяет выбранный `base_frame` к карточке оффера в магазине;
+  - `_apply_service_modal_base_frame_visual` — использует тот же mapping в модальных окнах `card_up` и `card_-`.
 - Навигация:
   - `_on_leave_shop_pressed` (выход в сохраненную сцену глобальной карты).
 
