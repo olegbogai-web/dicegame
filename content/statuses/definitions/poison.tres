@@ -1,8 +1,8 @@
-[gd_resource type="Resource" script_class="StatusDefinition" format=3]
+[gd_resource type="Resource" script_class="StatusDefinition" format=3 uid="uid://cvve15ymis3ds"]
 
-[ext_resource type="Script" path="res://content/statuses/resources/status_definition.gd" id="1_status"]
-[ext_resource type="Script" path="res://content/statuses/resources/status_effect_definition.gd" id="2_effect"]
-[ext_resource type="Texture2D" path="res://assets/states/poison.png" id="3_icon"]
+[ext_resource type="Script" uid="uid://cr3rgro5ggg2o" path="res://content/statuses/resources/status_definition.gd" id="1_status"]
+[ext_resource type="Script" uid="uid://desiurhox43nn" path="res://content/statuses/resources/status_effect_definition.gd" id="2_effect"]
+[ext_resource type="Texture2D" uid="uid://cyouh7hpqtv0s" path="res://assets/states/poison.png" id="3_icon"]
 
 [sub_resource type="Resource" id="StatusEffect_poison_damage_per_used_die"]
 script = ExtResource("2_effect")
@@ -10,14 +10,12 @@ effect_id = "poison_damage_per_used_die"
 effect_type = &"damage_per_used_die"
 trigger = &"on_ability_after_resolve"
 value = 1.0
-target_scope = &"self"
 
 [sub_resource type="Resource" id="StatusEffect_poison_decay"]
 script = ExtResource("2_effect")
 effect_id = "poison_decay"
 effect_type = &"remove_status"
 trigger = &"on_turn_end"
-target_scope = &"self"
 status_id = "poison"
 parameters = {
 "stacks": 1
@@ -29,7 +27,6 @@ status_id = "poison"
 display_name = "Яд"
 description = "Наносит 1 урона за каждый стак за каждый использованный кубик. В конце хода снимается 1 стак."
 asset = ExtResource("3_icon")
-max_stacks = 99
 effects = Array[ExtResource("2_effect")]([SubResource("StatusEffect_poison_damage_per_used_die"), SubResource("StatusEffect_poison_decay")])
 metadata = {
 "outgoing_stacks_stat_key": &"status_poison_stacks_outgoing"

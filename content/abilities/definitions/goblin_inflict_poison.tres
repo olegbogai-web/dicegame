@@ -1,12 +1,12 @@
-[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://bbpseobfjyj0r"]
 
 [ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" uid="uid://lfpdg732cjt" path="res://content/abilities/resources/ability_condition.gd" id="1_igbdr"]
 [ext_resource type="Script" uid="uid://cijja5c0f6ibw" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
 [ext_resource type="Script" uid="uid://vqakigfsnb18" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
 [ext_resource type="Script" uid="uid://c2t7x3op44t3s" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
 [ext_resource type="Script" uid="uid://drneiu6png0u3" path="res://content/abilities/resources/ability_effect_definition.gd" id="6_effect"]
-[ext_resource type="Texture2D" path="res://assets/entity/monsters/goblin_inflict_poison.png" id="7_icon"]
-[ext_resource type="Resource" path="res://content/statuses/definitions/poisoner.tres" id="8_poisoner_status"]
+[ext_resource type="Resource" uid="uid://cab5iykxt5gp4" path="res://content/statuses/definitions/poisoner.tres" id="8_poisoner_status"]
 
 [sub_resource type="Resource" id="AbilityDiceCondition_pay"]
 script = ExtResource("3_dice_condition")
@@ -46,7 +46,6 @@ ability_id = "goblin_inflict_poison"
 display_name = "Нанести яд"
 description = "Требует 1 любой куб. Накладывает на себя состояние «Отравитель» (1)."
 flavor_text = "Лучше не знать, откуда они берут свой «яд» прямо во время боя."
-icon = ExtResource("7_icon")
 tags = PackedStringArray("buff", "poison", "goblin")
 owner_scope = 1
 rarity = 1
