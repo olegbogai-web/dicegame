@@ -208,8 +208,15 @@ static func apply_status(
 	var container := _get_container_for_descriptor(battle_room, target_descriptor)
 	if container == null:
 		return false
+	var resolved_stacks := _resolve_outgoing_status_stacks(
+		battle_room,
+		target_descriptor,
+		source_descriptor,
+		status_definition,
+		stacks
+	)
 	var previous_stacks := _get_status_stacks(container, StringName(status_definition.status_id))
-	var instance := container.add_status(status_definition, maxi(stacks, 1))
+	var instance := container.add_status(status_definition, resolved_stacks)
 	if instance == null:
 		return false
 	_publish_status_event(
@@ -225,6 +232,7 @@ static func apply_status(
 			"source_descriptor": source_descriptor,
 			"previous_stacks": previous_stacks,
 			"stacks": instance.stacks,
+			"applied_stacks": resolved_stacks,
 		}
 	)
 	return true
@@ -627,6 +635,48 @@ static func _get_status_stacks(container: StatusContainer, status_id: StringName
 	if instance == null or not instance.is_effectively_active():
 		return 0
 	return instance.stacks
+
+
+static func _resolve_outgoing_status_stacks(
+	battle_room,
+	target_descriptor: Dictionary,
+	source_descriptor: Dictionary,
+	status_definition: StatusDefinition,
+	base_stacks: int
+) -> int:
+	var resolved_base_stacks := maxi(base_stacks, 1)
+	if status_definition == null:
+		return resolved_base_stacks
+	if source_descriptor.is_empty() or target_descriptor.is_empty():
+		return resolved_base_stacks
+	var source_side := StringName(source_descriptor.get("side", &""))
+	var target_side := StringName(target_descriptor.get("side", &""))
+	if source_side == &"" or target_side == &"" or source_side == target_side:
+		return resolved_base_stacks
+	var outgoing_stacks_stat_key := StringName(status_definition.metadata.get("outgoing_stacks_stat_key", &""))
+	if outgoing_stacks_stat_key == &"":
+		return resolved_base_stacks
+	var source_container := _get_container_for_descriptor(battle_room, source_descriptor)
+	if source_container == null:
+		return resolved_base_stacks
+	var result := resolve_passive_modifier_pipeline(
+		resolved_base_stacks,
+		[
+			{"container": source_container, "stat_key": outgoing_stacks_stat_key, "scope": &"source"},
+		]
+	)
+	var resolved_stacks := maxi(int(result.get("value", resolved_base_stacks)), 1)
+	_log_debug(
+		"apply_status outgoing modifier: status=%s base=%d resolved=%d source=%s target=%s stat=%s" % [
+			status_definition.status_id,
+			resolved_base_stacks,
+			resolved_stacks,
+			String(source_side),
+			String(target_side),
+			String(outgoing_stacks_stat_key),
+		]
+	)
+	return resolved_stacks
 
 
 static func _log_debug(message: String) -> void:

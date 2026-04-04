@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="StatusDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/statuses/resources/status_definition.gd" id="1_status"]
+[ext_resource type="Script" path="res://content/statuses/resources/status_effect_definition.gd" id="2_effect"]
+[ext_resource type="Texture2D" path="res://assets/states/poisoner.png" id="3_icon"]
+
+[sub_resource type="Resource" id="StatusEffect_poisoner_outgoing_poison_stacks"]
+script = ExtResource("2_effect")
+effect_id = "poisoner_outgoing_poison_stacks"
+stat_key = &"status_poison_stacks_outgoing"
+value = 1.0
+
+[resource]
+script = ExtResource("1_status")
+status_id = "poisoner"
+display_name = "Отравитель"
+description = "За каждый стак увеличивает количество накладываемых на противника стаков состояния «Яд» на 1. Не уменьшается."
+asset = ExtResource("3_icon")
+effects = Array[ExtResource("2_effect")]([SubResource("StatusEffect_poisoner_outgoing_poison_stacks")])
