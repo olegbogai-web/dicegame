@@ -2,6 +2,7 @@ extends RefCounted
 class_name MonsterTurnRuntime
 
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
+const TURN_DICE_STOP_TIMEOUT_SECONDS := 3.0
 
 
 static func run_turn(host: Node, context: Dictionary) -> StringName:
@@ -20,7 +21,9 @@ static func run_turn(host: Node, context: Dictionary) -> StringName:
 		return &"monster_view_missing"
 	_log_debug("turn started: monster=%s index=%d" % [String(monster_view.combatant_id), monster_index])
 
-	await _wait_until_turn_dice_stop(host, context)
+	var stopped_in_time := await _wait_until_turn_dice_stop(host, context)
+	if not stopped_in_time:
+		_log_debug("dice wait timeout: proceeding with current state (timeout=%.1fs, monster=%s index=%d)" % [TURN_DICE_STOP_TIMEOUT_SECONDS, String(monster_view.combatant_id), monster_index])
 
 	while battle_room != null and battle_room.is_monster_turn() and not battle_room.is_battle_over():
 		var available_dice := await _resolve_ready_dice_for_decision(host, context)
@@ -69,12 +72,17 @@ static func _resolve_ready_dice_for_decision(host: Node, context: Dictionary) ->
 	return BattleAbilityRuntime.filter_ready_dice(turn_dice, true)
 
 
-static func _wait_until_turn_dice_stop(host: Node, context: Dictionary) -> void:
+static func _wait_until_turn_dice_stop(host: Node, context: Dictionary) -> bool:
 	var are_dice_stopped: Callable = context.get("are_turn_dice_stopped", Callable())
 	if not are_dice_stopped.is_valid():
-		return
+		return true
+	var started_msec := Time.get_ticks_msec()
 	while host != null and is_instance_valid(host) and host.is_inside_tree() and not are_dice_stopped.call():
+		var elapsed_seconds := float(Time.get_ticks_msec() - started_msec) / 1000.0
+		if elapsed_seconds >= TURN_DICE_STOP_TIMEOUT_SECONDS:
+			return false
 		await host.get_tree().physics_frame
+	return true
 
 
 static func _call_dice_provider(context: Dictionary) -> Array[Dice]:
