@@ -3,7 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://0ssqyi084mdh" path="res://scenes/board.tscn" id="1_47dlb"]
 [ext_resource type="Script" uid="uid://dasggp047n2cm" path="res://scenes/battle_table.gd" id="2_runtime"]
 [ext_resource type="Texture2D" uid="uid://dxoj7vm840xgf" path="res://assets/material/dangeon_floor_2.png" id="3_5yklm"]
-[ext_resource type="Texture2D" uid="uid://b6ojmoowtta8k" path="res://assets/ui/base_frame_normal.png" id="4_euvx7"]
+[ext_resource type="Texture2D" uid="uid://dt5vdtki62eht" path="res://assets/ui/base_frame_normal.png" id="4_euvx7"]
 [ext_resource type="Texture2D" uid="uid://bjpqv8q13kqq7" path="res://assets/ui/base_frame_mid.png" id="5_ovkts"]
 [ext_resource type="Texture2D" uid="uid://cc0r8hvl0nlh5" path="res://assets/ability/common_attack.png" id="6_4mdnn"]
 [ext_resource type="Texture2D" uid="uid://cy0obo6lpmc3" path="res://assets/states/strength.png" id="7_ojcrh"]
@@ -11,7 +11,7 @@
 [ext_resource type="Texture2D" uid="uid://cd253wjyhe31w" path="res://assets/entity/monsters/ability_frame_bot_bar_v2.png" id="8_2oaiy"]
 [ext_resource type="Texture2D" uid="uid://b5cd1ogx7b4r6" path="res://assets/entity/monsters/test_player.png" id="9_v3i8a"]
 [ext_resource type="PackedScene" uid="uid://damoph5umarop" path="res://scenes/ability_reward.tscn" id="10_df7hy"]
-[ext_resource type="Texture2D" uid="uid://dxvwoyqvt34rk" path="res://assets/artefacts/necklace_strength.png" id="10_tw8gb"]
+[ext_resource type="Texture2D" uid="uid://dheshq5a4l60k" path="res://assets/artefacts/necklace_strength.png" id="10_tw8gb"]
 [ext_resource type="PackedScene" uid="uid://da7pxwcgh4x4h" path="res://ui/scenes/money_ui.tscn" id="11_money_ui"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gpgk3"]
@@ -205,7 +205,7 @@ material_override = SubResource("StandardMaterial3D_4krft")
 mesh = SubResource("PlaneMesh_n02mj")
 
 [node name="player_ability" type="MeshInstance3D" parent="ability_frame" unique_id=1735042967]
-transform = Transform3D(0.7222223, 0, 0, 0, 0.7222223, 0, 0, 0, 0.48148146, -0.25925922, 0.0055555403, 0)
+transform = Transform3D(0.5014829, 0, 0, 0, 0.7222223, 0, 0, 0, 0.7404827, -0.25925922, 0.0055555403, 0)
 material_override = SubResource("StandardMaterial3D_y5gjq")
 mesh = SubResource("PlaneMesh_v2h1w")
 
@@ -230,7 +230,7 @@ material_override = SubResource("StandardMaterial3D_4krft")
 mesh = SubResource("PlaneMesh_n02mj")
 
 [node name="monster_ability" type="MeshInstance3D" parent="ability_frame2" unique_id=808252641]
-transform = Transform3D(0.7222223, 0, 0, 0, 0.7222223, 0, 0, 0, 0.48148146, -0.25925922, 0.0055555403, 0)
+transform = Transform3D(-0.51082635, 0, -6.664429e-08, 0, 0.7222223, 0, 4.4657856e-08, 0, -0.7623218, -0.25925922, 0.0055555403, 0)
 material_override = SubResource("StandardMaterial3D_y5gjq")
 mesh = SubResource("PlaneMesh_v2h1w")
 

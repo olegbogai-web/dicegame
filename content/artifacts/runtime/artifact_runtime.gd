@@ -68,7 +68,7 @@ static func _convert_status_to_status(battle_room, owner_descriptor: Dictionary,
 	var source_container = battle_room.get_status_container_for_descriptor(owner_descriptor)
 	if source_container == null:
 		return
-	var source_status := source_container.get_status(remove_status_id)
+	var source_status = source_container.get_status(remove_status_id)
 	var current_stacks := 0
 	if source_status != null and source_status.is_effectively_active():
 		current_stacks = source_status.stacks
