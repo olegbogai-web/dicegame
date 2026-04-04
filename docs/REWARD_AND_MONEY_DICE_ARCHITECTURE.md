@@ -123,8 +123,21 @@
 - `_build_ability_reward_options` — формирует набор вариантов на основе редкости;
 - `_roll_reward_rarity` — бросок редкости по весам;
 - `_pick_ability_by_rarity_with_fallback` — выбор способности с fallback по редкостям вниз;
-- `_render_ability_reward_cards` и `_apply_reward_card_visual` — визуализация карточек в `new_battle_table`;
+- `_resolve_base_frame_by_rarity` — выбор ассета рамки карточки по редкости;
+- `_render_ability_reward_cards`, `_apply_reward_card_visual` и `_apply_reward_card_base_frame_visual` — визуализация карточек в `new_battle_table`;
 - `_resolve_ability_reward_click` и `_select_ability_reward` — выбор игроком и запись способности в runtime-статы игрока.
+
+### Правило base_frame для визуала наград (обязательное)
+
+Во всех reward-flow, где игрок видит карточку `ability`/`artifact`/`cube`, меняется только ассет рамки `base_frame` в зависимости от редкости:
+
+- `обычное` -> `base_frame_normal`;
+- `неизвестная`/`null` редкость -> `base_frame_normal` (fallback);
+- `необычное` -> `base_frame_copper_`;
+- `редкое` -> `base_frame_silver`;
+- `уникальное` -> `base_frame_gold`.
+
+Остальные элементы карточки (иконка, описание, выбор, выдача награды, экономика) остаются без изменений.
 
 
 ## 4.3. Runtime-алгоритм награды артефактами (`artifact_+`)
@@ -151,7 +164,7 @@
 - `_collect_owned_unique_artifact_ids`;
 - `_roll_artifact_reward_rarity`;
 - `_pick_artifact_by_rarity_with_fallback`;
-- `_render_artifact_reward_cards` и `_apply_artifact_reward_visual`;
+- `_render_artifact_reward_cards`, `_apply_artifact_reward_visual` и `_apply_artifact_base_frame_visual`;
 - `_resolve_artifact_reward_click` и `_select_artifact_reward`.
 
 ## 4.4. Runtime-алгоритм награды кубами (`cube_+`)
@@ -178,7 +191,7 @@
 - `_collect_owned_unique_cube_ids`;
 - `_roll_cube_reward_rarity`;
 - `_pick_cube_by_rarity_with_fallback`;
-- `_render_cube_reward_cards` и `_apply_cube_reward_visual`;
+- `_render_cube_reward_cards`, `_apply_cube_reward_visual` и `_apply_cube_base_frame_visual`;
 - `_resolve_cube_reward_click` и `_select_cube_reward`.
 
 ## 4.5. Runtime-алгоритм денежной награды (`money`)
