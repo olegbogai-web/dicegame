@@ -414,12 +414,30 @@ static func _apply_direct_magnitude(
 ) -> void:
 	var magnitude := maxi(int(round(float(entry.get("scaled_value", effect.value)))), 0)
 	if magnitude <= 0:
+		_log_debug(
+			"direct trigger skipped: status=%s effect=%s type=%s magnitude=%d" % [
+				String(entry.get("status_id", &"")),
+				String(entry.get("effect_id", &"")),
+				String(effect.effect_type),
+				magnitude,
+			]
+		)
 		return
 	var battle_room = context.get("battle_room", null)
 	if battle_room == null:
 		return
 	var owner_descriptor := context.get("owner_descriptor", {}) as Dictionary
 	var owner_side := StringName(owner_descriptor.get("side", &""))
+	_log_debug(
+		"direct trigger: status=%s effect=%s type=%s magnitude=%d owner=%s scope=%s" % [
+			String(entry.get("status_id", &"")),
+			String(entry.get("effect_id", &"")),
+			"damage" if is_damage else "heal",
+			magnitude,
+			String(owner_side),
+			String(effect.target_scope),
+		]
+	)
 	var targets := _resolve_targets(battle_room, owner_descriptor, owner_side, effect.target_scope)
 	for target in targets:
 		if StringName(target.get("side", &"")) == &"player":
