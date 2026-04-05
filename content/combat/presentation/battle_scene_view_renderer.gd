@@ -279,7 +279,7 @@ func _clear_generated_nodes(_owner: Node, nodes: Array[Node]) -> void:
 	nodes.clear()
 
 
-func _apply_health_bar(owner: Node, combatant_sprite: MeshInstance3D, health_ratio: float) -> void:
+func _apply_health_bar(_owner: Node, combatant_sprite: MeshInstance3D, health_ratio: float) -> void:
 	var resolved_ratio := clampf(health_ratio, 0.0, 1.0)
 	var health_bar := _resolve_health_bar(combatant_sprite)
 	if health_bar == null:
@@ -287,10 +287,9 @@ func _apply_health_bar(owner: Node, combatant_sprite: MeshInstance3D, health_rat
 
 	if not health_bar.has_meta(HEALTH_BAR_META_KEY):
 		health_bar.set_meta(HEALTH_BAR_META_KEY, health_bar.transform)
-	if not health_bar.has_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY):
-		health_bar.set_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY, resolved_ratio)
-		_update_health_bar_transform(health_bar, resolved_ratio)
+	health_bar.set_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY, resolved_ratio)
 	health_bar.set_meta(HEALTH_BAR_TARGET_RATIO_META_KEY, resolved_ratio)
+	_update_health_bar_transform(health_bar, resolved_ratio)
 
 
 func _resolve_health_bar(combatant_sprite: MeshInstance3D) -> MeshInstance3D:
