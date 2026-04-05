@@ -3,7 +3,6 @@ class_name ArtifactRuntime
 
 const StatusRuntime = preload("res://content/statuses/runtime/status_runtime.gd")
 const EVENT_BATTLE_START := &"on_battle_start"
-const EVENT_TURN_START := &"on_turn_start"
 const EVENT_TURN_END := &"on_turn_end"
 
 
