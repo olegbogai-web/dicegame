@@ -34,7 +34,11 @@ static func run_turn(host: Node, context: Dictionary) -> StringName:
 		if available_dice.is_empty():
 			_log_debug("turn finished: no_dice (monster=%s index=%d)" % [String(monster_view.combatant_id), monster_index])
 			return &"no_dice"
-		if not BattleAbilityRuntime.can_use_any_ability(monster_view.abilities, available_dice, true):
+		var activatable_abilities := _collect_activatable_abilities(monster_view.abilities, battle_room)
+		if activatable_abilities.is_empty():
+			_log_debug("turn finished: no_activatable_abilities (monster=%s index=%d)" % [String(monster_view.combatant_id), monster_index])
+			return &"no_activatable_abilities"
+		if not BattleAbilityRuntime.can_use_any_ability(activatable_abilities, available_dice, true):
 			_log_debug("turn finished: no_usable_abilities (monster=%s index=%d, ready_dice=%d)" % [String(monster_view.combatant_id), monster_index, available_dice.size()])
 			return &"no_usable_abilities"
 
@@ -113,6 +117,17 @@ static func _wait_delay(host: Node, context: Dictionary) -> void:
 	if delay_sec <= 0.0:
 		return
 	await host.get_tree().create_timer(delay_sec).timeout
+
+
+static func _collect_activatable_abilities(abilities: Array[AbilityDefinition], battle_room) -> Array[AbilityDefinition]:
+	var activatable: Array[AbilityDefinition] = []
+	for ability in abilities:
+		if ability == null:
+			continue
+		if battle_room == null or not battle_room.can_activate_current_turn_ability(ability):
+			continue
+		activatable.append(ability)
+	return activatable
 
 
 static func _log_debug(message: String) -> void:

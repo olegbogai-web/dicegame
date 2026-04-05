@@ -49,7 +49,7 @@ func get_target_hint() -> StringName:
 	if side == Side.ENEMY and selection == Selection.SINGLE:
 		return &"single_enemy"
 	if side == Side.ANY and selection == Selection.SINGLE:
-		return &"die"
+		return &"dice"
 	if selection == Selection.NONE:
 		return &"global"
 	return &"custom"

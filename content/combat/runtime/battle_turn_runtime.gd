@@ -126,6 +126,7 @@ static func process_turn_start_if_pending(battle_room) -> bool:
 		return false
 	battle_room.turn_start_pending = false
 	_log_debug("Начало хода: %s." % _format_turn_owner(battle_room.current_turn_owner, battle_room.current_monster_turn_index))
+	battle_room.on_turn_started()
 	_trigger_turn_start_statuses(battle_room)
 	_trigger_turn_start_artifacts(battle_room)
 	return true

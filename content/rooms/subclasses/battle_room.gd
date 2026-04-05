@@ -11,6 +11,7 @@ const GOBLIN_MONSTER_DEFINITION := preload("res://content/monsters/definitions/g
 const CHIMERA_MONSTER_DEFINITION := preload("res://content/monsters/definitions/chimera.tres")
 const COMMON_ATTACK_ABILITY := preload("res://content/abilities/definitions/common_attack.tres")
 const HEAL_ABILITY := preload("res://content/abilities/definitions/heal.tres")
+const REROLL_ABILITY := preload("res://content/abilities/definitions/reroll.tres")
 const GlobalMapDiceEvolutionService = preload("res://content/global_map/dice/global_map_dice_evolution_service.gd")
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
@@ -137,6 +138,7 @@ var current_monster_turn_index := -1
 var turn_counter := 0
 var turn_start_pending := false
 var battle_result: StringName = &"none"
+var _ability_cooldowns_by_owner: Dictionary = {}
 
 
 func apply_battle_definition(definition: BattleRoomDefinition) -> void:
@@ -503,6 +505,38 @@ func process_turn_start_if_pending() -> bool:
 	return BattleTurnRuntime.process_turn_start_if_pending(self)
 
 
+func on_turn_started() -> void:
+	var owner_descriptor := _resolve_turn_owner_descriptor()
+	if owner_descriptor.is_empty():
+		return
+	_decrement_ability_cooldowns_for_owner(owner_descriptor)
+
+
+func can_activate_current_turn_ability(ability: AbilityDefinition) -> bool:
+	if ability == null:
+		return false
+	var owner_descriptor := _resolve_turn_owner_descriptor()
+	if owner_descriptor.is_empty():
+		return false
+	return _get_ability_cooldown_turns(owner_descriptor, ability) <= 0
+
+
+func register_current_turn_ability_use(ability: AbilityDefinition) -> void:
+	if ability == null:
+		return
+	var owner_descriptor := _resolve_turn_owner_descriptor()
+	if owner_descriptor.is_empty():
+		return
+	var cooldown_turns := maxi(ability.cooldown_turns, 0)
+	if cooldown_turns <= 0:
+		return
+	var owner_key := _build_owner_cooldown_key(owner_descriptor)
+	var owner_cooldowns: Dictionary = _ability_cooldowns_by_owner.get(owner_key, {})
+	owner_cooldowns[ability.ability_id] = cooldown_turns
+	_ability_cooldowns_by_owner[owner_key] = owner_cooldowns
+	_debug_combat_log("Кулдаун способности %s установлен на %d ход(а)." % [ability.ability_id, cooldown_turns])
+
+
 func activate_player_ability(ability: AbilityDefinition, target_descriptor: Dictionary) -> Dictionary:
 	return activate_current_turn_ability(ability, target_descriptor)
 
@@ -517,6 +551,7 @@ func is_valid_room() -> bool:
 
 func _reset_battle_progression() -> void:
 	BattleTurnRuntime.reset_battle_progression(self)
+	_ability_cooldowns_by_owner.clear()
 
 
 func _format_descriptor_label(descriptor: Dictionary) -> String:
@@ -536,6 +571,47 @@ func _debug_combat_log(message: String) -> void:
 
 func _update_battle_result_if_finished() -> bool:
 	return BattleTurnRuntime.update_battle_result_if_finished(self)
+
+
+func _resolve_turn_owner_descriptor() -> Dictionary:
+	if current_turn_owner == &"player" and can_target_player():
+		return {"side": &"player"}
+	if current_turn_owner == &"monster" and can_target_monster(current_monster_turn_index):
+		return {
+			"side": &"enemy",
+			"index": current_monster_turn_index,
+		}
+	return {}
+
+
+func _decrement_ability_cooldowns_for_owner(owner_descriptor: Dictionary) -> void:
+	var owner_key := _build_owner_cooldown_key(owner_descriptor)
+	var owner_cooldowns: Dictionary = _ability_cooldowns_by_owner.get(owner_key, {})
+	if owner_cooldowns.is_empty():
+		return
+	var next_cooldowns: Dictionary = {}
+	for ability_id in owner_cooldowns.keys():
+		var remaining_turns := maxi(int(owner_cooldowns.get(ability_id, 0)) - 1, 0)
+		if remaining_turns > 0:
+			next_cooldowns[ability_id] = remaining_turns
+	if next_cooldowns.is_empty():
+		_ability_cooldowns_by_owner.erase(owner_key)
+	else:
+		_ability_cooldowns_by_owner[owner_key] = next_cooldowns
+
+
+func _get_ability_cooldown_turns(owner_descriptor: Dictionary, ability: AbilityDefinition) -> int:
+	if ability == null:
+		return 0
+	var owner_key := _build_owner_cooldown_key(owner_descriptor)
+	var owner_cooldowns: Dictionary = _ability_cooldowns_by_owner.get(owner_key, {})
+	return maxi(int(owner_cooldowns.get(ability.ability_id, 0)), 0)
+
+
+func _build_owner_cooldown_key(owner_descriptor: Dictionary) -> StringName:
+	var side := String(owner_descriptor.get("side", ""))
+	var index := int(owner_descriptor.get("index", -1))
+	return StringName("%s:%d" % [side, index])
 
 
 static func create_test_battle_room() -> BattleRoom:
@@ -649,6 +725,7 @@ static func build_default_player() -> Player:
 	base_stat.starting_abilities = [
 		COMMON_ATTACK_ABILITY,
 		HEAL_ABILITY,
+		REROLL_ABILITY,
 	]
 	base_stat.starting_dice = [
 		preload("res://content/resources/base_cube.tres"),

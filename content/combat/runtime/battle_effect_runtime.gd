@@ -13,8 +13,16 @@ static func activate_current_turn_ability(battle_room, ability: AbilityDefinitio
 			"affected_targets": [],
 			"battle_finished": BattleTurnRuntime.is_battle_over(battle_room),
 		}
+	if not battle_room.can_activate_current_turn_ability(ability):
+		_log_debug("ability blocked by cooldown: %s" % String(ability.ability_id))
+		return {
+			"success": false,
+			"affected_targets": [],
+			"battle_finished": BattleTurnRuntime.is_battle_over(battle_room),
+		}
 
 	var affected_targets: Array[Dictionary] = []
+	var applied_any_effect := false
 	var consumed_dice: Array[Dice] = []
 	for raw_dice in target_descriptor.get("consumed_dice", []):
 		if is_instance_valid(raw_dice) and raw_dice is Dice:
@@ -41,6 +49,7 @@ static func activate_current_turn_ability(battle_room, ability: AbilityDefinitio
 		for effect_target in effect_targets:
 			if _apply_effect_to_target(battle_room, ability, effect, effect_target, consumed_dice, source_descriptor):
 				affected_targets.append(effect_target)
+				applied_any_effect = true
 
 	StatusRuntime.trigger_event(StatusRuntime.build_event_context(
 		StatusRuntime.TRIGGER_ABILITY_AFTER_RESOLVE,
@@ -56,9 +65,11 @@ static func activate_current_turn_ability(battle_room, ability: AbilityDefinitio
 		}
 	))
 
+	if applied_any_effect:
+		battle_room.register_current_turn_ability_use(ability)
 	BattleTurnRuntime.update_battle_result_if_finished(battle_room)
 	return {
-		"success": true,
+		"success": applied_any_effect,
 		"affected_targets": affected_targets,
 		"battle_finished": BattleTurnRuntime.is_battle_over(battle_room),
 		"battle_result": battle_room.battle_result,
@@ -78,6 +89,11 @@ static func _resolve_effect_targets(battle_room, target_descriptor: Dictionary) 
 	if target_kind == &"monster":
 		var monster_index := int(target_descriptor.get("index", -1))
 		if battle_room.can_target_monster(monster_index):
+			resolved_targets.append(target_descriptor)
+		return resolved_targets
+	if target_kind == &"dice":
+		var target_dice = target_descriptor.get("dice") as Dice
+		if target_dice != null and is_instance_valid(target_dice):
 			resolved_targets.append(target_descriptor)
 		return resolved_targets
 	if target_kind == &"player" and battle_room.can_target_player():
@@ -200,6 +216,17 @@ static func _apply_effect_to_target(
 				]
 			)
 			return StatusRuntime.apply_status(battle_room, status_target, status_definition, status_stacks, source_descriptor)
+		&"reroll_dice":
+			if target_kind != &"dice":
+				_log_debug("reroll_dice skipped: target kind is not dice")
+				return false
+			var target_dice = target_descriptor.get("dice") as Dice
+			if target_dice == null or not is_instance_valid(target_dice):
+				_log_debug("reroll_dice skipped: target dice is invalid")
+				return false
+			target_dice.reroll_with_random_impulse()
+			_log_debug("reroll_dice applied: ability=%s effect=%s" % [String(ability.ability_id), String(effect.effect_id)])
+			return true
 	return false
 
 

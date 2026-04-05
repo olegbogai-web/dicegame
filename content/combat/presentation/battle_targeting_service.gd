@@ -14,7 +14,8 @@ func resolve_target_descriptor_at_screen_point(
 	player_sprite: MeshInstance3D,
 	monster_sprite_states: Array[Dictionary],
 	floor_mesh: MeshInstance3D,
-	camera: Camera3D
+	camera: Camera3D,
+	world_3d: World3D
 ) -> Dictionary:
 	if battle_room_data == null or ability == null or ability.target_rule == null:
 		return {}
@@ -50,6 +51,13 @@ func resolve_target_descriptor_at_screen_point(
 			return {
 				"kind": &"all_monsters",
 			}
+		&"dice":
+			var target_dice := resolve_player_dice_at_screen_point(screen_point, camera, world_3d)
+			if target_dice != null and is_instance_valid(target_dice):
+				return {
+					"kind": &"dice",
+					"dice": target_dice,
+				}
 	return {}
 
 
@@ -83,6 +91,10 @@ func resolve_activation_target_origin(
 				center += position
 			center /= float(living_monster_positions.size())
 			return center + Vector3.UP * ACTIVATION_TARGET_LIFT_Y
+	if target_kind == &"dice":
+		var target_dice = target_descriptor.get("dice") as Dice
+		if target_dice != null and is_instance_valid(target_dice):
+			return target_dice.global_position + Vector3.UP * ACTIVATION_TARGET_LIFT_Y
 	return base_origin + Vector3.UP * SELECTED_FRAME_LIFT_Y
 
 
@@ -111,17 +123,23 @@ func screen_point_hits_mesh(mesh_instance: MeshInstance3D, screen_point: Vector2
 
 
 func has_player_dice_at_screen_point(screen_point: Vector2, camera: Camera3D, world_3d: World3D) -> bool:
+	return resolve_player_dice_at_screen_point(screen_point, camera, world_3d) != null
+
+
+func resolve_player_dice_at_screen_point(screen_point: Vector2, camera: Camera3D, world_3d: World3D) -> Dice:
 	if camera == null or world_3d == null:
-		return false
+		return null
 	var ray_query := PhysicsRayQueryParameters3D.create(
 		camera.project_ray_origin(screen_point),
 		camera.project_ray_origin(screen_point) + camera.project_ray_normal(screen_point) * 1000.0
 	)
 	var hit = world_3d.direct_space_state.intersect_ray(ray_query)
 	if hit.is_empty():
-		return false
+		return null
 	var collider := hit.get("collider") as Node
-	return collider is Dice and StringName(collider.get_meta(&"owner", &"")) == &"player"
+	if collider is Dice and StringName(collider.get_meta(&"owner", &"")) == &"player":
+		return collider as Dice
+	return null
 
 
 func project_mesh_screen_rect(mesh_instance: MeshInstance3D, camera: Camera3D) -> Rect2:
