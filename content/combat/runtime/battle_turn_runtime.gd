@@ -15,7 +15,6 @@ static func start_battle(battle_room) -> Dictionary:
 	battle_room.turn_counter = 1
 	_trigger_battle_start_artifacts(battle_room)
 	_mark_turn_start_pending(battle_room)
-	_log_debug("Бой начат. Подготовка хода: %s." % _format_turn_owner(battle_room.current_turn_owner, battle_room.current_monster_turn_index))
 	return get_current_turn_context(battle_room)
 
 
@@ -55,7 +54,6 @@ static func advance_turn(battle_room) -> Dictionary:
 		return get_current_turn_context(battle_room)
 	if battle_room.battle_status != &"active":
 		return get_current_turn_context(battle_room)
-	_log_debug("Конец хода: %s." % _format_turn_owner(battle_room.current_turn_owner, battle_room.current_monster_turn_index))
 	_trigger_turn_end_artifacts(battle_room)
 	_trigger_turn_end_statuses(battle_room)
 	if update_battle_result_if_finished(battle_room):
@@ -69,7 +67,6 @@ static func advance_turn(battle_room) -> Dictionary:
 		battle_room.current_turn_owner = &"monster"
 		battle_room.current_monster_turn_index = monster_order[0]
 		_mark_turn_start_pending(battle_room)
-		_log_debug("Подготовка следующего хода: %s." % _format_turn_owner(battle_room.current_turn_owner, battle_room.current_monster_turn_index))
 		return get_current_turn_context(battle_room)
 
 	if battle_room.current_turn_owner == &"monster":
@@ -78,13 +75,11 @@ static func advance_turn(battle_room) -> Dictionary:
 		if next_order_position > 0 and next_order_position < current_order.size():
 			battle_room.current_monster_turn_index = current_order[next_order_position]
 			_mark_turn_start_pending(battle_room)
-			_log_debug("Подготовка следующего хода: %s." % _format_turn_owner(battle_room.current_turn_owner, battle_room.current_monster_turn_index))
 			return get_current_turn_context(battle_room)
 		battle_room.current_turn_owner = &"player"
 		battle_room.current_monster_turn_index = -1
 		battle_room.turn_counter += 1
 		_mark_turn_start_pending(battle_room)
-		_log_debug("Подготовка следующего хода: %s." % _format_turn_owner(battle_room.current_turn_owner, battle_room.current_monster_turn_index))
 		return get_current_turn_context(battle_room)
 
 	return start_battle(battle_room)
@@ -125,7 +120,6 @@ static func process_turn_start_if_pending(battle_room) -> bool:
 	if battle_room == null or not bool(battle_room.turn_start_pending):
 		return false
 	battle_room.turn_start_pending = false
-	_log_debug("Начало хода: %s." % _format_turn_owner(battle_room.current_turn_owner, battle_room.current_monster_turn_index))
 	_trigger_turn_start_statuses(battle_room)
 	return true
 
@@ -194,17 +188,3 @@ static func _trigger_turn_end_artifacts(battle_room) -> void:
 		{"side": &"player"},
 		battle_room.player_instance.get_active_artifact_definitions()
 	)
-
-
-static func _log_debug(message: String) -> void:
-	if not OS.is_debug_build():
-		return
-	print("[BattleTurnRuntime] %s" % message)
-
-
-static func _format_turn_owner(owner: StringName, monster_index: int) -> String:
-	if owner == &"player":
-		return "игрок"
-	if owner == &"monster":
-		return "монстр #%d" % (monster_index + 1)
-	return "none"
