@@ -81,7 +81,7 @@ func _apply_monster_sprites(owner: Node) -> void:
 			Basis.from_scale(monster_view.base_scale),
 			BattleRoomScript.MONSTER_SPRITE_POSITION + Vector3(0.0, 0.0, offsets[index])
 		)
-		var target_health_ratio := owner.battle_room_data.get_monster_health_ratio(index)
+		var target_health_ratio = owner.battle_room_data.get_monster_health_ratio(index)
 		var previous_health_ratio := float(previous_health_ratios.get(index, target_health_ratio))
 		_apply_health_bar(owner, target_sprite, target_health_ratio, previous_health_ratio)
 		_apply_monster_health_text(target_sprite, owner.battle_room_data.get_monster_health_values(index))
@@ -99,7 +99,7 @@ func _capture_monster_health_ratios(monster_sprite_states: Array[Dictionary], ow
 		var monster_index := int(monster_state.get("index", -1))
 		if sprite == null or monster_index < 0:
 			continue
-		var fallback_ratio := owner.battle_room_data.get_monster_health_ratio(monster_index)
+		var fallback_ratio = owner.battle_room_data.get_monster_health_ratio(monster_index)
 		ratios[monster_index] = _resolve_health_bar_ratio(sprite, fallback_ratio)
 	return ratios
 
