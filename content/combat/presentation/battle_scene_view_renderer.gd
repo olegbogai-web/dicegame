@@ -329,11 +329,10 @@ func _animate_health_bar(_owner: Node, combatant_sprite: MeshInstance3D, target_
 		health_bar.set_meta(HEALTH_BAR_META_KEY, health_bar.transform)
 	if not health_bar.has_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY):
 		health_bar.set_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY, clampf(target_ratio, 0.0, 1.0))
-	if not health_bar.has_meta(HEALTH_BAR_TARGET_RATIO_META_KEY):
-		health_bar.set_meta(HEALTH_BAR_TARGET_RATIO_META_KEY, clampf(target_ratio, 0.0, 1.0))
 
-	var current_ratio := float(health_bar.get_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY, target_ratio))
-	var resolved_target_ratio := clampf(float(health_bar.get_meta(HEALTH_BAR_TARGET_RATIO_META_KEY, target_ratio)), 0.0, 1.0)
+	var resolved_target_ratio := clampf(target_ratio, 0.0, 1.0)
+	health_bar.set_meta(HEALTH_BAR_TARGET_RATIO_META_KEY, resolved_target_ratio)
+	var current_ratio := float(health_bar.get_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY, resolved_target_ratio))
 	var step := 1.0 if HEALTH_BAR_ANIMATION_DURATION <= 0.0 else minf(delta / HEALTH_BAR_ANIMATION_DURATION, 1.0)
 	var next_ratio := move_toward(current_ratio, resolved_target_ratio, absf(resolved_target_ratio - current_ratio) * step)
 	health_bar.set_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY, next_ratio)
@@ -345,12 +344,14 @@ func _update_health_bars(owner: Node, delta: float) -> void:
 		return
 	if owner.battle_room_data.player_view != null:
 		_animate_health_bar(owner, owner._player_sprite, owner.battle_room_data.get_player_health_ratio(), delta)
+		_apply_health_text(owner._player_sprite, owner.battle_room_data.get_player_health_values(), ^"HP_frame/HP_text_player")
 	for monster_state in owner._monster_sprite_states:
 		var sprite := monster_state.get("sprite") as MeshInstance3D
 		var monster_index := int(monster_state.get("index", -1))
 		if sprite == null or monster_index < 0:
 			continue
 		_animate_health_bar(owner, sprite, owner.battle_room_data.get_monster_health_ratio(monster_index), delta)
+		_apply_monster_health_text(sprite, owner.battle_room_data.get_monster_health_values(monster_index))
 
 
 func _apply_monster_health_text(combatant_sprite: MeshInstance3D, health_values: Vector2i) -> void:
