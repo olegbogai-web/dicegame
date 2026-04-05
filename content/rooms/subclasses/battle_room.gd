@@ -279,6 +279,7 @@ func get_monster_view(index: int) -> CombatantViewData:
 
 func get_monster_ability_entries() -> Array[Dictionary]:
 	var resolved: Array[Dictionary] = []
+	var entry_by_ability_key := {}
 	for monster_index in monster_views.size():
 		var monster_view := monster_views[monster_index]
 		if monster_view == null:
@@ -287,12 +288,38 @@ func get_monster_ability_entries() -> Array[Dictionary]:
 			var ability := monster_view.abilities[ability_index]
 			if ability == null:
 				continue
-			resolved.append({
+			var ability_key := _build_monster_ability_key(ability)
+			if entry_by_ability_key.has(ability_key):
+				var existing_index := int(entry_by_ability_key[ability_key])
+				if existing_index >= 0 and existing_index < resolved.size():
+					var existing_entry := resolved[existing_index]
+					var shared_monsters := existing_entry.get("monster_indexes", PackedInt32Array()) as PackedInt32Array
+					if not shared_monsters.has(monster_index):
+						shared_monsters.append(monster_index)
+					existing_entry["monster_indexes"] = shared_monsters
+					var ability_indexes := existing_entry.get("ability_indexes_by_monster", {}) as Dictionary
+					ability_indexes[monster_index] = ability_index
+					existing_entry["ability_indexes_by_monster"] = ability_indexes
+					resolved[existing_index] = existing_entry
+				continue
+			var entry := {
 				"monster_index": monster_index,
 				"ability_index": ability_index,
 				"ability": ability,
-			})
+				"monster_indexes": PackedInt32Array([monster_index]),
+				"ability_indexes_by_monster": {monster_index: ability_index},
+			}
+			resolved.append(entry)
+			entry_by_ability_key[ability_key] = resolved.size() - 1
 	return resolved
+
+
+func _build_monster_ability_key(ability: AbilityDefinition) -> StringName:
+	if ability == null:
+		return &""
+	if not ability.resource_path.is_empty():
+		return StringName(ability.resource_path)
+	return StringName("%s|%s" % [ability.ability_id, ability.display_name])
 
 
 func get_required_dice_slots(ability: AbilityDefinition) -> int:
