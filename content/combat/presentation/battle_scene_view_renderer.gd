@@ -163,7 +163,9 @@ func _register_monster_ability_frame(owner: Node, frame: MeshInstance3D, ability
 		"frame": frame,
 		"ability": ability_entry.get("ability") as AbilityDefinition,
 		"monster_index": int(ability_entry.get("monster_index", -1)),
+		"monster_indexes": ability_entry.get("monster_indexes", PackedInt32Array()) as PackedInt32Array,
 		"ability_index": int(ability_entry.get("ability_index", runtime_index)),
+		"ability_indexes_by_monster": ability_entry.get("ability_indexes_by_monster", {}) as Dictionary,
 		"base_origin": frame.transform.origin,
 		"dice_places": _get_dice_place_nodes(frame),
 	})

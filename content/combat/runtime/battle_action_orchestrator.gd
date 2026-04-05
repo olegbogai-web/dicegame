@@ -81,13 +81,18 @@ func _build_dice_assignments_for_frame(owner: Node, consumed_dice: Array[Dice], 
 
 
 func _find_monster_ability_frame_state(owner: Node, monster_index: int, ability: AbilityDefinition) -> Dictionary:
+	var fallback_match := {}
 	for frame_state in owner._monster_ability_frame_states:
-		if int(frame_state.get("monster_index", -1)) != monster_index:
-			continue
 		if frame_state.get("ability") != ability:
 			continue
-		return frame_state
-	return {}
+		if int(frame_state.get("monster_index", -1)) == monster_index:
+			return frame_state
+		var shared_monster_indexes := frame_state.get("monster_indexes", PackedInt32Array()) as PackedInt32Array
+		if shared_monster_indexes.has(monster_index):
+			return frame_state
+		if fallback_match.is_empty():
+			fallback_match = frame_state
+	return fallback_match
 
 
 func _execute_monster_ability(
