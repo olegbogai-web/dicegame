@@ -555,10 +555,13 @@ static func _build_runtime_encounter_setup(marker_type: String, rng: RandomNumbe
 			"monsters": [elite_monster],
 		}
 	var normal_monster := _pick_random_runtime_monster_definition(rng, NORMAL_RUNTIME_MONSTER_POOL, RAT_MONSTER_DEFINITION)
-	print("[Debug][BattleRoom] Normal encounter selected monster=%s." % _resolve_monster_debug_label(normal_monster))
+	var normal_monsters: Array[MonsterDefinition] = [normal_monster]
+	if normal_monster == RAT_MONSTER_DEFINITION:
+		normal_monsters.append(RAT_MONSTER_DEFINITION)
+	print("[Debug][BattleRoom] Normal encounter selected monster=%s count=%d." % [_resolve_monster_debug_label(normal_monster), normal_monsters.size()])
 	return {
 		"floor_texture": _pick_runtime_floor_texture(rng, [DUNGEON_FLOOR_TEXTURE_1, DUNGEON_FLOOR_TEXTURE_2]),
-		"monsters": [normal_monster],
+		"monsters": normal_monsters,
 	}
 
 
