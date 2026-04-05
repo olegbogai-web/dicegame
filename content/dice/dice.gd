@@ -239,6 +239,7 @@ func _on_sleeping_state_changed() -> void:
 	if not _has_completed_first_stop:
 		_has_completed_first_stop = true
 		gravity_scale = _base_gravity_scale * POST_FIRST_STOP_GRAVITY_MULTIPLIER
+		_log_roll_result()
 
 	_align_top_face_to_camera()
 	lock_rotation = true
@@ -267,6 +268,19 @@ func _try_return_to_board_if_outside() -> void:
 	_is_returning_to_board = true
 	await _animate_return_to_board(board)
 	_is_returning_to_board = false
+
+
+func _log_roll_result() -> void:
+	if not OS.is_debug_build():
+		return
+	var owner := StringName(get_meta(&"owner", &""))
+	var owner_label := "none"
+	if owner == &"player":
+		owner_label = "игрок"
+	elif owner == &"monster":
+		owner_label = "монстр #%d" % (int(get_meta(&"monster_index", -1)) + 1)
+	var face_value := get_top_face_value()
+	print("[Debug][Dice] Выпало значение %d (%s)." % [face_value, owner_label])
 
 
 func _align_top_face_to_camera() -> void:
