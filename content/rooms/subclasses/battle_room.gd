@@ -45,6 +45,7 @@ class CombatantViewData:
 	var max_hp := 0
 	var dice_count := 0
 	var dice_loadout: Array[DiceDefinition] = []
+	var size_multiplier := 1.0
 	var ai_profile: MonsterAiProfile
 	var combatant_id: StringName = &""
 	var side: StringName = &""
@@ -57,6 +58,7 @@ class CombatantViewData:
 		next_max_hp: int = 0,
 		next_dice_count: int = 0,
 		next_dice_loadout: Array[DiceDefinition] = [],
+		next_size_multiplier: float = 1.0,
 		next_ai_profile: MonsterAiProfile = null,
 		next_combatant_id: StringName = &"",
 		next_side: StringName = &""
@@ -68,6 +70,7 @@ class CombatantViewData:
 		max_hp = maxi(next_max_hp, 0)
 		dice_count = maxi(next_dice_count, 0)
 		dice_loadout = _sanitize_dice_loadout(next_dice_loadout)
+		size_multiplier = clampf(next_size_multiplier, 0.2, 2.0)
 		ai_profile = next_ai_profile
 		combatant_id = next_combatant_id
 		side = next_side
@@ -180,6 +183,7 @@ func set_player_data(player: Player, sprite: Texture2D) -> void:
 		max_hp,
 		dice_count,
 		dice_loadout,
+		1.0,
 		ai_profile,
 		&"player",
 		&"player"
@@ -201,11 +205,12 @@ func set_monsters_from_definitions(next_monster_definitions: Array[MonsterDefini
 			CombatantViewData.new(
 				monster_definition.sprite,
 				monster_definition.abilities,
-				MONSTER_SPRITE_SCALE,
+				MONSTER_SPRITE_SCALE * clampf(monster_definition.size_multiplier, 0.2, 2.0),
 				monster_definition.max_health,
 				monster_definition.max_health,
 				monster_definition.get_combat_dice_count(),
 				monster_definition.get_combat_dice_loadout(),
+				clampf(monster_definition.size_multiplier, 0.2, 2.0),
 				monster_definition.ai_profile,
 				StringName("%s_%d" % [monster_definition.monster_id, monster_views.size()]),
 				&"enemy"

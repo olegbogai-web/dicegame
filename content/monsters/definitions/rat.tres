@@ -16,6 +16,7 @@ description = "Базовый монстр, который старается к
 sprite = ExtResource("3_sprite")
 tags = PackedStringArray("normal", "beast")
 max_health = 20
+size_multiplier = 0.4
 dice_count = 2
 dice_loadout = Array[ExtResource("2_dice")]([ExtResource("6_base_cube"), ExtResource("6_base_cube")])
 ai_profile = ExtResource("5_ai")
