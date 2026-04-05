@@ -190,46 +190,6 @@ func has_completed_first_stop() -> bool:
 	return _has_completed_first_stop
 
 
-func reroll_with_random_impulse(rng: RandomNumberGenerator = null) -> void:
-	_setup_components()
-	var random_source := rng
-	if random_source == null:
-		random_source = RandomNumberGenerator.new()
-		random_source.randomize()
-	clear_ability_slot()
-	_has_completed_first_stop = false
-	var was_sleeping := sleeping
-	freeze = false
-	lock_rotation = false
-	gravity_scale = _base_gravity_scale
-	sleeping = false
-	DiceMotionState.stop_motion(self)
-	_physics_runtime.apply_defaults(
-		self,
-		DEFAULT_FRICTION,
-		DEFAULT_BOUNCE,
-		DEFAULT_LINEAR_DAMP,
-		DEFAULT_ANGULAR_DAMP
-	)
-	var horizontal_impulse := Vector3(
-		random_source.randf_range(-1.0, 1.0),
-		0.0,
-		random_source.randf_range(-1.0, 1.0)
-	)
-	if horizontal_impulse.length_squared() < 0.0001:
-		horizontal_impulse = Vector3(0.5, 0.0, 0.5)
-	horizontal_impulse = horizontal_impulse.normalized() * random_source.randf_range(2.2, 3.8)
-	var upward_impulse := Vector3.UP * random_source.randf_range(3.8, 5.2)
-	apply_central_impulse(horizontal_impulse + upward_impulse)
-	apply_torque_impulse(Vector3(
-		random_source.randf_range(-1.0, 1.0),
-		random_source.randf_range(-1.0, 1.0),
-		random_source.randf_range(-1.0, 1.0)
-	).normalized() * random_source.randf_range(1.8, 3.6))
-	if OS.is_debug_build():
-		print("[Debug][Dice] Переброс куба. previous_sleeping=%s." % str(was_sleeping))
-
-
 func _setup_components() -> void:
 	if _node_graph == null:
 		_node_graph = DiceNodeGraphScript.new()
