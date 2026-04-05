@@ -408,6 +408,11 @@ func _apply_statuses_to_sprite(owner: Node, combatant_sprite: MeshInstance3D, de
 		return
 	var base_origin := template.transform.origin
 	var base_basis := template.transform.basis
+	var status_size_multiplier := _resolve_status_size_multiplier(owner, descriptor)
+	var status_spacing_x := STATUS_ICON_SPACING_X
+	if not is_equal_approx(status_size_multiplier, 1.0):
+		base_basis = base_basis.scaled(Vector3.ONE / status_size_multiplier)
+		status_spacing_x /= status_size_multiplier
 	for index in active_statuses.size():
 		var status_instance = active_statuses[index]
 		if status_instance == null or status_instance.definition == null:
@@ -415,7 +420,7 @@ func _apply_statuses_to_sprite(owner: Node, combatant_sprite: MeshInstance3D, de
 		var status_node := template.duplicate() as MeshInstance3D
 		status_node.name = "%s%d" % [STATUS_RUNTIME_NODE_PREFIX, index]
 		status_node.visible = true
-		var icon_origin := base_origin + Vector3(STATUS_ICON_SPACING_X * index, 0.0, 0.0)
+		var icon_origin := base_origin + Vector3(status_spacing_x * index, 0.0, 0.0)
 		status_node.transform = Transform3D(base_basis, icon_origin)
 		combatant_sprite.add_child(status_node)
 		if status_instance.definition.asset != null:
@@ -423,6 +428,18 @@ func _apply_statuses_to_sprite(owner: Node, combatant_sprite: MeshInstance3D, de
 		var stacks_label := status_node.get_node_or_null(^"state_stacks") as Label3D
 		if stacks_label != null:
 			stacks_label.text = str(maxi(status_instance.stacks, 0))
+
+
+func _resolve_status_size_multiplier(owner: Node, descriptor: Dictionary) -> float:
+	if owner.battle_room_data == null:
+		return 1.0
+	if descriptor.get("side", &"") != &"enemy":
+		return 1.0
+	var monster_index := int(descriptor.get("index", -1))
+	var monster_view = owner.battle_room_data.get_monster_view(monster_index)
+	if monster_view == null:
+		return 1.0
+	return clampf(float(monster_view.size_multiplier), 0.2, 2.0)
 
 
 func _refresh_status_visuals(owner: Node) -> void:

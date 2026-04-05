@@ -17,6 +17,7 @@ description = "Хитрый монстр, который сначала стар
 sprite = ExtResource("3_sprite")
 tags = PackedStringArray("normal", "goblin")
 max_health = 30
+size_multiplier = 0.6
 dice_count = 3
 dice_loadout = Array[ExtResource("2_dice")]([ExtResource("7_base_cube"), ExtResource("7_base_cube"), ExtResource("7_base_cube")])
 ai_profile = ExtResource("6_ai")
