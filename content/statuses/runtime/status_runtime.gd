@@ -390,6 +390,7 @@ static func _execute_trigger_effect(
 	entry: Dictionary,
 	effect: StatusEffectDefinition
 ) -> void:
+	_log_status_trigger(context, entry, effect)
 	if effect.effect_type == &"damage":
 		_apply_direct_magnitude(context, effect, entry, true)
 		return
@@ -404,6 +405,20 @@ static func _execute_trigger_effect(
 		return
 	if effect.effect_type == &"damage_per_used_die":
 		_apply_damage_per_used_die(context, effect, entry)
+
+
+static func _log_status_trigger(context: Dictionary, entry: Dictionary, effect: StatusEffectDefinition) -> void:
+	var owner_descriptor := context.get("owner_descriptor", {}) as Dictionary
+	var trigger_name := StringName(context.get("event_name", &""))
+	_log_debug(
+		"сработало состояние %s (effect=%s trigger=%s owner=%s stacks=%d)" % [
+			String(entry.get("status_id", &"")),
+			String(entry.get("effect_id", &"")),
+			String(trigger_name),
+			_format_descriptor(owner_descriptor),
+			int(entry.get("stacks", 0)),
+		]
+	)
 
 
 static func _apply_direct_magnitude(
@@ -715,3 +730,12 @@ static func _log_debug(message: String) -> void:
 	if not OS.is_debug_build():
 		return
 	print("[StatusRuntime] %s" % message)
+
+
+static func _format_descriptor(descriptor: Dictionary) -> String:
+	var side := StringName(descriptor.get("side", &""))
+	if side == &"player":
+		return "юнит"
+	if side == &"enemy":
+		return "монстр#%d" % (int(descriptor.get("index", -1)) + 1)
+	return "неизвестно"
