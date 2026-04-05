@@ -3,8 +3,6 @@ class_name BattleEffectRuntime
 
 const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
 const Dice = preload("res://content/dice/dice.gd")
-const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd")
-const BoardController = preload("res://ui/scripts/board_controller.gd")
 const StatusRuntime = preload("res://content/statuses/runtime/status_runtime.gd")
 
 
@@ -93,8 +91,9 @@ static func _resolve_effect_targets(battle_room, target_descriptor: Dictionary) 
 		if battle_room.can_target_monster(monster_index):
 			resolved_targets.append(target_descriptor)
 		return resolved_targets
-	if target_kind == &"dice" or target_kind == &"dice_group":
-		if not _collect_reroll_dice_targets(target_descriptor).is_empty():
+	if target_kind == &"dice":
+		var target_dice = target_descriptor.get("dice") as Dice
+		if target_dice != null and is_instance_valid(target_dice):
 			resolved_targets.append(target_descriptor)
 		return resolved_targets
 	if target_kind == &"player" and battle_room.can_target_player():
@@ -218,113 +217,17 @@ static func _apply_effect_to_target(
 			)
 			return StatusRuntime.apply_status(battle_room, status_target, status_definition, status_stacks, source_descriptor)
 		&"reroll_dice":
-			if target_kind != &"dice" and target_kind != &"dice_group":
+			if target_kind != &"dice":
 				_log_debug("reroll_dice skipped: target kind is not dice")
 				return false
-			var reroll_targets := _collect_reroll_dice_targets(target_descriptor)
-			if reroll_targets.is_empty():
+			var target_dice = target_descriptor.get("dice") as Dice
+			if target_dice == null or not is_instance_valid(target_dice):
 				_log_debug("reroll_dice skipped: target dice is invalid")
 				return false
-			var rerolled_count := _reroll_dice_targets(reroll_targets)
-			if rerolled_count <= 0:
-				_log_debug("reroll_dice skipped: no valid reroll requests")
-				return false
-			_log_debug(
-				"reroll_dice applied: ability=%s effect=%s rerolled=%d" % [
-					String(ability.ability_id),
-					String(effect.effect_id),
-					rerolled_count,
-				]
-			)
-			return rerolled_count > 0
+			target_dice.reroll_with_random_impulse()
+			_log_debug("reroll_dice applied: ability=%s effect=%s" % [String(ability.ability_id), String(effect.effect_id)])
+			return true
 	return false
-
-
-static func _collect_reroll_dice_targets(target_descriptor: Dictionary) -> Array[Dice]:
-	var resolved_targets: Array[Dice] = []
-	var seen_instance_ids := {}
-	_append_unique_reroll_die(resolved_targets, seen_instance_ids, target_descriptor.get("dice"))
-	for raw_dice in target_descriptor.get("dice_list", []):
-		_append_unique_reroll_die(resolved_targets, seen_instance_ids, raw_dice)
-	return resolved_targets
-
-
-static func _append_unique_reroll_die(
-	resolved_targets: Array[Dice],
-	seen_instance_ids: Dictionary,
-	candidate
-) -> void:
-	if not (candidate is Dice):
-		return
-	var target_dice := candidate as Dice
-	if target_dice == null or not is_instance_valid(target_dice):
-		return
-	var instance_id := target_dice.get_instance_id()
-	if seen_instance_ids.has(instance_id):
-		return
-	seen_instance_ids[instance_id] = true
-	resolved_targets.append(target_dice)
-
-
-static func _reroll_dice_targets(target_dice: Array[Dice]) -> int:
-	var requests_by_board: Dictionary = {}
-	var reroll_requests_count := 0
-	for dice in target_dice:
-		if dice == null or not is_instance_valid(dice):
-			continue
-		var board := dice.get_parent() as BoardController
-		if board == null:
-			continue
-		var reroll_request := _build_reroll_throw_request(board, dice)
-		if reroll_request == null:
-			continue
-		if not requests_by_board.has(board):
-			requests_by_board[board] = []
-		var board_requests: Array[DiceThrowRequest] = requests_by_board[board]
-		board_requests.append(reroll_request)
-		requests_by_board[board] = board_requests
-		dice.queue_free()
-		reroll_requests_count += 1
-	for board in requests_by_board.keys():
-		var board_requests: Array[DiceThrowRequest] = requests_by_board[board]
-		if board_requests.is_empty():
-			continue
-		board.throw_dice(board_requests)
-	return reroll_requests_count
-
-
-static func _build_reroll_throw_request(board: BoardController, source_dice: Dice) -> DiceThrowRequest:
-	if board == null or source_dice == null:
-		return null
-	var dice_scene: PackedScene = null
-	if not source_dice.scene_file_path.is_empty():
-		var loaded_scene := load(source_dice.scene_file_path)
-		if loaded_scene is PackedScene:
-			dice_scene = loaded_scene as PackedScene
-	if dice_scene == null:
-		dice_scene = board.default_dice_scene
-	if dice_scene == null:
-		return null
-	var metadata := _extract_dice_metadata(source_dice)
-	if source_dice.definition != null:
-		metadata["definition"] = source_dice.definition
-	return DiceThrowRequestScript.create(
-		dice_scene,
-		Vector3.ZERO,
-		maxf(source_dice.mass, 0.001),
-		source_dice.extra_size_multiplier,
-		metadata
-	)
-
-
-static func _extract_dice_metadata(source_dice: Dice) -> Dictionary:
-	var metadata := {}
-	if source_dice == null:
-		return metadata
-	for meta_key in source_dice.get_meta_list():
-		var resolved_key := StringName(meta_key)
-		metadata[resolved_key] = source_dice.get_meta(resolved_key)
-	return metadata
 
 
 static func _resolve_source_status_container(battle_room):
