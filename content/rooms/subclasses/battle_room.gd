@@ -132,6 +132,7 @@ var right_floor_texture: Texture2D = DEFAULT_FLOOR_TEXTURE
 var current_turn_owner: StringName = &"none"
 var current_monster_turn_index := -1
 var turn_counter := 0
+var turn_start_pending := false
 var battle_result: StringName = &"none"
 
 
@@ -436,6 +437,10 @@ func is_battle_over() -> bool:
 
 func advance_turn() -> Dictionary:
 	return BattleTurnRuntime.advance_turn(self)
+
+
+func process_turn_start_if_pending() -> bool:
+	return BattleTurnRuntime.process_turn_start_if_pending(self)
 
 
 func activate_player_ability(ability: AbilityDefinition, target_descriptor: Dictionary) -> Dictionary:
