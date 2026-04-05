@@ -7,6 +7,7 @@ const TINT_MATERIAL_META_KEY := &"runtime_tint_material"
 const HEALTH_BAR_META_KEY := &"health_bar_base_transform"
 const HEALTH_BAR_CURRENT_RATIO_META_KEY := &"health_bar_current_ratio"
 const HEALTH_BAR_TARGET_RATIO_META_KEY := &"health_bar_target_ratio"
+const HEALTH_BAR_LAST_ACTUAL_RATIO_META_KEY := &"health_bar_last_actual_ratio"
 const HEALTH_BAR_ANIMATION_DURATION := 0.5
 const STATUS_TEMPLATE_PATH := ^"state"
 const STATUS_RUNTIME_NODE_PREFIX := "state_runtime_"
@@ -287,9 +288,18 @@ func _apply_health_bar(owner: Node, combatant_sprite: MeshInstance3D, health_rat
 
 	if not health_bar.has_meta(HEALTH_BAR_META_KEY):
 		health_bar.set_meta(HEALTH_BAR_META_KEY, health_bar.transform)
+	var previous_actual_ratio := float(health_bar.get_meta(HEALTH_BAR_LAST_ACTUAL_RATIO_META_KEY, resolved_ratio))
 	if not health_bar.has_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY):
-		health_bar.set_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY, resolved_ratio)
-		_update_health_bar_transform(health_bar, resolved_ratio)
+		health_bar.set_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY, previous_actual_ratio)
+
+	var current_ratio := float(health_bar.get_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY, previous_actual_ratio))
+	if is_equal_approx(previous_actual_ratio, resolved_ratio):
+		current_ratio = resolved_ratio
+	else:
+		current_ratio = previous_actual_ratio
+	health_bar.set_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY, current_ratio)
+	_update_health_bar_transform(health_bar, current_ratio)
+	health_bar.set_meta(HEALTH_BAR_LAST_ACTUAL_RATIO_META_KEY, resolved_ratio)
 	health_bar.set_meta(HEALTH_BAR_TARGET_RATIO_META_KEY, resolved_ratio)
 
 
