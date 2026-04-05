@@ -217,16 +217,24 @@ static func _apply_effect_to_target(
 			)
 			return StatusRuntime.apply_status(battle_room, status_target, status_definition, status_stacks, source_descriptor)
 		&"reroll_dice":
-			if target_kind != &"dice":
-				_log_debug("reroll_dice skipped: target kind is not dice")
+			var dice_to_reroll := _resolve_reroll_dice_targets(target_descriptor, consumed_dice)
+			if dice_to_reroll.is_empty():
+				_log_debug("reroll_dice skipped: no valid target dice")
 				return false
-			var target_dice = target_descriptor.get("dice") as Dice
-			if target_dice == null or not is_instance_valid(target_dice):
-				_log_debug("reroll_dice skipped: target dice is invalid")
-				return false
-			target_dice.reroll_with_random_impulse()
-			_log_debug("reroll_dice applied: ability=%s effect=%s" % [String(ability.ability_id), String(effect.effect_id)])
-			return true
+			var rerolled_dice := Dice.reroll_group_with_board_throw(dice_to_reroll)
+			var is_successful := not rerolled_dice.is_empty()
+			if is_successful:
+				_log_debug(
+					"reroll_dice applied: ability=%s effect=%s source_count=%d rerolled_count=%d" % [
+						String(ability.ability_id),
+						String(effect.effect_id),
+						dice_to_reroll.size(),
+						rerolled_dice.size(),
+					]
+				)
+			else:
+				_log_debug("reroll_dice skipped: board reroll produced no dice")
+			return is_successful
 	return false
 
 
@@ -280,6 +288,22 @@ static func _to_status_descriptor(target_descriptor: Dictionary) -> Dictionary:
 			"index": int(target_descriptor.get("index", -1)),
 		}
 	return {}
+
+
+static func _resolve_reroll_dice_targets(target_descriptor: Dictionary, consumed_dice: Array[Dice]) -> Array[Dice]:
+	var resolved: Array[Dice] = []
+	var target_kind := StringName(target_descriptor.get("kind", &""))
+	if target_kind == &"dice":
+		var target_dice = target_descriptor.get("dice") as Dice
+		if target_dice != null and is_instance_valid(target_dice):
+			resolved.append(target_dice)
+	for dice in consumed_dice:
+		if dice == null or not is_instance_valid(dice):
+			continue
+		if resolved.has(dice):
+			continue
+		resolved.append(dice)
+	return resolved
 
 
 static func _log_debug(message: String) -> void:
