@@ -126,7 +126,7 @@ material_override = SubResource("StandardMaterial3D_tapwp")
 mesh = SubResource("PlaneMesh_4fpdg")
 
 [node name="HP_frame_monster" type="MeshInstance3D" parent="monster_sprite" unique_id=142010113]
-transform = Transform3D(0.8, 0, 0, 0, 1, 0, 0, 0, 0.1, 0, 0.001, -0.9993613)
+transform = Transform3D(1.04, 0, 0, 0, 1.3, 0, 0, 0, 0.13, 0, 0.001, -1.1)
 material_override = SubResource("StandardMaterial3D_y3wq5")
 mesh = SubResource("PlaneMesh_1bgnp")
 
@@ -151,7 +151,7 @@ material_override = SubResource("StandardMaterial3D_5hv8y")
 mesh = SubResource("PlaneMesh_v2ddd")
 
 [node name="HP_frame" type="MeshInstance3D" parent="player_sprite" unique_id=575653818]
-transform = Transform3D(0.8, 0, 0, 0, 1, 0, 0, 0, 0.1, 0, 0.001, -0.9993613)
+transform = Transform3D(1.04, 0, 0, 0, 1.3, 0, 0, 0, 0.13, 0, 0.001, -1.1)
 material_override = SubResource("StandardMaterial3D_q7213")
 mesh = SubResource("PlaneMesh_xd7kb")
 

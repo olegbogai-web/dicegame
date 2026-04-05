@@ -1,12 +1,12 @@
-[gd_resource type="Resource" script_class="MonsterDefinition" format=3]
+[gd_resource type="Resource" script_class="MonsterDefinition" format=3 uid="uid://2pf0486oh66y"]
 
-[ext_resource type="Script" uid="uid://ba5hefomauwar" path="res://content/monsters/resources/monster_definition.gd" id="1_monster"]
 [ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
-[ext_resource type="Script" path="res://content/dice/resources/dice_definition.gd" id="2_dice"]
-[ext_resource type="Texture2D" path="res://assets/entity/monsters/rat_1.png" id="3_sprite"]
-[ext_resource type="Resource" path="res://content/abilities/definitions/rat_bite.tres" id="4_rat_bite"]
+[ext_resource type="Script" uid="uid://ba5hefomauwar" path="res://content/monsters/resources/monster_definition.gd" id="1_monster"]
+[ext_resource type="Script" uid="uid://dags37suujqm8" path="res://content/dice/resources/dice_definition.gd" id="2_dice"]
+[ext_resource type="Texture2D" uid="uid://dnlssib33xex3" path="res://assets/entity/monsters/rat_1.png" id="3_sprite"]
+[ext_resource type="Resource" uid="uid://c7q3ykcwkmbdx" path="res://content/abilities/definitions/rat_bite.tres" id="4_rat_bite"]
 [ext_resource type="Resource" path="res://content/monster_ai/profiles/rat_ai_profile.tres" id="5_ai"]
-[ext_resource type="Resource" path="res://content/resources/base_cube.tres" id="6_base_cube"]
+[ext_resource type="Resource" uid="uid://b0ye741pt16bi" path="res://content/resources/base_cube.tres" id="6_base_cube"]
 
 [resource]
 script = ExtResource("1_monster")
@@ -16,7 +16,7 @@ description = "Базовый монстр, который старается к
 sprite = ExtResource("3_sprite")
 tags = PackedStringArray("normal", "beast")
 max_health = 20
-size_multiplier = 0.4
+size_multiplier = 0.7
 dice_count = 2
 dice_loadout = Array[ExtResource("2_dice")]([ExtResource("6_base_cube"), ExtResource("6_base_cube")])
 ai_profile = ExtResource("5_ai")

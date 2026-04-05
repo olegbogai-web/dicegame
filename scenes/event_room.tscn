@@ -130,4 +130,4 @@ transform = Transform3D(9.050745, 0, 0, 0, 0.6366414, 0, 0, 0, 5.063, 0.03043809
 material_override = SubResource("ShaderMaterial_x62gx")
 mesh = SubResource("PlaneMesh_6yyso")
 
-[node name="money_ui" parent="." instance=ExtResource("7_money_ui")]
+[node name="money_ui" parent="." unique_id=1197792018 instance=ExtResource("7_money_ui")]

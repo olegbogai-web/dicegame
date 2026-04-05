@@ -1,24 +1,22 @@
-[gd_resource type="Resource" script_class="ArtifactDefinition" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="ArtifactDefinition" format=3 uid="uid://3s701t1yaqwl"]
 
-[ext_resource type="Script" path="res://content/artifacts/resources/artifact_definition.gd" id="1_artifact"]
-[ext_resource type="Script" path="res://content/artifacts/resources/artifact_trigger_definition.gd" id="2_trigger"]
-[ext_resource type="Texture2D" path="res://assets/artefacts/snake_tooth.png" id="3_icon"]
-[ext_resource type="Resource" path="res://content/statuses/definitions/poison.tres" id="4_status"]
-[ext_resource type="Resource" path="res://content/statuses/definitions/regeneration.tres" id="5_status"]
+[ext_resource type="Script" uid="uid://c73ki0djjabbv" path="res://content/artifacts/resources/artifact_definition.gd" id="1_artifact"]
+[ext_resource type="Script" uid="uid://desiurhox43nn" path="res://content/statuses/resources/status_effect_definition.gd" id="1_t2dtk"]
+[ext_resource type="Script" uid="uid://bjwofi8ayl0sj" path="res://content/artifacts/resources/artifact_trigger_definition.gd" id="2_trigger"]
+[ext_resource type="Texture2D" uid="uid://6twumhxkr0e5" path="res://assets/artefacts/snake_tooth.png" id="3_icon"]
+[ext_resource type="Resource" uid="uid://cvve15ymis3ds" path="res://content/statuses/definitions/poison.tres" id="4_status"]
+[ext_resource type="Resource" uid="uid://drbrwun1o2b7j" path="res://content/statuses/definitions/regeneration.tres" id="5_status"]
 
 [sub_resource type="Resource" id="ArtifactTrigger_ancient_snake_tooth_on_turn_end"]
 script = ExtResource("2_trigger")
 trigger_id = "ancient_snake_tooth_on_turn_end"
 event_name = &"on_turn_end"
 effect_type = &"convert_status_on_remove"
-target_scope = &"player"
-priority = 0
-phase_order = 0
 parameters = {
 "remove_stacks": 2,
 "source_status_definition": ExtResource("4_status"),
-"target_status_definition": ExtResource("5_status"),
-"target_stacks_per_removed_stack": 1
+"target_stacks_per_removed_stack": 1,
+"target_status_definition": ExtResource("5_status")
 }
 
 [resource]
@@ -29,6 +27,4 @@ description = "В конце каждого хода снимает 2 стака
 rarity = &"unique"
 sprite = ExtResource("3_icon")
 tags = PackedStringArray("status", "turn_end", "cleanse", "regeneration")
-modifiers = []
 triggers = Array[ExtResource("2_trigger")]([SubResource("ArtifactTrigger_ancient_snake_tooth_on_turn_end")])
-metadata = {}

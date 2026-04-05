@@ -1,14 +1,14 @@
-[gd_resource type="Resource" script_class="MonsterDefinition" format=3]
+[gd_resource type="Resource" script_class="MonsterDefinition" format=3 uid="uid://b74l8oeqahqiy"]
 
-[ext_resource type="Script" uid="uid://ba5hefomauwar" path="res://content/monsters/resources/monster_definition.gd" id="1_monster"]
 [ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
-[ext_resource type="Script" path="res://content/dice/resources/dice_definition.gd" id="2_dice"]
-[ext_resource type="Texture2D" path="res://assets/entity/monsters/chimera.png" id="3_sprite"]
-[ext_resource type="Resource" uid="uid://cg7bawimcd68m" path="res://content/abilities/definitions/clawed_series_upgrade_2.tres" id="4_clawed_series"]
-[ext_resource type="Resource" uid="uid://bkcy0qub780o2" path="res://content/abilities/definitions/strengthening_upgrade_2.tres" id="5_strengthening"]
+[ext_resource type="Script" uid="uid://ba5hefomauwar" path="res://content/monsters/resources/monster_definition.gd" id="1_monster"]
+[ext_resource type="Script" uid="uid://dags37suujqm8" path="res://content/dice/resources/dice_definition.gd" id="2_dice"]
+[ext_resource type="Texture2D" uid="uid://bfx7ltnqxbxh8" path="res://assets/entity/monsters/chimera.png" id="3_sprite"]
+[ext_resource type="Resource" uid="uid://0xdpsx6ldli2" path="res://content/abilities/definitions/clawed_series_upgrade_2.tres" id="4_clawed_series"]
+[ext_resource type="Resource" uid="uid://c1woe4k3s1xhn" path="res://content/abilities/definitions/strengthening_upgrade_2.tres" id="5_strengthening"]
 [ext_resource type="Resource" path="res://content/monster_ai/profiles/chimera_ai_profile.tres" id="6_ai"]
-[ext_resource type="Resource" path="res://content/resources/base_cube.tres" id="7_base_cube"]
-[ext_resource type="Resource" path="res://content/dice/definitions/lucky_one.tres" id="8_lucky_one"]
+[ext_resource type="Resource" uid="uid://b0ye741pt16bi" path="res://content/resources/base_cube.tres" id="7_base_cube"]
+[ext_resource type="Resource" uid="uid://dxvloh0abj03o" path="res://content/dice/definitions/lucky_one.tres" id="8_lucky_one"]
 
 [resource]
 script = ExtResource("1_monster")
@@ -17,7 +17,7 @@ display_name = "Химера"
 description = "Элитный монстр, который старается сначала усилиться, а затем разрывать цель когтями."
 sprite = ExtResource("3_sprite")
 tags = PackedStringArray("elite")
-max_health = 100
+max_health = 10
 dice_count = 6
 dice_loadout = Array[ExtResource("2_dice")]([ExtResource("7_base_cube"), ExtResource("7_base_cube"), ExtResource("7_base_cube"), ExtResource("7_base_cube"), ExtResource("7_base_cube"), ExtResource("8_lucky_one")])
 ai_profile = ExtResource("6_ai")
