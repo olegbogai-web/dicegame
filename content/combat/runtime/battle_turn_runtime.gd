@@ -120,23 +120,46 @@ static func process_turn_start_if_pending(battle_room) -> bool:
 	if battle_room == null or not bool(battle_room.turn_start_pending):
 		return false
 	battle_room.turn_start_pending = false
-	_trigger_turn_start_artifacts(battle_room)
 	_trigger_turn_start_statuses(battle_room)
 	return true
 
 
 static func _trigger_turn_end_statuses(battle_room) -> void:
-	var owner_descriptor := _resolve_current_turn_owner_descriptor(battle_room)
-	if owner_descriptor.is_empty():
+	if battle_room.current_turn_owner == &"player":
+		StatusRuntime.trigger_turn_end(
+			battle_room,
+			{
+				"side": &"player",
+			}
+		)
 		return
-	StatusRuntime.trigger_turn_end(battle_room, owner_descriptor)
+	if battle_room.current_turn_owner == &"monster" and battle_room.can_target_monster(battle_room.current_monster_turn_index):
+		StatusRuntime.trigger_turn_end(
+			battle_room,
+			{
+				"side": &"enemy",
+				"index": battle_room.current_monster_turn_index,
+			}
+		)
 
 
 static func _trigger_turn_start_statuses(battle_room) -> void:
-	var owner_descriptor := _resolve_current_turn_owner_descriptor(battle_room)
-	if owner_descriptor.is_empty():
+	if battle_room.current_turn_owner == &"player":
+		StatusRuntime.trigger_turn_start(
+			battle_room,
+			{
+				"side": &"player",
+			}
+		)
 		return
-	StatusRuntime.trigger_turn_start(battle_room, owner_descriptor)
+	if battle_room.current_turn_owner == &"monster" and battle_room.can_target_monster(battle_room.current_monster_turn_index):
+		StatusRuntime.trigger_turn_start(
+			battle_room,
+			{
+				"side": &"enemy",
+				"index": battle_room.current_monster_turn_index,
+			}
+		)
 
 
 static func _trigger_battle_start_artifacts(battle_room) -> void:
@@ -159,39 +182,9 @@ static func _mark_turn_start_pending(battle_room) -> void:
 static func _trigger_turn_end_artifacts(battle_room) -> void:
 	if battle_room == null or battle_room.player_instance == null:
 		return
-	var owner_descriptor := _resolve_current_turn_owner_descriptor(battle_room)
-	if owner_descriptor.is_empty() or owner_descriptor.get("side", &"") != &"player":
-		return
 	ArtifactRuntime.trigger_event(
 		ArtifactRuntime.EVENT_TURN_END,
 		battle_room,
-		owner_descriptor,
+		{"side": &"player"},
 		battle_room.player_instance.get_active_artifact_definitions()
 	)
-
-
-static func _trigger_turn_start_artifacts(battle_room) -> void:
-	if battle_room == null or battle_room.player_instance == null:
-		return
-	var owner_descriptor := _resolve_current_turn_owner_descriptor(battle_room)
-	if owner_descriptor.is_empty() or owner_descriptor.get("side", &"") != &"player":
-		return
-	ArtifactRuntime.trigger_event(
-		ArtifactRuntime.EVENT_TURN_START,
-		battle_room,
-		owner_descriptor,
-		battle_room.player_instance.get_active_artifact_definitions()
-	)
-
-
-static func _resolve_current_turn_owner_descriptor(battle_room) -> Dictionary:
-	if battle_room == null:
-		return {}
-	if battle_room.current_turn_owner == &"player":
-		return {"side": &"player"}
-	if battle_room.current_turn_owner == &"monster" and battle_room.can_target_monster(battle_room.current_monster_turn_index):
-		return {
-			"side": &"enemy",
-			"index": battle_room.current_monster_turn_index,
-		}
-	return {}
