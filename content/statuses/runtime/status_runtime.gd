@@ -193,6 +193,14 @@ static func trigger_event(context: Dictionary) -> Dictionary:
 		var effect := entry.get("effect") as StatusEffectDefinition
 		if effect == null:
 			continue
+		_log_debug(
+			"сработало состояние %s: trigger=%s effect=%s owner=%s" % [
+				String(entry.get("status_id", &"")),
+				String(event_name),
+				String(entry.get("effect_id", &"")),
+				_format_descriptor(owner_descriptor),
+			]
+		)
 		_publish_status_event(context, EVENT_STATUS_TRIGGERED, {
 			"trigger": event_name,
 			"status_id": entry.get("status_id", &""),
@@ -715,3 +723,12 @@ static func _log_debug(message: String) -> void:
 	if not OS.is_debug_build():
 		return
 	print("[StatusRuntime] %s" % message)
+
+
+static func _format_descriptor(descriptor: Dictionary) -> String:
+	var side := StringName(descriptor.get("side", &""))
+	if side == &"player":
+		return "игрок"
+	if side == &"enemy":
+		return "монстр #%d" % (int(descriptor.get("index", -1)) + 1)
+	return "неизвестно"
