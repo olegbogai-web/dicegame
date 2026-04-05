@@ -244,7 +244,6 @@ func _on_sleeping_state_changed() -> void:
 	lock_rotation = true
 	DiceMotionState.stop_motion(self)
 	_physics_runtime.disable_bounce(self)
-	_log_roll_result()
 
 
 func _try_return_to_board_if_outside() -> void:
@@ -332,16 +331,3 @@ func _find_board_controller() -> BoardController:
 			return node as BoardController
 		node = node.get_parent()
 	return null
-
-
-func _log_roll_result() -> void:
-	if not OS.is_debug_build():
-		return
-	var top_value := get_top_face_value()
-	var owner := StringName(get_meta(&"owner", &""))
-	var owner_label := "неизвестно"
-	if owner == &"player":
-		owner_label = "юнит"
-	elif owner == &"monster":
-		owner_label = "монстр#%d" % (int(get_meta(&"monster_index", -1)) + 1)
-	print("[Dice] выпал куб: %s значение=%d node=%s" % [owner_label, top_value, name])

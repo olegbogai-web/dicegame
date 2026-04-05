@@ -368,20 +368,9 @@ func apply_damage_to_descriptor(descriptor: Dictionary, amount: int) -> bool:
 	if side == &"player":
 		if not can_target_player():
 			return false
-		var previous_hp := player_view.current_hp
 		if player_instance != null:
 			player_instance.take_damage(resolved_damage)
-		var applied_damage := player_view.take_damage(resolved_damage)
-		_log_battle_debug(
-			"урон %s -%d (%d/%d -> %d/%d)" % [
-				_describe_descriptor({"side": &"player"}),
-				applied_damage,
-				previous_hp,
-				player_view.max_hp,
-				player_view.current_hp,
-				player_view.max_hp,
-			]
-		)
+		player_view.take_damage(resolved_damage)
 		if not player_view.is_alive():
 			_on_combatant_died({"side": &"player"})
 		return true
@@ -389,19 +378,7 @@ func apply_damage_to_descriptor(descriptor: Dictionary, amount: int) -> bool:
 		var monster_index := int(descriptor.get("index", -1))
 		if not can_target_monster(monster_index):
 			return false
-		var monster_view := monster_views[monster_index]
-		var previous_hp := monster_view.current_hp
-		var applied_damage := monster_view.take_damage(resolved_damage)
-		_log_battle_debug(
-			"урон %s -%d (%d/%d -> %d/%d)" % [
-				_describe_descriptor({"side": &"enemy", "index": monster_index}),
-				applied_damage,
-				previous_hp,
-				monster_view.max_hp,
-				monster_view.current_hp,
-				monster_view.max_hp,
-			]
-		)
+		monster_views[monster_index].take_damage(resolved_damage)
 		if not monster_views[monster_index].is_alive():
 			_on_combatant_died({"side": &"enemy", "index": monster_index})
 		return true
@@ -416,38 +393,15 @@ func apply_heal_to_descriptor(descriptor: Dictionary, amount: int) -> bool:
 	if side == &"player":
 		if not can_target_player():
 			return false
-		var previous_hp := player_view.current_hp
 		if player_instance != null:
 			player_instance.heal(resolved_heal)
-		var applied_heal := player_view.heal(resolved_heal)
-		_log_battle_debug(
-			"хп %s +%d (%d/%d -> %d/%d)" % [
-				_describe_descriptor({"side": &"player"}),
-				applied_heal,
-				previous_hp,
-				player_view.max_hp,
-				player_view.current_hp,
-				player_view.max_hp,
-			]
-		)
+		player_view.heal(resolved_heal)
 		return true
 	if side == &"enemy":
 		var monster_index := int(descriptor.get("index", -1))
 		if not can_target_monster(monster_index):
 			return false
-		var monster_view := monster_views[monster_index]
-		var previous_hp := monster_view.current_hp
-		var applied_heal := monster_view.heal(resolved_heal)
-		_log_battle_debug(
-			"хп %s +%d (%d/%d -> %d/%d)" % [
-				_describe_descriptor({"side": &"enemy", "index": monster_index}),
-				applied_heal,
-				previous_hp,
-				monster_view.max_hp,
-				monster_view.current_hp,
-				monster_view.max_hp,
-			]
-		)
+		monster_views[monster_index].heal(resolved_heal)
 		return true
 	return false
 
@@ -456,22 +410,6 @@ func _on_combatant_died(descriptor: Dictionary) -> void:
 	if combat_runtime_state == null:
 		return
 	combat_runtime_state.mark_combatant_dead(descriptor)
-
-
-func _describe_descriptor(descriptor: Dictionary) -> String:
-	var side := StringName(descriptor.get("side", &""))
-	if side == &"player":
-		return "юнит"
-	if side == &"enemy":
-		var index := int(descriptor.get("index", -1))
-		return "монстр#%d" % (index + 1)
-	return "неизвестно"
-
-
-func _log_battle_debug(message: String) -> void:
-	if not OS.is_debug_build():
-		return
-	print("[Battle] %s" % message)
 
 func start_battle() -> Dictionary:
 	return BattleTurnRuntime.start_battle(self)
