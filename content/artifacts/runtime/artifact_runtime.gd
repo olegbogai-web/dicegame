@@ -104,10 +104,10 @@ static func _execute_convert_status_on_remove_trigger(battle_room, owner_descrip
 static func _get_status_stacks(battle_room, target_descriptor: Dictionary, status_id: StringName) -> int:
 	if battle_room == null or status_id == &"":
 		return 0
-	var container := battle_room.get_status_container_for_descriptor(target_descriptor)
+	var container = battle_room.get_status_container_for_descriptor(target_descriptor)
 	if container == null:
 		return 0
-	var instance := container.get_status(status_id)
+	var instance = container.get_status(status_id)
 	if instance == null or not instance.is_effectively_active():
 		return 0
 	return instance.stacks
