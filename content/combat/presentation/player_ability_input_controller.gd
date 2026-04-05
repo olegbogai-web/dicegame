@@ -44,7 +44,8 @@ func handle_unhandled_input(
 		return false
 
 	var mouse_event := event as InputEventMouseButton
-	if targeting_service.has_player_dice_at_screen_point(mouse_event.position, owner._camera, owner.get_world_3d()):
+	var clicked_player_dice := targeting_service.has_player_dice_at_screen_point(mouse_event.position, owner._camera, owner.get_world_3d())
+	if clicked_player_dice and not _selected_ability_targets_dice(owner):
 		return false
 	var clicked_frame_state := _find_player_ability_frame_at_screen_point(owner, mouse_event.position)
 	if not clicked_frame_state.is_empty():
@@ -60,7 +61,8 @@ func handle_unhandled_input(
 		owner._player_sprite,
 		owner._monster_sprite_states,
 		owner._floor,
-		owner._camera
+		owner._camera,
+		owner.get_world_3d()
 	)
 	if target_descriptor.is_empty():
 		return false
@@ -202,8 +204,19 @@ func _is_ability_state_ready(owner: Node, frame_state: Dictionary) -> bool:
 	if frame == null:
 		return false
 	var ability := frame_state.get("ability") as AbilityDefinition
+	if owner.battle_room_data == null or not owner.battle_room_data.can_activate_current_turn_ability(ability):
+		return false
 	var consumed_dice := _collect_ready_dice_for_frame(owner, frame)
 	return BattleAbilityRuntime.can_use_ability_with_dice(ability, consumed_dice, true)
+
+
+func _selected_ability_targets_dice(owner: Node) -> bool:
+	if owner._selected_ability_state.is_empty():
+		return false
+	var selected_ability := owner._selected_ability_state.get("ability") as AbilityDefinition
+	if selected_ability == null or selected_ability.target_rule == null:
+		return false
+	return selected_ability.target_rule.get_target_hint() == &"dice"
 
 
 func _collect_ready_dice_for_frame(owner: Node, frame: MeshInstance3D) -> Array[Dice]:
