@@ -10,7 +10,7 @@ const HEALTH_BAR_TARGET_RATIO_META_KEY := &"health_bar_target_ratio"
 const HEALTH_BAR_ANIMATION_DURATION := 0.5
 const STATUS_TEMPLATE_PATH := ^"state"
 const STATUS_RUNTIME_NODE_PREFIX := "state_runtime_"
-const STATUS_ICON_SPACING_X := 0.18
+const STATUS_ICON_SPACING_X := 0.26
 
 
 func _apply_room_data(owner: Node) -> void:
@@ -405,12 +405,6 @@ func _apply_statuses_to_sprite(owner: Node, combatant_sprite: MeshInstance3D, de
 	var active_statuses = status_container.get_active_statuses()
 	if active_statuses.is_empty():
 		return
-	active_statuses.sort_custom(func(a, b) -> bool:
-		if a == null or b == null:
-			return false
-		return String(a.get_status_id()) < String(b.get_status_id())
-	)
-
 	var base_origin := template.transform.origin
 	var base_basis := template.transform.basis
 	for index in active_statuses.size():
