@@ -26,7 +26,6 @@ const DiceOrientationServiceScript = preload("res://content/dice/runtime/dice_or
 const DiceSlotSnapControllerScript = preload("res://content/dice/runtime/dice_slot_snap_controller.gd")
 const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd")
 const BoardController = preload("res://ui/scripts/board_controller.gd")
-const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd")
 
 @export var definition: DiceDefinition
 @export var extra_size_multiplier: Vector3 = Vector3.ONE
@@ -191,74 +190,44 @@ func has_completed_first_stop() -> bool:
 	return _has_completed_first_stop
 
 
-func reroll_with_random_impulse(_rng: RandomNumberGenerator = null) -> void:
-	var rerolled := reroll_group_with_board_throw([self])
-	if OS.is_debug_build():
-		print("[Debug][Dice] Переброс куба через удаление и новый бросок. replaced=%s." % str(not rerolled.is_empty()))
-
-
-static func reroll_group_with_board_throw(dice_group: Array[Dice]) -> Array[Dice]:
-	var grouped_requests_by_board := {}
-	var source_dice_by_board := {}
-	for dice in dice_group:
-		if dice == null or not is_instance_valid(dice):
-			continue
-		var board := dice._find_board_controller()
-		if board == null or not is_instance_valid(board):
-			continue
-		var request := _build_throw_request_from_runtime_dice(dice)
-		if request == null:
-			continue
-		if not grouped_requests_by_board.has(board):
-			grouped_requests_by_board[board] = []
-			source_dice_by_board[board] = []
-		(grouped_requests_by_board[board] as Array).append(request)
-		(source_dice_by_board[board] as Array).append(dice)
-
-	var rerolled: Array[Dice] = []
-	for board_key in grouped_requests_by_board.keys():
-		var board := board_key as BoardController
-		var requests_raw := grouped_requests_by_board[board] as Array
-		var source_dice_raw := source_dice_by_board[board] as Array
-		var requests: Array[DiceThrowRequest] = []
-		var source_dice: Array[Dice] = []
-		for request in requests_raw:
-			if request is DiceThrowRequest:
-				requests.append(request as DiceThrowRequest)
-		for source_dice_item in source_dice_raw:
-			if source_dice_item is Dice:
-				source_dice.append(source_dice_item as Dice)
-		if requests.is_empty() or source_dice.is_empty():
-			continue
-		for source_dice_item in source_dice:
-			source_dice_item.clear_ability_slot()
-			source_dice_item.queue_free()
-		var spawned_dice := board.throw_dice(requests)
-		for dice_body in spawned_dice:
-			if dice_body is Dice:
-				rerolled.append(dice_body as Dice)
-	return rerolled
-
-
-static func _build_throw_request_from_runtime_dice(dice: Dice) -> DiceThrowRequest:
-	if dice == null or not is_instance_valid(dice):
-		return null
-	var scene_file_path := dice.scene_file_path
-	if scene_file_path.is_empty():
-		return null
-	var dice_scene := load(scene_file_path) as PackedScene
-	if dice_scene == null:
-		return null
-	var metadata_copy := {}
-	for metadata_key in dice.get_meta_list():
-		metadata_copy[metadata_key] = dice.get_meta(metadata_key)
-	return DiceThrowRequestScript.create(
-		dice_scene,
-		Vector3.ZERO,
-		dice.mass,
-		metadata_copy,
-		dice.extra_size_multiplier
+func reroll_with_random_impulse(rng: RandomNumberGenerator = null) -> void:
+	_setup_components()
+	var random_source := rng
+	if random_source == null:
+		random_source = RandomNumberGenerator.new()
+		random_source.randomize()
+	clear_ability_slot()
+	_has_completed_first_stop = false
+	var was_sleeping := sleeping
+	freeze = false
+	lock_rotation = false
+	gravity_scale = _base_gravity_scale
+	sleeping = false
+	DiceMotionState.stop_motion(self)
+	_physics_runtime.apply_defaults(
+		self,
+		DEFAULT_FRICTION,
+		DEFAULT_BOUNCE,
+		DEFAULT_LINEAR_DAMP,
+		DEFAULT_ANGULAR_DAMP
 	)
+	var horizontal_impulse := Vector3(
+		random_source.randf_range(-1.0, 1.0),
+		0.0,
+		random_source.randf_range(-1.0, 1.0)
+	)
+	if horizontal_impulse.length_squared() < 0.0001:
+		horizontal_impulse = Vector3(0.5, 0.0, 0.5)
+	horizontal_impulse = horizontal_impulse.normalized() * random_source.randf_range(2.2, 3.8)
+	var upward_impulse := Vector3.UP * random_source.randf_range(3.8, 5.2)
+	apply_central_impulse(horizontal_impulse + upward_impulse)
+	apply_torque_impulse(Vector3(
+		random_source.randf_range(-1.0, 1.0),
+		random_source.randf_range(-1.0, 1.0),
+		random_source.randf_range(-1.0, 1.0)
+	).normalized() * random_source.randf_range(1.8, 3.6))
+	if OS.is_debug_build():
+		print("[Debug][Dice] Переброс куба. previous_sleeping=%s." % str(was_sleeping))
 
 
 func _setup_components() -> void:
