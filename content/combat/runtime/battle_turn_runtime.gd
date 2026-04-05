@@ -127,6 +127,7 @@ static func process_turn_start_if_pending(battle_room) -> bool:
 	battle_room.turn_start_pending = false
 	_log_debug("Начало хода: %s." % _format_turn_owner(battle_room.current_turn_owner, battle_room.current_monster_turn_index))
 	_trigger_turn_start_statuses(battle_room)
+	_trigger_turn_start_artifacts(battle_room)
 	return true
 
 
@@ -192,7 +193,20 @@ static func _trigger_turn_end_artifacts(battle_room) -> void:
 		ArtifactRuntime.EVENT_TURN_END,
 		battle_room,
 		{"side": &"player"},
-		battle_room.player_instance.get_active_artifact_definitions()
+		battle_room.player_instance.get_active_artifact_definitions(),
+		{"turn_owner": battle_room.current_turn_owner}
+	)
+
+
+static func _trigger_turn_start_artifacts(battle_room) -> void:
+	if battle_room == null or battle_room.player_instance == null:
+		return
+	ArtifactRuntime.trigger_event(
+		ArtifactRuntime.EVENT_TURN_START,
+		battle_room,
+		{"side": &"player"},
+		battle_room.player_instance.get_active_artifact_definitions(),
+		{"turn_owner": battle_room.current_turn_owner}
 	)
 
 

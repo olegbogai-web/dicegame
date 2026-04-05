@@ -3,10 +3,20 @@ class_name ArtifactRuntime
 
 const StatusRuntime = preload("res://content/statuses/runtime/status_runtime.gd")
 const EVENT_BATTLE_START := &"on_battle_start"
+const EVENT_TURN_START := &"on_turn_start"
 const EVENT_TURN_END := &"on_turn_end"
+const TURN_OWNER_PLAYER := &"player"
+const TURN_OWNER_MONSTER := &"monster"
+const TURN_OWNER_ANY := &"any"
 
 
-static func trigger_event(event_name: StringName, battle_room, owner_descriptor: Dictionary, artifacts: Array[ArtifactDefinition]) -> void:
+static func trigger_event(
+	event_name: StringName,
+	battle_room,
+	owner_descriptor: Dictionary,
+	artifacts: Array[ArtifactDefinition],
+	event_context: Dictionary = {}
+) -> void:
 	if battle_room == null or event_name == &"":
 		return
 	var trigger_entries: Array[Dictionary] = []
@@ -15,6 +25,8 @@ static func trigger_event(event_name: StringName, battle_room, owner_descriptor:
 			continue
 		for trigger in artifact.triggers:
 			if trigger == null or trigger.event_name != event_name:
+				continue
+			if not _is_trigger_compatible_with_event_context(trigger, event_name, event_context):
 				continue
 			trigger_entries.append({
 				"artifact_id": StringName(artifact.artifact_id),
@@ -56,6 +68,35 @@ static func _execute_trigger(battle_room, owner_descriptor: Dictionary, trigger:
 
 	if trigger.effect_type == &"convert_status_on_remove":
 		_execute_convert_status_on_remove_trigger(battle_room, owner_descriptor, trigger)
+
+
+static func _is_trigger_compatible_with_event_context(
+	trigger: ArtifactTriggerDefinition,
+	event_name: StringName,
+	event_context: Dictionary
+) -> bool:
+	if trigger == null:
+		return false
+	if not _is_turn_scoped_event(event_name):
+		return true
+	var expected_turn_owner := _normalize_turn_owner(trigger.parameters.get("turn_owner", TURN_OWNER_PLAYER))
+	if expected_turn_owner == TURN_OWNER_ANY:
+		return true
+	var actual_turn_owner := _normalize_turn_owner(event_context.get("turn_owner", TURN_OWNER_PLAYER))
+	return actual_turn_owner == expected_turn_owner
+
+
+static func _is_turn_scoped_event(event_name: StringName) -> bool:
+	return event_name == EVENT_TURN_START or event_name == EVENT_TURN_END
+
+
+static func _normalize_turn_owner(value: Variant) -> StringName:
+	var normalized := StringName(String(value).strip_edges().to_lower())
+	if normalized == TURN_OWNER_MONSTER:
+		return TURN_OWNER_MONSTER
+	if normalized == TURN_OWNER_ANY:
+		return TURN_OWNER_ANY
+	return TURN_OWNER_PLAYER
 
 
 static func _resolve_target_descriptor(owner_descriptor: Dictionary, target_scope: StringName) -> Dictionary:
