@@ -60,6 +60,7 @@ func _apply_player_sprite(owner: Node) -> void:
 
 
 func _apply_monster_sprites(owner: Node) -> void:
+	var previous_health_ratios := _capture_monster_health_ratios(owner._monster_sprite_states, owner)
 	_clear_generated_nodes(owner, owner._generated_monster_sprites)
 	owner._monster_sprite_states.clear()
 
@@ -80,13 +81,27 @@ func _apply_monster_sprites(owner: Node) -> void:
 			Basis.from_scale(monster_view.base_scale),
 			BattleRoomScript.MONSTER_SPRITE_POSITION + Vector3(0.0, 0.0, offsets[index])
 		)
-		_apply_health_bar(owner, target_sprite, owner.battle_room_data.get_monster_health_ratio(index))
+		var target_health_ratio := owner.battle_room_data.get_monster_health_ratio(index)
+		var previous_health_ratio := float(previous_health_ratios.get(index, target_health_ratio))
+		_apply_health_bar(owner, target_sprite, target_health_ratio, previous_health_ratio)
 		_apply_monster_health_text(target_sprite, owner.battle_room_data.get_monster_health_values(index))
 		_apply_statuses_to_sprite(owner, target_sprite, {"side": &"enemy", "index": index})
 		owner._monster_sprite_states.append({
 			"sprite": target_sprite,
 			"index": index,
 		})
+
+
+func _capture_monster_health_ratios(monster_sprite_states: Array[Dictionary], owner: Node) -> Dictionary:
+	var ratios := {}
+	for monster_state in monster_sprite_states:
+		var sprite := monster_state.get("sprite") as MeshInstance3D
+		var monster_index := int(monster_state.get("index", -1))
+		if sprite == null or monster_index < 0:
+			continue
+		var fallback_ratio := owner.battle_room_data.get_monster_health_ratio(monster_index)
+		ratios[monster_index] = _resolve_health_bar_ratio(sprite, fallback_ratio)
+	return ratios
 
 
 func _apply_ability_frames(
@@ -279,7 +294,7 @@ func _clear_generated_nodes(_owner: Node, nodes: Array[Node]) -> void:
 	nodes.clear()
 
 
-func _apply_health_bar(owner: Node, combatant_sprite: MeshInstance3D, health_ratio: float) -> void:
+func _apply_health_bar(owner: Node, combatant_sprite: MeshInstance3D, health_ratio: float, initial_ratio: float = NAN) -> void:
 	var resolved_ratio := clampf(health_ratio, 0.0, 1.0)
 	var health_bar := _resolve_health_bar(combatant_sprite)
 	if health_bar == null:
@@ -287,9 +302,9 @@ func _apply_health_bar(owner: Node, combatant_sprite: MeshInstance3D, health_rat
 
 	if not health_bar.has_meta(HEALTH_BAR_META_KEY):
 		health_bar.set_meta(HEALTH_BAR_META_KEY, health_bar.transform)
-	if not health_bar.has_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY):
-		health_bar.set_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY, resolved_ratio)
-		_update_health_bar_transform(health_bar, resolved_ratio)
+	var resolved_initial_ratio := _resolve_health_bar_initial_ratio(health_bar, resolved_ratio, initial_ratio)
+	health_bar.set_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY, resolved_initial_ratio)
+	_update_health_bar_transform(health_bar, resolved_initial_ratio)
 	health_bar.set_meta(HEALTH_BAR_TARGET_RATIO_META_KEY, resolved_ratio)
 
 
@@ -301,6 +316,23 @@ func _resolve_health_bar(combatant_sprite: MeshInstance3D) -> MeshInstance3D:
 	if health_bar == null:
 		health_bar = combatant_sprite.get_node_or_null(^"HP_frame_monster/HP_bar_monster") as MeshInstance3D
 	return health_bar
+
+
+func _resolve_health_bar_initial_ratio(health_bar: MeshInstance3D, fallback_ratio: float, initial_ratio: float) -> float:
+	if not is_nan(initial_ratio):
+		return clampf(initial_ratio, 0.0, 1.0)
+	if health_bar != null and health_bar.has_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY):
+		return clampf(float(health_bar.get_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY)), 0.0, 1.0)
+	return clampf(fallback_ratio, 0.0, 1.0)
+
+
+func _resolve_health_bar_ratio(combatant_sprite: MeshInstance3D, fallback_ratio: float) -> float:
+	var health_bar := _resolve_health_bar(combatant_sprite)
+	if health_bar == null:
+		return clampf(fallback_ratio, 0.0, 1.0)
+	if health_bar.has_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY):
+		return clampf(float(health_bar.get_meta(HEALTH_BAR_CURRENT_RATIO_META_KEY)), 0.0, 1.0)
+	return clampf(fallback_ratio, 0.0, 1.0)
 
 
 func _update_health_bar_transform(health_bar: MeshInstance3D, health_ratio: float) -> void:
