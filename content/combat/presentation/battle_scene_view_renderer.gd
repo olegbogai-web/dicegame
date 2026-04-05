@@ -73,7 +73,7 @@ func _apply_monster_sprites(owner: Node) -> void:
 	for index in monster_views.size():
 		var target_sprite = owner._monster_sprite_template if index == 0 else _duplicate_sprite_template(owner, owner._monster_sprite_template, owner._generated_monster_sprites)
 		var monster_view = monster_views[index]
-		var is_alive := owner.battle_room_data.can_target_monster(index)
+		var is_alive = owner.battle_room_data.can_target_monster(index)
 		target_sprite.visible = is_alive and monster_view != null and monster_view.sprite != null
 		if not target_sprite.visible:
 			_clear_runtime_status_visuals(owner, target_sprite)
