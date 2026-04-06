@@ -25,6 +25,7 @@ const Dice = preload("res://content/dice/dice.gd")
 @export var throw_vertical_velocity_max: float = 0.4
 @export var angular_velocity_min: Vector3 = Vector3(-35.0, -5.0, -35.0)
 @export var angular_velocity_max: Vector3 = Vector3(35.0, 5.0, 35.0)
+@export var use_continuous_collision_detection: bool = true
 
 @onready var _floor: Node3D = get_node_or_null(floor_path)
 var _rng := RandomNumberGenerator.new()
@@ -53,6 +54,8 @@ func throw_dice(requests: Array[DiceThrowRequest]) -> Array[RigidBody3D]:
 			continue
 
 		var dice_body := instance as RigidBody3D
+		if use_continuous_collision_detection:
+			dice_body.continuous_cd = true
 
 		if dice_body is Dice:
 			var runtime_dice := dice_body as Dice
