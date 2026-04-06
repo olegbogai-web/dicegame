@@ -255,6 +255,14 @@
   - базовый цвет: `rgb(156, 21, 0)`; цвет цифр: `rgb(247, 92, 92)`;
   - эффект: если способность активирована с расходом этого куба, перебрасываются все остальные оставшиеся кубы игрока;
   - текущая реализация хардкода: `content/combat/runtime/battle_effect_runtime.gd` (`KAMIKAZE_DICE_NAME`, `_has_consumed_dice_with_name()`, `_reroll_remaining_player_dice()`).
+- `dublikat` / «Дубликат» (`content/dice/definitions/dublikat.tres`):
+  - грани: `1..6`; редкость: `UNIQUE`;
+  - базовый цвет: `rgb(156, 21, 0)`; цвет цифр: `rgb(247, 92, 92)`;
+  - эффект: при броске создает идентичную копию и визуально бросается как два одинаковых куба;
+  - поведение распространяется на обычный бросок хода и на системный переброс;
+  - текущая реализация хардкода:
+    - `content/combat/runtime/battle_turn_orchestrator.gd` (`DUBLIKAT_DICE_NAME`, `_append_throw_requests_for_definition()`, `_should_duplicate_on_throw()`);
+    - `content/dice/dice.gd` (`DUBLIKAT_DICE_NAME`, `reroll_group_with_board_throw()`, `_should_duplicate_on_throw()`).
 - `joker` / «Джокер» (`content/dice/definitions/joker.tres`):
   - грани: `joker` x5 (`assets/dice_edges/joker.png`) + `пусто` x1; редкость: `UNIQUE`;
   - базовый цвет: `rgb(255, 255, 255)`;
