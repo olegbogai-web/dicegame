@@ -1,0 +1,65 @@
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_effect_definition.gd" id="6_effect"]
+[ext_resource type="Texture2D" path="res://assets/ability/heal.png" id="7_icon"]
+[ext_resource type="Resource" path="res://content/statuses/definitions/holiness.tres" id="8_holiness_status"]
+
+[sub_resource type="Resource" id="AbilityDiceCondition_pay"]
+script = ExtResource("3_dice_condition")
+required_count = 1
+required_tags = PackedStringArray()
+forbidden_tags = PackedStringArray()
+accepted_face_ids = PackedStringArray()
+consume_order = PackedStringArray()
+
+[sub_resource type="Resource" id="AbilityCost_main"]
+script = ExtResource("2_cost")
+dice_conditions = Array[ExtResource("3_dice_condition")]([SubResource("AbilityDiceCondition_pay")])
+
+[sub_resource type="Resource" id="AbilityEffect_heal"]
+script = ExtResource("6_effect")
+effect_id = "heal_restore_hp"
+effect_type = &"healing"
+magnitude = 2
+dice_query_tags = PackedStringArray()
+
+[sub_resource type="Resource" id="AbilityEffect_holiness"]
+script = ExtResource("6_effect")
+effect_id = "heal_apply_holiness"
+effect_type = &"apply_status"
+status_id = "holiness"
+dice_query_tags = PackedStringArray()
+parameters = {
+"stacks": 1,
+"status_definition": ExtResource("8_holiness_status"),
+"target": "source"
+}
+
+[sub_resource type="Resource" id="AbilityTargetRule_self"]
+script = ExtResource("4_target_rule")
+side = 3
+selection = 0
+min_targets = 0
+max_targets = 0
+allow_self = true
+required_tags = PackedStringArray()
+forbidden_tags = PackedStringArray()
+
+[resource]
+script = ExtResource("1_ability")
+ability_id = "heal"
+display_name = "Исцеление++"
+description = "Требует 1 любой куб. Исцеляет на 2 и накладывает на себя состояние «Святость» +1."
+icon = ExtResource("7_icon")
+tags = PackedStringArray("heal", "support")
+owner_scope = 0
+upgrade_level = 2
+max_upgrade_level = 2
+cost = SubResource("AbilityCost_main")
+target_rule = SubResource("AbilityTargetRule_self")
+effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_heal"), SubResource("AbilityEffect_holiness")])
+follow_up_ability_ids = PackedStringArray()

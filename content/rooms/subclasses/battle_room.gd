@@ -9,8 +9,8 @@ const TEST_MONSTER_DEFINITION := preload("res://content/monsters/definitions/tes
 const RAT_MONSTER_DEFINITION := preload("res://content/monsters/definitions/rat.tres")
 const GOBLIN_MONSTER_DEFINITION := preload("res://content/monsters/definitions/goblin.tres")
 const CHIMERA_MONSTER_DEFINITION := preload("res://content/monsters/definitions/chimera.tres")
-const COMMON_ATTACK_ABILITY := preload("res://content/abilities/definitions/common_attack_upgrade_any_die_random_reroll.tres")
-const HEAL_ABILITY := preload("res://content/abilities/definitions/heal.tres")
+const COMMON_ATTACK_ABILITY := preload("res://content/abilities/definitions/common_attack_upgrade_power_strength_1.tres")
+const HEAL_ABILITY := preload("res://content/abilities/definitions/heal_upgrade_efficiency_holiness_1_heal_2.tres")
 const REROLL_ABILITY := preload("res://content/abilities/definitions/reroll.tres")
 const REROLL_ALL_ABILITY := preload("res://content/abilities/definitions/reroll_all.tres")
 const PEREVERTYSH_DICE := preload("res://content/dice/definitions/perevertysh.tres")
@@ -758,6 +758,13 @@ static func build_default_player() -> Player:
 		REROLL_ABILITY,
 		REROLL_ALL_ABILITY,
 	]
+	var starter_ability_ids: Array[String] = []
+	for ability in base_stat.starting_abilities:
+		if ability == null:
+			starter_ability_ids.append("null")
+			continue
+		starter_ability_ids.append("%s(lvl=%d)" % [ability.ability_id, ability.upgrade_level])
+	print("[Debug][BattleRoom] Default player starting abilities: %s." % ", ".join(starter_ability_ids))
 	base_stat.starting_dice = [
 		preload("res://content/resources/base_cube.tres"),
 		preload("res://content/resources/base_cube.tres"),

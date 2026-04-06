@@ -1,15 +1,15 @@
 [gd_resource type="Resource" script_class="AbilityDefinition" format=3]
 
-[ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
-[ext_resource type="Script" uid="uid://cijja5c0f6ibw" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
-[ext_resource type="Script" uid="uid://vqakigfsnb18" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
-[ext_resource type="Script" uid="uid://c2t7x3op44t3s" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
-[ext_resource type="Script" uid="uid://drneiu6png0u3" path="res://content/abilities/resources/ability_effect_definition.gd" id="6_effect"]
-[ext_resource type="Texture2D" uid="uid://djtk1o38aysx6" path="res://assets/ability/heal.png" id="7_icon"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_effect_definition.gd" id="6_effect"]
+[ext_resource type="Texture2D" path="res://assets/ability/heal.png" id="7_icon"]
 
 [sub_resource type="Resource" id="AbilityDiceCondition_pay"]
 script = ExtResource("3_dice_condition")
-required_count = 2
+required_count = 1
 required_tags = PackedStringArray()
 forbidden_tags = PackedStringArray()
 accepted_face_ids = PackedStringArray()
@@ -23,7 +23,7 @@ dice_conditions = Array[ExtResource("3_dice_condition")]([SubResource("AbilityDi
 script = ExtResource("6_effect")
 effect_id = "heal_restore_hp"
 effect_type = &"healing"
-magnitude = 8
+magnitude = 5
 dice_query_tags = PackedStringArray()
 
 [sub_resource type="Resource" id="AbilityTargetRule_self"]
@@ -39,14 +39,14 @@ forbidden_tags = PackedStringArray()
 [resource]
 script = ExtResource("1_ability")
 ability_id = "heal"
-display_name = "Исцеление+"
-description = "Требует 2 любых куба. Исцеляет на 8."
+display_name = "Исцеление++"
+description = "Требует 1 любой куб. Исцеляет на 5."
 icon = ExtResource("7_icon")
 tags = PackedStringArray("heal", "support")
 owner_scope = 0
-upgrade_level = 1
+upgrade_level = 2
 max_upgrade_level = 2
 cost = SubResource("AbilityCost_main")
 target_rule = SubResource("AbilityTargetRule_self")
 effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_heal")])
-follow_up_ability_ids = PackedStringArray("res://content/abilities/definitions/heal_upgrade_power_regeneration_3.tres", "res://content/abilities/definitions/heal_upgrade_power_strength_1_heal_5.tres", "res://content/abilities/definitions/heal_upgrade_power_heal_12.tres")
+follow_up_ability_ids = PackedStringArray()

@@ -44,6 +44,24 @@
 
 ## 2. Модель данных (data-driven)
 
+### 2.0. Актуальные ветки улучшений (кратко)
+
+- `common_attack`:
+  - `1` → `common_attack_upgrade_power`;
+    - `1.1` → `common_attack_upgrade_power_damage_12`;
+    - `1.2` → `common_attack_upgrade_power_strength_1`.
+  - `2` → `common_attack_upgrade_any_die`;
+    - `2.1` → `common_attack_upgrade_any_die_random_reroll`;
+    - `2.2` → `common_attack_upgrade_any_die_damage_8`.
+- `heal`:
+  - `1` → `heal_upgrade_power`;
+    - `1.1` → `heal_upgrade_power_regeneration_3` (без прямого хила, `Регенерация +3`);
+    - `1.2` → `heal_upgrade_power_strength_1_heal_5` (`хил 5` + `Сила +1`);
+    - `1.3` → `heal_upgrade_power_heal_12` (`хил 12`).
+  - `2` → `heal_upgrade_efficiency`;
+    - `2.1` → `heal_upgrade_efficiency_heal_5` (`хил 5`);
+    - `2.2` → `heal_upgrade_efficiency_holiness_1_heal_2` (`хил 2` + `Святость +1`).
+
 ## 2.1. Что должно быть в ability content
 
 В контенте способности (definition/resource) должен быть отдельный блок метаданных улучшения:
