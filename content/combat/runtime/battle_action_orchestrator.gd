@@ -38,6 +38,7 @@ func _play_ability_use_visual(
 		var runtime_target_descriptor := target_descriptor.duplicate(true)
 		runtime_target_descriptor["consumed_dice"] = consumed_dice
 		runtime_target_descriptor["available_player_dice"] = _collect_available_player_dice(owner)
+		runtime_target_descriptor["board"] = owner._board
 		owner.battle_room_data.activate_current_turn_ability(ability, runtime_target_descriptor)
 		_apply_combatant_views_after_ability_resolution(owner)
 	var on_finished := func() -> void:
@@ -108,6 +109,7 @@ func _execute_monster_ability(
 		var runtime_target_descriptor := target_descriptor.duplicate(true)
 		runtime_target_descriptor["consumed_dice"] = consumed_dice
 		runtime_target_descriptor["available_player_dice"] = _collect_available_player_dice(owner)
+		runtime_target_descriptor["board"] = owner._board
 		owner.battle_room_data.activate_current_turn_ability(ability, runtime_target_descriptor)
 		_apply_combatant_views_after_ability_resolution(owner)
 		for dice in consumed_dice:
