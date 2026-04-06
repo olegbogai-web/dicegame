@@ -13,6 +13,7 @@ func resolve_target_descriptor_at_screen_point(
 	battle_room_data: BattleRoom,
 	player_sprite: MeshInstance3D,
 	monster_sprite_states: Array[Dictionary],
+	player_dice: Array[Dice],
 	floor_mesh: MeshInstance3D,
 	camera: Camera3D,
 	world_3d: World3D
@@ -22,11 +23,17 @@ func resolve_target_descriptor_at_screen_point(
 
 	match ability.target_rule.get_target_hint():
 		&"self":
-			if screen_point_hits_mesh(player_sprite, screen_point, camera) and battle_room_data.can_target_player():
+			if battle_room_data.can_target_player():
 				return {
 					"kind": &"player",
 				}
 		&"single_enemy":
+			var living_monster_indexes := battle_room_data.get_living_monster_indexes()
+			if living_monster_indexes.size() == 1:
+				return {
+					"kind": &"monster",
+					"index": living_monster_indexes[0],
+				}
 			for index in range(monster_sprite_states.size() - 1, -1, -1):
 				var monster_state = monster_sprite_states[index]
 				var sprite := monster_state.get("sprite") as MeshInstance3D
@@ -53,6 +60,13 @@ func resolve_target_descriptor_at_screen_point(
 			}
 		&"dice":
 			var target_dice := resolve_player_dice_at_screen_point(screen_point, camera, world_3d)
+			if target_dice == null:
+				var valid_dice: Array[Dice] = []
+				for dice in player_dice:
+					if dice != null and is_instance_valid(dice):
+						valid_dice.append(dice)
+				if valid_dice.size() == 1:
+					target_dice = valid_dice[0]
 			if target_dice != null and is_instance_valid(target_dice):
 				return {
 					"kind": &"dice",

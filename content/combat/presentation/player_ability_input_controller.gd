@@ -60,6 +60,7 @@ func handle_unhandled_input(
 		owner.battle_room_data,
 		owner._player_sprite,
 		owner._monster_sprite_states,
+		_get_board_dice(owner),
 		owner._floor,
 		owner._camera,
 		owner.get_world_3d()
