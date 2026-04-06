@@ -37,6 +37,7 @@ func _play_ability_use_visual(
 	var on_activate := func() -> void:
 		var runtime_target_descriptor := target_descriptor.duplicate(true)
 		runtime_target_descriptor["consumed_dice"] = consumed_dice
+		runtime_target_descriptor["available_player_dice"] = _collect_available_player_dice(owner)
 		owner.battle_room_data.activate_current_turn_ability(ability, runtime_target_descriptor)
 		_apply_combatant_views_after_ability_resolution(owner)
 	var on_finished := func() -> void:
@@ -106,6 +107,7 @@ func _execute_monster_ability(
 	if frame_state.is_empty():
 		var runtime_target_descriptor := target_descriptor.duplicate(true)
 		runtime_target_descriptor["consumed_dice"] = consumed_dice
+		runtime_target_descriptor["available_player_dice"] = _collect_available_player_dice(owner)
 		owner.battle_room_data.activate_current_turn_ability(ability, runtime_target_descriptor)
 		_apply_combatant_views_after_ability_resolution(owner)
 		for dice in consumed_dice:
@@ -113,6 +115,16 @@ func _execute_monster_ability(
 				dice.queue_free()
 		return
 	await _play_ability_use_visual(owner, frame_state, target_descriptor, consumed_dice, MONSTER_PRE_ACTIVATE_DELAY_SEC)
+
+
+func _collect_available_player_dice(owner: Node) -> Array[Dice]:
+	var available: Array[Dice] = []
+	if owner == null or owner._board == null:
+		return available
+	for child in owner._board.get_children():
+		if child is Dice and is_instance_valid(child) and StringName((child as Dice).get_meta(&"owner", &"")) == &"player":
+			available.append(child as Dice)
+	return available
 
 
 func _apply_combatant_views_after_ability_resolution(owner: Node) -> void:
