@@ -49,7 +49,7 @@ func resolve_target_descriptor_at_screen_point(
 				}
 		&"global":
 			return {
-				"kind": &"all_monsters",
+				"kind": &"global",
 			}
 		&"dice":
 			var target_dice := resolve_player_dice_at_screen_point(screen_point, camera, world_3d)

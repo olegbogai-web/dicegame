@@ -96,6 +96,9 @@ static func _resolve_effect_targets(battle_room, target_descriptor: Dictionary) 
 		if target_dice != null and is_instance_valid(target_dice):
 			resolved_targets.append(target_descriptor)
 		return resolved_targets
+	if target_kind == &"global":
+		resolved_targets.append(target_descriptor)
+		return resolved_targets
 	if target_kind == &"player" and battle_room.can_target_player():
 		resolved_targets.append(target_descriptor)
 	return resolved_targets
@@ -217,7 +220,7 @@ static func _apply_effect_to_target(
 			)
 			return StatusRuntime.apply_status(battle_room, status_target, status_definition, status_stacks, source_descriptor)
 		&"reroll_dice":
-			var dice_to_reroll := _resolve_reroll_dice_targets(target_descriptor, consumed_dice)
+			var dice_to_reroll := _resolve_reroll_dice_targets(effect, target_descriptor, consumed_dice)
 			if dice_to_reroll.is_empty():
 				_log_debug("reroll_dice skipped: no valid target dice")
 				return false
@@ -290,20 +293,53 @@ static func _to_status_descriptor(target_descriptor: Dictionary) -> Dictionary:
 	return {}
 
 
-static func _resolve_reroll_dice_targets(target_descriptor: Dictionary, consumed_dice: Array[Dice]) -> Array[Dice]:
+static func _resolve_reroll_dice_targets(
+	effect: AbilityEffectDefinition,
+	target_descriptor: Dictionary,
+	consumed_dice: Array[Dice]
+) -> Array[Dice]:
 	var resolved: Array[Dice] = []
+	var should_reroll_all_remaining := false
+	if effect != null:
+		should_reroll_all_remaining = StringName(effect.parameters.get("scope", &"")) == &"all_remaining_player_dice"
+	if should_reroll_all_remaining:
+		for dice in _resolve_available_player_dice(target_descriptor):
+			if _is_valid_reroll_candidate(dice, consumed_dice, resolved):
+				resolved.append(dice)
+
 	var target_kind := StringName(target_descriptor.get("kind", &""))
 	if target_kind == &"dice":
 		var target_dice = target_descriptor.get("dice") as Dice
-		if target_dice != null and is_instance_valid(target_dice):
+		if _is_valid_reroll_candidate(target_dice, consumed_dice, resolved, should_reroll_all_remaining):
 			resolved.append(target_dice)
 	for dice in consumed_dice:
-		if dice == null or not is_instance_valid(dice):
-			continue
-		if resolved.has(dice):
-			continue
-		resolved.append(dice)
+		if _is_valid_reroll_candidate(dice, consumed_dice, resolved, false):
+			resolved.append(dice)
 	return resolved
+
+
+static func _resolve_available_player_dice(target_descriptor: Dictionary) -> Array[Dice]:
+	var resolved: Array[Dice] = []
+	for raw_dice in target_descriptor.get("available_player_dice", []):
+		if raw_dice is Dice and is_instance_valid(raw_dice):
+			resolved.append(raw_dice as Dice)
+	return resolved
+
+
+static func _is_valid_reroll_candidate(
+	candidate,
+	consumed_dice: Array[Dice],
+	already_selected: Array[Dice],
+	exclude_consumed: bool = true
+) -> bool:
+	var dice := candidate as Dice
+	if dice == null or not is_instance_valid(dice):
+		return false
+	if exclude_consumed and consumed_dice.has(dice):
+		return false
+	if already_selected.has(dice):
+		return false
+	return true
 
 
 static func _log_debug(message: String) -> void:

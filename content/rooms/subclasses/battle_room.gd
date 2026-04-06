@@ -139,6 +139,7 @@ var turn_counter := 0
 var turn_start_pending := false
 var battle_result: StringName = &"none"
 var _ability_cooldowns_by_owner: Dictionary = {}
+var _used_once_per_battle_abilities_by_owner: Dictionary = {}
 
 
 func apply_battle_definition(definition: BattleRoomDefinition) -> void:
@@ -518,6 +519,9 @@ func can_activate_current_turn_ability(ability: AbilityDefinition) -> bool:
 	var owner_descriptor := _resolve_turn_owner_descriptor()
 	if owner_descriptor.is_empty():
 		return false
+	if ability.once_per_battle and _is_ability_used_once_per_battle(owner_descriptor, ability):
+		_debug_combat_log("Способность %s уже использована в этом бою и недоступна повторно." % String(ability.ability_id))
+		return false
 	return _get_ability_cooldown_turns(owner_descriptor, ability) <= 0
 
 
@@ -527,6 +531,8 @@ func register_current_turn_ability_use(ability: AbilityDefinition) -> void:
 	var owner_descriptor := _resolve_turn_owner_descriptor()
 	if owner_descriptor.is_empty():
 		return
+	if ability.once_per_battle:
+		_mark_ability_used_once_per_battle(owner_descriptor, ability)
 	var cooldown_turns := maxi(ability.cooldown_turns, 0)
 	if cooldown_turns <= 0:
 		return
@@ -552,6 +558,7 @@ func is_valid_room() -> bool:
 func _reset_battle_progression() -> void:
 	BattleTurnRuntime.reset_battle_progression(self)
 	_ability_cooldowns_by_owner.clear()
+	_used_once_per_battle_abilities_by_owner.clear()
 
 
 func _format_descriptor_label(descriptor: Dictionary) -> String:
@@ -612,6 +619,24 @@ func _build_owner_cooldown_key(owner_descriptor: Dictionary) -> StringName:
 	var side := String(owner_descriptor.get("side", ""))
 	var index := int(owner_descriptor.get("index", -1))
 	return StringName("%s:%d" % [side, index])
+
+
+func _mark_ability_used_once_per_battle(owner_descriptor: Dictionary, ability: AbilityDefinition) -> void:
+	if ability == null:
+		return
+	var owner_key := _build_owner_cooldown_key(owner_descriptor)
+	var used_abilities: Dictionary = _used_once_per_battle_abilities_by_owner.get(owner_key, {})
+	used_abilities[ability.ability_id] = true
+	_used_once_per_battle_abilities_by_owner[owner_key] = used_abilities
+	_debug_combat_log("One-shot способность %s помечена как использованная." % String(ability.ability_id))
+
+
+func _is_ability_used_once_per_battle(owner_descriptor: Dictionary, ability: AbilityDefinition) -> bool:
+	if ability == null:
+		return false
+	var owner_key := _build_owner_cooldown_key(owner_descriptor)
+	var used_abilities: Dictionary = _used_once_per_battle_abilities_by_owner.get(owner_key, {})
+	return bool(used_abilities.get(ability.ability_id, false))
 
 
 static func create_test_battle_room() -> BattleRoom:
