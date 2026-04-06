@@ -525,7 +525,6 @@ func can_activate_current_turn_ability(ability: AbilityDefinition) -> bool:
 	if owner_descriptor.is_empty():
 		return false
 	if ability.once_per_battle and _is_ability_used_once_per_battle(owner_descriptor, ability):
-		_debug_combat_log("Способность %s уже использована в этом бою и недоступна повторно." % String(ability.ability_id))
 		return false
 	return _get_ability_cooldown_turns(owner_descriptor, ability) <= 0
 
