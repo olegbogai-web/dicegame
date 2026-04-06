@@ -258,18 +258,19 @@ static func _apply_effect_to_target(
 			if random_reroll_target == null:
 				_log_debug("reroll_random_player_die skipped: no valid random target")
 				return false
-			var rerolled_random := Dice.reroll_group_with_board_throw([random_reroll_target])
+			var rerolled_random := Dice.throw_copies_group_with_board_throw([random_reroll_target])
 			var reroll_success := not rerolled_random.is_empty()
 			if reroll_success:
 				_log_debug(
-					"reroll_random_player_die applied: ability=%s effect=%s dice=%s" % [
+					"reroll_random_player_die applied as throw-copy: ability=%s effect=%s dice=%s copies=%d" % [
 						String(ability.ability_id),
 						String(effect.effect_id),
 						String(random_reroll_target.definition.dice_name) if random_reroll_target.definition != null else "unknown",
+						rerolled_random.size(),
 					]
 				)
 			else:
-				_log_debug("reroll_random_player_die skipped: board reroll produced no dice")
+				_log_debug("reroll_random_player_die skipped: board throw-copy produced no dice")
 			return reroll_success
 	return false
 
