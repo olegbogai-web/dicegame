@@ -12,6 +12,7 @@ const HEALTH_BAR_ANIMATION_DURATION := 0.5
 const STATUS_TEMPLATE_PATH := ^"state"
 const STATUS_RUNTIME_NODE_PREFIX := "state_runtime_"
 const STATUS_ICON_SPACING_X := 0.26
+const MONSTER_STACK_SPACING_Z := BattleRoomScript.STACK_SPACING_Z + 0.8
 
 
 func _apply_room_data(owner: Node) -> void:
@@ -70,7 +71,7 @@ func _apply_monster_sprites(owner: Node) -> void:
 		owner._monster_sprite_template.visible = false
 		return
 
-	var offsets := _build_centered_offsets(monster_views.size(), BattleRoomScript.STACK_SPACING_Z)
+	var offsets := _build_centered_offsets(monster_views.size(), MONSTER_STACK_SPACING_Z)
 	for index in monster_views.size():
 		var target_sprite = owner._monster_sprite_template if index == 0 else _duplicate_sprite_template(owner, owner._monster_sprite_template, owner._generated_monster_sprites)
 		var monster_view = monster_views[index]
