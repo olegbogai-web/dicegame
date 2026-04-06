@@ -6,7 +6,7 @@
 [ext_resource type="Script" uid="uid://c2t7x3op44t3s" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
 [ext_resource type="Script" uid="uid://lfpdg732cjt" path="res://content/abilities/resources/ability_condition.gd" id="5_condition"]
 [ext_resource type="Script" uid="uid://drneiu6png0u3" path="res://content/abilities/resources/ability_effect_definition.gd" id="6_effect"]
-[ext_resource type="Texture2D" uid="uid://cc0r8hvl0nlh5" path="res://assets/ability/common_attack.png" id="7_icon"]
+[ext_resource type="Texture2D" uid="uid://de4ysofyiwoyi" path="res://assets/ability/common_attack.png" id="7_icon"]
 
 [sub_resource type="Resource" id="AbilityDiceCondition_pay"]
 script = ExtResource("3_dice_condition")
@@ -46,9 +46,9 @@ display_name = "Обычный удар"
 description = "Требует четное значение на верхней грани куба. Наносит 5 урона выбранному существу."
 icon = ExtResource("7_icon")
 tags = PackedStringArray("attack")
+max_upgrade_level = 2
 cost = SubResource("AbilityCost_main")
 target_rule = SubResource("AbilityTargetRule_enemy")
 use_conditions = Array[ExtResource("5_condition")]([SubResource("AbilityCondition_even_top_face")])
 effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_damage")])
-max_upgrade_level = 2
 follow_up_ability_ids = PackedStringArray("res://content/abilities/definitions/common_attack_upgrade_power.tres", "res://content/abilities/definitions/common_attack_upgrade_any_die.tres")

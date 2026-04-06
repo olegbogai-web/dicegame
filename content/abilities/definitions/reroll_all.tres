@@ -1,10 +1,12 @@
-[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://pc7t1cjefmy8"]
 
-[ext_resource type="Script" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
-[ext_resource type="Script" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
-[ext_resource type="Script" path="res://content/abilities/resources/ability_target_rule.gd" id="3_target_rule"]
-[ext_resource type="Script" path="res://content/abilities/resources/ability_effect_definition.gd" id="4_effect"]
-[ext_resource type="Texture2D" path="res://assets/ability/reroll_all.png" id="5_icon"]
+[ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" uid="uid://lfpdg732cjt" path="res://content/abilities/resources/ability_condition.gd" id="1_pe52s"]
+[ext_resource type="Script" uid="uid://cijja5c0f6ibw" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
+[ext_resource type="Script" uid="uid://vqakigfsnb18" path="res://content/abilities/resources/ability_dice_condition.gd" id="2_owbow"]
+[ext_resource type="Script" uid="uid://c2t7x3op44t3s" path="res://content/abilities/resources/ability_target_rule.gd" id="3_target_rule"]
+[ext_resource type="Script" uid="uid://drneiu6png0u3" path="res://content/abilities/resources/ability_effect_definition.gd" id="4_effect"]
+[ext_resource type="Texture2D" uid="uid://cl140ijybstru" path="res://assets/ability/reroll_all.png" id="5_icon"]
 
 [sub_resource type="Resource" id="AbilityCost_reroll_all"]
 script = ExtResource("2_cost")
@@ -13,6 +15,7 @@ script = ExtResource("2_cost")
 script = ExtResource("4_effect")
 effect_id = "reroll_all_remaining_player_dice"
 effect_type = &"reroll_dice"
+dice_query_tags = PackedStringArray()
 parameters = {
 "scope": "all_remaining_player_dice"
 }
@@ -22,6 +25,8 @@ script = ExtResource("3_target_rule")
 side = 2
 selection = 0
 allow_self = true
+required_tags = PackedStringArray()
+forbidden_tags = PackedStringArray()
 
 [resource]
 script = ExtResource("1_ability")

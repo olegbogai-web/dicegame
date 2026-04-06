@@ -85,7 +85,7 @@ func _try_reroll_perevertysh_die(owner: Node, mouse_event: InputEventMouseButton
 	if target_dice.definition == null or StringName(target_dice.definition.dice_name) != PEREVERTYSH_DICE_NAME:
 		return false
 	var die_instance_id := target_dice.get_instance_id()
-	var current_turn := owner.battle_room_data.turn_counter
+	var current_turn = owner.battle_room_data.turn_counter
 	var reroll_turn_by_die: Dictionary = owner._perevertysh_reroll_turn_by_die
 	if reroll_turn_by_die.get(die_instance_id, -1) == current_turn:
 		return false

@@ -57,7 +57,6 @@ flavor_text = "Палка, смазанная говном. Просто и эф
 icon = ExtResource("7_icon")
 tags = PackedStringArray("attack", "poison", "goblin")
 owner_scope = 1
-rarity = 0
 max_upgrade_level = 1
 cost = SubResource("AbilityCost_main")
 target_rule = SubResource("AbilityTargetRule_enemy")
