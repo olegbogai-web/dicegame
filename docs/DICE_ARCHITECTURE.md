@@ -255,6 +255,16 @@
   - базовый цвет: `rgb(156, 21, 0)`; цвет цифр: `rgb(247, 92, 92)`;
   - эффект: если способность активирована с расходом этого куба, перебрасываются все остальные оставшиеся кубы игрока;
   - текущая реализация хардкода: `content/combat/runtime/battle_effect_runtime.gd` (`KAMIKAZE_DICE_NAME`, `_has_consumed_dice_with_name()`, `_reroll_remaining_player_dice()`).
+- `joker` / «Джокер» (`content/dice/definitions/joker.tres`):
+  - грани: `joker` x5 (`assets/dice_edges/joker.png`) + `пусто` x1; редкость: `UNIQUE`;
+  - базовый цвет: `rgb(255, 255, 255)`;
+  - эффект: если в любой ячейке способности стоит куб с верхней гранью `joker`, способность можно активировать вне зависимости от dice-условий.
+- `almost_real_joker` / «Почти настоящий джокер» (`content/dice/definitions/almost_real_joker.tres`):
+  - грани: `joker` x3 (`assets/dice_edges/joker.png`) + `пусто` x3; редкость: `RARE`;
+  - базовый цвет: `rgb(255, 255, 255)`.
+- `false_joker` / «Ложный джокер» (`content/dice/definitions/false_joker.tres`):
+  - грани: `joker` x1 (`assets/dice_edges/joker.png`) + `пусто` x5; редкость: `COMMON`;
+  - базовый цвет: `rgb(255, 255, 255)`.
 
 ### 9. `dice_face_view.gd`
 

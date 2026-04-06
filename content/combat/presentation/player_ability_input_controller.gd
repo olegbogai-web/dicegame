@@ -17,6 +17,7 @@ const SELECTED_FRAME_LIFT_Y := 1.9
 const SELECTED_FRAME_MOUSE_FOLLOW_FACTOR := 0.2
 
 const PEREVERTYSH_DICE_NAME := &"perevertysh"
+const JOKER_FACE_ID := &"joker"
 
 
 func handle_unhandled_input(
@@ -229,6 +230,8 @@ func _is_ability_state_ready(owner: Node, frame_state: Dictionary) -> bool:
 	if owner.battle_room_data == null or not owner.battle_room_data.can_activate_current_turn_ability(ability):
 		return false
 	var consumed_dice := _collect_ready_dice_for_frame(owner, frame)
+	if _has_joker_override_in_consumed_dice(consumed_dice):
+		return true
 	return BattleAbilityRuntime.can_use_ability_with_dice(ability, consumed_dice, true)
 
 
@@ -301,13 +304,15 @@ func _dice_matches_slot(_owner: Node, dice: Dice, slot_state: Dictionary) -> boo
 	var condition := slot_state.get("condition") as AbilityDiceCondition
 	if dice == null or condition == null:
 		return false
+	var top_face := dice.get_top_face()
+	if top_face != null and StringName(top_face.text_value) == JOKER_FACE_ID:
+		return true
 
 	var top_face_value := dice.get_top_face_value()
 	if top_face_value < 0 or not condition.matches_value(top_face_value):
 		return false
 
 	if condition.requires_face_filter():
-		var top_face := dice.get_top_face()
 		if top_face == null or not condition.accepted_face_ids.has(top_face.text_value):
 			return false
 
@@ -320,6 +325,20 @@ func _dice_matches_slot(_owner: Node, dice: Dice, slot_state: Dictionary) -> boo
 			return false
 
 	return BattleAbilityRuntime.is_die_usable_for_ability(dice, slot_state.get("ability") as AbilityDefinition, condition)
+
+
+func _has_joker_override_in_consumed_dice(consumed_dice: Array[Dice]) -> bool:
+	for dice in consumed_dice:
+		if dice == null or not is_instance_valid(dice):
+			continue
+		if not dice.is_snapped_to_ability_slot():
+			continue
+		var top_face := dice.get_top_face()
+		if top_face == null:
+			continue
+		if StringName(top_face.text_value) == JOKER_FACE_ID:
+			return true
+	return false
 
 
 func _get_slot_target_position(dice_place: MeshInstance3D, dice: Dice) -> Vector3:

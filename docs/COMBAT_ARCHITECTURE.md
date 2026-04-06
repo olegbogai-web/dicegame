@@ -156,6 +156,15 @@
   - trigger: способность активирована и в `consumed_dice` есть куб `kamikaze`;
   - effect: переброс всех оставшихся кубов игрока (кроме уже потраченных в этой активации);
   - runtime hooks: `BattleEffectRuntime::KAMIKAZE_DICE_NAME`, `BattleEffectRuntime::_has_consumed_dice_with_name`, `BattleEffectRuntime::_reroll_remaining_player_dice`.
+- `joker`-линейка (`content/dice/definitions/joker.tres`, `content/dice/definitions/almost_real_joker.tres`, `content/dice/definitions/false_joker.tres`):
+  - trigger: в любой ячейке выбранной способности стоит куб, у которого верхняя грань имеет `text_value = "joker"`;
+  - effect: активация способности разрешается независимо от проверок dice-условий (value/face/tags/use_conditions);
+  - runtime hooks:
+    - `BattleAbilityRuntime::JOKER_FACE_ID`;
+    - `BattleAbilityRuntime::_has_joker_override_dice`;
+    - `PlayerAbilityInputController::JOKER_FACE_ID`;
+    - `PlayerAbilityInputController::_has_joker_override_in_consumed_dice`;
+    - `PlayerAbilityInputController::_dice_matches_slot` (джокер можно поставить в любую ячейку способности).
 
 ---
 
