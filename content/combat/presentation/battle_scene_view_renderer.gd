@@ -2,6 +2,7 @@ extends RefCounted
 class_name BattleSceneViewRenderer
 
 const BattleRoomScript = preload("res://content/rooms/subclasses/battle_room.gd")
+const RarityFrameVisuals = preload("res://content/combat/presentation/rarity_frame_visuals.gd")
 
 const TINT_MATERIAL_META_KEY := &"runtime_tint_material"
 const HEALTH_BAR_META_KEY := &"health_bar_base_transform"
@@ -129,6 +130,7 @@ func _apply_ability_frames(
 			continue
 		frame.transform = Transform3D(frame.transform.basis, anchor + Vector3(0.0, 0.0, offsets[index]))
 		_apply_ability_icon(owner, frame, ability)
+		_apply_ability_frame_rarity_visual(frame, ability)
 		_apply_dice_places(frame, owner.battle_room_data.get_required_dice_slots(ability))
 		if track_player_slots:
 			owner._player_ability_input_controller._register_player_ability_frame(owner, frame, ability, index)
@@ -156,6 +158,7 @@ func _apply_monster_ability_frames(owner: Node) -> void:
 			BattleRoomScript.MONSTER_ABILITY_FRAME_POSITION + Vector3(0.0, 0.0, offsets[index])
 		)
 		_apply_ability_icon(owner, frame, ability)
+		_apply_ability_frame_rarity_visual(frame, ability)
 		_apply_dice_places(frame, owner.battle_room_data.get_required_dice_slots(ability))
 		_register_monster_ability_frame(owner, frame, entry, index)
 
@@ -239,6 +242,12 @@ func _apply_ability_icon(owner: Node, frame: MeshInstance3D, ability: AbilityDef
 	if icon_node.visible:
 		_apply_texture_to_mesh(owner, icon_node, ability.icon)
 
+
+
+func _apply_ability_frame_rarity_visual(frame: MeshInstance3D, ability: AbilityDefinition) -> void:
+	if frame == null or ability == null:
+		return
+	RarityFrameVisuals.apply_base_frame_to_mesh_instance(frame, ability.rarity)
 
 func _apply_dice_places(frame: MeshInstance3D, required_count: int) -> void:
 	var dice_places := _get_dice_place_nodes(frame)
