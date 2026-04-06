@@ -16,6 +16,8 @@ const FRAME_SELECTED_COLOR := Color(1.0, 0.92, 0.52, 1.0)
 const SELECTED_FRAME_LIFT_Y := 1.9
 const SELECTED_FRAME_MOUSE_FOLLOW_FACTOR := 0.2
 
+const PEREVERTYSH_DICE_NAME := &"perevertysh"
+
 
 func handle_unhandled_input(
 	owner: Node,
@@ -38,6 +40,8 @@ func handle_unhandled_input(
 	if not owner.battle_room_data.is_player_turn() or owner.battle_room_data.is_battle_over():
 		return false
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
+		if _try_reroll_perevertysh_die(owner, event as InputEventMouseButton, targeting_service):
+			return true
 		_cancel_selected_ability(owner)
 		return true
 	if not (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT):
@@ -67,6 +71,23 @@ func handle_unhandled_input(
 	if target_descriptor.is_empty():
 		return false
 	await action_orchestrator._activate_selected_ability(owner, target_descriptor)
+	return true
+
+
+func _try_reroll_perevertysh_die(owner: Node, mouse_event: InputEventMouseButton, targeting_service: BattleTargetingService) -> bool:
+	if owner == null or owner.battle_room_data == null or mouse_event == null or targeting_service == null:
+		return false
+	var target_dice := targeting_service.resolve_player_dice_at_screen_point(mouse_event.position, owner._camera, owner.get_world_3d())
+	if target_dice == null or not is_instance_valid(target_dice):
+		return false
+	if target_dice.definition == null or StringName(target_dice.definition.dice_name) != PEREVERTYSH_DICE_NAME:
+		return false
+	if owner._perevertysh_reroll_turn_counter == owner.battle_room_data.turn_counter:
+		return false
+	var rerolled := Dice.reroll_group_with_board_throw([target_dice])
+	if rerolled.is_empty():
+		return false
+	owner._perevertysh_reroll_turn_counter = owner.battle_room_data.turn_counter
 	return true
 
 

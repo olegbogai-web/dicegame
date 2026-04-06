@@ -5,6 +5,8 @@ const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runt
 const Dice = preload("res://content/dice/dice.gd")
 const StatusRuntime = preload("res://content/statuses/runtime/status_runtime.gd")
 
+const KAMIKAZE_DICE_NAME := &"kamikaze"
+
 
 static func activate_current_turn_ability(battle_room, ability: AbilityDefinition, target_descriptor: Dictionary) -> Dictionary:
 	if ability == null or battle_room.current_turn_owner == &"none" or BattleTurnRuntime.is_battle_over(battle_room):
@@ -50,6 +52,10 @@ static func activate_current_turn_ability(battle_room, ability: AbilityDefinitio
 			if _apply_effect_to_target(battle_room, ability, effect, effect_target, consumed_dice, source_descriptor):
 				affected_targets.append(effect_target)
 				applied_any_effect = true
+
+	if _has_consumed_dice_with_name(consumed_dice, KAMIKAZE_DICE_NAME):
+		if _reroll_remaining_player_dice(target_descriptor, consumed_dice):
+			applied_any_effect = true
 
 	StatusRuntime.trigger_event(StatusRuntime.build_event_context(
 		StatusRuntime.TRIGGER_ABILITY_AFTER_RESOLVE,
@@ -239,6 +245,34 @@ static func _apply_effect_to_target(
 				_log_debug("reroll_dice skipped: board reroll produced no dice")
 			return is_successful
 	return false
+
+
+static func _has_consumed_dice_with_name(consumed_dice: Array[Dice], expected_dice_name: StringName) -> bool:
+	if expected_dice_name == &"":
+		return false
+	for dice in consumed_dice:
+		if dice == null or not is_instance_valid(dice) or dice.definition == null:
+			continue
+		if StringName(dice.definition.dice_name) == expected_dice_name:
+			return true
+	return false
+
+
+static func _reroll_remaining_player_dice(target_descriptor: Dictionary, consumed_dice: Array[Dice]) -> bool:
+	var reroll_targets: Array[Dice] = []
+	for dice in _resolve_available_player_dice(target_descriptor):
+		if _is_valid_reroll_candidate(dice, consumed_dice, reroll_targets):
+			reroll_targets.append(dice)
+	if reroll_targets.is_empty():
+		_log_debug("kamikaze reroll skipped: no remaining player dice")
+		return false
+	var rerolled_dice := Dice.reroll_group_with_board_throw(reroll_targets)
+	var success := not rerolled_dice.is_empty()
+	if success:
+		_log_debug("kamikaze reroll applied: source_count=%d rerolled_count=%d" % [reroll_targets.size(), rerolled_dice.size()])
+	else:
+		_log_debug("kamikaze reroll skipped: board reroll produced no dice")
+	return success
 
 
 static func _resolve_source_status_container(battle_room):
