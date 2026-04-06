@@ -3,6 +3,7 @@ class_name BattleAbilityRuntime
 
 const Dice = preload("res://content/dice/dice.gd")
 const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd")
+const JOKER_FACE_ID := &"joker"
 
 
 static func build_slot_conditions(ability: AbilityDefinition) -> Array[AbilityDiceCondition]:
@@ -25,6 +26,8 @@ static func can_use_ability_with_dice(
 	if ability == null:
 		return false
 	if ability.cost == null or not ability.cost.requires_dice():
+		return true
+	if _has_joker_override_dice(dice_list, require_stopped):
 		return true
 	return collect_dice_for_ability(ability, dice_list, require_stopped).size() >= get_required_dice_count(ability)
 
@@ -272,3 +275,17 @@ static func _satisfies_ability_use_conditions(dice: Dice, ability: AbilityDefini
 			if parity == "odd" and top_face_value % 2 == 0:
 				return false
 	return true
+
+
+static func _has_joker_override_dice(dice_list: Array[Dice], require_stopped: bool) -> bool:
+	for dice in dice_list:
+		if dice == null or not is_instance_valid(dice):
+			continue
+		if require_stopped and not is_die_fully_stopped(dice):
+			continue
+		var top_face := dice.get_top_face()
+		if top_face == null:
+			continue
+		if StringName(top_face.text_value) == JOKER_FACE_ID:
+			return true
+	return false
