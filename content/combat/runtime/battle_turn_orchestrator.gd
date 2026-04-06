@@ -10,6 +10,11 @@ const TURN_TRANSFER_DELAY_SEC := 0.3
 const VISUAL_SYNC_TIMEOUT_SEC := 2.0
 
 var _turn_transition_in_progress := false
+var _dice_selection_rng := RandomNumberGenerator.new()
+
+
+func _init() -> void:
+	_dice_selection_rng.randomize()
 
 
 func start_current_turn(context: Dictionary) -> void:
@@ -59,6 +64,7 @@ func throw_current_turn_dice(context: Dictionary) -> void:
 					"owner": &"monster",
 					"monster_index": battle_room_data.current_monster_turn_index,
 				}))
+	_apply_turn_start_dice_penalty(battle_room_data, requests)
 	if not requests.is_empty():
 		board.throw_dice(requests)
 
@@ -181,3 +187,61 @@ func _wait_delay(owner_node: Node, seconds: float) -> void:
 	if seconds <= 0.0:
 		return
 	await owner_node.get_tree().create_timer(seconds).timeout
+
+
+func _apply_turn_start_dice_penalty(battle_room_data: BattleRoom, requests: Array[DiceThrowRequest]) -> void:
+	if battle_room_data == null or requests.is_empty():
+		return
+	var owner_descriptor := {}
+	if battle_room_data.is_player_turn():
+		owner_descriptor = {"side": &"player"}
+	elif battle_room_data.is_monster_turn():
+		owner_descriptor = {
+			"side": &"enemy",
+			"index": battle_room_data.current_monster_turn_index,
+		}
+	if owner_descriptor.is_empty():
+		return
+	var penalty := battle_room_data.consume_turn_start_dice_penalty(owner_descriptor)
+	if penalty <= 0:
+		return
+	var available_count := requests.size()
+	var resolved_penalty := mini(maxi(penalty, 0), available_count)
+	if resolved_penalty <= 0:
+		return
+	var removable_indexes: Array[int] = []
+	for index in available_count:
+		removable_indexes.append(index)
+	for _step in resolved_penalty:
+		if removable_indexes.is_empty():
+			break
+		var random_slot := _dice_selection_rng.randi_range(0, removable_indexes.size() - 1)
+		var remove_index := removable_indexes[random_slot]
+		removable_indexes.remove_at(random_slot)
+		requests.remove_at(remove_index)
+		for item_index in removable_indexes.size():
+			if removable_indexes[item_index] > remove_index:
+				removable_indexes[item_index] -= 1
+	_log_debug(
+		"Применен штраф на кубы в начале хода: owner=%s penalty=%d removed=%d remaining=%d." % [
+			_format_turn_owner(owner_descriptor),
+			penalty,
+			resolved_penalty,
+			requests.size(),
+		]
+	)
+
+
+func _log_debug(message: String) -> void:
+	if not OS.is_debug_build():
+		return
+	print("[BattleTurnOrchestrator] %s" % message)
+
+
+func _format_turn_owner(descriptor: Dictionary) -> String:
+	var side := StringName(descriptor.get("side", &""))
+	if side == &"player":
+		return "игрок"
+	if side == &"enemy":
+		return "монстр #%d" % (int(descriptor.get("index", -1)) + 1)
+	return "неизвестно"

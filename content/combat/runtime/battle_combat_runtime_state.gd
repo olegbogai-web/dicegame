@@ -6,6 +6,7 @@ const CombatantRuntimeState = preload("res://content/combat/runtime/combatant_ru
 var player_state: CombatantRuntimeState
 var monster_states: Array[CombatantRuntimeState] = []
 var status_event_log: Array[Dictionary] = []
+var _turn_start_dice_penalty_by_owner: Dictionary = {}
 
 
 func set_player_state(combatant_id: StringName, side: StringName = &"player") -> void:
@@ -56,6 +57,7 @@ func clear_all_statuses() -> void:
 	for monster_state in monster_states:
 		if monster_state != null and monster_state.statuses != null:
 			monster_state.statuses.clear()
+	_turn_start_dice_penalty_by_owner.clear()
 	clear_status_event_log()
 
 
@@ -66,6 +68,7 @@ func mark_combatant_dead(descriptor: Dictionary) -> void:
 	combatant_state.is_alive = false
 	if combatant_state.statuses != null:
 		combatant_state.statuses.clear()
+	_turn_start_dice_penalty_by_owner.erase(_build_owner_key(descriptor))
 
 
 func mark_combatant_alive(descriptor: Dictionary) -> void:
@@ -88,3 +91,34 @@ func get_status_event_log() -> Array[Dictionary]:
 
 func clear_status_event_log() -> void:
 	status_event_log.clear()
+
+
+func add_turn_start_dice_penalty(descriptor: Dictionary, penalty: int) -> int:
+	var resolved_penalty := maxi(penalty, 0)
+	if resolved_penalty <= 0:
+		return 0
+	var owner_key := _build_owner_key(descriptor)
+	if owner_key == &"":
+		return 0
+	var current_penalty := int(_turn_start_dice_penalty_by_owner.get(owner_key, 0))
+	var next_penalty := current_penalty + resolved_penalty
+	_turn_start_dice_penalty_by_owner[owner_key] = next_penalty
+	return next_penalty
+
+
+func consume_turn_start_dice_penalty(descriptor: Dictionary) -> int:
+	var owner_key := _build_owner_key(descriptor)
+	if owner_key == &"":
+		return 0
+	var penalty := maxi(int(_turn_start_dice_penalty_by_owner.get(owner_key, 0)), 0)
+	_turn_start_dice_penalty_by_owner.erase(owner_key)
+	return penalty
+
+
+func _build_owner_key(descriptor: Dictionary) -> StringName:
+	var side := StringName(descriptor.get("side", &""))
+	if side == &"player":
+		return &"player"
+	if side == &"enemy":
+		return StringName("enemy_%d" % int(descriptor.get("index", -1)))
+	return &""

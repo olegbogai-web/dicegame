@@ -19,6 +19,7 @@ const EVENT_STATUS_APPLIED := &"status_applied"
 const EVENT_STATUS_REMOVED := &"status_removed"
 const EVENT_STATUS_TRIGGERED := &"status_triggered"
 const EVENT_STATUS_EXPIRED := &"status_expired"
+const EFFECT_DISARM_DICE_ON_TURN_START := &"disarm_dice_on_turn_start"
 
 
 static func build_event_context(event_name: StringName, payload: Dictionary = {}) -> Dictionary:
@@ -412,6 +413,9 @@ static func _execute_trigger_effect(
 		return
 	if effect.effect_type == &"damage_per_used_die":
 		_apply_damage_per_used_die(context, effect, entry)
+		return
+	if effect.effect_type == EFFECT_DISARM_DICE_ON_TURN_START:
+		_apply_turn_start_dice_penalty(context, effect, entry)
 
 
 static func _apply_direct_magnitude(
@@ -609,6 +613,43 @@ static func _apply_damage_per_used_die(
 			"magnitude": total_magnitude,
 			"metadata": {"origin": &"status"},
 		}))
+
+
+static func _apply_turn_start_dice_penalty(
+	context: Dictionary,
+	effect: StatusEffectDefinition,
+	entry: Dictionary
+) -> void:
+	var battle_room = context.get("battle_room", null)
+	if battle_room == null:
+		return
+	var owner_descriptor := context.get("owner_descriptor", {}) as Dictionary
+	var owner_side := StringName(owner_descriptor.get("side", &""))
+	var resolved_penalty := maxi(int(round(float(entry.get("scaled_value", effect.value)))), 0)
+	if resolved_penalty <= 0:
+		_log_debug(
+			"turn_start_dice_penalty skipped: status=%s effect=%s penalty=%d owner=%s" % [
+				String(entry.get("status_id", &"")),
+				String(entry.get("effect_id", &"")),
+				resolved_penalty,
+				_format_descriptor(owner_descriptor),
+			]
+		)
+		return
+	var targets := _resolve_targets(battle_room, owner_descriptor, owner_side, effect.target_scope)
+	if targets.is_empty():
+		return
+	for target in targets:
+		var accumulated_penalty := battle_room.add_turn_start_dice_penalty(target, resolved_penalty)
+		_log_debug(
+			"turn_start_dice_penalty queued: status=%s effect=%s add=%d total=%d target=%s" % [
+				String(entry.get("status_id", &"")),
+				String(entry.get("effect_id", &"")),
+				resolved_penalty,
+				accumulated_penalty,
+				_format_descriptor(target),
+			]
+		)
 
 
 static func _resolve_targets(battle_room, owner_descriptor: Dictionary, owner_side: StringName, target_scope: StringName) -> Array[Dictionary]:
