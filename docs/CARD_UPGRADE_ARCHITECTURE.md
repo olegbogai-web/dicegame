@@ -61,6 +61,15 @@
   - `2` → `heal_upgrade_efficiency`;
     - `2.1` → `heal_upgrade_efficiency_heal_5` (`хил 5`);
     - `2.2` → `heal_upgrade_efficiency_holiness_1_heal_2` (`хил 2` + `Святость +1`).
+- `death_blow`:
+  - `1` → `death_blow_upgrade_1` (`урон 20`, 1 куб `6`);
+    - `1.1` → `death_blow_upgrade_1_1` (`урон 25`);
+    - `1.2` → `death_blow_upgrade_1_2` (`урон 15`, при убийстве цели `хил 15`);
+    - `1.3` → `death_blow_upgrade_1_3` (`урон 20`, 1 куб `5` или `6`).
+  - `2` → `death_blow_upgrade_2` (`урон 30`, 2 куба `6`);
+    - `2.1` → `death_blow_upgrade_2_1` (`урон 75`, ровно 3 куба `6`);
+    - `2.2` → `death_blow_upgrade_2_2` (`урон 50` + `Обезоружен 1`);
+    - `2.3` → `death_blow_upgrade_2_3` (`урон 60`).
 
 ## 2.1. Что должно быть в ability content
 

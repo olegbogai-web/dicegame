@@ -1,6 +1,5 @@
-[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://dg8chslp78ydq"]
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
 
-[ext_resource type="Script" uid="uid://lfpdg732cjt" path="res://content/abilities/resources/ability_condition.gd" id="1_1w68m"]
 [ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
 [ext_resource type="Script" uid="uid://cijja5c0f6ibw" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
 [ext_resource type="Script" uid="uid://vqakigfsnb18" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
@@ -23,7 +22,14 @@ dice_conditions = Array[ExtResource("3_dice_condition")]([SubResource("AbilityDi
 
 [sub_resource type="Resource" id="AbilityEffect_damage"]
 script = ExtResource("6_effect")
-effect_id = "death_blow_damage"
+effect_id = "death_blow_damage_1_2"
+magnitude = 15
+dice_query_tags = PackedStringArray()
+
+[sub_resource type="Resource" id="AbilityEffect_heal_if_kill"]
+script = ExtResource("6_effect")
+effect_id = "death_blow_heal_if_kill_1_2"
+effect_type = &"heal_if_target_dead"
 magnitude = 15
 dice_query_tags = PackedStringArray()
 
@@ -35,12 +41,13 @@ forbidden_tags = PackedStringArray()
 [resource]
 script = ExtResource("1_ability")
 ability_id = "death_blow"
-display_name = "Смертельный удар"
-description = "Наносит 15 урона; активируется шестеркой."
+display_name = "Смертельный удар++"
+description = "Наносит 15 урона; если удар убивает цель, восстанавливает 15 ХП."
 icon = ExtResource("7_icon")
 tags = PackedStringArray("attack")
+upgrade_level = 2
 max_upgrade_level = 2
 cost = SubResource("AbilityCost_main")
 target_rule = SubResource("AbilityTargetRule_enemy")
-effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_damage")])
-follow_up_ability_ids = PackedStringArray("res://content/abilities/definitions/death_blow_upgrade_1.tres", "res://content/abilities/definitions/death_blow_upgrade_2.tres")
+effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_damage"), SubResource("AbilityEffect_heal_if_kill")])
+follow_up_ability_ids = PackedStringArray()
