@@ -3,6 +3,7 @@ class_name BoardController
 
 const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd")
 const Dice = preload("res://content/dice/dice.gd")
+const DUPLICATE_DICE_NAME := &"duplicate"
 
 @export_category("Board References")
 @export var floor_path: NodePath = ^"floor"
@@ -40,8 +41,9 @@ func throw_dice(requests: Array[DiceThrowRequest]) -> Array[RigidBody3D]:
 	var occupied_areas: Array[AABB] = []
 	var board_center := _get_board_center()
 	var spawn_extents := _get_spawn_extents()
+	var expanded_requests := _expand_duplicate_requests(requests)
 
-	for request in requests:
+	for request in expanded_requests:
 		if request == null or request.dice_scene == null:
 			push_warning("Skipped dice throw request because no scene was provided.")
 			continue
@@ -89,6 +91,35 @@ func throw_dice(requests: Array[DiceThrowRequest]) -> Array[RigidBody3D]:
 		spawned_dice.append(dice_body)
 
 	return spawned_dice
+
+
+func _expand_duplicate_requests(requests: Array[DiceThrowRequest]) -> Array[DiceThrowRequest]:
+	var expanded: Array[DiceThrowRequest] = []
+	for request in requests:
+		if request == null:
+			continue
+		expanded.append(request)
+		if not _is_duplicate_dice_request(request):
+			continue
+		expanded.append(
+			DiceThrowRequestScript.create(
+				request.dice_scene,
+				request.size,
+				request.mass,
+				request.extra_size_multiplier,
+				request.metadata
+			)
+		)
+	return expanded
+
+
+func _is_duplicate_dice_request(request: DiceThrowRequest) -> bool:
+	if request == null:
+		return false
+	var runtime_definition := request.metadata.get("definition") as DiceDefinition
+	if runtime_definition == null:
+		return false
+	return StringName(runtime_definition.dice_name) == DUPLICATE_DICE_NAME
 
 
 func throw_single_default_die() -> RigidBody3D:

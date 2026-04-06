@@ -156,6 +156,10 @@
   - trigger: способность активирована и в `consumed_dice` есть куб `kamikaze`;
   - effect: переброс всех оставшихся кубов игрока (кроме уже потраченных в этой активации);
   - runtime hooks: `BattleEffectRuntime::KAMIKAZE_DICE_NAME`, `BattleEffectRuntime::_has_consumed_dice_with_name`, `BattleEffectRuntime::_reroll_remaining_player_dice`.
+- `duplicate` / «Дубликат» (`content/dice/definitions/duplicate.tres`):
+  - trigger: любой бросок этого куба (обычный старт хода, `reroll`, `reroll_all`, хардкод-перебросы);
+  - effect: вместо одного инстанса в runtime создаются два одинаковых куба;
+  - runtime hooks: `BoardController::DUPLICATE_DICE_NAME`, `BoardController::_expand_duplicate_requests`, `BoardController::_is_duplicate_dice_request`.
 - `joker`-линейка (`content/dice/definitions/joker.tres`, `content/dice/definitions/almost_real_joker.tres`, `content/dice/definitions/false_joker.tres`):
   - trigger: в любой ячейке выбранной способности стоит куб, у которого верхняя грань имеет `text_value = "joker"`;
   - effect: активация способности разрешается независимо от проверок dice-условий (value/face/tags/use_conditions);
