@@ -255,6 +255,12 @@
   - базовый цвет: `rgb(156, 21, 0)`; цвет цифр: `rgb(247, 92, 92)`;
   - эффект: если способность активирована с расходом этого куба, перебрасываются все остальные оставшиеся кубы игрока;
   - текущая реализация хардкода: `content/combat/runtime/battle_effect_runtime.gd` (`KAMIKAZE_DICE_NAME`, `_has_consumed_dice_with_name()`, `_reroll_remaining_player_dice()`).
+- `duplicate` / «Дубликат» (`content/dice/definitions/duplicate.tres`):
+  - грани: `1..6`; редкость: `UNIQUE`;
+  - базовый цвет: `rgb(156, 21, 0)`; цвет цифр: `rgb(247, 92, 92)`;
+  - эффект: при каждом броске создает ровно одну свою копию с теми же runtime-параметрами (включая `definition`, `mass`, `extra_size_multiplier`, `metadata`);
+  - гарантия для переброса: работает и для `reroll`/`reroll_all`, потому что дублирование выполняется на слое `BoardController.throw_dice(...)`;
+  - runtime hooks: `ui/scripts/board_controller.gd::DUPLICATE_DICE_NAME`, `BoardController::_expand_duplicate_requests(...)`, `BoardController::_is_duplicate_dice_request(...)`.
 - `joker` / «Джокер» (`content/dice/definitions/joker.tres`):
   - грани: `joker` x5 (`assets/dice_edges/joker.png`) + `пусто` x1; редкость: `UNIQUE`;
   - базовый цвет: `rgb(255, 255, 255)`;
