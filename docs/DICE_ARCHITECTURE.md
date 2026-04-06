@@ -238,6 +238,10 @@
 **Правило:**
 Ресурсы описывают данные, а runtime-компоненты интерпретируют их.
 
+Для управляемого расхода кубов в бою `dice_definition.gd` хранит параметр `ability_activations_before_consume`:
+- `1` (по умолчанию) — куб удаляется при первом списании в активации способности;
+- `2+` — куб удаляется только после указанного количества списаний.
+
 **Классификация кубов (обязательная):**
 - `dice_definition.gd` должен хранить `scope` (например: `COMBAT`, `GLOBAL_MAP`, `REWARD`, `MONEY`, `EVENT`, `SYSTEM`);
 - контентные кубы типа «Счастливая единица/двойка/.../шестерка» должны иметь `scope = COMBAT`;
@@ -271,6 +275,12 @@
 - `false_joker` / «Ложный джокер» (`content/dice/definitions/false_joker.tres`):
   - грани: `joker` x1 (`assets/dice_edges/joker.png`) + `пусто` x5; редкость: `COMMON`;
   - базовый цвет: `rgb(255, 255, 255)`.
+- `prilipala` / «Прилипала» (`content/dice/definitions/prilipala.tres`):
+  - грани: `1..6`; редкость: `RARE`;
+  - базовый цвет: `rgb(93, 156, 72)`; цвет цифр: `rgb(155, 232, 130)`;
+  - эффект: куб не удаляется при первом списании на способность и удаляется только при втором списании;
+  - data hook: `DiceDefinition.ability_activations_before_consume = 2`;
+  - runtime hook: `content/combat/runtime/battle_activation_animation_runtime.gd::_should_consume_dice_on_current_activation()`.
 
 ### 9. `dice_face_view.gd`
 
