@@ -240,38 +240,6 @@ static func reroll_group_with_board_throw(dice_group: Array[Dice]) -> Array[Dice
 	return rerolled
 
 
-static func throw_copies_with_board_throw(dice_group: Array[Dice]) -> Array[Dice]:
-	var grouped_requests_by_board := {}
-	for dice in dice_group:
-		if dice == null or not is_instance_valid(dice):
-			continue
-		var board := dice._find_board_controller()
-		if board == null or not is_instance_valid(board):
-			continue
-		var request := _build_throw_request_from_runtime_dice(dice)
-		if request == null:
-			continue
-		if not grouped_requests_by_board.has(board):
-			grouped_requests_by_board[board] = []
-		(grouped_requests_by_board[board] as Array).append(request)
-
-	var spawned_copies: Array[Dice] = []
-	for board_key in grouped_requests_by_board.keys():
-		var board := board_key as BoardController
-		var requests_raw := grouped_requests_by_board[board] as Array
-		var requests: Array[DiceThrowRequest] = []
-		for request in requests_raw:
-			if request is DiceThrowRequest:
-				requests.append(request as DiceThrowRequest)
-		if requests.is_empty():
-			continue
-		var spawned_dice := board.throw_dice(requests)
-		for dice_body in spawned_dice:
-			if dice_body is Dice:
-				spawned_copies.append(dice_body as Dice)
-	return spawned_copies
-
-
 static func _build_throw_request_from_runtime_dice(dice: Dice) -> DiceThrowRequest:
 	if dice == null or not is_instance_valid(dice):
 		return null
