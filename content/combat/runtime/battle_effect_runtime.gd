@@ -47,15 +47,6 @@ static func activate_current_turn_ability(battle_room, ability: AbilityDefinitio
 	for effect in ability.effects:
 		if effect == null:
 			continue
-		if not _passes_effect_chance(effect):
-			_log_debug(
-				"effect skipped by chance: ability=%s effect=%s chance=%.3f" % [
-					String(ability.ability_id),
-					String(effect.effect_id),
-					clampf(float(effect.chance), 0.0, 1.0),
-				]
-			)
-			continue
 		var effect_targets := _resolve_effect_targets(battle_room, target_descriptor)
 		for effect_target in effect_targets:
 			if _apply_effect_to_target(battle_room, ability, effect, effect_target, consumed_dice, source_descriptor):
@@ -219,7 +210,7 @@ static func _apply_effect_to_target(
 				_log_debug("apply_status skipped: no status definition for effect=%s" % String(effect.effect_id))
 				return false
 			var status_stacks := maxi(int(effect.parameters.get("stacks", 1)), 1)
-			var status_target := _resolve_apply_status_target_descriptor(effect, target_descriptor, source_descriptor)
+			var status_target := _to_status_descriptor(target_descriptor)
 			if status_target.is_empty():
 				_log_debug("apply_status skipped: unresolved target descriptor kind=%s" % String(target_kind))
 				return false
@@ -253,24 +244,6 @@ static func _apply_effect_to_target(
 			else:
 				_log_debug("reroll_dice skipped: board reroll produced no dice")
 			return is_successful
-		&"reroll_random_player_die":
-			var random_reroll_target := _pick_random_reroll_candidate(target_descriptor, consumed_dice)
-			if random_reroll_target == null:
-				_log_debug("reroll_random_player_die skipped: no valid random target")
-				return false
-			var rerolled_random := Dice.reroll_group_with_board_throw([random_reroll_target])
-			var reroll_success := not rerolled_random.is_empty()
-			if reroll_success:
-				_log_debug(
-					"reroll_random_player_die applied: ability=%s effect=%s dice=%s" % [
-						String(ability.ability_id),
-						String(effect.effect_id),
-						String(random_reroll_target.definition.dice_name) if random_reroll_target.definition != null else "unknown",
-					]
-				)
-			else:
-				_log_debug("reroll_random_player_die skipped: board reroll produced no dice")
-			return reroll_success
 	return false
 
 
@@ -354,31 +327,6 @@ static func _to_status_descriptor(target_descriptor: Dictionary) -> Dictionary:
 	return {}
 
 
-static func _resolve_apply_status_target_descriptor(
-	effect: AbilityEffectDefinition,
-	target_descriptor: Dictionary,
-	source_descriptor: Dictionary
-) -> Dictionary:
-	if effect == null:
-		return _to_status_descriptor(target_descriptor)
-	var target_kind := StringName(effect.parameters.get("target", &"target"))
-	if target_kind == &"source":
-		return _sanitize_status_descriptor(source_descriptor)
-	return _to_status_descriptor(target_descriptor)
-
-
-static func _sanitize_status_descriptor(raw_descriptor: Dictionary) -> Dictionary:
-	var side := StringName(raw_descriptor.get("side", &""))
-	if side == &"player":
-		return {"side": &"player"}
-	if side == &"enemy":
-		return {
-			"side": &"enemy",
-			"index": int(raw_descriptor.get("index", -1)),
-		}
-	return {}
-
-
 static func _resolve_reroll_dice_targets(
 	effect: AbilityEffectDefinition,
 	target_descriptor: Dictionary,
@@ -410,28 +358,6 @@ static func _resolve_available_player_dice(target_descriptor: Dictionary) -> Arr
 		if raw_dice is Dice and is_instance_valid(raw_dice):
 			resolved.append(raw_dice as Dice)
 	return resolved
-
-
-static func _pick_random_reroll_candidate(target_descriptor: Dictionary, consumed_dice: Array[Dice]) -> Dice:
-	var candidates: Array[Dice] = []
-	for dice in _resolve_available_player_dice(target_descriptor):
-		if _is_valid_reroll_candidate(dice, consumed_dice, candidates):
-			candidates.append(dice)
-	if candidates.is_empty():
-		return null
-	var selected_index := randi_range(0, candidates.size() - 1)
-	return candidates[selected_index]
-
-
-static func _passes_effect_chance(effect: AbilityEffectDefinition) -> bool:
-	if effect == null:
-		return false
-	var resolved_chance := clampf(float(effect.chance), 0.0, 1.0)
-	if resolved_chance >= 1.0:
-		return true
-	if resolved_chance <= 0.0:
-		return false
-	return randf() <= resolved_chance
 
 
 static func _is_valid_reroll_candidate(
