@@ -3,6 +3,7 @@ class_name PostBattleRewardFlow
 
 const Dice = preload("res://content/dice/dice.gd")
 const GlobalMapRuntimeState = preload("res://content/global_map/runtime/global_map_runtime_state.gd")
+const RarityFrameVisuals = preload("res://content/combat/presentation/rarity_frame_visuals.gd")
 
 const POST_BATTLE_REWARD_DICE_SIZE_MULTIPLIER := Vector3(4.0, 4.0, 4.0)
 const POST_BATTLE_REWARD_DICE_THROW_HEIGHT_MULTIPLIER := 0.65
@@ -41,10 +42,6 @@ const CUBE_REWARD_VISUAL_POSITION_OFFSET := Vector3(0.0, 0.3, 0.0)
 const CUBE_REWARD_VISUAL_SCALE_MULTIPLIER := Vector3(1.5, 1.5, 1.5)
 const BASE_CUBE_SCENE_PATH := "res://content/resources/base_cube.tscn"
 const GLOBAL_MAP_SCENE_PATH := "res://scenes/global_map_room.tscn"
-const BASE_FRAME_NORMAL := preload("res://assets/ui/base_frame_normal.png")
-const BASE_FRAME_COPPER := preload("res://assets/ui/base_frame_copper_.png")
-const BASE_FRAME_SILVER := preload("res://assets/ui/base_frame_silver.png")
-const BASE_FRAME_GOLD := preload("res://assets/ui/base_frame_gold.png")
 
 
 func _handle_post_battle_reward_dice(owner: Node) -> void:
@@ -966,48 +963,13 @@ func _build_cube_reward_description(cube_definition: DiceDefinition) -> String:
 	return "Редкость: %s · Область: %s" % [_format_cube_rarity(cube_definition.rarity), _format_cube_scope(cube_definition.scope)]
 
 
-func _resolve_base_frame_by_rarity(rarity_value: Variant) -> Texture2D:
-	if rarity_value is StringName:
-		match rarity_value as StringName:
-			&"uncommon":
-				return BASE_FRAME_COPPER
-			&"rare":
-				return BASE_FRAME_SILVER
-			&"unique":
-				return BASE_FRAME_GOLD
-		return BASE_FRAME_NORMAL
-	if rarity_value is int:
-		match int(rarity_value):
-			1:
-				return BASE_FRAME_COPPER
-			2:
-				return BASE_FRAME_SILVER
-			3:
-				return BASE_FRAME_GOLD
-		return BASE_FRAME_NORMAL
-	return BASE_FRAME_NORMAL
-
-
 func _apply_reward_card_base_frame_visual(card_root: Node3D, rarity_value: Variant) -> void:
 	if card_root == null:
 		return
 	var frame := card_root.get_node_or_null(^"ability_frame_base") as MeshInstance3D
 	if frame == null:
 		return
-	_apply_texture_to_mesh_instance(frame, _resolve_base_frame_by_rarity(rarity_value))
-
-
-func _apply_texture_to_mesh_instance(mesh_instance: MeshInstance3D, texture: Texture2D) -> void:
-	if mesh_instance == null or texture == null:
-		return
-	var material := mesh_instance.material_override
-	if material == null:
-		material = StandardMaterial3D.new()
-	elif material is StandardMaterial3D:
-		material = (material as StandardMaterial3D).duplicate()
-	if material is StandardMaterial3D:
-		(material as StandardMaterial3D).albedo_texture = texture
-	mesh_instance.material_override = material
+	RarityFrameVisuals.apply_base_frame_to_mesh_instance(frame, rarity_value)
 
 
 func _format_cube_rarity(rarity: int) -> String:
