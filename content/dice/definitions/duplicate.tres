@@ -6,32 +6,32 @@
 [sub_resource type="Resource" id="Face_1"]
 script = ExtResource("2_face")
 text_value = "1"
-text_color = Color(0.968627, 0.360784, 0.360784, 1)
+text_color = Color(0.831373, 0.654902, 0.819608, 1)
 
 [sub_resource type="Resource" id="Face_2"]
 script = ExtResource("2_face")
 text_value = "2"
-text_color = Color(0.968627, 0.360784, 0.360784, 1)
+text_color = Color(0.831373, 0.654902, 0.819608, 1)
 
 [sub_resource type="Resource" id="Face_3"]
 script = ExtResource("2_face")
 text_value = "3"
-text_color = Color(0.968627, 0.360784, 0.360784, 1)
+text_color = Color(0.831373, 0.654902, 0.819608, 1)
 
 [sub_resource type="Resource" id="Face_4"]
 script = ExtResource("2_face")
 text_value = "4"
-text_color = Color(0.968627, 0.360784, 0.360784, 1)
+text_color = Color(0.831373, 0.654902, 0.819608, 1)
 
 [sub_resource type="Resource" id="Face_5"]
 script = ExtResource("2_face")
 text_value = "5"
-text_color = Color(0.968627, 0.360784, 0.360784, 1)
+text_color = Color(0.831373, 0.654902, 0.819608, 1)
 
 [sub_resource type="Resource" id="Face_6"]
 script = ExtResource("2_face")
 text_value = "6"
-text_color = Color(0.968627, 0.360784, 0.360784, 1)
+text_color = Color(0.831373, 0.654902, 0.819608, 1)
 
 [resource]
 script = ExtResource("1_dice")
@@ -41,5 +41,5 @@ description = "При броске создает свою копию."
 rarity = 3
 scope = 0
 size_multiplier = Vector3(2.52, 2.52, 2.52)
-base_color = Color(0.611765, 0.0823529, 0, 1)
+base_color = Color(0.329412, 0.207843, 0.32549, 1)
 faces = Array[ExtResource("2_face")]([SubResource("Face_1"), SubResource("Face_2"), SubResource("Face_3"), SubResource("Face_4"), SubResource("Face_5"), SubResource("Face_6")])
