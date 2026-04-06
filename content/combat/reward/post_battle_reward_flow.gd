@@ -520,9 +520,20 @@ func _resolve_parallel_upgrade_options(current_ability: AbilityDefinition, abili
 	var resolved: Array[AbilityDefinition] = []
 	if current_ability == null:
 		return resolved
-	var base_ability := _find_base_ability_for_family(current_ability, ability_catalog)
-	if base_ability != null:
-		resolved = _resolve_follow_up_abilities(base_ability, ability_catalog)
+
+	var next_upgrades := _resolve_follow_up_abilities(current_ability, ability_catalog)
+	if not next_upgrades.is_empty():
+		resolved = next_upgrades
+	else:
+		var parent_ability := _find_parent_ability_for_upgrade(current_ability, ability_catalog)
+		if parent_ability != null:
+			for candidate in _resolve_follow_up_abilities(parent_ability, ability_catalog):
+				if candidate == null:
+					continue
+				if candidate.upgrade_level != current_ability.upgrade_level:
+					continue
+				resolved.append(candidate)
+
 	var includes_current := false
 	for ability in resolved:
 		if ability == null:
@@ -535,20 +546,22 @@ func _resolve_parallel_upgrade_options(current_ability: AbilityDefinition, abili
 	return resolved
 
 
-func _find_base_ability_for_family(ability: AbilityDefinition, ability_catalog: Dictionary) -> AbilityDefinition:
+func _find_parent_ability_for_upgrade(ability: AbilityDefinition, ability_catalog: Dictionary) -> AbilityDefinition:
 	if ability == null:
 		return null
-	if ability.upgrade_level <= 0:
-		return ability
+	var ability_path := ability.resource_path
+	if ability_path.is_empty():
+		return null
 	for candidate in ability_catalog.values():
 		var typed_candidate := candidate as AbilityDefinition
 		if typed_candidate == null:
 			continue
 		if typed_candidate.ability_id != ability.ability_id:
 			continue
-		if typed_candidate.upgrade_level == 0:
-			return typed_candidate
-	return ability
+		for follow_up_id in typed_candidate.follow_up_ability_ids:
+			if str(follow_up_id) == ability_path:
+				return typed_candidate
+	return null
 
 
 func _collect_owned_ability_ids(player: Player) -> Dictionary:
