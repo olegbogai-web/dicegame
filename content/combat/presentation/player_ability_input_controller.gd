@@ -84,12 +84,16 @@ func _try_reroll_perevertysh_die(owner: Node, mouse_event: InputEventMouseButton
 		return false
 	if target_dice.definition == null or StringName(target_dice.definition.dice_name) != PEREVERTYSH_DICE_NAME:
 		return false
-	if owner._perevertysh_reroll_turn_counter == owner.battle_room_data.turn_counter:
+	var die_instance_id := target_dice.get_instance_id()
+	var current_turn := owner.battle_room_data.turn_counter
+	var reroll_turn_by_die: Dictionary = owner._perevertysh_reroll_turn_by_die
+	if reroll_turn_by_die.get(die_instance_id, -1) == current_turn:
 		return false
 	var rerolled := Dice.reroll_group_with_board_throw([target_dice])
 	if rerolled.is_empty():
 		return false
-	owner._perevertysh_reroll_turn_counter = owner.battle_room_data.turn_counter
+	reroll_turn_by_die[die_instance_id] = current_turn
+	owner._perevertysh_reroll_turn_by_die = reroll_turn_by_die
 	return true
 
 
