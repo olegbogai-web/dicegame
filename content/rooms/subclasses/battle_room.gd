@@ -401,6 +401,18 @@ func clear_status_event_log() -> void:
 	combat_runtime_state.clear_status_event_log()
 
 
+func add_turn_start_dice_penalty(descriptor: Dictionary, penalty: int) -> int:
+	if combat_runtime_state == null:
+		return 0
+	return combat_runtime_state.add_turn_start_dice_penalty(descriptor, penalty)
+
+
+func consume_turn_start_dice_penalty(descriptor: Dictionary) -> int:
+	if combat_runtime_state == null:
+		return 0
+	return combat_runtime_state.consume_turn_start_dice_penalty(descriptor)
+
+
 func apply_damage_to_descriptor(descriptor: Dictionary, amount: int) -> bool:
 	var resolved_damage := maxi(amount, 0)
 	if resolved_damage <= 0:
