@@ -145,6 +145,18 @@
   - лимит использования: `once_per_battle = true` (строго 1 раз за бой);
   - редкость: `RARE`.
 
+### 2.7. Реестр хардкод-кубов в Combat runtime
+
+- `perevertysh` / «Перевертыш» (`content/dice/definitions/perevertysh.tres`):
+  - trigger: ПКМ по кубу на поле во время хода игрока;
+  - effect: локальный переброс только этого куба;
+  - limit: 1 раз за ход игрока;
+  - runtime hooks: `PlayerAbilityInputController::PEREVERTYSH_DICE_NAME`, `PlayerAbilityInputController::_try_reroll_perevertysh_die`, `battle_table::_perevertysh_reroll_turn_counter`.
+- `kamikaze` / «Камикадзе» (`content/dice/definitions/kamikaze.tres`):
+  - trigger: способность активирована и в `consumed_dice` есть куб `kamikaze`;
+  - effect: переброс всех оставшихся кубов игрока (кроме уже потраченных в этой активации);
+  - runtime hooks: `BattleEffectRuntime::KAMIKAZE_DICE_NAME`, `BattleEffectRuntime::_has_consumed_dice_with_name`, `BattleEffectRuntime::_reroll_remaining_player_dice`.
+
 ---
 
 ## 3. Границы ответственности Combat

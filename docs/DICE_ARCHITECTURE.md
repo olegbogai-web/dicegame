@@ -244,6 +244,18 @@
 - контентные кубы «Нечетный куб» (`odd_cube`) и «Четный куб» (`even_cube`) также относятся к боевым кубам и должны иметь `scope = COMBAT`, `rarity = COMMON`;
 - получение таких кубов в run-time означает добавление в боевой loadout игрока (`player.dice_loadout`), чтобы они автоматически бросались каждый ход в боевой комнате.
 
+**Актуальные специальные боевые кубы (хардкод-поведение):**
+- `perevertysh` / «Перевертыш» (`content/dice/definitions/perevertysh.tres`):
+  - грани: `1..6`; редкость: `UNCOMMON`;
+  - базовый цвет: `rgb(83, 82, 133)`; цвет цифр: `rgb(201, 200, 247)`;
+  - эффект: игрок может нажать ПКМ по самому кубу и перебросить его 1 раз за свой ход;
+  - текущая реализация лимита: `scenes/battle_table.gd::_perevertysh_reroll_turn_counter` + `content/combat/presentation/player_ability_input_controller.gd::_try_reroll_perevertysh_die()`.
+- `kamikaze` / «Камикадзе» (`content/dice/definitions/kamikaze.tres`):
+  - грани: `1..6`; редкость: `RARE`;
+  - базовый цвет: `rgb(156, 21, 0)`; цвет цифр: `rgb(247, 92, 92)`;
+  - эффект: если способность активирована с расходом этого куба, перебрасываются все остальные оставшиеся кубы игрока;
+  - текущая реализация хардкода: `content/combat/runtime/battle_effect_runtime.gd` (`KAMIKAZE_DICE_NAME`, `_has_consumed_dice_with_name()`, `_reroll_remaining_player_dice()`).
+
 ### 9. `dice_face_view.gd`
 
 **Ответственность:**
