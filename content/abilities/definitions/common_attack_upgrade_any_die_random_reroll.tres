@@ -1,0 +1,51 @@
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_effect_definition.gd" id="6_effect"]
+[ext_resource type="Texture2D" path="res://assets/ability/common_attack.png" id="7_icon"]
+
+[sub_resource type="Resource" id="AbilityDiceCondition_pay"]
+script = ExtResource("3_dice_condition")
+required_tags = PackedStringArray()
+forbidden_tags = PackedStringArray()
+accepted_face_ids = PackedStringArray()
+consume_order = PackedStringArray()
+
+[sub_resource type="Resource" id="AbilityCost_main"]
+script = ExtResource("2_cost")
+dice_conditions = Array[ExtResource("3_dice_condition")]([SubResource("AbilityDiceCondition_pay")])
+
+[sub_resource type="Resource" id="AbilityEffect_damage"]
+script = ExtResource("6_effect")
+effect_id = "common_attack_damage"
+magnitude = 4
+dice_query_tags = PackedStringArray()
+
+[sub_resource type="Resource" id="AbilityEffect_random_reroll"]
+script = ExtResource("6_effect")
+effect_id = "common_attack_random_player_die_reroll"
+effect_type = &"reroll_random_player_die"
+chance = 0.25
+dice_query_tags = PackedStringArray()
+
+[sub_resource type="Resource" id="AbilityTargetRule_enemy"]
+script = ExtResource("4_target_rule")
+required_tags = PackedStringArray()
+forbidden_tags = PackedStringArray()
+
+[resource]
+script = ExtResource("1_ability")
+ability_id = "common_attack"
+display_name = "Обычный удар++"
+description = "Может использоваться с любым кубиком. Наносит 4 урона выбранному существу и с шансом 25% перебрасывает случайный доступный куб игрока."
+icon = ExtResource("7_icon")
+tags = PackedStringArray("attack")
+upgrade_level = 2
+max_upgrade_level = 2
+cost = SubResource("AbilityCost_main")
+target_rule = SubResource("AbilityTargetRule_enemy")
+effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_damage"), SubResource("AbilityEffect_random_reroll")])
+follow_up_ability_ids = PackedStringArray()

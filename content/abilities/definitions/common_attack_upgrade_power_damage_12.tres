@@ -1,12 +1,12 @@
 [gd_resource type="Resource" script_class="AbilityDefinition" format=3]
 
-[ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
-[ext_resource type="Script" uid="uid://cijja5c0f6ibw" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
-[ext_resource type="Script" uid="uid://vqakigfsnb18" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
-[ext_resource type="Script" uid="uid://c2t7x3op44t3s" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
-[ext_resource type="Script" uid="uid://lfpdg732cjt" path="res://content/abilities/resources/ability_condition.gd" id="5_condition"]
-[ext_resource type="Script" uid="uid://drneiu6png0u3" path="res://content/abilities/resources/ability_effect_definition.gd" id="6_effect"]
-[ext_resource type="Texture2D" uid="uid://cc0r8hvl0nlh5" path="res://assets/ability/common_attack.png" id="7_icon"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_condition.gd" id="5_condition"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_effect_definition.gd" id="6_effect"]
+[ext_resource type="Texture2D" path="res://assets/ability/common_attack.png" id="7_icon"]
 
 [sub_resource type="Resource" id="AbilityDiceCondition_pay"]
 script = ExtResource("3_dice_condition")
@@ -22,7 +22,7 @@ dice_conditions = Array[ExtResource("3_dice_condition")]([SubResource("AbilityDi
 [sub_resource type="Resource" id="AbilityEffect_damage"]
 script = ExtResource("6_effect")
 effect_id = "common_attack_damage"
-magnitude = 8
+magnitude = 12
 dice_query_tags = PackedStringArray()
 
 [sub_resource type="Resource" id="AbilityTargetRule_enemy"]
@@ -42,14 +42,14 @@ parameters = {
 [resource]
 script = ExtResource("1_ability")
 ability_id = "common_attack"
-display_name = "Обычный удар+"
-description = "Требует четное значение на верхней грани куба. Наносит 8 урона выбранному существу."
+display_name = "Обычный удар++"
+description = "Требует четное значение на верхней грани куба. Наносит 12 урона выбранному существу."
 icon = ExtResource("7_icon")
 tags = PackedStringArray("attack")
-upgrade_level = 1
+upgrade_level = 2
 max_upgrade_level = 2
 cost = SubResource("AbilityCost_main")
 target_rule = SubResource("AbilityTargetRule_enemy")
 use_conditions = Array[ExtResource("5_condition")]([SubResource("AbilityCondition_even_top_face")])
 effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_damage")])
-follow_up_ability_ids = PackedStringArray("res://content/abilities/definitions/common_attack_upgrade_power_damage_12.tres", "res://content/abilities/definitions/common_attack_upgrade_power_strength_1.tres")
+follow_up_ability_ids = PackedStringArray()
