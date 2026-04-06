@@ -4,9 +4,6 @@ class_name BattleEffectRuntime
 const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
 const Dice = preload("res://content/dice/dice.gd")
 const StatusRuntime = preload("res://content/statuses/runtime/status_runtime.gd")
-const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd")
-const BoardController = preload("res://ui/scripts/board_controller.gd")
-const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 
 const KAMIKAZE_DICE_NAME := &"kamikaze"
 
@@ -257,18 +254,23 @@ static func _apply_effect_to_target(
 				_log_debug("reroll_dice skipped: board reroll produced no dice")
 			return is_successful
 		&"reroll_random_player_die":
-			var throw_result := _throw_random_runtime_player_die(battle_room, target_descriptor, consumed_dice)
-			if throw_result.get("success", false):
+			var random_reroll_target := _pick_random_reroll_candidate(target_descriptor, consumed_dice)
+			if random_reroll_target == null:
+				_log_debug("reroll_random_player_die skipped: no valid random target")
+				return false
+			var rerolled_random := Dice.reroll_group_with_board_throw([random_reroll_target])
+			var reroll_success := not rerolled_random.is_empty()
+			if reroll_success:
 				_log_debug(
-					"reroll_random_player_die applied as new throw: ability=%s effect=%s dice=%s" % [
+					"reroll_random_player_die applied: ability=%s effect=%s dice=%s" % [
 						String(ability.ability_id),
 						String(effect.effect_id),
-						String(throw_result.get("dice_name", &"unknown")),
+						String(random_reroll_target.definition.dice_name) if random_reroll_target.definition != null else "unknown",
 					]
 				)
-				return true
-			_log_debug("reroll_random_player_die skipped: %s" % String(throw_result.get("reason", "unknown reason")))
-			return false
+			else:
+				_log_debug("reroll_random_player_die skipped: board reroll produced no dice")
+			return reroll_success
 	return false
 
 
@@ -419,55 +421,6 @@ static func _pick_random_reroll_candidate(target_descriptor: Dictionary, consume
 		return null
 	var selected_index := randi_range(0, candidates.size() - 1)
 	return candidates[selected_index]
-
-
-static func _collect_runtime_player_combat_dice_definitions(battle_room) -> Array[DiceDefinition]:
-	var resolved: Array[DiceDefinition] = []
-	if battle_room == null or battle_room.player_instance == null:
-		return resolved
-	for dice_definition in battle_room.player_instance.dice_loadout:
-		if dice_definition == null:
-			continue
-		if dice_definition.scope != DiceDefinition.Scope.COMBAT:
-			continue
-		resolved.append(dice_definition)
-	return resolved
-
-
-static func _resolve_board_from_dice_context(target_descriptor: Dictionary, consumed_dice: Array[Dice]):
-	for dice in _resolve_available_player_dice(target_descriptor):
-		if dice != null and is_instance_valid(dice):
-			var board_from_available := dice.get_parent() as BoardController
-			if board_from_available != null and is_instance_valid(board_from_available):
-				return board_from_available
-	for dice in consumed_dice:
-		if dice != null and is_instance_valid(dice):
-			var board_from_consumed := dice.get_parent() as BoardController
-			if board_from_consumed != null and is_instance_valid(board_from_consumed):
-				return board_from_consumed
-	return null
-
-
-static func _throw_random_runtime_player_die(battle_room, target_descriptor: Dictionary, consumed_dice: Array[Dice]) -> Dictionary:
-	var board := _resolve_board_from_dice_context(target_descriptor, consumed_dice)
-	if board == null:
-		return {"success": false, "reason": "no board context"}
-	var runtime_combat_dice := _collect_runtime_player_combat_dice_definitions(battle_room)
-	if runtime_combat_dice.is_empty():
-		return {"success": false, "reason": "no runtime combat dice definitions"}
-	var random_index := randi_range(0, runtime_combat_dice.size() - 1)
-	var selected_definition := runtime_combat_dice[random_index]
-	var request := DiceThrowRequestScript.create(BASE_DICE_SCENE, Vector3.ZERO, 1.0, Vector3.ONE, {
-		"owner": &"player",
-		"definition": selected_definition,
-	})
-	var spawned_dice := board.throw_dice([request])
-	if spawned_dice.is_empty():
-		return {"success": false, "reason": "board throw produced no dice"}
-	return {
-		"success": true,
-		"dice_name": String(selected_definition.dice_name) if selected_definition != null else "unknown",
-	}
 
 
 static func _passes_effect_chance(effect: AbilityEffectDefinition) -> bool:
