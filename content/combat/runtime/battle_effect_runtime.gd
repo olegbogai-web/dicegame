@@ -234,6 +234,51 @@ static func _apply_effect_to_target(
 				]
 			)
 			return StatusRuntime.apply_status(battle_room, status_target, status_definition, status_stacks, source_descriptor)
+		&"heal_if_target_dead":
+			if target_kind != &"monster":
+				_log_debug("heal_if_target_dead skipped: unsupported target_kind=%s" % String(target_kind))
+				return false
+			var dead_monster_index := int(target_descriptor.get("index", -1))
+			if dead_monster_index < 0 or dead_monster_index >= battle_room.monster_views.size():
+				_log_debug("heal_if_target_dead skipped: invalid monster index=%d" % dead_monster_index)
+				return false
+			var dead_monster_view := battle_room.monster_views[dead_monster_index]
+			if dead_monster_view == null or dead_monster_view.is_alive():
+				_log_debug(
+					"heal_if_target_dead skipped: monster still alive ability=%s effect=%s target_index=%d" % [
+						String(ability.ability_id),
+						String(effect.effect_id),
+						dead_monster_index,
+					]
+				)
+				return false
+			var heal_target_side := StringName(effect.parameters.get("heal_target_side", &"player"))
+			var heal_target_descriptor := {"side": heal_target_side}
+			if heal_target_side == &"enemy":
+				heal_target_descriptor = {
+					"side": &"enemy",
+					"index": int(effect.parameters.get("heal_target_index", dead_monster_index)),
+				}
+			if not battle_room.apply_heal_to_descriptor(heal_target_descriptor, resolved_magnitude):
+				_log_debug(
+					"heal_if_target_dead skipped: heal application failed ability=%s effect=%s heal_target=%s magnitude=%d" % [
+						String(ability.ability_id),
+						String(effect.effect_id),
+						JSON.stringify(heal_target_descriptor),
+						resolved_magnitude,
+					]
+				)
+				return false
+			_log_debug(
+				"heal_if_target_dead applied: ability=%s effect=%s dead_target_index=%d heal_target=%s magnitude=%d" % [
+					String(ability.ability_id),
+					String(effect.effect_id),
+					dead_monster_index,
+					JSON.stringify(heal_target_descriptor),
+					resolved_magnitude,
+				]
+			)
+			return true
 		&"reroll_dice":
 			var dice_to_reroll := _resolve_reroll_dice_targets(effect, target_descriptor, consumed_dice)
 			if dice_to_reroll.is_empty():

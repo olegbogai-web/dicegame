@@ -11,6 +11,7 @@ const GOBLIN_MONSTER_DEFINITION := preload("res://content/monsters/definitions/g
 const CHIMERA_MONSTER_DEFINITION := preload("res://content/monsters/definitions/chimera.tres")
 const COMMON_ATTACK_ABILITY := preload("res://content/abilities/definitions/common_attack_upgrade_power_strength_1.tres")
 const HEAL_ABILITY := preload("res://content/abilities/definitions/heal_upgrade_efficiency_holiness_1_heal_2.tres")
+const DEATH_BLOW_ABILITY := preload("res://content/abilities/definitions/death_blow_upgrade_2_2.tres")
 const REROLL_ABILITY := preload("res://content/abilities/definitions/reroll.tres")
 const REROLL_ALL_ABILITY := preload("res://content/abilities/definitions/reroll_all.tres")
 const PEREVERTYSH_DICE := preload("res://content/dice/definitions/perevertysh.tres")
@@ -767,6 +768,7 @@ static func build_default_player() -> Player:
 	base_stat.starting_abilities = [
 		COMMON_ATTACK_ABILITY,
 		HEAL_ABILITY,
+		DEATH_BLOW_ABILITY,
 		REROLL_ABILITY,
 		REROLL_ALL_ABILITY,
 	]
