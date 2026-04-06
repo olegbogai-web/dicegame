@@ -6,7 +6,6 @@ const DiceThrowRequestScript = preload("res://content/dice/dice_throw_request.gd
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 const MonsterTurnRuntime = preload("res://content/monster_ai/monster_turn_runtime.gd")
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
-const DUBLIKAT_DICE_NAME := &"dublikat"
 const TURN_TRANSFER_DELAY_SEC := 0.3
 const VISUAL_SYNC_TIMEOUT_SEC := 2.0
 
@@ -43,7 +42,7 @@ func throw_current_turn_dice(context: Dictionary) -> void:
 				continue
 			if dice_definition.scope != DiceDefinition.Scope.COMBAT:
 				continue
-			_append_throw_requests_for_definition(requests, dice_definition, {"owner": &"player"})
+			requests.append(build_dice_throw_request(dice_definition, {"owner": &"player"}))
 	elif battle_room_data.is_monster_turn() and battle_room_data.can_target_monster(battle_room_data.current_monster_turn_index):
 		var monster_view = battle_room_data.monster_views[battle_room_data.current_monster_turn_index]
 		if monster_view.dice_loadout.is_empty():
@@ -56,7 +55,7 @@ func throw_current_turn_dice(context: Dictionary) -> void:
 			for dice_definition in monster_view.dice_loadout:
 				if dice_definition == null:
 					continue
-				_append_throw_requests_for_definition(requests, dice_definition, {
+				requests.append(build_dice_throw_request(dice_definition, {
 					"owner": &"monster",
 					"monster_index": battle_room_data.current_monster_turn_index,
 				}))
@@ -69,19 +68,6 @@ func build_dice_throw_request(dice_definition: DiceDefinition, metadata: Diction
 	if dice_definition != null:
 		request.metadata["definition"] = dice_definition
 	return request
-
-
-func _append_throw_requests_for_definition(requests: Array[DiceThrowRequest], dice_definition: DiceDefinition, metadata: Dictionary) -> void:
-	requests.append(build_dice_throw_request(dice_definition, metadata))
-	if not _should_duplicate_on_throw(dice_definition):
-		return
-	requests.append(build_dice_throw_request(dice_definition, metadata))
-
-
-func _should_duplicate_on_throw(dice_definition: DiceDefinition) -> bool:
-	if dice_definition == null:
-		return false
-	return StringName(dice_definition.dice_name) == DUBLIKAT_DICE_NAME
 
 
 func clear_board_dice(context: Dictionary) -> void:

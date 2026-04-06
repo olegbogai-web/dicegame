@@ -16,7 +16,6 @@ const DEFAULT_BOUNCE := 0.75
 const DEFAULT_LINEAR_DAMP := 0.25
 const DEFAULT_ANGULAR_DAMP := 0.25
 const POST_FIRST_STOP_GRAVITY_MULTIPLIER := 5.0
-const DUBLIKAT_DICE_NAME := &"dublikat"
 
 const DiceNodeGraphScript = preload("res://content/dice/runtime/dice_node_graph.gd")
 const DicePhysicsRuntimeScript = preload("res://content/dice/runtime/dice_physics_runtime.gd")
@@ -215,8 +214,6 @@ static func reroll_group_with_board_throw(dice_group: Array[Dice]) -> Array[Dice
 			source_dice_by_board[board] = []
 		(grouped_requests_by_board[board] as Array).append(request)
 		(source_dice_by_board[board] as Array).append(dice)
-		if _should_duplicate_on_throw(dice):
-			(grouped_requests_by_board[board] as Array).append(request.duplicate(true))
 
 	var rerolled: Array[Dice] = []
 	for board_key in grouped_requests_by_board.keys():
@@ -262,12 +259,6 @@ static func _build_throw_request_from_runtime_dice(dice: Dice) -> DiceThrowReque
 		dice.extra_size_multiplier,
 		metadata_copy
 	)
-
-
-static func _should_duplicate_on_throw(dice: Dice) -> bool:
-	if dice == null or not is_instance_valid(dice) or dice.definition == null:
-		return false
-	return StringName(dice.definition.dice_name) == DUBLIKAT_DICE_NAME
 
 
 func _setup_components() -> void:
