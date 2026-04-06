@@ -22,6 +22,8 @@ const ABILITY_ROW_OFFSET_Z := 0.0
 const BOTTOM_ROW_OFFSET_Z := 8.2
 const PRICE_OFFSET_Y := 0.0
 const PRICE_OFFSET_Z := 2.21
+const SERVICE_SOLD_OFFSET_Y := 0.01
+const SERVICE_SOLD_SCALE := Vector3(0.26, 0.26, 0.26)
 const LOW_FUNDS_TINT := Color(0.75, 0.5, 0.5, 1.0)
 const AVAILABLE_TINT := Color(1.0, 1.0, 1.0, 1.0)
 const MODAL_SELECTION_Y := 5.0
@@ -483,7 +485,8 @@ func _clear_modal_cards() -> void:
 func _refresh_offers_visual_state() -> void:
 	for offer in _offer_entries:
 		var card := offer.get("card") as Node3D
-		var sold_badge := _ensure_sold_badge(card)
+		var offer_type := str(offer.get("offer_type", ""))
+		var sold_badge := _ensure_sold_badge(card, offer_type)
 		var is_sold := bool(offer.get("is_sold", false))
 		if sold_badge != null:
 			_configure_sold_badge_transform(offer, sold_badge)
@@ -527,7 +530,7 @@ func _setup_fixed_price_badges() -> void:
 		_ensure_price_badge_children(_card_remove_price)
 
 
-func _ensure_sold_badge(card_root: Node3D) -> MeshInstance3D:
+func _ensure_sold_badge(card_root: Node3D, offer_type: String = "") -> MeshInstance3D:
 	if card_root == null:
 		return null
 	var sold_badge := card_root.get_node_or_null(^"sold") as MeshInstance3D
@@ -537,6 +540,8 @@ func _ensure_sold_badge(card_root: Node3D) -> MeshInstance3D:
 			sold_badge.name = "sold"
 			card_root.add_child(sold_badge)
 	if sold_badge != null:
+		if offer_type == "card_upgrade" or offer_type == "card_remove":
+			sold_badge.transform = Transform3D(Basis.IDENTITY.scaled(SERVICE_SOLD_SCALE), Vector3(0.0, SERVICE_SOLD_OFFSET_Y, 0.0))
 		sold_badge.visible = false
 	return sold_badge
 
