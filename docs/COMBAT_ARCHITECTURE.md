@@ -169,6 +169,10 @@
     - `PlayerAbilityInputController::JOKER_FACE_ID`;
     - `PlayerAbilityInputController::_has_joker_override_in_consumed_dice`;
     - `PlayerAbilityInputController::_dice_matches_slot` (джокер можно поставить в любую ячейку способности).
+- `prilipala` / «Прилипала» (`content/dice/definitions/prilipala.tres`):
+  - trigger: куб участвует в оплате способности;
+  - effect: на первой активации остается в слоте и не удаляется, удаляется на второй активации;
+  - runtime hooks: `BattleActivationAnimationRuntime::ABILITY_ACTIVATION_CONSUME_COUNTER_META`, `BattleActivationAnimationRuntime::_should_consume_dice_on_current_activation`.
 
 ---
 
@@ -429,6 +433,8 @@
 - переводится в состояние `consumed_until_next_turn`;
 - возвращается только в начале следующего хода того же существа.
 
+Исключение: если у куба задано `DiceDefinition.ability_activations_before_consume > 1`, фактическое удаление/перевод в consumed-состояние происходит только после достижения нужного числа активаций (например, `prilipala` удаляется со второго списания).
+
 ### Шаг 6. Выбор следующих действий
 
 Существо может:
@@ -616,6 +622,7 @@ UI может реализовывать drag-and-drop, подсветку и в
 - монстры ходят последовательно в порядке убывания числа кубов;
 - каждый ход начинается с броска всех кубов активного существа;
 - куб, потраченный на способность, недоступен до следующего хода владельца;
+- куб может иметь отложенное удаление по `DiceDefinition.ability_activations_before_consume` (например, `prilipala`);
 - способность исполняется только после валидного выбора стоимости и цели;
 - смерть игрока или уничтожение всех монстров немедленно завершает бой;
 - комната не дублирует боевую логику, а использует результат `Combat`.

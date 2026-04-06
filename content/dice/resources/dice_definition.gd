@@ -31,6 +31,7 @@ enum Scope {
 @export var texture: Texture2D
 @export_range(0.0, 1.0, 0.01) var roughness := 0.95
 @export_range(0.0, 1.0, 0.01) var metallic := 0.0
+@export_range(1, 8, 1) var ability_activations_before_consume := 1
 @export var faces: Array[DiceFaceDefinition] = []
 
 

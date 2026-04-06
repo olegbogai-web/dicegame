@@ -4,6 +4,7 @@ class_name BattleActivationAnimationRuntime
 const Dice = preload("res://content/dice/dice.gd")
 const DiceMotionState = preload("res://content/dice/runtime/dice_motion_state.gd")
 const DEFAULT_DICE_MOVE_DURATION := 0.24
+const ABILITY_ACTIVATION_CONSUME_COUNTER_META := &"ability_activation_consume_counter"
 
 
 static func move_dice_to_places(host: Node, dice_assignments: Array[Dictionary], duration: float = DEFAULT_DICE_MOVE_DURATION) -> void:
@@ -58,8 +59,12 @@ static func play_ability_use_animation(
 		if on_activate.is_valid():
 			on_activate.call()
 		for dice in consumed_dice:
-			if is_instance_valid(dice):
+			if not is_instance_valid(dice):
+				continue
+			if _should_consume_dice_on_current_activation(dice):
 				dice.queue_free()
+				continue
+			DiceMotionState.restore_dynamic_control(dice, dice.gravity_scale, dice.lock_rotation, true)
 	)
 	tween.tween_property(frame, "transform:origin", base_origin, half_duration)
 	await tween.finished
@@ -69,3 +74,14 @@ static func play_ability_use_animation(
 
 static func _prepare_dice_for_scripted_motion(dice: Dice) -> void:
 	DiceMotionState.begin_kinematic_control(dice, true, true, dice.gravity_scale)
+
+
+static func _should_consume_dice_on_current_activation(dice: Dice) -> bool:
+	if dice == null or not is_instance_valid(dice):
+		return false
+	var consume_after_activations := 1
+	if dice.definition != null:
+		consume_after_activations = maxi(dice.definition.ability_activations_before_consume, 1)
+	var consume_counter := int(dice.get_meta(ABILITY_ACTIVATION_CONSUME_COUNTER_META, 0)) + 1
+	dice.set_meta(ABILITY_ACTIVATION_CONSUME_COUNTER_META, consume_counter)
+	return consume_counter >= consume_after_activations
