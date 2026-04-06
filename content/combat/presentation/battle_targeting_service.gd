@@ -129,16 +129,23 @@ func has_player_dice_at_screen_point(screen_point: Vector2, camera: Camera3D, wo
 func resolve_player_dice_at_screen_point(screen_point: Vector2, camera: Camera3D, world_3d: World3D) -> Dice:
 	if camera == null or world_3d == null:
 		return null
-	var ray_query := PhysicsRayQueryParameters3D.create(
-		camera.project_ray_origin(screen_point),
-		camera.project_ray_origin(screen_point) + camera.project_ray_normal(screen_point) * 1000.0
-	)
-	var hit = world_3d.direct_space_state.intersect_ray(ray_query)
-	if hit.is_empty():
+	var ray_origin := camera.project_ray_origin(screen_point)
+	var ray_end := ray_origin + camera.project_ray_normal(screen_point) * 1000.0
+	var ray_query := PhysicsRayQueryParameters3D.create(ray_origin, ray_end)
+	var excluded_rids: Array[RID] = []
+	const MAX_RAYCAST_PENETRATIONS := 8
+	for _attempt in MAX_RAYCAST_PENETRATIONS:
+		ray_query.exclude = excluded_rids
+		var hit = world_3d.direct_space_state.intersect_ray(ray_query)
+		if hit.is_empty():
+			return null
+		var collider := hit.get("collider") as Node
+		if collider is Dice and StringName(collider.get_meta(&"owner", &"")) == &"player":
+			return collider as Dice
+		if collider is CollisionObject3D:
+			excluded_rids.append((collider as CollisionObject3D).get_rid())
+			continue
 		return null
-	var collider := hit.get("collider") as Node
-	if collider is Dice and StringName(collider.get_meta(&"owner", &"")) == &"player":
-		return collider as Dice
 	return null
 
 
