@@ -16,6 +16,7 @@ const REROLL_ALL_ABILITY := preload("res://content/abilities/definitions/reroll_
 const PEREVERTYSH_DICE := preload("res://content/dice/definitions/perevertysh.tres")
 const KAMIKAZE_DICE := preload("res://content/dice/definitions/kamikaze.tres")
 const JOKER_DICE := preload("res://content/dice/definitions/joker.tres")
+const DUBLIKAT_DICE := preload("res://content/dice/definitions/dublikat.tres")
 const GlobalMapDiceEvolutionService = preload("res://content/global_map/dice/global_map_dice_evolution_service.gd")
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
@@ -764,5 +765,6 @@ static func build_default_player() -> Player:
 		PEREVERTYSH_DICE,
 		KAMIKAZE_DICE,
 		JOKER_DICE,
+		DUBLIKAT_DICE,
 	]
 	return Player.new(base_stat)
