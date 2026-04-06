@@ -42,14 +42,14 @@ func supports_multiple_targets() -> bool:
 
 
 func get_target_hint() -> StringName:
-	if side == Side.SELF or (selection == Selection.NONE and allow_self):
+	if side == Side.SELF:
 		return &"self"
+	if selection == Selection.NONE:
+		return &"global"
 	if side == Side.ENEMY and selection == Selection.ALL:
 		return &"all_enemies"
 	if side == Side.ENEMY and selection == Selection.SINGLE:
 		return &"single_enemy"
 	if side == Side.ANY and selection == Selection.SINGLE:
 		return &"dice"
-	if selection == Selection.NONE:
-		return &"global"
 	return &"custom"
