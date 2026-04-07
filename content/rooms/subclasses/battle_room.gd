@@ -550,8 +550,13 @@ func can_activate_current_turn_ability(ability: AbilityDefinition) -> bool:
 	if owner_descriptor.is_empty():
 		return false
 	if ability.once_per_battle and _is_ability_used_once_per_battle(owner_descriptor, ability):
+		_debug_combat_log("Способность %s заблокирована: once_per_battle уже использована." % String(ability.ability_id))
 		return false
-	return _get_ability_cooldown_turns(owner_descriptor, ability) <= 0
+	var cooldown_turns := _get_ability_cooldown_turns(owner_descriptor, ability)
+	if cooldown_turns > 0:
+		_debug_combat_log("Способность %s заблокирована: осталось %d ход(а) кулдауна." % [String(ability.ability_id), cooldown_turns])
+		return false
+	return true
 
 
 func register_current_turn_ability_use(ability: AbilityDefinition) -> void:
