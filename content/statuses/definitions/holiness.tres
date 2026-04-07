@@ -17,6 +17,3 @@ display_name = "Святость"
 description = "Пассивно увеличивает получаемое исцеление на 1 за каждый стак. Не сбрасывается в конце хода."
 asset = ExtResource("3_icon")
 effects = Array[ExtResource("2_effect")]([SubResource("StatusEffect_holiness_incoming_healing_bonus")])
-metadata = {
-"status_category": &"positive"
-}
