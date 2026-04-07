@@ -148,6 +148,8 @@ var _ability_cooldowns_by_owner: Dictionary = {}
 var _used_once_per_battle_abilities_by_owner: Dictionary = {}
 var _ability_uses_by_owner: Dictionary = {}
 var _ability_uses_this_turn_by_owner: Dictionary = {}
+var _last_debug_combat_message := ""
+var _last_debug_combat_message_repeat_count := 0
 
 
 func apply_battle_definition(definition: BattleRoomDefinition) -> void:
@@ -602,6 +604,8 @@ func _reset_battle_progression() -> void:
 	_used_once_per_battle_abilities_by_owner.clear()
 	_ability_uses_by_owner.clear()
 	_ability_uses_this_turn_by_owner.clear()
+	_last_debug_combat_message = ""
+	_last_debug_combat_message_repeat_count = 0
 
 
 func _format_descriptor_label(descriptor: Dictionary) -> String:
@@ -616,6 +620,13 @@ func _format_descriptor_label(descriptor: Dictionary) -> String:
 func _debug_combat_log(message: String) -> void:
 	if not OS.is_debug_build():
 		return
+	if message == _last_debug_combat_message:
+		_last_debug_combat_message_repeat_count += 1
+		return
+	if _last_debug_combat_message_repeat_count > 0:
+		print("[Debug][BattleRoom] Предыдущее сообщение повторилось еще %d раз." % _last_debug_combat_message_repeat_count)
+	_last_debug_combat_message = message
+	_last_debug_combat_message_repeat_count = 0
 	print("[Debug][BattleRoom] %s" % message)
 
 
