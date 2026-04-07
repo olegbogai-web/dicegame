@@ -16,5 +16,4 @@ status_id = "poisoner"
 display_name = "Отравитель"
 description = "За каждый стак увеличивает количество накладываемых на противника стаков состояния «Яд» на 1. Не уменьшается."
 asset = ExtResource("3_icon")
-category = 0
 effects = Array[ExtResource("2_effect")]([SubResource("StatusEffect_poisoner_outgoing_poison_stacks")])

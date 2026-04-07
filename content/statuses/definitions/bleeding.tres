@@ -27,5 +27,4 @@ status_id = "bleeding"
 display_name = "Кровотечение"
 description = "В начале хода наносит 1 урона за каждый стак. В конце хода владельца снимается 1 стак."
 asset = ExtResource("3_icon")
-category = 1
 effects = Array[ExtResource("2_effect")]([SubResource("StatusEffect_bleeding_damage_on_turn_start"), SubResource("StatusEffect_bleeding_decay")])
