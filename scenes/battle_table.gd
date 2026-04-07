@@ -227,6 +227,8 @@ func _build_centered_offsets(count: int, spacing: float) -> Array[float]:
 
 
 func _physics_process(delta: float) -> void:
+	if battle_room_data != null and battle_room_data.battle_status == &"victory":
+		_handle_post_battle_reward_dice()
 	_try_resolve_post_battle_reward_dice_result()
 	_refresh_player_ability_snap_state()
 	_update_health_bars(delta)
