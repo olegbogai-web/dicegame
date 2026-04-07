@@ -4,6 +4,7 @@ class_name BattleEffectRuntime
 const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
 const Dice = preload("res://content/dice/dice.gd")
 const StatusRuntime = preload("res://content/statuses/runtime/status_runtime.gd")
+const StatusInstance = preload("res://content/statuses/runtime/status_instance.gd")
 
 const KAMIKAZE_DICE_NAME := &"kamikaze"
 
@@ -298,6 +299,37 @@ static func _apply_effect_to_target(
 			else:
 				_log_debug("reroll_dice skipped: board reroll produced no dice")
 			return is_successful
+		&"reroll_dice_heal_owner_by_result":
+			var reroll_and_heal_targets := _resolve_reroll_dice_targets(effect, target_descriptor, consumed_dice)
+			if reroll_and_heal_targets.is_empty():
+				_log_debug("reroll_dice_heal_owner_by_result skipped: no valid target dice")
+				return false
+			var rerolled_with_heal := Dice.reroll_group_with_board_throw(reroll_and_heal_targets)
+			if rerolled_with_heal.is_empty():
+				_log_debug("reroll_dice_heal_owner_by_result skipped: board reroll produced no dice")
+				return false
+			var healed_amount := maxi(rerolled_with_heal[0].value, 0)
+			if healed_amount <= 0:
+				_log_debug("reroll_dice_heal_owner_by_result skipped: rerolled value <= 0")
+				return false
+			var heal_target_descriptor := source_descriptor
+			if heal_target_descriptor.is_empty():
+				heal_target_descriptor = _resolve_current_turn_source_descriptor(battle_room)
+			if heal_target_descriptor.is_empty():
+				_log_debug("reroll_dice_heal_owner_by_result skipped: unresolved heal target")
+				return false
+			if not battle_room.apply_heal_to_descriptor(heal_target_descriptor, healed_amount):
+				_log_debug("reroll_dice_heal_owner_by_result skipped: failed to apply heal=%d" % healed_amount)
+				return false
+			_log_debug(
+				"reroll_dice_heal_owner_by_result applied: ability=%s effect=%s rerolled_value=%d heal_target=%s" % [
+					String(ability.ability_id),
+					String(effect.effect_id),
+					healed_amount,
+					JSON.stringify(heal_target_descriptor),
+				]
+			)
+			return true
 		&"reroll_random_player_die":
 			var copies_count := maxi(int(effect.parameters.get("copies_count", 1)), 0)
 			if copies_count <= 0:
@@ -325,6 +357,13 @@ static func _apply_effect_to_target(
 			else:
 				_log_debug("reroll_random_player_die skipped: board throw-copy produced no dice")
 			return reroll_success
+		&"cleanse_random_negative_status":
+			var cleanse_target := _resolve_apply_status_target_descriptor(effect, target_descriptor, source_descriptor)
+			if cleanse_target.is_empty():
+				_log_debug("cleanse_random_negative_status skipped: unresolved target")
+				return false
+			var cleanse_stacks := maxi(int(effect.parameters.get("stacks", 1)), 1)
+			return _cleanse_random_negative_status_stacks(battle_room, cleanse_target, cleanse_stacks, ability, effect)
 	return false
 
 
@@ -386,6 +425,58 @@ static func _resolve_status_definition(effect: AbilityEffectDefinition) -> Statu
 	if effect.parameters.has("status_definition") and effect.parameters["status_definition"] is StatusDefinition:
 		return effect.parameters["status_definition"] as StatusDefinition
 	return null
+
+
+static func _cleanse_random_negative_status_stacks(
+	battle_room,
+	target_descriptor: Dictionary,
+	stacks_to_remove: int,
+	ability: AbilityDefinition,
+	effect: AbilityEffectDefinition
+) -> bool:
+	var status_container = battle_room.get_status_container_for_descriptor(target_descriptor)
+	if status_container == null:
+		_log_debug("cleanse_random_negative_status skipped: no status container target=%s" % JSON.stringify(target_descriptor))
+		return false
+	var negative_status_candidates: Array[StatusInstance] = []
+	for status_instance in status_container.get_active_statuses():
+		if status_instance == null or status_instance.definition == null:
+			continue
+		var category := StringName(status_instance.definition.metadata.get("status_category", &""))
+		if category != &"negative":
+			continue
+		negative_status_candidates.append(status_instance)
+	if negative_status_candidates.is_empty():
+		_log_debug("cleanse_random_negative_status skipped: no negative statuses target=%s" % JSON.stringify(target_descriptor))
+		return false
+	var random_status := negative_status_candidates[randi_range(0, negative_status_candidates.size() - 1)]
+	var status_id := random_status.get_status_id()
+	var removed := StatusRuntime.remove_status(
+		battle_room,
+		target_descriptor,
+		status_id,
+		stacks_to_remove,
+		&"status_removed"
+	)
+	if removed:
+		_log_debug(
+			"cleanse_random_negative_status applied: ability=%s effect=%s status=%s remove=%d target=%s" % [
+				String(ability.ability_id),
+				String(effect.effect_id),
+				String(status_id),
+				stacks_to_remove,
+				JSON.stringify(target_descriptor),
+			]
+		)
+	else:
+		_log_debug(
+			"cleanse_random_negative_status skipped: failed remove status=%s remove=%d target=%s" % [
+				String(status_id),
+				stacks_to_remove,
+				JSON.stringify(target_descriptor),
+			]
+		)
+	return removed
 
 
 static func _resolve_current_turn_source_descriptor(battle_room) -> Dictionary:
