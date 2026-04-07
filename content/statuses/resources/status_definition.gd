@@ -4,6 +4,12 @@ class_name StatusDefinition
 
 const DEFAULT_MAX_STACKS := 99
 
+enum Category {
+	POSITIVE,
+	NEGATIVE,
+	ABSOLUTE,
+}
+
 @export var status_id := ""
 @export var display_name := "New Status"
 @export_multiline var description := ""
@@ -11,6 +17,7 @@ const DEFAULT_MAX_STACKS := 99
 @export var stacking_policy: StringName = &"add"
 @export_range(1, 999, 1) var max_stacks := DEFAULT_MAX_STACKS
 @export var duration_model: StringName = &"battle"
+@export var category: Category = Category.POSITIVE
 @export var effects: Array[StatusEffectDefinition] = []
 @export var metadata: Dictionary = {}
 

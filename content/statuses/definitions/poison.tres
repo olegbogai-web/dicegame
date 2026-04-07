@@ -27,6 +27,7 @@ status_id = "poison"
 display_name = "Яд"
 description = "Наносит 1 урона за каждый стак за каждый использованный кубик. В конце хода снимается 1 стак."
 asset = ExtResource("3_icon")
+category = 1
 effects = Array[ExtResource("2_effect")]([SubResource("StatusEffect_poison_damage_per_used_die"), SubResource("StatusEffect_poison_decay")])
 metadata = {
 "outgoing_stacks_stat_key": &"status_poison_stacks_outgoing"
