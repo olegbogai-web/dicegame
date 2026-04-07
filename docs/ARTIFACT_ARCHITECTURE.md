@@ -128,6 +128,10 @@
 - `Банан` (`artifact_id = banana`): при получении `+10` к текущему и максимальному HP (`metadata.on_grant_max_hp_bonus = 10`).
 - `Яблоко` (`artifact_id = apple`): при получении `+20` к текущему и максимальному HP (`metadata.on_grant_max_hp_bonus = 20`).
 - `Арбуз` (`artifact_id = watermelon`): при получении `+30` к текущему и максимальному HP (`metadata.on_grant_max_hp_bonus = 30`).
+- `Ожерелье силы` (`artifact_id = strength_necklace`): в начале боя накладывает на игрока `Сила +2` (редкость `common`).
+- `Ожерелье святости` (`artifact_id = holiness_necklace`): в начале боя накладывает на игрока `Святость +2` (редкость `common`).
+- `Ожерелье регенерации` (`artifact_id = regeneration_necklace`): в начале боя накладывает на игрока `Регенерация +5` (редкость `rare`).
+- `Амулет сломанного меча` (`artifact_id = broken_sword_amulet`): в начале боя накладывает на всех врагов `Обезоружен +2` (редкость `uncommon`).
 
 
 ## Интеграция с post-battle reward (`artifact_+`)
@@ -161,7 +165,7 @@ UI-часть использует 3D-шаблон `artefact_frame_reward` с д
 - `Ожерелье силы` (`artifact_id = strength_necklace`):
   - редкость: `common`;
   - тип эффекта: триггерный (`on_battle_start`);
-  - действие триггера: применяет к игроку `1` стак статуса `Сила` через общий pipeline событий/эффектов;
+  - действие триггера: применяет к игроку `2` стака статуса `Сила` через общий pipeline событий/эффектов;
   - реализация должна оставаться data-driven: эффект задается в `ArtifactDefinition.triggers`, а не в `Combat`/`BattleRoom` через проверки конкретного `artifact_id`.
 - `Зуб древней змеи` (`artifact_id = ancient_snake_tooth`):
   - редкость: `unique`;
