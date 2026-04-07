@@ -11,6 +11,7 @@ const GOBLIN_MONSTER_DEFINITION := preload("res://content/monsters/definitions/g
 const CHIMERA_MONSTER_DEFINITION := preload("res://content/monsters/definitions/chimera.tres")
 const MUSKET_SHOT_UPGRADE_1_2_ABILITY := preload("res://content/abilities/definitions/needle_throw_upgrade_1_2.tres")
 const STRENGTHENING_UPGRADE_3_2_ABILITY := preload("res://content/abilities/definitions/strengthening_upgrade_3_2.tres")
+const REROLL_ALL_UPGRADE_1_1_ABILITY := preload("res://content/abilities/definitions/reroll_all_upgrade_1_1.tres")
 const PEREVERTYSH_DICE := preload("res://content/dice/definitions/perevertysh.tres")
 const KAMIKAZE_DICE := preload("res://content/dice/definitions/kamikaze.tres")
 const DUPLICATE_DICE := preload("res://content/dice/definitions/duplicate.tres")
@@ -144,6 +145,8 @@ var turn_start_pending := false
 var battle_result: StringName = &"none"
 var _ability_cooldowns_by_owner: Dictionary = {}
 var _used_once_per_battle_abilities_by_owner: Dictionary = {}
+var _ability_uses_by_owner: Dictionary = {}
+var _ability_uses_this_turn_by_owner: Dictionary = {}
 
 
 func apply_battle_definition(definition: BattleRoomDefinition) -> void:
@@ -540,6 +543,7 @@ func on_turn_started() -> void:
 	if owner_descriptor.is_empty():
 		return
 	_decrement_ability_cooldowns_for_owner(owner_descriptor)
+	_reset_ability_use_counters_for_owner_turn(owner_descriptor)
 
 
 func can_activate_current_turn_ability(ability: AbilityDefinition) -> bool:
@@ -550,6 +554,8 @@ func can_activate_current_turn_ability(ability: AbilityDefinition) -> bool:
 		return false
 	if ability.once_per_battle and _is_ability_used_once_per_battle(owner_descriptor, ability):
 		_debug_combat_log("Способность %s заблокирована: once_per_battle уже использована." % String(ability.ability_id))
+		return false
+	if not _is_within_custom_ability_use_limits(owner_descriptor, ability):
 		return false
 	var cooldown_turns := _get_ability_cooldown_turns(owner_descriptor, ability)
 	if cooldown_turns > 0:
@@ -566,6 +572,7 @@ func register_current_turn_ability_use(ability: AbilityDefinition) -> void:
 		return
 	if ability.once_per_battle:
 		_mark_ability_used_once_per_battle(owner_descriptor, ability)
+	_register_ability_use_in_counters(owner_descriptor, ability)
 	var cooldown_turns := maxi(ability.cooldown_turns, 0)
 	if cooldown_turns <= 0:
 		return
@@ -592,6 +599,8 @@ func _reset_battle_progression() -> void:
 	BattleTurnRuntime.reset_battle_progression(self)
 	_ability_cooldowns_by_owner.clear()
 	_used_once_per_battle_abilities_by_owner.clear()
+	_ability_uses_by_owner.clear()
+	_ability_uses_this_turn_by_owner.clear()
 
 
 func _format_descriptor_label(descriptor: Dictionary) -> String:
@@ -649,6 +658,67 @@ func _build_owner_cooldown_key(owner_descriptor: Dictionary) -> StringName:
 	var index := int(owner_descriptor.get("index", -1))
 	return StringName("%s:%d" % [side, index])
 
+
+
+
+func _is_within_custom_ability_use_limits(owner_descriptor: Dictionary, ability: AbilityDefinition) -> bool:
+	if ability == null:
+		return true
+	var max_uses_per_battle := maxi(ability.max_uses_per_battle, 0)
+	if max_uses_per_battle > 0:
+		var used_in_battle := _get_ability_use_count_for_owner(owner_descriptor, ability)
+		if used_in_battle >= max_uses_per_battle:
+			_debug_combat_log("Способность %s заблокирована: достигнут лимит %d использований за бой." % [String(ability.ability_id), max_uses_per_battle])
+			return false
+	var max_uses_per_turn := maxi(ability.max_uses_per_turn, 0)
+	if max_uses_per_turn > 0:
+		var used_this_turn := _get_ability_use_count_for_owner_this_turn(owner_descriptor, ability)
+		if used_this_turn >= max_uses_per_turn:
+			_debug_combat_log("Способность %s заблокирована: достигнут лимит %d использований за ход." % [String(ability.ability_id), max_uses_per_turn])
+			return false
+	return true
+
+
+func _register_ability_use_in_counters(owner_descriptor: Dictionary, ability: AbilityDefinition) -> void:
+	if ability == null:
+		return
+	var owner_key := _build_owner_cooldown_key(owner_descriptor)
+	var ability_key := String(ability.ability_id)
+	if ability_key.is_empty():
+		return
+	var used_in_battle := _get_ability_use_count_for_owner(owner_descriptor, ability) + 1
+	var owner_battle_uses: Dictionary = _ability_uses_by_owner.get(owner_key, {})
+	owner_battle_uses[ability_key] = used_in_battle
+	_ability_uses_by_owner[owner_key] = owner_battle_uses
+	var used_this_turn := _get_ability_use_count_for_owner_this_turn(owner_descriptor, ability) + 1
+	var owner_turn_uses: Dictionary = _ability_uses_this_turn_by_owner.get(owner_key, {})
+	owner_turn_uses[ability_key] = used_this_turn
+	_ability_uses_this_turn_by_owner[owner_key] = owner_turn_uses
+	_debug_combat_log("Счетчики способности %s: за бой=%d, за ход=%d." % [ability_key, used_in_battle, used_this_turn])
+
+
+func _get_ability_use_count_for_owner(owner_descriptor: Dictionary, ability: AbilityDefinition) -> int:
+	if ability == null:
+		return 0
+	var owner_key := _build_owner_cooldown_key(owner_descriptor)
+	var owner_uses: Dictionary = _ability_uses_by_owner.get(owner_key, {})
+	return maxi(int(owner_uses.get(String(ability.ability_id), 0)), 0)
+
+
+func _get_ability_use_count_for_owner_this_turn(owner_descriptor: Dictionary, ability: AbilityDefinition) -> int:
+	if ability == null:
+		return 0
+	var owner_key := _build_owner_cooldown_key(owner_descriptor)
+	var owner_uses: Dictionary = _ability_uses_this_turn_by_owner.get(owner_key, {})
+	return maxi(int(owner_uses.get(String(ability.ability_id), 0)), 0)
+
+
+func _reset_ability_use_counters_for_owner_turn(owner_descriptor: Dictionary) -> void:
+	var owner_key := _build_owner_cooldown_key(owner_descriptor)
+	if not _ability_uses_this_turn_by_owner.has(owner_key):
+		return
+	_ability_uses_this_turn_by_owner.erase(owner_key)
+	_debug_combat_log("Сброшены счетчики использований за ход для %s." % String(owner_key))
 
 func _mark_ability_used_once_per_battle(owner_descriptor: Dictionary, ability: AbilityDefinition) -> void:
 	if ability == null:
@@ -779,8 +849,9 @@ static func build_default_player() -> Player:
 	base_stat.starting_abilities = [
 		MUSKET_SHOT_UPGRADE_1_2_ABILITY,
 		STRENGTHENING_UPGRADE_3_2_ABILITY,
+		REROLL_ALL_UPGRADE_1_1_ABILITY,
 	]
-	print("[Debug][BattleRoom] Default player now starts without base abilities (only predefined upgrades).")
+	print("[Debug][BattleRoom] Default player starts with predefined upgraded abilities, including Переброс всего++ (1.1 ветка).")
 	var starter_ability_ids: Array[String] = []
 	for ability in base_stat.starting_abilities:
 		if ability == null:
