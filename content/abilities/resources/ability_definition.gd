@@ -55,6 +55,8 @@ const OWNER_SCOPE_TAGS := {
 @export_range(0, 99, 1) var charges := 0
 @export var starts_on_cooldown := false
 @export var once_per_battle := false
+@export_range(0, 99, 1) var max_uses_per_battle := 0
+@export_range(0, 99, 1) var max_uses_per_turn := 0
 @export var exhausts_for_battle := false
 
 @export_category("Rules")

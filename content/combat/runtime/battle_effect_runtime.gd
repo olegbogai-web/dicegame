@@ -299,18 +299,26 @@ static func _apply_effect_to_target(
 				_log_debug("reroll_dice skipped: board reroll produced no dice")
 			return is_successful
 		&"reroll_random_player_die":
+			var copies_count := maxi(int(effect.parameters.get("copies_count", 1)), 0)
+			if copies_count <= 0:
+				_log_debug("reroll_random_player_die skipped: copies_count <= 0")
+				return false
 			var random_reroll_target := _pick_random_reroll_candidate(target_descriptor, consumed_dice)
 			if random_reroll_target == null:
 				_log_debug("reroll_random_player_die skipped: no valid random target")
 				return false
-			var rerolled_random := Dice.throw_copies_group_with_board_throw([random_reroll_target])
+			var source_dice: Array[Dice] = []
+			for _index in copies_count:
+				source_dice.append(random_reroll_target)
+			var rerolled_random := Dice.throw_copies_group_with_board_throw(source_dice)
 			var reroll_success := not rerolled_random.is_empty()
 			if reroll_success:
 				_log_debug(
-					"reroll_random_player_die applied as throw-copy: ability=%s effect=%s dice=%s copies=%d" % [
+					"reroll_random_player_die applied as throw-copy: ability=%s effect=%s dice=%s requested_copies=%d spawned=%d" % [
 						String(ability.ability_id),
 						String(effect.effect_id),
 						String(random_reroll_target.definition.dice_name) if random_reroll_target.definition != null else "unknown",
+						copies_count,
 						rerolled_random.size(),
 					]
 				)
@@ -436,16 +444,16 @@ static func _resolve_reroll_dice_targets(
 		should_reroll_all_remaining = StringName(effect.parameters.get("scope", &"")) == &"all_remaining_player_dice"
 	if should_reroll_all_remaining:
 		for dice in _resolve_available_player_dice(target_descriptor):
-			if _is_valid_reroll_candidate(dice, consumed_dice, resolved):
+			if _is_valid_reroll_candidate(dice, consumed_dice, resolved, true, effect):
 				resolved.append(dice)
 
 	var target_kind := StringName(target_descriptor.get("kind", &""))
 	if target_kind == &"dice":
 		var target_dice = target_descriptor.get("dice") as Dice
-		if _is_valid_reroll_candidate(target_dice, consumed_dice, resolved, should_reroll_all_remaining):
+		if _is_valid_reroll_candidate(target_dice, consumed_dice, resolved, should_reroll_all_remaining, effect):
 			resolved.append(target_dice)
 	for dice in consumed_dice:
-		if _is_valid_reroll_candidate(dice, consumed_dice, resolved, false):
+		if _is_valid_reroll_candidate(dice, consumed_dice, resolved, false, effect):
 			resolved.append(dice)
 	return resolved
 
@@ -461,7 +469,7 @@ static func _resolve_available_player_dice(target_descriptor: Dictionary) -> Arr
 static func _pick_random_reroll_candidate(target_descriptor: Dictionary, consumed_dice: Array[Dice]) -> Dice:
 	var candidates: Array[Dice] = []
 	for dice in _resolve_available_player_dice(target_descriptor):
-		if _is_valid_reroll_candidate(dice, consumed_dice, candidates):
+		if _is_valid_reroll_candidate(dice, consumed_dice, candidates, true, null):
 			candidates.append(dice)
 	if candidates.is_empty():
 		return null
@@ -484,7 +492,8 @@ static func _is_valid_reroll_candidate(
 	candidate,
 	consumed_dice: Array[Dice],
 	already_selected: Array[Dice],
-	exclude_consumed: bool = true
+	exclude_consumed: bool = true,
+	effect: AbilityEffectDefinition = null
 ) -> bool:
 	var dice := candidate as Dice
 	if dice == null or not is_instance_valid(dice):
@@ -493,6 +502,10 @@ static func _is_valid_reroll_candidate(
 		return false
 	if already_selected.has(dice):
 		return false
+	if effect != null:
+		var min_value_to_skip := maxi(int(effect.parameters.get("skip_reroll_if_value_gte", 0)), 0)
+		if min_value_to_skip > 0 and dice.value >= min_value_to_skip:
+			return false
 	return true
 
 

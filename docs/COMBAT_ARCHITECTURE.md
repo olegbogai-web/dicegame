@@ -139,12 +139,19 @@
   - эффект: перебрасывает выбранный куб;
   - лимит использования: `cooldown_turns = 1` (фактически 1 раз за собственный ход, откат в начале следующего хода владельца);
   - редкость: `UNCOMMON`.
-- `reroll_all` / «Переброс всего» (`content/abilities/definitions/reroll_all.tres`):
+- `reroll_all` / «Переброс всего» (`content/abilities/definitions/reroll_all*.tres`):
   - owner scope: игрок (`owner_scope = PLAYER`), доступна в player reward/shop flow;
   - стоимость: не требует кубов;
   - таргет: глобальный (после выбора способности можно нажать в любую точку экрана);
-  - эффект: перебрасывает все оставшиеся кубы игрока, которые еще не были потрачены в текущей активации;
-  - лимит использования: `once_per_battle = true` (строго 1 раз за бой);
+  - base-эффект: перебрасывает все оставшиеся кубы игрока, которые еще не были потрачены в текущей активации;
+  - base-лимит использования: `once_per_battle = true` (строго 1 раз за бой);
+  - ветка `1` (`reroll_all_upgrade_1`) — `2` использования за бой, не чаще `1` раза за ход;
+    - `1.1` (`reroll_all_upgrade_1_1`) — `3` использования за бой, не чаще `1` раза за ход;
+    - `1.2` (`reroll_all_upgrade_1_2`) — `2` использования за бой без ограничения «1 раз за ход»;
+  - ветка `2` (`reroll_all_upgrade_2`) — base-переброс + создание копии случайного куба с доски;
+    - `2.1` (`reroll_all_upgrade_2_1`) — создает две копии случайного куба;
+    - `2.2` (`reroll_all_upgrade_2_2`) — не перебрасывает кубы со значением `>= 5`;
+  - runtime note: поддержаны data-driven параметры `max_uses_per_battle`, `max_uses_per_turn`, `copies_count`, `skip_reroll_if_value_gte`;
   - редкость: `RARE`.
 - `death_blow`-линейка / «Смертельный удар» (`content/abilities/definitions/death_blow*.tres`):
   - owner scope: игрок (`owner_scope = PLAYER`);
