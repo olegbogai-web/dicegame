@@ -7,7 +7,7 @@
 [ext_resource type="Script" uid="uid://c2t7x3op44t3s" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
 [ext_resource type="Script" uid="uid://drneiu6png0u3" path="res://content/abilities/resources/ability_effect_definition.gd" id="6_effect"]
 [ext_resource type="Texture2D" uid="uid://bwgrpe7gf22n" path="res://assets/ability/strengthening.png" id="7_icon"]
-[ext_resource type="Resource" path="res://content/statuses/definitions/strength.tres" id="8_strength_status"]
+[ext_resource type="Resource" uid="uid://cxine163sndw8" path="res://content/statuses/definitions/strength.tres" id="8_strength_status"]
 
 [sub_resource type="Resource" id="AbilityDiceCondition_pay"]
 script = ExtResource("3_dice_condition")

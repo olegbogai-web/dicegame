@@ -12,7 +12,7 @@ const HEALTH_BAR_ANIMATION_DURATION := 0.5
 const STATUS_TEMPLATE_PATH := ^"state"
 const STATUS_RUNTIME_NODE_PREFIX := "state_runtime_"
 const STATUS_ICON_SPACING_X := 0.26
-const MONSTER_STACK_SPACING_Z := BattleRoomScript.STACK_SPACING_Z + 0.8
+const MONSTER_STACK_SPACING_Z := BattleRoomScript.STACK_SPACING_Z + 0.6
 
 
 func _apply_room_data(owner: Node) -> void:

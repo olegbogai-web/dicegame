@@ -242,7 +242,7 @@ static func _apply_effect_to_target(
 			if dead_monster_index < 0 or dead_monster_index >= battle_room.monster_views.size():
 				_log_debug("heal_if_target_dead skipped: invalid monster index=%d" % dead_monster_index)
 				return false
-			var dead_monster_view := battle_room.monster_views[dead_monster_index]
+			var dead_monster_view = battle_room.monster_views[dead_monster_index]
 			if dead_monster_view == null or dead_monster_view.is_alive():
 				_log_debug(
 					"heal_if_target_dead skipped: monster still alive ability=%s effect=%s target_index=%d" % [

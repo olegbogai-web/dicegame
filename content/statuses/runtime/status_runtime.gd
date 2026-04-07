@@ -668,7 +668,7 @@ static func _apply_turn_start_dice_penalty(
 	if targets.is_empty():
 		return
 	for target in targets:
-		var accumulated_penalty := battle_room.add_turn_start_dice_penalty(target, resolved_penalty)
+		var accumulated_penalty = battle_room.add_turn_start_dice_penalty(target, resolved_penalty)
 		_log_debug(
 			"turn_start_dice_penalty queued: status=%s effect=%s add=%d total=%d target=%s" % [
 				String(entry.get("status_id", &"")),
