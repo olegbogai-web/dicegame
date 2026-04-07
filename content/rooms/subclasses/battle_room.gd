@@ -254,7 +254,7 @@ func get_player_health_values() -> Vector2i:
 
 
 func get_monster_health_ratio(index: int) -> float:
-	if index < 0 or index >= monster_views.size():
+	if index < 0 or index >= monster_views.size() or monster_views[index] == null:
 		return 0.0
 	return monster_views[index].get_health_ratio()
 
@@ -490,6 +490,19 @@ func _on_combatant_died(descriptor: Dictionary) -> void:
 	if combat_runtime_state == null:
 		return
 	combat_runtime_state.mark_combatant_dead(descriptor)
+	if StringName(descriptor.get("side", &"")) == &"enemy":
+		_purge_dead_monsters()
+	BattleTurnRuntime.update_battle_result_if_finished(self)
+
+
+func _purge_dead_monsters() -> void:
+	for monster_index in monster_views.size():
+		var monster_view := monster_views[monster_index]
+		if monster_view == null:
+			continue
+		if monster_view.is_alive():
+			continue
+		monster_views[monster_index] = null
 
 func start_battle() -> Dictionary:
 	return BattleTurnRuntime.start_battle(self)
@@ -590,10 +603,6 @@ func _debug_combat_log(message: String) -> void:
 	if not OS.is_debug_build():
 		return
 	print("[Debug][BattleRoom] %s" % message)
-
-
-func _update_battle_result_if_finished() -> bool:
-	return BattleTurnRuntime.update_battle_result_if_finished(self)
 
 
 func _resolve_turn_owner_descriptor() -> Dictionary:
