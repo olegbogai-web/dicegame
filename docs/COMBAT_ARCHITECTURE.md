@@ -132,12 +132,16 @@
 
 ### 2.6. Краткий реестр utility-способностей игрока
 
-- `reroll` / «Переброс кубика» (`content/abilities/definitions/reroll.tres`):
+- `reroll` / «Переброс кубика» (`content/abilities/definitions/reroll*.tres`):
   - owner scope: игрок (`owner_scope = PLAYER`), доступна в player reward/shop flow;
-  - стоимость: не требует кубов;
-  - таргет: выбранный боевой куб игрока;
-  - эффект: перебрасывает выбранный куб;
-  - лимит использования: `cooldown_turns = 1` (фактически 1 раз за собственный ход, откат в начале следующего хода владельца);
+  - base (`reroll`) — не требует кубов, таргетит выбранный куб, перебрасывает его, `cooldown_turns = 1`;
+  - ветка `1` (`reroll_upgrade_1`) — `2` использования за ход;
+    - `1.1` (`reroll_upgrade_1_1`) — `3` использования за ход;
+    - `1.2` (`reroll_upgrade_1_2`) — `2` использования за ход + лечение на значение переброшенного куба;
+  - ветка `2` (`reroll_upgrade_2`) — без КД, требует `1` любой куб для активации и перебрасывает именно этот потраченный куб;
+    - `2.1` (`reroll_upgrade_2_1`) — дополнительно накладывает `Регенерация 2` на владельца;
+    - `2.2` (`reroll_upgrade_2_2`) — дополнительно снимает `1` стак случайного отрицательного статуса с владельца;
+  - runtime note: добавлены generic effect types `heal_from_rerolled_die` и `remove_random_negative_status_stack` в `BattleEffectRuntime`;
   - редкость: `UNCOMMON`.
 - `reroll_all` / «Переброс всего» (`content/abilities/definitions/reroll_all*.tres`):
   - owner scope: игрок (`owner_scope = PLAYER`), доступна в player reward/shop flow;

@@ -27,4 +27,5 @@ status_id = "disarmed"
 display_name = "Обезоружен"
 description = "В начале хода владелец бросает на 1 куб меньше за каждый стак (случайный куб из доступных). В конце хода все стаки снимаются."
 asset = ExtResource("3_icon")
+category = 1
 effects = Array[ExtResource("2_effect")]([SubResource("StatusEffect_disarmed_turn_start_dice_penalty"), SubResource("StatusEffect_disarmed_clear_stacks")])

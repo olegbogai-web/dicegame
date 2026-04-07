@@ -279,6 +279,36 @@ static func _apply_effect_to_target(
 				]
 			)
 			return true
+		&"heal_from_rerolled_die":
+			var rerolled_die = _resolve_primary_rerolled_die(target_descriptor, consumed_dice)
+			if rerolled_die == null:
+				_log_debug("heal_from_rerolled_die skipped: no valid rerolled die")
+				return false
+			var heal_amount := maxi(rerolled_die.get_top_face_value(), 0)
+			if heal_amount <= 0:
+				_log_debug("heal_from_rerolled_die skipped: die value <= 0")
+				return false
+			if not battle_room.apply_heal_to_descriptor(source_descriptor, heal_amount):
+				_log_debug(
+					"heal_from_rerolled_die skipped: heal application failed source=%s amount=%d" % [
+						JSON.stringify(source_descriptor),
+						heal_amount,
+					]
+				)
+				return false
+			_log_debug(
+				"heal_from_rerolled_die applied: ability=%s effect=%s source=%s heal=%d" % [
+					String(ability.ability_id),
+					String(effect.effect_id),
+					JSON.stringify(source_descriptor),
+					heal_amount,
+				]
+			)
+			return true
+		&"remove_random_negative_status_stack":
+			var remove_stacks := maxi(int(effect.parameters.get("stacks", 1)), 1)
+			return _remove_random_negative_status_stacks(battle_room, source_descriptor, remove_stacks, ability, effect)
+
 		&"reroll_dice":
 			var dice_to_reroll := _resolve_reroll_dice_targets(effect, target_descriptor, consumed_dice)
 			if dice_to_reroll.is_empty():
@@ -477,6 +507,70 @@ static func _pick_random_reroll_candidate(target_descriptor: Dictionary, consume
 	return candidates[selected_index]
 
 
+
+
+static func _resolve_primary_rerolled_die(target_descriptor: Dictionary, consumed_dice: Array[Dice]) -> Dice:
+	var target_kind := StringName(target_descriptor.get("kind", &""))
+	if target_kind == &"dice":
+		var target_dice = target_descriptor.get("dice") as Dice
+		if target_dice != null and is_instance_valid(target_dice):
+			return target_dice
+	for dice in consumed_dice:
+		if dice != null and is_instance_valid(dice):
+			return dice
+	return null
+
+
+static func _remove_random_negative_status_stacks(
+	battle_room,
+	source_descriptor: Dictionary,
+	stacks_to_remove: int,
+	ability: AbilityDefinition,
+	effect: AbilityEffectDefinition
+) -> bool:
+	if battle_room == null or source_descriptor.is_empty() or stacks_to_remove <= 0:
+		_log_debug("remove_random_negative_status_stack skipped: invalid input")
+		return false
+	var source_container = battle_room.get_status_container_for_descriptor(source_descriptor)
+	if source_container == null:
+		_log_debug("remove_random_negative_status_stack skipped: source container missing")
+		return false
+	var negative_status_ids: Array[StringName] = []
+	for status_instance in source_container.get_active_statuses():
+		if status_instance == null or status_instance.definition == null:
+			continue
+		if not _is_negative_status_definition(status_instance.definition):
+			continue
+		if status_instance.stacks <= 0:
+			continue
+		negative_status_ids.append(StringName(status_instance.definition.status_id))
+	if negative_status_ids.is_empty():
+		_log_debug("remove_random_negative_status_stack skipped: no negative statuses on source")
+		return false
+	var random_index := randi_range(0, negative_status_ids.size() - 1)
+	var selected_status_id := negative_status_ids[random_index]
+	var removed := source_container.remove_status(selected_status_id, stacks_to_remove)
+	if not removed:
+		_log_debug("remove_random_negative_status_stack skipped: remove_status returned false")
+		return false
+	_log_debug(
+		"remove_random_negative_status_stack applied: ability=%s effect=%s source=%s status=%s removed=%d" % [
+			String(ability.ability_id),
+			String(effect.effect_id),
+			JSON.stringify(source_descriptor),
+			String(selected_status_id),
+			stacks_to_remove,
+		]
+	)
+	return true
+
+
+static func _is_negative_status_definition(status_definition: StatusDefinition) -> bool:
+	if status_definition == null:
+		return false
+	if status_definition.category == StatusDefinition.Category.NEGATIVE:
+		return true
+	return StringName(status_definition.metadata.get("category", &"")) == &"negative"
 static func _passes_effect_chance(effect: AbilityEffectDefinition) -> bool:
 	if effect == null:
 		return false
