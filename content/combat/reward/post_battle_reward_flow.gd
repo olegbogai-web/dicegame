@@ -505,14 +505,32 @@ func _resolve_follow_up_abilities(base_ability: AbilityDefinition, ability_catal
 	var resolved: Array[AbilityDefinition] = []
 	if base_ability == null:
 		return resolved
+	var requested_follow_ups: Array[String] = []
+	var missing_follow_ups: Array[String] = []
 	for follow_up_id in base_ability.follow_up_ability_ids:
 		var key := str(follow_up_id)
 		if key.is_empty():
 			continue
+		requested_follow_ups.append(key.get_file())
 		var follow_up_ability := ability_catalog.get(key, null) as AbilityDefinition
 		if follow_up_ability == null:
+			missing_follow_ups.append(key.get_file())
 			continue
 		resolved.append(follow_up_ability)
+	var resolved_names: Array[String] = []
+	for ability in resolved:
+		if ability == null:
+			continue
+		resolved_names.append("%s(lvl=%d)" % [ability.display_name, ability.upgrade_level])
+	print(
+		"[Debug][RewardFlow] Upgrade branches for %s(lvl=%d): requested=%s resolved=%s missing=%s." % [
+			base_ability.display_name,
+			base_ability.upgrade_level,
+			JSON.stringify(requested_follow_ups),
+			JSON.stringify(resolved_names),
+			JSON.stringify(missing_follow_ups),
+		]
+	)
 	return resolved
 
 

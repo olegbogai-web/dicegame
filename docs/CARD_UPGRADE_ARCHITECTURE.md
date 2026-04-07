@@ -70,6 +70,14 @@
     - `2.1` → `death_blow_upgrade_2_1` (`урон 75`, ровно 3 куба `6`);
     - `2.2` → `death_blow_upgrade_2_2` (`урон 50` + `Обезоружен 1`);
     - `2.3` → `death_blow_upgrade_2_3` (`урон 60`).
+- `clawed_series`:
+  - base (`clawed_series`) — `3` куба со значением `<= 3`, `5` ударов по `3`.
+  - `1` → `clawed_series_upgrade_1` (`5` ударов по `4`);
+    - `1.1` → `clawed_series_upgrade_1_1` (`7` ударов по `4`);
+    - `1.2` → `clawed_series_upgrade_1_2` (`5` ударов по `6`).
+  - `2` → `clawed_series_upgrade_2` (`3` удара по `10`);
+    - `2.1` → `clawed_series_upgrade_2_1` (`3` удара по `10` + `Кровотечение 5`);
+    - `2.2` → `clawed_series_upgrade_2_2` (`3` удара по `15`).
 
 ## 2.1. Что должно быть в ability content
 

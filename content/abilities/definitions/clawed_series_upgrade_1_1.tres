@@ -1,7 +1,6 @@
-[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://bgmmlyx4so83j"]
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
 
 [ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
-[ext_resource type="Script" uid="uid://lfpdg732cjt" path="res://content/abilities/resources/ability_condition.gd" id="1_hikop"]
 [ext_resource type="Script" uid="uid://cijja5c0f6ibw" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
 [ext_resource type="Script" uid="uid://vqakigfsnb18" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
 [ext_resource type="Script" uid="uid://c2t7x3op44t3s" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
@@ -23,8 +22,8 @@ dice_conditions = Array[ExtResource("3_dice_condition")]([SubResource("AbilityDi
 
 [sub_resource type="Resource" id="AbilityEffect_damage"]
 script = ExtResource("6_effect")
-effect_id = "clawed_series_damage"
-magnitude = 3
+effect_id = "clawed_series_damage_1_1"
+magnitude = 4
 dice_query_tags = PackedStringArray()
 
 [sub_resource type="Resource" id="AbilityTargetRule_enemy"]
@@ -35,12 +34,13 @@ forbidden_tags = PackedStringArray()
 [resource]
 script = ExtResource("1_ability")
 ability_id = "clawed_series"
-display_name = "Когтистая серия"
-description = "Требует 3 куба со значением 3 или меньше. Наносит 5 ударов по 3 урона (итого 15)."
+display_name = "Когтистая серия++"
+description = "Требует 3 куба со значением 3 или меньше. Наносит 7 ударов по 4 урона (итого 28)."
 icon = ExtResource("7_icon")
 tags = PackedStringArray("attack")
+upgrade_level = 2
 max_upgrade_level = 2
 cost = SubResource("AbilityCost_main")
 target_rule = SubResource("AbilityTargetRule_enemy")
-effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_damage"), SubResource("AbilityEffect_damage"), SubResource("AbilityEffect_damage"), SubResource("AbilityEffect_damage"), SubResource("AbilityEffect_damage")])
-follow_up_ability_ids = PackedStringArray("res://content/abilities/definitions/clawed_series_upgrade_1.tres", "res://content/abilities/definitions/clawed_series_upgrade_2.tres")
+effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_damage"), SubResource("AbilityEffect_damage"), SubResource("AbilityEffect_damage"), SubResource("AbilityEffect_damage"), SubResource("AbilityEffect_damage"), SubResource("AbilityEffect_damage"), SubResource("AbilityEffect_damage")])
+follow_up_ability_ids = PackedStringArray()
