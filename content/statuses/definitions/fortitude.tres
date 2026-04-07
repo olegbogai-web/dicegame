@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="StatusDefinition" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://content/statuses/resources/status_definition.gd" id="1_status"]
+[ext_resource type="Script" path="res://content/statuses/resources/status_effect_definition.gd" id="2_effect"]
+[ext_resource type="Texture2D" path="res://assets/states/Fortress.png" id="3_icon"]
+
+[sub_resource type="Resource" id="StatusEffect_fortitude_incoming_damage_reduction"]
+script = ExtResource("2_effect")
+effect_id = "fortitude_incoming_damage_reduction"
+stat_key = &"ability_damage_incoming"
+value = -1.0
+
+[sub_resource type="Resource" id="StatusEffect_fortitude_decay_on_damage_taken"]
+script = ExtResource("2_effect")
+effect_id = "fortitude_decay_on_damage_taken"
+effect_type = &"remove_status"
+trigger = &"on_damage_taken"
+status_id = "fortitude"
+parameters = {
+"only_origin": &"ability",
+"stacks": 1
+}
+
+[resource]
+script = ExtResource("1_status")
+status_id = "fortitude"
+display_name = "Стойкость"
+description = "Пассивно уменьшает входящий урон от атак на 1 за каждый стак. При получении урона от атаки снимается 1 стак."
+asset = ExtResource("3_icon")
+effects = Array[ExtResource("2_effect")]([SubResource("StatusEffect_fortitude_incoming_damage_reduction"), SubResource("StatusEffect_fortitude_decay_on_damage_taken")])
+metadata = {
+"status_category": &"positive"
+}

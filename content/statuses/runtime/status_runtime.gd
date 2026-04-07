@@ -563,6 +563,20 @@ static func _remove_status_from_scope(
 		return
 	var owner_descriptor := context.get("owner_descriptor", {}) as Dictionary
 	var owner_side := StringName(owner_descriptor.get("side", &""))
+	var metadata := context.get("metadata", {}) as Dictionary
+	var expected_origin := StringName(String(effect.parameters.get("only_origin", "")).strip_edges().to_lower())
+	if expected_origin != &"":
+		var actual_origin := StringName(String(metadata.get("origin", "")).strip_edges().to_lower())
+		if actual_origin != expected_origin:
+			_log_debug(
+				"remove_status trigger skipped by origin filter: status=%s expected=%s actual=%s owner=%s" % [
+					effect.status_id,
+					String(expected_origin),
+					String(actual_origin),
+					String(owner_side),
+				]
+			)
+			return
 	var resolved_remove_stacks := int(effect.parameters.get("stacks", 1))
 	_log_debug(
 		"remove_status trigger: status=%s remove=%d owner=%s" % [

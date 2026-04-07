@@ -15,7 +15,11 @@ const REWARD_MONEY_ICON := preload("res://assets/dice_edges/money.png")
 const MONEY_DICE_SKIN := preload("res://assets/dice_edges/money_dice_skin.png")
 const DiceDefinitionScript = preload("res://content/dice/resources/dice_definition.gd")
 const DiceFaceDefinitionScript = preload("res://content/dice/resources/dice_face_definition.gd")
-const DEFAULT_BASE_ARTIFACT_ANCIENT_SNAKE_TOOTH := preload("res://content/artifacts/definitions/ancient_snake_tooth.tres")
+const DEFAULT_BASE_ARTIFACT_STRENGTH_NECKLACE := preload("res://content/artifacts/definitions/strength_necklace.tres")
+const DEFAULT_BASE_ARTIFACT_HOLINESS_NECKLACE := preload("res://content/artifacts/definitions/holiness_necklace.tres")
+const DEFAULT_BASE_ARTIFACT_REGENERATION_NECKLACE := preload("res://content/artifacts/definitions/regeneration_necklace.tres")
+const DEFAULT_BASE_ARTIFACT_DURABILITY_NECKLACE := preload("res://content/artifacts/definitions/durability_necklace.tres")
+const DEFAULT_BASE_ARTIFACT_BROKEN_SWORD_AMULET := preload("res://content/artifacts/definitions/broken_sword_amulet.tres")
 
 @export_category("Identity")
 @export var player_id := ""
@@ -149,7 +153,13 @@ func _build_default_money_faces() -> Array[DiceFaceDefinition]:
 
 
 func _build_default_artifacts_base() -> Array[ArtifactDefinition]:
-	return [DEFAULT_BASE_ARTIFACT_ANCIENT_SNAKE_TOOTH]
+	return [
+		DEFAULT_BASE_ARTIFACT_STRENGTH_NECKLACE,
+		DEFAULT_BASE_ARTIFACT_HOLINESS_NECKLACE,
+		DEFAULT_BASE_ARTIFACT_REGENERATION_NECKLACE,
+		DEFAULT_BASE_ARTIFACT_DURABILITY_NECKLACE,
+		DEFAULT_BASE_ARTIFACT_BROKEN_SWORD_AMULET,
+	]
 
 
 func _build_money_face(value: String) -> DiceFaceDefinition:
