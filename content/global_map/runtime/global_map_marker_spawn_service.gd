@@ -17,18 +17,20 @@ func build_spawn_points(
 	background_node: Node3D,
 	origin_position: Vector3,
 	marker_count: int,
+	occupied_points: Array[Vector3] = [],
 	wall_margin: float = DEFAULT_WALL_MARGIN,
 	min_distance: float = DEFAULT_MIN_DISTANCE,
 	max_attempts: int = DEFAULT_MAX_ATTEMPTS
 ) -> Array[Vector3]:
-	var spawned_points: Array[Vector3] = []
+	var spawned_points: Array[Vector3] = occupied_points.duplicate()
+	var new_points: Array[Vector3] = []
 	if background_node == null or marker_count <= 0:
-		return spawned_points
+		return new_points
 
 	var bounds := _resolve_background_bounds(background_node)
 	if bounds.is_empty():
 		print("%s skip: empty background bounds" % GLOBAL_MAP_SPAWN_LOG_PREFIX)
-		return spawned_points
+		return new_points
 
 	var min_x: float = bounds["min_x"]
 	var max_x: float = bounds["max_x"]
@@ -40,7 +42,7 @@ func build_spawn_points(
 	var safe_max_z := max_z - wall_margin
 	if safe_min_x > safe_max_x or safe_min_z > safe_max_z:
 		print("%s skip: invalid safe area x(%.2f..%.2f) z(%.2f..%.2f)" % [GLOBAL_MAP_SPAWN_LOG_PREFIX, safe_min_x, safe_max_x, safe_min_z, safe_max_z])
-		return spawned_points
+		return new_points
 
 	for _index in marker_count:
 		var candidate = _find_candidate_position(
@@ -56,10 +58,12 @@ func build_spawn_points(
 		if candidate == null:
 			print("%s marker[%d] not found" % [GLOBAL_MAP_SPAWN_LOG_PREFIX, _index])
 			continue
-		spawned_points.append(candidate as Vector3)
+		var candidate_point := candidate as Vector3
+		spawned_points.append(candidate_point)
+		new_points.append(candidate_point)
 		print("%s marker[%d]=%s" % [GLOBAL_MAP_SPAWN_LOG_PREFIX, _index, candidate])
 
-	return spawned_points
+	return new_points
 
 
 func _find_candidate_position(
