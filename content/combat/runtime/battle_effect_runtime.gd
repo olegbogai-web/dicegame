@@ -4,6 +4,8 @@ class_name BattleEffectRuntime
 const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
 const Dice = preload("res://content/dice/dice.gd")
 const StatusRuntime = preload("res://content/statuses/runtime/status_runtime.gd")
+const StatusInstance = preload("res://content/statuses/runtime/status_instance.gd")
+const STATUS_CATEGORY_NEGATIVE := &"negative"
 
 const KAMIKAZE_DICE_NAME := &"kamikaze"
 
@@ -138,8 +140,12 @@ static func _apply_effect_to_target(
 	)
 	match effect.effect_type:
 		&"damage":
-			if target_kind == &"monster":
-				var monster_index := int(target_descriptor.get("index", -1))
+			var damage_target := _resolve_effect_combat_target_descriptor(effect, target_descriptor, source_descriptor, target_kind)
+			if damage_target.is_empty():
+				_log_debug("damage skipped: unresolved target descriptor kind=%s" % String(target_kind))
+				return false
+			if StringName(damage_target.get("side", &"")) == &"enemy":
+				var monster_index := int(damage_target.get("index", -1))
 				if not battle_room.can_target_monster(monster_index):
 					return false
 				if not battle_room.apply_damage_to_descriptor({"side": &"enemy", "index": monster_index}, resolved_magnitude):
@@ -148,9 +154,9 @@ static func _apply_effect_to_target(
 					StatusRuntime.TRIGGER_DAMAGE_TAKEN,
 					{
 						"battle_room": battle_room,
-						"owner_descriptor": {"side": &"enemy", "index": monster_index},
+						"owner_descriptor": damage_target,
 						"source_descriptor": source_descriptor,
-						"target_descriptor": {"side": &"enemy", "index": monster_index},
+						"target_descriptor": damage_target,
 						"ability": ability,
 						"ability_effect": effect,
 						"magnitude": resolved_magnitude,
@@ -158,43 +164,29 @@ static func _apply_effect_to_target(
 					}
 				))
 				return true
-			if target_kind == &"player":
-				if not battle_room.apply_damage_to_descriptor({"side": &"player"}, resolved_magnitude):
-					return false
-				StatusRuntime.trigger_event(StatusRuntime.build_event_context(
-					StatusRuntime.TRIGGER_DAMAGE_TAKEN,
-					{
-						"battle_room": battle_room,
-						"owner_descriptor": {"side": &"player"},
-						"source_descriptor": source_descriptor,
-						"target_descriptor": {"side": &"player"},
-						"ability": ability,
-						"ability_effect": effect,
-						"magnitude": resolved_magnitude,
-						"metadata": {"origin": &"ability"},
-					}
-				))
-				return true
+			if not battle_room.apply_damage_to_descriptor({"side": &"player"}, resolved_magnitude):
+				return false
+			StatusRuntime.trigger_event(StatusRuntime.build_event_context(
+				StatusRuntime.TRIGGER_DAMAGE_TAKEN,
+				{
+					"battle_room": battle_room,
+					"owner_descriptor": {"side": &"player"},
+					"source_descriptor": source_descriptor,
+					"target_descriptor": {"side": &"player"},
+					"ability": ability,
+					"ability_effect": effect,
+					"magnitude": resolved_magnitude,
+					"metadata": {"origin": &"ability"},
+				}
+			))
+			return true
 		&"healing":
-			if target_kind == &"player":
-				if not battle_room.apply_heal_to_descriptor({"side": &"player"}, resolved_magnitude):
-					return false
-				StatusRuntime.trigger_event(StatusRuntime.build_event_context(
-					StatusRuntime.TRIGGER_HEAL_TAKEN,
-					{
-						"battle_room": battle_room,
-						"owner_descriptor": {"side": &"player"},
-						"source_descriptor": source_descriptor,
-						"target_descriptor": {"side": &"player"},
-						"ability": ability,
-						"ability_effect": effect,
-						"magnitude": resolved_magnitude,
-						"metadata": {"origin": &"ability"},
-					}
-				))
-				return true
-			if target_kind == &"monster":
-				var monster_index := int(target_descriptor.get("index", -1))
+			var heal_target := _resolve_effect_combat_target_descriptor(effect, target_descriptor, source_descriptor, target_kind)
+			if heal_target.is_empty():
+				_log_debug("healing skipped: unresolved target descriptor kind=%s" % String(target_kind))
+				return false
+			if StringName(heal_target.get("side", &"")) == &"enemy":
+				var monster_index := int(heal_target.get("index", -1))
 				if not battle_room.can_target_monster(monster_index):
 					return false
 				if not battle_room.apply_heal_to_descriptor({"side": &"enemy", "index": monster_index}, resolved_magnitude):
@@ -203,9 +195,9 @@ static func _apply_effect_to_target(
 					StatusRuntime.TRIGGER_HEAL_TAKEN,
 					{
 						"battle_room": battle_room,
-						"owner_descriptor": {"side": &"enemy", "index": monster_index},
+						"owner_descriptor": heal_target,
 						"source_descriptor": source_descriptor,
-						"target_descriptor": {"side": &"enemy", "index": monster_index},
+						"target_descriptor": heal_target,
 						"ability": ability,
 						"ability_effect": effect,
 						"magnitude": resolved_magnitude,
@@ -213,6 +205,22 @@ static func _apply_effect_to_target(
 					}
 				))
 				return true
+			if not battle_room.apply_heal_to_descriptor({"side": &"player"}, resolved_magnitude):
+				return false
+			StatusRuntime.trigger_event(StatusRuntime.build_event_context(
+				StatusRuntime.TRIGGER_HEAL_TAKEN,
+				{
+					"battle_room": battle_room,
+					"owner_descriptor": {"side": &"player"},
+					"source_descriptor": source_descriptor,
+					"target_descriptor": {"side": &"player"},
+					"ability": ability,
+					"ability_effect": effect,
+					"magnitude": resolved_magnitude,
+					"metadata": {"origin": &"ability"},
+				}
+			))
+			return true
 		&"apply_status":
 			var status_definition := _resolve_status_definition(effect)
 			if status_definition == null:
@@ -325,6 +333,18 @@ static func _apply_effect_to_target(
 			else:
 				_log_debug("reroll_random_player_die skipped: board throw-copy produced no dice")
 			return reroll_success
+		&"remove_random_negative_status":
+			var removal_target := _resolve_apply_status_target_descriptor(effect, target_descriptor, source_descriptor)
+			if removal_target.is_empty():
+				_log_debug("remove_random_negative_status skipped: unresolved target descriptor")
+				return false
+			return _remove_random_status_stack_by_category(
+				battle_room,
+				removal_target,
+				STATUS_CATEGORY_NEGATIVE,
+				ability,
+				effect
+			)
 	return false
 
 
@@ -433,6 +453,24 @@ static func _sanitize_status_descriptor(raw_descriptor: Dictionary) -> Dictionar
 	return {}
 
 
+static func _resolve_effect_combat_target_descriptor(
+	effect: AbilityEffectDefinition,
+	target_descriptor: Dictionary,
+	source_descriptor: Dictionary,
+	target_kind: StringName
+) -> Dictionary:
+	if effect != null and StringName(effect.parameters.get("target", &"target")) == &"source":
+		return _sanitize_status_descriptor(source_descriptor)
+	if target_kind == &"player":
+		return {"side": &"player"}
+	if target_kind == &"monster":
+		return {
+			"side": &"enemy",
+			"index": int(target_descriptor.get("index", -1)),
+		}
+	return {}
+
+
 static func _resolve_reroll_dice_targets(
 	effect: AbilityEffectDefinition,
 	target_descriptor: Dictionary,
@@ -486,6 +524,63 @@ static func _passes_effect_chance(effect: AbilityEffectDefinition) -> bool:
 	if resolved_chance <= 0.0:
 		return false
 	return randf() <= resolved_chance
+
+
+static func _remove_random_status_stack_by_category(
+	battle_room,
+	target_descriptor: Dictionary,
+	required_category: StringName,
+	ability: AbilityDefinition,
+	effect: AbilityEffectDefinition
+) -> bool:
+	var status_container = battle_room.get_status_container_for_descriptor(target_descriptor)
+	if status_container == null:
+		_log_debug("remove_random_status_stack skipped: target has no status container")
+		return false
+	var candidates: Array[StatusInstance] = []
+	for status_instance in status_container.get_active_statuses():
+		if status_instance == null or status_instance.definition == null:
+			continue
+		if _resolve_status_category(status_instance.definition) != required_category:
+			continue
+		candidates.append(status_instance)
+	if candidates.is_empty():
+		_log_debug("remove_random_status_stack skipped: no statuses in category=%s target=%s" % [
+			String(required_category),
+			JSON.stringify(target_descriptor),
+		])
+		return false
+	var picked_index := randi_range(0, candidates.size() - 1)
+	var picked_status := candidates[picked_index]
+	var picked_status_id := StringName(picked_status.definition.status_id)
+	var removed := StatusRuntime.remove_status(
+		battle_room,
+		target_descriptor,
+		picked_status_id,
+		1
+	)
+	if removed:
+		_log_debug("remove_random_status_stack applied: ability=%s effect=%s category=%s removed_status=%s target=%s" % [
+			String(ability.ability_id),
+			String(effect.effect_id),
+			String(required_category),
+			String(picked_status_id),
+			JSON.stringify(target_descriptor),
+		])
+	else:
+		_log_debug("remove_random_status_stack failed: ability=%s effect=%s status=%s target=%s" % [
+			String(ability.ability_id),
+			String(effect.effect_id),
+			String(picked_status_id),
+			JSON.stringify(target_descriptor),
+		])
+	return removed
+
+
+static func _resolve_status_category(status_definition: StatusDefinition) -> StringName:
+	if status_definition == null:
+		return &""
+	return StringName(status_definition.metadata.get("status_category", &""))
 
 
 static func _is_valid_reroll_candidate(
