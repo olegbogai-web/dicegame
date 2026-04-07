@@ -419,12 +419,12 @@ func consume_turn_start_dice_penalty(descriptor: Dictionary) -> int:
 
 func apply_damage_to_descriptor(descriptor: Dictionary, amount: int) -> bool:
 	var resolved_damage := maxi(amount, 0)
-	if resolved_damage <= 0:
-		return false
 	var side := StringName(descriptor.get("side", &""))
 	if side == &"player":
 		if not can_target_player():
 			return false
+		if resolved_damage <= 0:
+			return true
 		if player_instance != null:
 			player_instance.take_damage(resolved_damage)
 		player_view.take_damage(resolved_damage)
@@ -442,6 +442,8 @@ func apply_damage_to_descriptor(descriptor: Dictionary, amount: int) -> bool:
 		var monster_index := int(descriptor.get("index", -1))
 		if not can_target_monster(monster_index):
 			return false
+		if resolved_damage <= 0:
+			return true
 		var monster_view := monster_views[monster_index]
 		monster_view.take_damage(resolved_damage)
 		var current_hp := monster_view.current_hp
