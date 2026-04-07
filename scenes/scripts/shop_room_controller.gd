@@ -457,12 +457,14 @@ func _set_modal_card_render_priority(card: Node3D) -> void:
 		return
 	var frame := card.get_node_or_null(^"ability_frame_base") as MeshInstance3D
 	if frame != null and frame.material_override is BaseMaterial3D:
-		var material := frame.material_override as BaseMaterial3D
+		var material := (frame.material_override as BaseMaterial3D).duplicate() as BaseMaterial3D
 		material.render_priority = 4
+		frame.material_override = material
 	var icon := card.get_node_or_null(^"ability_icon") as MeshInstance3D
 	if icon != null and icon.material_override is BaseMaterial3D:
-		var icon_material := icon.material_override as BaseMaterial3D
+		var icon_material := (icon.material_override as BaseMaterial3D).duplicate() as BaseMaterial3D
 		icon_material.render_priority = 4
+		icon.material_override = icon_material
 	var title := card.get_node_or_null(^"ability_text") as Label3D
 	if title != null:
 		title.render_priority = 5
