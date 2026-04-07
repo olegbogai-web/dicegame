@@ -31,6 +31,7 @@ const PATH_JITTER_XZ := 0.1
 const PATH_JITTER_ROTATION_DEGREES := 10.0
 const PATH_MARKER_CLEARANCE := 0.65
 const PATH_MAX_BUILD_ATTEMPTS := 60
+const PATH_REPOSITION_ATTEMPTS_BEFORE_DIRECT := 3
 
 var _owner: Node3D
 var _camera: Camera3D
@@ -343,25 +344,64 @@ func _deferred_roll_global_map_dice() -> void:
 func _spawn_markers_for_roll_result() -> void:
 	if _rolled_global_map_dice.is_empty():
 		return
-	var marker_points := _marker_spawn_service.build_spawn_points(
-		_background,
-		_hero_movement.get_ground_position(),
-		_rolled_global_map_dice.size()
-	)
-	if marker_points.is_empty():
-		push_warning("%s Не удалось разместить новые метки на карте." % GLOBAL_MAP_DICE_LOG_PREFIX)
+	var background_bounds := _resolve_background_bounds()
+	if background_bounds.is_empty():
+		push_warning("%s Не удалось разместить новые метки на карте: границы фона недоступны." % GLOBAL_MAP_DICE_LOG_PREFIX)
 		return
-	print("%s marker points=%s" % [GLOBAL_MAP_DICE_LOG_PREFIX, str(marker_points)])
+	var occupied_marker_positions := _marker_presenter.get_all_marker_positions()
 	var marker_specs: Array[Dictionary] = []
-	for index in range(min(_rolled_global_map_dice.size(), marker_points.size())):
+	for index in range(_rolled_global_map_dice.size()):
 		var dice := _rolled_global_map_dice[index]
 		var marker_data := _marker_link_resolver.resolve_marker_for_face(dice.get_top_face())
-		marker_data["position"] = marker_points[index]
+		var placement := _resolve_marker_placement_with_path_retry(occupied_marker_positions, background_bounds)
+		if placement.is_empty():
+			push_warning("%s Не удалось подобрать позицию метки index=%d после повторных попыток." % [GLOBAL_MAP_DICE_LOG_PREFIX, index])
+			continue
+		var marker_position := placement.get("position", _hero_movement.get_ground_position()) as Vector3
+		var marker_path_points := _to_vector3_array(placement.get("path_points", []))
+		marker_data["position"] = marker_position
+		marker_data["path_points"] = marker_path_points
 		marker_data["visible"] = true
 		marker_specs.append(marker_data)
-		print("%s marker[%d] type=%s pos=%s" % [GLOBAL_MAP_DICE_LOG_PREFIX, index, String(marker_data.get("type", "")), marker_points[index]])
+		occupied_marker_positions.append(marker_position)
+		print("%s marker[%d] type=%s pos=%s path_points=%d" % [GLOBAL_MAP_DICE_LOG_PREFIX, index, String(marker_data.get("type", "")), marker_position, marker_path_points.size()])
+	if marker_specs.is_empty():
+		push_warning("%s Не удалось разместить новые метки на карте." % GLOBAL_MAP_DICE_LOG_PREFIX)
+		return
 	var created_markers := _marker_presenter.show_markers(marker_specs, false)
 	_build_paths_for_markers(created_markers)
+
+
+func _resolve_marker_placement_with_path_retry(marker_positions: Array[Vector3], background_bounds: Dictionary) -> Dictionary:
+	for attempt in range(PATH_REPOSITION_ATTEMPTS_BEFORE_DIRECT + 1):
+		var candidate_points := _marker_spawn_service.build_spawn_points(
+			_background,
+			_hero_movement.get_ground_position(),
+			1,
+			marker_positions
+		)
+		if candidate_points.is_empty():
+			print("%s marker placement retry=%d: spawn candidate not found" % [GLOBAL_MAP_DICE_LOG_PREFIX, attempt + 1])
+			continue
+		var candidate_position := candidate_points[0]
+		if attempt < PATH_REPOSITION_ATTEMPTS_BEFORE_DIRECT:
+			var path_points := _build_wavy_path_to_marker(candidate_position, marker_positions, background_bounds)
+			if not path_points.is_empty():
+				print("%s marker placement retry=%d: path built with rules points=%d" % [GLOBAL_MAP_DICE_LOG_PREFIX, attempt + 1, path_points.size()])
+				return {
+					"position": candidate_position,
+					"path_points": path_points,
+				}
+			print("%s marker placement retry=%d: path failed, reselect marker" % [GLOBAL_MAP_DICE_LOG_PREFIX, attempt + 1])
+			continue
+		var fallback_path := _build_direct_path_to_marker(candidate_position)
+		_register_path_segments(fallback_path)
+		print("%s marker placement retry=%d: forced direct path points=%d" % [GLOBAL_MAP_DICE_LOG_PREFIX, attempt + 1, fallback_path.size()])
+		return {
+			"position": candidate_position,
+			"path_points": fallback_path,
+		}
+	return {}
 
 
 func _build_global_map_throw_request(definition: DiceDefinition) -> DiceThrowRequest:
@@ -454,11 +494,20 @@ func _build_paths_for_markers(markers: Array[Dictionary]) -> void:
 		var marker_node := marker_data.get("node") as Node3D
 		if marker_node == null or not is_instance_valid(marker_node):
 			continue
+		var prebuilt_path_points := _to_vector3_array(marker_data.get("path_points", []))
+		if prebuilt_path_points.size() >= 2:
+			_spawn_dash_path(prebuilt_path_points)
+			_marker_presenter.set_marker_path_points(marker_node, prebuilt_path_points)
+			print("%s path restored prebuilt points=%d" % [GLOBAL_MAP_DICE_LOG_PREFIX, prebuilt_path_points.size()])
+			continue
 		print("%s build path marker type=%s pos=%s" % [GLOBAL_MAP_DICE_LOG_PREFIX, String(marker_data.get("type", "")), marker_node.global_position])
 		var path_points := _build_wavy_path_to_marker(marker_node.global_position, marker_positions, background_bounds)
 		if path_points.is_empty():
-			_marker_presenter.set_marker_path_points(marker_node, [marker_node.global_position])
-			print("%s path fallback direct marker=%s" % [GLOBAL_MAP_DICE_LOG_PREFIX, marker_node.global_position])
+			var fallback_path := _build_direct_path_to_marker(marker_node.global_position)
+			_register_path_segments(fallback_path)
+			_spawn_dash_path(fallback_path)
+			_marker_presenter.set_marker_path_points(marker_node, fallback_path)
+			print("%s path fallback forced direct marker=%s" % [GLOBAL_MAP_DICE_LOG_PREFIX, marker_node.global_position])
 			continue
 		_spawn_dash_path(path_points)
 		_marker_presenter.set_marker_path_points(marker_node, path_points)
@@ -539,6 +588,14 @@ func _generate_wavy_points(start: Vector3, target: Vector3) -> Array[Vector3]:
 		points.append(Vector3(point_xz.x, PATH_DASH_Y, point_xz.y))
 	points.append(Vector3(target.x, PATH_DASH_Y, target.z))
 	return points
+
+
+func _build_direct_path_to_marker(target: Vector3) -> Array[Vector3]:
+	var anchor := _resolve_path_anchor()
+	return [
+		Vector3(anchor.x, PATH_DASH_Y, anchor.z),
+		Vector3(target.x, PATH_DASH_Y, target.z),
+	]
 
 
 func _spawn_dash_path(path_points: Array[Vector3]) -> void:
