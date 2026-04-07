@@ -86,6 +86,17 @@
   - `2` → `needle_throw_upgrade_2` (принимает только кубы `<= 3`, урон `4 * значение_куба`);
     - `2.1` → `needle_throw_upgrade_2_1` (принимает только кубы `1..2`, урон `8 * значение_куба`);
     - `2.2` → `needle_throw_upgrade_2_2` (принимает только кубы `<= 3`, урон `5 * значение_куба`).
+- `strengthening` / «Усиление»:
+  - base (`strengthening`) — до `3` кубов, сумма `>= 9`, `Сила +3`.
+  - `1` → `strengthening_upgrade_1` (сумма `>= 7`, `Сила +3`);
+    - `1.1` → `strengthening_upgrade_1_1` (сумма `>= 6`, `Сила +3`);
+    - `1.2` → `strengthening_upgrade_1_2` (сумма `>= 7`, `Сила +4`).
+  - `2` → `strengthening_upgrade_2` (сумма ровно `9`, `Сила +5`);
+    - `2.1` → `strengthening_upgrade_2_1` (сумма ровно `9`, `Сила +6`);
+    - `2.2` → `strengthening_upgrade_2_2` (сумма ровно `12`, `Сила +9`).
+  - `3` → `strengthening_upgrade_3` (сумма `>= 9`, `Сила +4`);
+    - `3.1` → `strengthening_upgrade_3_1` (сумма `>= 9`, `Сила +5`);
+    - `3.2` → `strengthening_upgrade_3_2` (сумма `>= 9`, максимум `2` куба, `Сила +6`).
 
 ## 2.1. Что должно быть в ability content
 

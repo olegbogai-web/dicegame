@@ -1,7 +1,6 @@
-[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://c1woe4k3s1xhn"]
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
 
 [ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
-[ext_resource type="Script" uid="uid://lfpdg732cjt" path="res://content/abilities/resources/ability_condition.gd" id="2_condition"]
 [ext_resource type="Script" uid="uid://cijja5c0f6ibw" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
 [ext_resource type="Script" uid="uid://vqakigfsnb18" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
 [ext_resource type="Script" uid="uid://c2t7x3op44t3s" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
@@ -11,10 +10,9 @@
 
 [sub_resource type="Resource" id="AbilityDiceCondition_pay"]
 script = ExtResource("3_dice_condition")
-max_selected_count = 3
+max_selected_count = 2
 min_total_value = 9
-max_total_value = 9
-slot_count_hint = 3
+slot_count_hint = 2
 required_tags = PackedStringArray()
 forbidden_tags = PackedStringArray()
 accepted_face_ids = PackedStringArray()
@@ -26,12 +24,12 @@ dice_conditions = Array[ExtResource("3_dice_condition")]([SubResource("AbilityDi
 
 [sub_resource type="Resource" id="AbilityEffect_strength"]
 script = ExtResource("6_effect")
-effect_id = "strengthening_apply_strength_2"
+effect_id = "strengthening_apply_strength_3_2"
 effect_type = &"apply_status"
 status_id = "strength"
 dice_query_tags = PackedStringArray()
 parameters = {
-"stacks": 5,
+"stacks": 6,
 "status_definition": ExtResource("8_strength_status")
 }
 
@@ -48,14 +46,14 @@ forbidden_tags = PackedStringArray()
 [resource]
 script = ExtResource("1_ability")
 ability_id = "strengthening"
-display_name = "Усиление+"
-description = "Требует ровно 9 суммарно на 1-3 кубах. Накладывает состояние Сила +5."
+display_name = "Усиление++"
+description = "Требует сумму значений 9+ максимум на 2 кубах. Накладывает состояние Сила +6."
 icon = ExtResource("7_icon")
 tags = PackedStringArray("buff", "strength")
 owner_scope = 0
-upgrade_level = 1
+upgrade_level = 2
 max_upgrade_level = 2
 cost = SubResource("AbilityCost_main")
 target_rule = SubResource("AbilityTargetRule_self")
 effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_strength")])
-follow_up_ability_ids = PackedStringArray("res://content/abilities/definitions/strengthening_upgrade_2_1.tres", "res://content/abilities/definitions/strengthening_upgrade_2_2.tres")
+follow_up_ability_ids = PackedStringArray()
