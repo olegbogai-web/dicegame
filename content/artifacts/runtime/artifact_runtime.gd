@@ -60,10 +60,11 @@ static func _execute_trigger(battle_room, owner_descriptor: Dictionary, trigger:
 		if status_definition == null:
 			return
 		var stacks := maxi(int(trigger.parameters.get("stacks", 1)), 1)
-		var target_descriptor := _resolve_target_descriptor(owner_descriptor, trigger.target_scope)
-		if target_descriptor.is_empty():
-			return
-		StatusRuntime.apply_status(battle_room, target_descriptor, status_definition, stacks, owner_descriptor)
+		var target_descriptors := _resolve_target_descriptors(battle_room, owner_descriptor, trigger.target_scope)
+		for target_descriptor in target_descriptors:
+			if target_descriptor.is_empty():
+				continue
+			StatusRuntime.apply_status(battle_room, target_descriptor, status_definition, stacks, owner_descriptor)
 		return
 
 	if trigger.effect_type == &"convert_status_on_remove":
@@ -99,12 +100,31 @@ static func _normalize_turn_owner(value: Variant) -> StringName:
 	return TURN_OWNER_PLAYER
 
 
-static func _resolve_target_descriptor(owner_descriptor: Dictionary, target_scope: StringName) -> Dictionary:
+static func _resolve_target_descriptors(
+	battle_room,
+	owner_descriptor: Dictionary,
+	target_scope: StringName
+) -> Array[Dictionary]:
 	if target_scope == &"player":
-		return {"side": &"player"}
+		return [{"side": &"player"}]
+	if target_scope == &"enemy":
+		if battle_room == null:
+			return []
+		var monster_index := int(owner_descriptor.get("index", -1))
+		if battle_room.can_target_monster(monster_index):
+			return [{"side": &"enemy", "index": monster_index}]
+		return []
+	if target_scope == &"all_enemies":
+		if battle_room == null:
+			return []
+		var descriptors: Array[Dictionary] = []
+		var monster_indexes := battle_room.get_living_monster_indexes()
+		for monster_index in monster_indexes:
+			descriptors.append({"side": &"enemy", "index": monster_index})
+		return descriptors
 	if target_scope == &"self":
-		return owner_descriptor.duplicate(true)
-	return owner_descriptor.duplicate(true)
+		return [owner_descriptor.duplicate(true)]
+	return [owner_descriptor.duplicate(true)]
 
 
 static func _execute_convert_status_on_remove_trigger(battle_room, owner_descriptor: Dictionary, trigger: ArtifactTriggerDefinition) -> void:
@@ -114,9 +134,10 @@ static func _execute_convert_status_on_remove_trigger(battle_room, owner_descrip
 		_log_debug("convert_status_on_remove skipped: status definitions are not configured.")
 		return
 
-	var target_descriptor := _resolve_target_descriptor(owner_descriptor, trigger.target_scope)
-	if target_descriptor.is_empty():
+	var target_descriptors := _resolve_target_descriptors(battle_room, owner_descriptor, trigger.target_scope)
+	if target_descriptors.is_empty():
 		return
+	var target_descriptor := target_descriptors[0]
 
 	var remove_stacks := maxi(int(trigger.parameters.get("remove_stacks", 1)), 1)
 	var per_removed_stack := maxi(int(trigger.parameters.get("target_stacks_per_removed_stack", 1)), 1)
