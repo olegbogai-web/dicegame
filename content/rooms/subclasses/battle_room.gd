@@ -9,9 +9,8 @@ const TEST_MONSTER_DEFINITION := preload("res://content/monsters/definitions/tes
 const RAT_MONSTER_DEFINITION := preload("res://content/monsters/definitions/rat.tres")
 const GOBLIN_MONSTER_DEFINITION := preload("res://content/monsters/definitions/goblin.tres")
 const CHIMERA_MONSTER_DEFINITION := preload("res://content/monsters/definitions/chimera.tres")
-const CLAWED_SERIES_ABILITY := preload("res://content/abilities/definitions/clawed_series.tres")
-const CLAWED_SERIES_UPGRADE_2_1_ABILITY := preload("res://content/abilities/definitions/clawed_series_upgrade_2_1.tres")
-const STRENGTHENING_ABILITY := preload("res://content/abilities/definitions/strengthening.tres")
+const MUSKET_SHOT_UPGRADE_1_2_ABILITY := preload("res://content/abilities/definitions/needle_throw_upgrade_1_2.tres")
+const STRENGTHENING_UPGRADE_3_2_ABILITY := preload("res://content/abilities/definitions/strengthening_upgrade_3_2.tres")
 const PEREVERTYSH_DICE := preload("res://content/dice/definitions/perevertysh.tres")
 const KAMIKAZE_DICE := preload("res://content/dice/definitions/kamikaze.tres")
 const DUPLICATE_DICE := preload("res://content/dice/definitions/duplicate.tres")
@@ -778,10 +777,10 @@ static func build_default_player() -> Player:
 	base_stat.starting_hp = 30
 	base_stat.starting_armor = 0
 	base_stat.starting_abilities = [
-		CLAWED_SERIES_ABILITY,
-		CLAWED_SERIES_UPGRADE_2_1_ABILITY,
-		STRENGTHENING_ABILITY,
+		MUSKET_SHOT_UPGRADE_1_2_ABILITY,
+		STRENGTHENING_UPGRADE_3_2_ABILITY,
 	]
+	print("[Debug][BattleRoom] Default player now starts without base abilities (only predefined upgrades).")
 	var starter_ability_ids: Array[String] = []
 	for ability in base_stat.starting_abilities:
 		if ability == null:
