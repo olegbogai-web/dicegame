@@ -241,7 +241,21 @@ static func apply_status(
 	var previous_stacks := _get_status_stacks(container, StringName(status_definition.status_id))
 	var instance := container.add_status(status_definition, resolved_stacks)
 	if instance == null:
+		_log_debug("apply_status failed: status=%s target=%s source=%s requested=%d" % [
+			status_definition.status_id,
+			_format_descriptor(target_descriptor),
+			_format_descriptor(source_descriptor),
+			resolved_stacks,
+		])
 		return false
+	_log_debug("apply_status success: status=%s target=%s source=%s previous=%d applied=%d total=%d" % [
+		status_definition.status_id,
+		_format_descriptor(target_descriptor),
+		_format_descriptor(source_descriptor),
+		previous_stacks,
+		resolved_stacks,
+		instance.stacks,
+	])
 	_publish_status_event(
 		build_event_context(&"apply_status", {
 			"battle_room": battle_room,
@@ -278,8 +292,22 @@ static func remove_status(
 		return false
 	var removed := container.remove_status(status_id, stacks)
 	if not removed:
+		_log_debug("remove_status failed: status=%s target=%s requested=%d previous=%d" % [
+			String(status_id),
+			_format_descriptor(target_descriptor),
+			stacks,
+			previous_stacks,
+		])
 		return false
 	var current_stacks := _get_status_stacks(container, status_id)
+	_log_debug("remove_status success: status=%s target=%s requested=%d previous=%d current=%d reason=%s" % [
+		String(status_id),
+		_format_descriptor(target_descriptor),
+		stacks,
+		previous_stacks,
+		current_stacks,
+		String(reason),
+	])
 	var event_name := reason if reason == EVENT_STATUS_EXPIRED else EVENT_STATUS_REMOVED
 	_publish_status_event(
 		build_event_context(event_name, {
