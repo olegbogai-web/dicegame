@@ -96,6 +96,8 @@ func _ready() -> void:
 	_rng.randomize()
 	_ability_reward_rng.randomize()
 	_runtime_player = _resolve_or_create_runtime_player()
+	if _ability_template != null:
+		_ability_template.visible = false
 	_setup_fixed_price_badges()
 	_generate_shop_inventory()
 	_refresh_offers_visual_state()
@@ -260,9 +262,8 @@ func _generate_ability_offers() -> void:
 		if picked == null:
 			continue
 		offered_ids[picked.ability_id] = true
-		var card := _ability_template if slot == 0 else (_ability_template.duplicate() as Node3D)
-		if slot > 0:
-			add_child(card)
+		var card := _ability_template.duplicate() as Node3D
+		add_child(card)
 		card.visible = true
 		card.transform.origin = origin + Vector3(float(slot) * spacing, 0.0, ABILITY_ROW_OFFSET_Z)
 		_apply_ability_visual(card, picked)
