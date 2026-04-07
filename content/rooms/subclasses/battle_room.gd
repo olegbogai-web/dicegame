@@ -12,7 +12,6 @@ const CHIMERA_MONSTER_DEFINITION := preload("res://content/monsters/definitions/
 const MUSKET_SHOT_UPGRADE_1_2_ABILITY := preload("res://content/abilities/definitions/needle_throw_upgrade_1_2.tres")
 const STRENGTHENING_UPGRADE_3_2_ABILITY := preload("res://content/abilities/definitions/strengthening_upgrade_3_2.tres")
 const REROLL_ALL_UPGRADE_1_1_ABILITY := preload("res://content/abilities/definitions/reroll_all_upgrade_1_1.tres")
-const REROLL_UPGRADE_2_2_ABILITY := preload("res://content/abilities/definitions/reroll_upgrade_2_2.tres")
 const PEREVERTYSH_DICE := preload("res://content/dice/definitions/perevertysh.tres")
 const KAMIKAZE_DICE := preload("res://content/dice/definitions/kamikaze.tres")
 const DUPLICATE_DICE := preload("res://content/dice/definitions/duplicate.tres")
@@ -851,9 +850,8 @@ static func build_default_player() -> Player:
 		MUSKET_SHOT_UPGRADE_1_2_ABILITY,
 		STRENGTHENING_UPGRADE_3_2_ABILITY,
 		REROLL_ALL_UPGRADE_1_1_ABILITY,
-		REROLL_UPGRADE_2_2_ABILITY,
 	]
-	print("[Debug][BattleRoom] Default player starts with predefined upgraded abilities, including Переброс кубика++ (2.2 ветка).")
+	print("[Debug][BattleRoom] Default player starts with predefined upgraded abilities, including Переброс всего++ (1.1 ветка).")
 	var starter_ability_ids: Array[String] = []
 	for ability in base_stat.starting_abilities:
 		if ability == null:

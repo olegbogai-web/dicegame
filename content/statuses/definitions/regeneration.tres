@@ -27,5 +27,4 @@ status_id = "regeneration"
 display_name = "Регенерация"
 description = "В начале хода восстанавливает 1 HP за каждый стак. В конце хода владельца снимается 1 стак."
 asset = ExtResource("3_icon")
-category = 0
 effects = Array[ExtResource("2_effect")]([SubResource("StatusEffect_regeneration_heal_on_turn_start"), SubResource("StatusEffect_regeneration_decay")])

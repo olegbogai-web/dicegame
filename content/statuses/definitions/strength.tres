@@ -16,5 +16,4 @@ status_id = "strength"
 display_name = "Сила"
 description = "Пассивно увеличивает урон способностей на 1 за каждый стак."
 asset = ExtResource("3_icon")
-category = 0
 effects = Array[ExtResource("2_effect")]([SubResource("StatusEffect_strength_damage_bonus")])
