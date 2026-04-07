@@ -1,8 +1,6 @@
-[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://ntg415146sxf"]
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
 
 [ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
-[ext_resource type="Script" uid="uid://lfpdg732cjt" path="res://content/abilities/resources/ability_condition.gd" id="1_mdnnm"]
-[ext_resource type="Script" uid="uid://vqakigfsnb18" path="res://content/abilities/resources/ability_dice_condition.gd" id="2_08g55"]
 [ext_resource type="Script" uid="uid://cijja5c0f6ibw" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
 [ext_resource type="Script" uid="uid://c2t7x3op44t3s" path="res://content/abilities/resources/ability_target_rule.gd" id="3_target_rule"]
 [ext_resource type="Script" uid="uid://drneiu6png0u3" path="res://content/abilities/resources/ability_effect_definition.gd" id="4_effect"]
@@ -13,7 +11,7 @@ script = ExtResource("2_cost")
 
 [sub_resource type="Resource" id="AbilityEffect_reroll_selected_dice"]
 script = ExtResource("4_effect")
-effect_id = "reroll_selected_dice"
+effect_id = "reroll_selected_dice_upgrade_1"
 effect_type = &"reroll_dice"
 dice_query_tags = PackedStringArray()
 
@@ -27,14 +25,16 @@ forbidden_tags = PackedStringArray()
 [resource]
 script = ExtResource("1_ability")
 ability_id = "reroll"
-display_name = "Переброс кубика"
-description = "Раз в ход перебрасывает выбранный куб."
+display_name = "Переброс кубика+"
+description = "Можно использовать 2 раза за ход. Перебрасывает выбранный куб."
 icon = ExtResource("5_icon")
 tags = PackedStringArray("utility", "reroll")
 owner_scope = 0
 rarity = 1
-cooldown_turns = 1
+upgrade_level = 1
+max_upgrade_level = 2
+max_uses_per_turn = 2
 cost = SubResource("AbilityCost_reroll")
 target_rule = SubResource("AbilityTargetRule_dice")
 effects = Array[ExtResource("4_effect")]([SubResource("AbilityEffect_reroll_selected_dice")])
-follow_up_ability_ids = PackedStringArray("res://content/abilities/definitions/reroll_upgrade_1.tres", "res://content/abilities/definitions/reroll_upgrade_2.tres")
+follow_up_ability_ids = PackedStringArray("res://content/abilities/definitions/reroll_upgrade_1_1.tres", "res://content/abilities/definitions/reroll_upgrade_1_2.tres")
