@@ -531,8 +531,10 @@ static func _resolve_reroll_dice_targets(
 ) -> Array[Dice]:
 	var resolved: Array[Dice] = []
 	var should_reroll_all_remaining := false
+	var include_consumed_dice := false
 	if effect != null:
 		should_reroll_all_remaining = StringName(effect.parameters.get("scope", &"")) == &"all_remaining_player_dice"
+		include_consumed_dice = bool(effect.parameters.get("include_consumed_dice", false))
 	if should_reroll_all_remaining:
 		for dice in _resolve_available_player_dice(target_descriptor):
 			if _is_valid_reroll_candidate(dice, consumed_dice, resolved, true, effect):
@@ -543,9 +545,10 @@ static func _resolve_reroll_dice_targets(
 		var target_dice = target_descriptor.get("dice") as Dice
 		if _is_valid_reroll_candidate(target_dice, consumed_dice, resolved, should_reroll_all_remaining, effect):
 			resolved.append(target_dice)
-	for dice in consumed_dice:
-		if _is_valid_reroll_candidate(dice, consumed_dice, resolved, false, effect):
-			resolved.append(dice)
+	if include_consumed_dice:
+		for dice in consumed_dice:
+			if _is_valid_reroll_candidate(dice, consumed_dice, resolved, false, effect):
+				resolved.append(dice)
 	return resolved
 
 
