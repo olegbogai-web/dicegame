@@ -23,8 +23,8 @@ dice_conditions = Array[ExtResource("3_dice_condition")]([SubResource("AbilityDi
 
 [sub_resource type="Resource" id="AbilityEffect_damage"]
 script = ExtResource("6_effect")
-effect_id = "clawed_series_damage"
-magnitude = 7
+effect_id = "clawed_series_damage_2"
+magnitude = 10
 dice_query_tags = PackedStringArray()
 
 [sub_resource type="Resource" id="AbilityTargetRule_enemy"]
@@ -36,12 +36,12 @@ forbidden_tags = PackedStringArray()
 script = ExtResource("1_ability")
 ability_id = "clawed_series"
 display_name = "Когтистая серия+"
-description = "Требует 3 куба со значением 3 или меньше. Наносит 3 удара по 7 урона (итого 21)."
+description = "Требует 3 куба со значением 3 или меньше. Наносит 3 удара по 10 урона (итого 30)."
 icon = ExtResource("7_icon")
 tags = PackedStringArray("attack")
 upgrade_level = 1
-max_upgrade_level = 1
+max_upgrade_level = 2
 cost = SubResource("AbilityCost_main")
 target_rule = SubResource("AbilityTargetRule_enemy")
 effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_damage"), SubResource("AbilityEffect_damage"), SubResource("AbilityEffect_damage")])
-follow_up_ability_ids = PackedStringArray()
+follow_up_ability_ids = PackedStringArray("res://content/abilities/definitions/clawed_series_upgrade_2_1.tres", "res://content/abilities/definitions/clawed_series_upgrade_2_2.tres")

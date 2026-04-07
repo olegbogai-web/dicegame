@@ -9,11 +9,9 @@ const TEST_MONSTER_DEFINITION := preload("res://content/monsters/definitions/tes
 const RAT_MONSTER_DEFINITION := preload("res://content/monsters/definitions/rat.tres")
 const GOBLIN_MONSTER_DEFINITION := preload("res://content/monsters/definitions/goblin.tres")
 const CHIMERA_MONSTER_DEFINITION := preload("res://content/monsters/definitions/chimera.tres")
-const COMMON_ATTACK_ABILITY := preload("res://content/abilities/definitions/common_attack_upgrade_power_strength_1.tres")
-const HEAL_ABILITY := preload("res://content/abilities/definitions/heal_upgrade_efficiency_holiness_1_heal_2.tres")
-const DEATH_BLOW_ABILITY := preload("res://content/abilities/definitions/death_blow_upgrade_2_2.tres")
-const REROLL_ABILITY := preload("res://content/abilities/definitions/reroll.tres")
-const REROLL_ALL_ABILITY := preload("res://content/abilities/definitions/reroll_all.tres")
+const CLAWED_SERIES_ABILITY := preload("res://content/abilities/definitions/clawed_series.tres")
+const CLAWED_SERIES_UPGRADE_2_1_ABILITY := preload("res://content/abilities/definitions/clawed_series_upgrade_2_1.tres")
+const STRENGTHENING_ABILITY := preload("res://content/abilities/definitions/strengthening.tres")
 const PEREVERTYSH_DICE := preload("res://content/dice/definitions/perevertysh.tres")
 const KAMIKAZE_DICE := preload("res://content/dice/definitions/kamikaze.tres")
 const DUPLICATE_DICE := preload("res://content/dice/definitions/duplicate.tres")
@@ -766,11 +764,9 @@ static func build_default_player() -> Player:
 	base_stat.starting_hp = 30
 	base_stat.starting_armor = 0
 	base_stat.starting_abilities = [
-		COMMON_ATTACK_ABILITY,
-		HEAL_ABILITY,
-		DEATH_BLOW_ABILITY,
-		REROLL_ABILITY,
-		REROLL_ALL_ABILITY,
+		CLAWED_SERIES_ABILITY,
+		CLAWED_SERIES_UPGRADE_2_1_ABILITY,
+		STRENGTHENING_ABILITY,
 	]
 	var starter_ability_ids: Array[String] = []
 	for ability in base_stat.starting_abilities:
