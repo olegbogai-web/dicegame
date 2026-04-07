@@ -308,7 +308,7 @@ static func _apply_effect_to_target(
 			if rerolled_with_heal.is_empty():
 				_log_debug("reroll_dice_heal_owner_by_result skipped: board reroll produced no dice")
 				return false
-			var healed_amount := maxi(rerolled_with_heal[0].value, 0)
+			var healed_amount := maxi((rerolled_with_heal[0] as Dice).get_top_face_value(), 0)
 			if healed_amount <= 0:
 				_log_debug("reroll_dice_heal_owner_by_result skipped: rerolled value <= 0")
 				return false
@@ -598,7 +598,7 @@ static func _is_valid_reroll_candidate(
 		return false
 	if effect != null:
 		var min_value_to_skip := maxi(int(effect.parameters.get("skip_reroll_if_value_gte", 0)), 0)
-		if min_value_to_skip > 0 and dice.value >= min_value_to_skip:
+		if min_value_to_skip > 0 and dice.get_top_face_value() >= min_value_to_skip:
 			return false
 	return true
 
