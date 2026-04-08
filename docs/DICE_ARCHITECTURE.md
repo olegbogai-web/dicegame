@@ -241,6 +241,7 @@
 Для управляемого расхода кубов в бою `dice_definition.gd` хранит параметр `ability_activations_before_consume`:
 - `1` (по умолчанию) — куб удаляется при первом списании в активации способности;
 - `2+` — куб удаляется только после указанного количества списаний.
+- текущий диапазон в ресурсе: `1..1000` (позволяет контентным кубам задавать почти «постоянное» присутствие в бою без отдельного runtime-хардкода удаления).
 
 **Классификация кубов (обязательная):**
 - `dice_definition.gd` должен хранить `scope` (например: `COMBAT`, `GLOBAL_MAP`, `REWARD`, `MONEY`, `EVENT`, `SYSTEM`);
@@ -281,6 +282,17 @@
   - эффект: куб не удаляется при первом списании на способность и удаляется только при втором списании;
   - data hook: `DiceDefinition.ability_activations_before_consume = 2`;
   - runtime hook: `content/combat/runtime/battle_activation_animation_runtime.gd::_should_consume_dice_on_current_activation()`.
+- `golden` / «Золотой» (`content/dice/definitions/golden.tres`):
+  - грани: `пустые` x6; редкость: `RARE`;
+  - базовый цвет: `rgb(255, 191, 0)`;
+  - эффект: при каждом броске этого куба игрок получает `+1` монету;
+  - runtime hooks: `BattleTurnOrchestrator::GOLDEN_DICE_NAME`, `BattleTurnOrchestrator::GOLDEN_DICE_COINS_ON_THROW`, `BattleTurnOrchestrator::_apply_player_throw_coin_bonus()`.
+- `poisoned` / «Отравленный» (`content/dice/definitions/poisoned.tres`):
+  - грани: `1..6`; редкость: `UNCOMMON`;
+  - базовый цвет: `rgb(35, 71, 0)`; цвет цифр: `rgb(130, 255, 13)`;
+  - эффект 1: куб практически не расходуется (`ability_activations_before_consume = 1000`);
+  - эффект 2: при каждом использовании в оплате способности накладывает на владельца `Яд +5`;
+  - runtime hooks: `BattleEffectRuntime::POISONED_DICE_NAME`, `BattleEffectRuntime::POISONED_DICE_STACKS_ON_USE`, `BattleEffectRuntime::_apply_poisoned_dice_self_poison()`.
 
 ### 9. `dice_face_view.gd`
 

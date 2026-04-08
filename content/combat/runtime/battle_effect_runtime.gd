@@ -5,8 +5,11 @@ const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runt
 const Dice = preload("res://content/dice/dice.gd")
 const StatusRuntime = preload("res://content/statuses/runtime/status_runtime.gd")
 const StatusInstance = preload("res://content/statuses/runtime/status_instance.gd")
+const POISON_STATUS_DEFINITION = preload("res://content/statuses/definitions/poison.tres")
 
 const KAMIKAZE_DICE_NAME := &"kamikaze"
+const POISONED_DICE_NAME := &"poisoned"
+const POISONED_DICE_STACKS_ON_USE := 5
 
 
 static func activate_current_turn_ability(battle_room, ability: AbilityDefinition, target_descriptor: Dictionary) -> Dictionary:
@@ -66,6 +69,8 @@ static func activate_current_turn_ability(battle_room, ability: AbilityDefinitio
 	if _has_consumed_dice_with_name(consumed_dice, KAMIKAZE_DICE_NAME):
 		if _reroll_remaining_player_dice(target_descriptor, consumed_dice):
 			applied_any_effect = true
+	if _apply_poisoned_dice_self_poison(battle_room, consumed_dice, source_descriptor):
+		applied_any_effect = true
 
 	StatusRuntime.trigger_event(StatusRuntime.build_event_context(
 		StatusRuntime.TRIGGER_ABILITY_AFTER_RESOLVE,
@@ -376,6 +381,35 @@ static func _has_consumed_dice_with_name(consumed_dice: Array[Dice], expected_di
 		if StringName(dice.definition.dice_name) == expected_dice_name:
 			return true
 	return false
+
+
+static func _count_consumed_dice_with_name(consumed_dice: Array[Dice], expected_dice_name: StringName) -> int:
+	if consumed_dice.is_empty():
+		return 0
+	var matched_count := 0
+	for dice in consumed_dice:
+		if dice == null or not is_instance_valid(dice) or dice.definition == null:
+			continue
+		if StringName(dice.definition.dice_name) == expected_dice_name:
+			matched_count += 1
+	return matched_count
+
+
+static func _apply_poisoned_dice_self_poison(battle_room, consumed_dice: Array[Dice], source_descriptor: Dictionary) -> bool:
+	if battle_room == null or consumed_dice.is_empty() or POISON_STATUS_DEFINITION == null:
+		return false
+	var poisoned_dice_count := _count_consumed_dice_with_name(consumed_dice, POISONED_DICE_NAME)
+	if poisoned_dice_count <= 0:
+		return false
+	var target_descriptor := {
+		"side": StringName(source_descriptor.get("side", &"")),
+	}
+	if target_descriptor["side"] == &"enemy":
+		target_descriptor["index"] = int(source_descriptor.get("index", -1))
+	if StringName(target_descriptor.get("side", &"")) == &"":
+		return false
+	var total_stacks := poisoned_dice_count * POISONED_DICE_STACKS_ON_USE
+	return StatusRuntime.apply_status(battle_room, target_descriptor, POISON_STATUS_DEFINITION, total_stacks, source_descriptor)
 
 
 static func _reroll_remaining_player_dice(target_descriptor: Dictionary, consumed_dice: Array[Dice]) -> bool:

@@ -205,6 +205,15 @@
   - trigger: куб участвует в оплате способности;
   - effect: на первой активации остается в слоте и не удаляется, удаляется на второй активации;
   - runtime hooks: `BattleActivationAnimationRuntime::ABILITY_ACTIVATION_CONSUME_COUNTER_META`, `BattleActivationAnimationRuntime::_should_consume_dice_on_current_activation`.
+- `golden` / «Золотой» (`content/dice/definitions/golden.tres`):
+  - trigger: куб включен в бросок начала хода игрока;
+  - effect: за каждый брошенный `golden` игрок получает `+1` монету;
+  - runtime hooks: `BattleTurnOrchestrator::GOLDEN_DICE_NAME`, `BattleTurnOrchestrator::_apply_player_throw_coin_bonus`.
+- `poisoned` / «Отравленный» (`content/dice/definitions/poisoned.tres`):
+  - trigger: куб входит в `consumed_dice` при активации способности;
+  - effect: накладывает на владельца `poison` в размере `5` стаков за каждый использованный куб;
+  - доп. свойство data-уровня: `ability_activations_before_consume = 1000` (куб практически не расходуется);
+  - runtime hooks: `BattleEffectRuntime::POISONED_DICE_NAME`, `BattleEffectRuntime::_apply_poisoned_dice_self_poison`.
 
 ---
 
