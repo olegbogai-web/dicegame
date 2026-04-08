@@ -1,0 +1,51 @@
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
+
+[ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" uid="uid://cijja5c0f6ibw" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
+[ext_resource type="Script" uid="uid://vqakigfsnb18" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
+[ext_resource type="Script" uid="uid://c2t7x3op44t3s" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
+[ext_resource type="Script" uid="uid://drneiu6png0u3" path="res://content/abilities/resources/ability_effect_definition.gd" id="6_effect"]
+[ext_resource type="Texture2D" uid="uid://39n8g5uutdri" path="res://assets/ability/crushing_shot.png" id="7_icon"]
+
+[sub_resource type="Resource" id="AbilityDiceCondition_pay_sum_7_or_more"]
+script = ExtResource("3_dice_condition")
+required_count = 2
+requires_exact_count = true
+min_total_value = 7
+required_tags = PackedStringArray()
+forbidden_tags = PackedStringArray()
+accepted_face_ids = PackedStringArray()
+consume_order = PackedStringArray()
+
+[sub_resource type="Resource" id="AbilityCost_main"]
+script = ExtResource("2_cost")
+dice_conditions = Array[ExtResource("3_dice_condition")]([SubResource("AbilityDiceCondition_pay_sum_7_or_more")])
+
+[sub_resource type="Resource" id="AbilityEffect_damage"]
+script = ExtResource("6_effect")
+effect_id = "crushing_shot_damage_2"
+magnitude = 15
+dice_query_tags = PackedStringArray()
+
+[sub_resource type="Resource" id="AbilityTargetRule_enemy"]
+script = ExtResource("4_target_rule")
+required_tags = PackedStringArray()
+forbidden_tags = PackedStringArray()
+
+[resource]
+script = ExtResource("1_ability")
+ability_id = "crushing_shot"
+display_name = "Сокрушающий выстрел+"
+description = "Требует ровно 2 куба с суммой 7 или больше. Наносит 15 урона."
+icon = ExtResource("7_icon")
+tags = PackedStringArray("attack")
+rarity = 0
+upgrade_level = 1
+max_upgrade_level = 2
+cost = SubResource("AbilityCost_main")
+target_rule = SubResource("AbilityTargetRule_enemy")
+effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_damage")])
+follow_up_ability_ids = PackedStringArray("res://content/abilities/definitions/crushing_shot_upgrade_2_1.tres", "res://content/abilities/definitions/crushing_shot_upgrade_2_2.tres")
+ui_metadata = {
+"debug_note": "crushing_shot_upgrade_2_requires_two_dice_sum_gte_7"
+}

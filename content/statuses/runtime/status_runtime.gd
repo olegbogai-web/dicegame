@@ -81,6 +81,28 @@ static func resolve_ability_effect_magnitude(
 				]
 			)
 
+	if bool(effect.parameters.get("consumed_dice_total_value_bonus", false)) and consumed_dice is Array and not consumed_dice.is_empty():
+		var consumed_total_value := 0
+		for consumed_die in consumed_dice:
+			if consumed_die == null or not is_instance_valid(consumed_die):
+				continue
+			var consumed_die_value := maxi(consumed_die.get_top_face_value(), 0)
+			var consumed_result := resolve_passive_modifier_pipeline(
+				consumed_die_value,
+				[
+					{"container": source_container, "stat_key": &"dice_face_value_outgoing", "scope": &"source"},
+				]
+			)
+			consumed_total_value += maxi(consumed_result.get("value", 0), 0)
+		resolved_base_magnitude += consumed_total_value
+		_log_debug(
+			"ability magnitude consumed dice bonus: effect=%s consumed_total=%d magnitude=%d" % [
+				String(effect.effect_id),
+				consumed_total_value,
+				resolved_base_magnitude,
+			]
+		)
+
 	if effect.effect_type == &"damage":
 		var damage_result := resolve_passive_modifier_pipeline(
 			resolved_base_magnitude,

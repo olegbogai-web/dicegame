@@ -170,6 +170,12 @@
   - base: 1 любой куб, урон `floor(1.5 * value(selected_die))`;
   - ветка `1.x`: эскалация урона `2.25x -> 3x -> 5x`; у `1.2` есть `cooldown_turns = 1` (эффективно 1 использование за собственный ход);
   - ветка `2.x`: ужесточение dice-условий (`<=3`, затем `1..2`) в обмен на более высокий множитель урона (`4x`, `8x`), альтернативная `2.2` дает `5x` при условии `<=3`.
+- `crushing_shot`-линейка / «Сокрушающий выстрел» (`content/abilities/definitions/crushing_shot*.tres`):
+  - owner scope: игрок (`owner_scope = PLAYER`), редкость: `COMMON`;
+  - base: ровно `2` куба с суммой `7`, урон `15`;
+  - ветка `1.x`: фиксированный урон `20 -> 25`, альтернативная `1.2` оставляет `15` урона и затем накладывает `vulnerability` (1) на цель;
+  - ветка `2.x`: смягчает dice-требование (`>=7`, затем `>=5`) и в варианте `2.2` добавляет к урону сумму использованных кубов (`15 + total(consumed_dice)`);
+  - runtime note: параметр эффекта `consumed_dice_total_value_bonus = true` обрабатывается generic-логикой `StatusRuntime.resolve_ability_effect_magnitude` с debug-логом.
 - `strengthening`-линейка / «Усиление» (`content/abilities/definitions/strengthening*.tres`):
   - owner scope: игрок (`owner_scope = PLAYER`), редкость: `COMMON`;
   - base: до 3 кубов, сумма `>= 9`, накладывает `Сила +3`;
