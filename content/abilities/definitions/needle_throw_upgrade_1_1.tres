@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://vqakigfsnb18" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
 [ext_resource type="Script" uid="uid://c2t7x3op44t3s" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
 [ext_resource type="Script" uid="uid://drneiu6png0u3" path="res://content/abilities/resources/ability_effect_definition.gd" id="6_effect"]
-[ext_resource type="Texture2D" uid="uid://buxy6mgu8vj8m" path="res://assets/ability/needle_throw.png" id="7_icon"]
+[ext_resource type="Texture2D" uid="uid://buxy6mgu8vj8m" path="res://assets/ability/snapshot.png" id="7_icon"]
 
 [sub_resource type="Resource" id="AbilityDiceCondition_pay"]
 script = ExtResource("3_dice_condition")
@@ -36,7 +36,7 @@ forbidden_tags = PackedStringArray()
 [resource]
 script = ExtResource("1_ability")
 ability_id = "needle_throw"
-display_name = "Выстрел из мушкета++"
+display_name = "Выстрел навскидку++"
 description = "Наносит урон равный 3x значению куба."
 icon = ExtResource("7_icon")
 tags = PackedStringArray("attack")
