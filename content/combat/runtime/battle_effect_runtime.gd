@@ -9,7 +9,7 @@ const POISON_STATUS_DEFINITION = preload("res://content/statuses/definitions/poi
 
 const KAMIKAZE_DICE_NAME := &"kamikaze"
 const POISONED_DICE_NAME := &"poisoned"
-const POISONED_DICE_STACKS_ON_USE := 2
+const POISONED_DICE_STACKS_ON_USE := 5
 
 
 static func activate_current_turn_ability(battle_room, ability: AbilityDefinition, target_descriptor: Dictionary) -> Dictionary:
@@ -69,6 +69,9 @@ static func activate_current_turn_ability(battle_room, ability: AbilityDefinitio
 	if _has_consumed_dice_with_name(consumed_dice, KAMIKAZE_DICE_NAME):
 		if _reroll_remaining_player_dice(target_descriptor, consumed_dice):
 			applied_any_effect = true
+	if _apply_poisoned_dice_self_poison(battle_room, consumed_dice, source_descriptor):
+		applied_any_effect = true
+
 	StatusRuntime.trigger_event(StatusRuntime.build_event_context(
 		StatusRuntime.TRIGGER_ABILITY_AFTER_RESOLVE,
 		{
@@ -82,9 +85,6 @@ static func activate_current_turn_ability(battle_room, ability: AbilityDefinitio
 			},
 		}
 	))
-
-	if _apply_poisoned_dice_self_poison(battle_room, consumed_dice, source_descriptor):
-		applied_any_effect = true
 
 	if applied_any_effect:
 		battle_room.register_current_turn_ability_use(ability)
