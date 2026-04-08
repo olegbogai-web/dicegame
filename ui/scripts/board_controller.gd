@@ -42,7 +42,6 @@ func throw_dice(requests: Array[DiceThrowRequest]) -> Array[RigidBody3D]:
 	var board_center := _get_board_center()
 	var spawn_extents := _get_spawn_extents()
 	var expanded_requests := _expand_duplicate_requests(requests)
-	var pending_coin_reward_by_receiver := {}
 
 	for request in expanded_requests:
 		if request == null or request.dice_scene == null:
@@ -69,7 +68,6 @@ func throw_dice(requests: Array[DiceThrowRequest]) -> Array[RigidBody3D]:
 
 		for metadata_key in request.metadata.keys():
 			dice_body.set_meta(StringName(metadata_key), request.metadata[metadata_key])
-		_collect_coin_reward(request, pending_coin_reward_by_receiver)
 
 		var resolved_size := _resolve_request_size(dice_body, request)
 		var spawn_result := _find_spawn_transform(resolved_size, occupied_areas, board_center, spawn_extents)
@@ -92,7 +90,6 @@ func throw_dice(requests: Array[DiceThrowRequest]) -> Array[RigidBody3D]:
 
 		spawned_dice.append(dice_body)
 
-	_apply_pending_coin_rewards(pending_coin_reward_by_receiver)
 	return spawned_dice
 
 
@@ -123,37 +120,6 @@ func _is_duplicate_dice_request(request: DiceThrowRequest) -> bool:
 	if runtime_definition == null:
 		return false
 	return StringName(runtime_definition.dice_name) == DUPLICATE_DICE_NAME
-
-
-func _collect_coin_reward(request: DiceThrowRequest, pending_coin_reward_by_receiver: Dictionary) -> void:
-	if request == null:
-		return
-	var dice_definition := request.metadata.get("definition") as DiceDefinition
-	if dice_definition == null:
-		return
-	var coin_reward := maxi(int(dice_definition.coins_on_throw), 0)
-	if coin_reward <= 0:
-		return
-	var coin_receiver := request.metadata.get("coin_receiver")
-	if coin_receiver == null or not is_instance_valid(coin_receiver):
-		return
-	var receiver_key := str(coin_receiver.get_instance_id())
-	pending_coin_reward_by_receiver[receiver_key] = {
-		"receiver": coin_receiver,
-		"coins": int(pending_coin_reward_by_receiver.get(receiver_key, {}).get("coins", 0)) + coin_reward,
-	}
-
-
-func _apply_pending_coin_rewards(pending_coin_reward_by_receiver: Dictionary) -> void:
-	if pending_coin_reward_by_receiver.is_empty():
-		return
-	for entry in pending_coin_reward_by_receiver.values():
-		var coin_receiver = entry.get("receiver")
-		var coins := maxi(int(entry.get("coins", 0)), 0)
-		if coin_receiver == null or not is_instance_valid(coin_receiver) or coins <= 0:
-			continue
-		if coin_receiver.has_method("add_coins"):
-			coin_receiver.add_coins(coins)
 
 
 func throw_single_default_die() -> RigidBody3D:
