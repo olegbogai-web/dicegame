@@ -118,7 +118,7 @@ static func _resolve_target_descriptors(
 		if battle_room == null:
 			return []
 		var descriptors: Array[Dictionary] = []
-		var monster_indexes := battle_room.get_living_monster_indexes()
+		var monster_indexes = battle_room.get_living_monster_indexes()
 		for monster_index in monster_indexes:
 			descriptors.append({"side": &"enemy", "index": monster_index})
 		return descriptors
