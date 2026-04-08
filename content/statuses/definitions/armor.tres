@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="StatusDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/statuses/resources/status_definition.gd" id="1_status"]
+[ext_resource type="Texture2D" path="res://assets/states/armor.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_status")
+status_id = "armor"
+display_name = "Броня"
+description = "Блокирует входящий урон только от атак после применения стойкости: 1 стак = 1 заблокированный урон. Уменьшается на величину заблокированного урона."
+asset = ExtResource("2_icon")
+metadata = {
+"absorbs_incoming_damage": true,
+"absorbs_incoming_damage_origin": &"ability",
+"absorbs_incoming_damage_priority": 0,
+"status_category": &"positive"
+}
