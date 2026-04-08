@@ -144,7 +144,7 @@
 
 Ссылка: [docs/ARTIFACT_ARCHITECTURE.md](./ARTIFACT_ARCHITECTURE.md)
 
-Текущий контент HP-артефактов по контракту `on_grant_max_hp_bonus`: `banana` (+10), `apple` (+20), `watermelon` (+30). Отдельно добавлены боевые артефакты: `strength_necklace` (`Сила +2` в начале боя), `holiness_necklace` (`Святость +2`), `regeneration_necklace` (`Регенерация +5`) и `broken_sword_amulet` (`Обезоружен +2` всем врагам в начале боя).
+Текущий контент HP-артефактов по контракту `on_grant_max_hp_bonus`: `banana` (+10), `apple` (+20), `watermelon` (+30). Отдельно добавлены боевые артефакты: `strength_necklace` (`Сила +2` в начале боя), `holiness_necklace` (`Святость +2`), `regeneration_necklace` (`Регенерация +5`), `broken_sword_amulet` (`Обезоружен +2` всем врагам в начале боя) и `vulnerability_amulet` (`Уязвимость +2` всем врагам в начале боя).
 
 ## Архитектура post-battle кубов награды и денег
 

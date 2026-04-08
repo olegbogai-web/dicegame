@@ -20,6 +20,7 @@ const DEFAULT_BASE_ARTIFACT_HOLINESS_NECKLACE := preload("res://content/artifact
 const DEFAULT_BASE_ARTIFACT_REGENERATION_NECKLACE := preload("res://content/artifacts/definitions/regeneration_necklace.tres")
 const DEFAULT_BASE_ARTIFACT_DURABILITY_NECKLACE := preload("res://content/artifacts/definitions/durability_necklace.tres")
 const DEFAULT_BASE_ARTIFACT_BROKEN_SWORD_AMULET := preload("res://content/artifacts/definitions/broken_sword_amulet.tres")
+const DEFAULT_BASE_ARTIFACT_VULNERABILITY_AMULET := preload("res://content/artifacts/definitions/vulnerability_amulet.tres")
 
 @export_category("Identity")
 @export var player_id := ""
@@ -159,6 +160,7 @@ func _build_default_artifacts_base() -> Array[ArtifactDefinition]:
 		DEFAULT_BASE_ARTIFACT_REGENERATION_NECKLACE,
 		DEFAULT_BASE_ARTIFACT_DURABILITY_NECKLACE,
 		DEFAULT_BASE_ARTIFACT_BROKEN_SWORD_AMULET,
+		DEFAULT_BASE_ARTIFACT_VULNERABILITY_AMULET,
 	]
 
 
