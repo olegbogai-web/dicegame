@@ -129,6 +129,14 @@
   - `2` → `poison_injection_upgrade_2` (стоимость `1` или `2`, накладывает `Яд 2`);
     - `2.1` → `poison_injection_upgrade_2_1` (стоимость `1..3`, накладывает `Яд 2`);
     - `2.2` → `poison_injection_upgrade_2_2` (стоимость: любой `1` куб, накладывает `Яд 1`).
+- `protection_spell` / «Заклинание защиты»:
+  - base (`protection_spell`) — `1` куб номиналом `3` или `5`, накладывает `Броня +4` на владельца.
+  - `1` → `protection_spell_upgrade_1` (`Броня +6`);
+    - `1.1` → `protection_spell_upgrade_1_1` (`Броня +9`);
+    - `1.2` → `protection_spell_upgrade_1_2` (`Броня +3` + `Стойкость 1` владельцу).
+  - `2` → `protection_spell_upgrade_2` (стоимость: `1` нечетный куб, `Броня +4`);
+    - `2.1` → `protection_spell_upgrade_2_1` (стоимость: `1` любой куб, `Броня +4`);
+    - `2.2` → `protection_spell_upgrade_2_2` (стоимость: `1` нечетный куб, `Броня +6`).
 
 ## 2.1. Что должно быть в ability content
 

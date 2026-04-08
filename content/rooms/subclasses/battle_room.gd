@@ -10,7 +10,7 @@ const RAT_MONSTER_DEFINITION := preload("res://content/monsters/definitions/rat.
 const GOBLIN_MONSTER_DEFINITION := preload("res://content/monsters/definitions/goblin.tres")
 const CHIMERA_MONSTER_DEFINITION := preload("res://content/monsters/definitions/chimera.tres")
 const CRUSHING_SHOT_UPGRADE_1_2_ABILITY := preload("res://content/abilities/definitions/crushing_shot_upgrade_1_2.tres")
-const STRENGTHENING_UPGRADE_3_2_ABILITY := preload("res://content/abilities/definitions/strengthening_upgrade_3_2.tres")
+const PROTECTION_SPELL_UPGRADE_1_2_ABILITY := preload("res://content/abilities/definitions/protection_spell_upgrade_1_2.tres")
 const REROLL_UPGRADE_2_2_ABILITY := preload("res://content/abilities/definitions/reroll_upgrade_2_2.tres")
 const REROLL_ALL_UPGRADE_2_2_ABILITY := preload("res://content/abilities/definitions/reroll_all_upgrade_2_2.tres")
 const POISON_INJECTION_ABILITY := preload("res://content/abilities/definitions/poison_injection.tres")
@@ -865,12 +865,12 @@ static func build_default_player() -> Player:
 	base_stat.starting_armor = 0
 	base_stat.starting_abilities = [
 		CRUSHING_SHOT_UPGRADE_1_2_ABILITY,
-		STRENGTHENING_UPGRADE_3_2_ABILITY,
+		PROTECTION_SPELL_UPGRADE_1_2_ABILITY,
 		REROLL_UPGRADE_2_2_ABILITY,
 		REROLL_ALL_UPGRADE_2_2_ABILITY,
 		POISON_INJECTION_ABILITY,
 	]
-	print("[Debug][BattleRoom] Default player starts with predefined upgraded abilities, including Сокрушающий выстрел++, and base poison archetype card (Отравляющий укол).")
+	print("[Debug][BattleRoom] Default player starts with predefined upgraded abilities, including Сокрушающий выстрел++, Заклинание защиты++ (1.2 branch), and base poison archetype card (Отравляющий укол).")
 	var starter_ability_ids: Array[String] = []
 	for ability in base_stat.starting_abilities:
 		if ability == null:
