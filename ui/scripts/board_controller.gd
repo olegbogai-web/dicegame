@@ -90,7 +90,6 @@ func throw_dice(requests: Array[DiceThrowRequest]) -> Array[RigidBody3D]:
 
 		spawned_dice.append(dice_body)
 
-	_try_apply_player_throw_coin_bonus(spawned_dice)
 	return spawned_dice
 
 
@@ -281,28 +280,3 @@ func _random_vector3(min_value: Vector3, max_value: Vector3) -> Vector3:
 		_rng.randf_range(min_value.y, max_value.y),
 		_rng.randf_range(min_value.z, max_value.z)
 	)
-
-
-func _try_apply_player_throw_coin_bonus(spawned_dice: Array[RigidBody3D]) -> void:
-	if spawned_dice.is_empty():
-		return
-	var battle_table := get_parent()
-	if battle_table == null or not battle_table.has_method("get"):
-		return
-	var battle_room_data = battle_table.get("battle_room_data")
-	if battle_room_data == null or battle_room_data.player_instance == null:
-		return
-	var bonus_coins := 0
-	for dice_body in spawned_dice:
-		if dice_body == null or not is_instance_valid(dice_body):
-			continue
-		if StringName(dice_body.get_meta(&"owner", &"")) != &"player":
-			continue
-		if not (dice_body is Dice):
-			continue
-		var dice_definition := (dice_body as Dice).definition
-		if dice_definition == null:
-			continue
-		bonus_coins += maxi(int(dice_definition.throw_coin_bonus), 0)
-	if bonus_coins > 0:
-		battle_room_data.player_instance.add_coins(bonus_coins)

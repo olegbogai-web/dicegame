@@ -8,6 +8,8 @@ const MonsterTurnRuntime = preload("res://content/monster_ai/monster_turn_runtim
 const BASE_DICE_SCENE = preload("res://content/resources/base_cube.tscn")
 const TURN_TRANSFER_DELAY_SEC := 0.3
 const VISUAL_SYNC_TIMEOUT_SEC := 2.0
+const GOLDEN_DICE_NAME := &"golden"
+const GOLDEN_DICE_COINS_ON_THROW := 1
 
 var _turn_transition_in_progress := false
 var _dice_selection_rng := RandomNumberGenerator.new()
@@ -65,6 +67,7 @@ func throw_current_turn_dice(context: Dictionary) -> void:
 					"monster_index": battle_room_data.current_monster_turn_index,
 				}))
 	_apply_turn_start_dice_penalty(battle_room_data, requests)
+	_apply_player_throw_coin_bonus(battle_room_data, requests)
 	if not requests.is_empty():
 		board.throw_dice(requests)
 
@@ -187,6 +190,25 @@ func _wait_delay(owner_node: Node, seconds: float) -> void:
 	if seconds <= 0.0:
 		return
 	await owner_node.get_tree().create_timer(seconds).timeout
+
+
+func _apply_player_throw_coin_bonus(battle_room_data: BattleRoom, requests: Array[DiceThrowRequest]) -> void:
+	if battle_room_data == null or requests.is_empty() or not battle_room_data.is_player_turn():
+		return
+	var player := battle_room_data.player_instance
+	if player == null:
+		return
+	var bonus_coins := 0
+	for request in requests:
+		if request == null:
+			continue
+		var dice_definition := request.metadata.get("definition") as DiceDefinition
+		if dice_definition == null:
+			continue
+		if StringName(dice_definition.dice_name) == GOLDEN_DICE_NAME:
+			bonus_coins += GOLDEN_DICE_COINS_ON_THROW
+	if bonus_coins > 0:
+		player.add_coins(bonus_coins)
 
 
 func _apply_turn_start_dice_penalty(battle_room_data: BattleRoom, requests: Array[DiceThrowRequest]) -> void:
