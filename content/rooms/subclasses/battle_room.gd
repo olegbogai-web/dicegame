@@ -18,6 +18,8 @@ const KAMIKAZE_DICE := preload("res://content/dice/definitions/kamikaze.tres")
 const DUPLICATE_DICE := preload("res://content/dice/definitions/duplicate.tres")
 const JOKER_DICE := preload("res://content/dice/definitions/joker.tres")
 const PRILIPALA_DICE := preload("res://content/dice/definitions/prilipala.tres")
+const GOLDEN_DICE := preload("res://content/dice/definitions/golden.tres")
+const POISONED_DICE := preload("res://content/dice/definitions/poisoned.tres")
 const GlobalMapDiceEvolutionService = preload("res://content/global_map/dice/global_map_dice_evolution_service.gd")
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
@@ -881,6 +883,8 @@ static func build_default_player() -> Player:
 		PEREVERTYSH_DICE,
 		KAMIKAZE_DICE,
 		PRILIPALA_DICE,
+		GOLDEN_DICE,
+		POISONED_DICE,
 		DUPLICATE_DICE,
 		JOKER_DICE,
 	]
