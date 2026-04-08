@@ -32,6 +32,7 @@ enum Scope {
 @export_range(0.0, 1.0, 0.01) var roughness := 0.95
 @export_range(0.0, 1.0, 0.01) var metallic := 0.0
 @export_range(1, 1000, 1) var ability_activations_before_consume := 1
+@export_range(0, 999, 1) var throw_coin_bonus := 0
 @export var faces: Array[DiceFaceDefinition] = []
 
 

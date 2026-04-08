@@ -36,4 +36,5 @@ rarity = 2
 scope = 0
 size_multiplier = Vector3(2.52, 2.52, 2.52)
 base_color = Color(1, 0.74902, 0, 1)
+throw_coin_bonus = 1
 faces = Array[ExtResource("2_face")]([SubResource("Face_1"), SubResource("Face_2"), SubResource("Face_3"), SubResource("Face_4"), SubResource("Face_5"), SubResource("Face_6")])
