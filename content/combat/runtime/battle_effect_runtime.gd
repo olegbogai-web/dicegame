@@ -148,35 +148,51 @@ static func _apply_effect_to_target(
 				var monster_index := int(target_descriptor.get("index", -1))
 				if not battle_room.can_target_monster(monster_index):
 					return false
-				if not battle_room.apply_damage_to_descriptor({"side": &"enemy", "index": monster_index}, resolved_magnitude):
+				var enemy_damage_descriptor := {"side": &"enemy", "index": monster_index}
+				var enemy_absorb_result := StatusRuntime.absorb_damage_with_statuses(
+					battle_room,
+					enemy_damage_descriptor,
+					resolved_magnitude,
+					&"ability"
+				)
+				var enemy_final_damage := maxi(int(enemy_absorb_result.get("resolved_damage", resolved_magnitude)), 0)
+				if not battle_room.apply_damage_to_descriptor(enemy_damage_descriptor, enemy_final_damage):
 					return false
 				StatusRuntime.trigger_event(StatusRuntime.build_event_context(
 					StatusRuntime.TRIGGER_DAMAGE_TAKEN,
 					{
 						"battle_room": battle_room,
-						"owner_descriptor": {"side": &"enemy", "index": monster_index},
+						"owner_descriptor": enemy_damage_descriptor,
 						"source_descriptor": source_descriptor,
-						"target_descriptor": {"side": &"enemy", "index": monster_index},
+						"target_descriptor": enemy_damage_descriptor,
 						"ability": ability,
 						"ability_effect": effect,
-						"magnitude": resolved_magnitude,
+						"magnitude": enemy_final_damage,
 						"metadata": {"origin": &"ability"},
 					}
 				))
 				return true
 			if target_kind == &"player":
-				if not battle_room.apply_damage_to_descriptor({"side": &"player"}, resolved_magnitude):
+				var player_damage_descriptor := {"side": &"player"}
+				var player_absorb_result := StatusRuntime.absorb_damage_with_statuses(
+					battle_room,
+					player_damage_descriptor,
+					resolved_magnitude,
+					&"ability"
+				)
+				var player_final_damage := maxi(int(player_absorb_result.get("resolved_damage", resolved_magnitude)), 0)
+				if not battle_room.apply_damage_to_descriptor(player_damage_descriptor, player_final_damage):
 					return false
 				StatusRuntime.trigger_event(StatusRuntime.build_event_context(
 					StatusRuntime.TRIGGER_DAMAGE_TAKEN,
 					{
 						"battle_room": battle_room,
-						"owner_descriptor": {"side": &"player"},
+						"owner_descriptor": player_damage_descriptor,
 						"source_descriptor": source_descriptor,
-						"target_descriptor": {"side": &"player"},
+						"target_descriptor": player_damage_descriptor,
 						"ability": ability,
 						"ability_effect": effect,
-						"magnitude": resolved_magnitude,
+						"magnitude": player_final_damage,
 						"metadata": {"origin": &"ability"},
 					}
 				))

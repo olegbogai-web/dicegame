@@ -140,6 +140,89 @@ static func resolve_ability_effect_magnitude(
 	return maxi(resolved_base_magnitude, 0)
 
 
+static func absorb_damage_with_statuses(
+	battle_room,
+	target_descriptor: Dictionary,
+	incoming_damage: int,
+	damage_origin: StringName
+) -> Dictionary:
+	var resolved_damage := maxi(incoming_damage, 0)
+	if battle_room == null or resolved_damage <= 0:
+		return {
+			"resolved_damage": resolved_damage,
+			"blocked_damage": 0,
+			"blocked_by_status_id": &"",
+		}
+	var container := _get_container_for_descriptor(battle_room, target_descriptor)
+	if container == null:
+		return {
+			"resolved_damage": resolved_damage,
+			"blocked_damage": 0,
+			"blocked_by_status_id": &"",
+		}
+
+	var absorb_entries: Array[Dictionary] = []
+	for status_instance in _get_sorted_active_statuses(container):
+		if status_instance == null or status_instance.definition == null:
+			continue
+		var definition: StatusDefinition = status_instance.definition
+		var metadata := definition.metadata
+		if not bool(metadata.get("absorbs_incoming_damage", false)):
+			continue
+		var allowed_origin := StringName(String(metadata.get("absorbs_incoming_damage_origin", "")).strip_edges().to_lower())
+		if allowed_origin != &"" and damage_origin != allowed_origin:
+			continue
+		absorb_entries.append({
+			"status_id": status_instance.get_status_id(),
+			"stacks": maxi(status_instance.stacks, 0),
+			"priority": int(metadata.get("absorbs_incoming_damage_priority", 0)),
+		})
+
+	if absorb_entries.is_empty():
+		return {
+			"resolved_damage": resolved_damage,
+			"blocked_damage": 0,
+			"blocked_by_status_id": &"",
+		}
+
+	absorb_entries.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
+		return int(left.get("priority", 0)) > int(right.get("priority", 0))
+	)
+
+	var total_blocked := 0
+	var first_block_status_id: StringName = &""
+	for entry in absorb_entries:
+		if resolved_damage <= 0:
+			break
+		var status_id := StringName(entry.get("status_id", &""))
+		var available_stacks := maxi(int(entry.get("stacks", 0)), 0)
+		if status_id == &"" or available_stacks <= 0:
+			continue
+		var blocked_by_status := mini(available_stacks, resolved_damage)
+		if blocked_by_status <= 0:
+			continue
+		remove_status(battle_room, target_descriptor, status_id, blocked_by_status, EVENT_STATUS_EXPIRED)
+		resolved_damage -= blocked_by_status
+		total_blocked += blocked_by_status
+		if first_block_status_id == &"":
+			first_block_status_id = status_id
+		_log_debug(
+			"damage absorbed by status: status=%s blocked=%d remaining=%d target=%s origin=%s" % [
+				String(status_id),
+				blocked_by_status,
+				resolved_damage,
+				_format_descriptor(target_descriptor),
+				String(damage_origin),
+			]
+		)
+
+	return {
+		"resolved_damage": maxi(resolved_damage, 0),
+		"blocked_damage": total_blocked,
+		"blocked_by_status_id": first_block_status_id,
+	}
+
+
 static func resolve_passive_modifier_pipeline(base_value: int, modifier_queries: Array[Dictionary]) -> Dictionary:
 	var resolved_entries := _collect_effect_entries(modifier_queries, TRIGGER_PASSIVE, &"modifier")
 	if resolved_entries.is_empty():
