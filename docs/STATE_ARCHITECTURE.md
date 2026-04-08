@@ -72,7 +72,7 @@
 Актуальный реестр:
 
 - Позитивные: `strength`, `holiness`, `regeneration`, `poisoner`, `fortitude`;
-- Отрицательные: `poison`, `bleeding`, `disarmed`;
+- Отрицательные: `poison`, `bleeding`, `disarmed`, `vulnerability`;
 - Абсолютные: пока не добавлены в контент.
 
 ---
@@ -240,3 +240,9 @@
   - затухание: в конце хода владельца снимается `1` стак (`on_turn_end`, `remove_status`);
   - стэкинг: суммирование (`stacking_policy = add`);
   - визуал: `asset = bleeding`.
+- `Уязвимость` (`status_id = vulnerability`):
+  - тип: пассивный модификатор входящего урона + триггерный сброс;
+  - эффект: увеличивает входящий урон от атак на `20%` за каждый стак (мультипликативно: `x1.2^stacks`, `ability_damage_incoming`);
+  - затухание: в конце хода владельца снимает все стаки (`on_turn_end`, `remove_status` со `stacks = -1`);
+  - стэкинг: суммирование (`stacking_policy = add`);
+  - визуал: `asset = vulnerability`.

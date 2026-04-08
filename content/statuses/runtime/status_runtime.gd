@@ -351,12 +351,15 @@ static func _collect_effect_entries(
 					continue
 				if effect_type == &"modifier" and effect.stat_key != stat_key:
 					continue
+				var scaled_value := effect.value * float(status_instance.stacks)
+				if effect.operation == OP_MULTIPLY:
+					scaled_value = pow(effect.value, status_instance.stacks)
 				entries.append({
 					"effect": effect,
 					"status_id": status_id,
 					"effect_id": StringName(effect.effect_id),
 					"operation": effect.operation,
-					"scaled_value": effect.value * float(status_instance.stacks),
+					"scaled_value": scaled_value,
 					"stacks": status_instance.stacks,
 					"priority": effect.priority,
 					"phase_order": effect.phase_order,
