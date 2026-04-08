@@ -165,7 +165,7 @@
   - ветка `1.x`: вариации от одиночного куба (`6`, либо `5/6`) с уроном `15..25`; `1.2` дополнительно лечит игрока на `15`, если цель убита этим ударом;
   - ветка `2.x`: вариации от `2x6`/`3x6` с уроном `50..75`; `2.2` дополнительно накладывает `disarmed` (1) на цель;
   - runtime note: условное лечение при убийстве реализуется через generic effect type `heal_if_target_dead` в `BattleEffectRuntime`, без ветки под конкретный `ability_id`.
-- `needle_throw`-линейка / «Выстрел из мушкета» (`content/abilities/definitions/needle_throw*.tres`):
+- `needle_throw`-линейка / «Выстрел навскидку» (`content/abilities/definitions/needle_throw*.tres`):
   - owner scope: игрок (`owner_scope = PLAYER`), редкость: `RARE`;
   - base: 1 любой куб, урон `floor(1.5 * value(selected_die))`;
   - ветка `1.x`: эскалация урона `2.25x -> 3x -> 5x`; у `1.2` есть `cooldown_turns = 1` (эффективно 1 использование за собственный ход);

@@ -78,7 +78,7 @@
   - `2` → `clawed_series_upgrade_2` (`3` удара по `10`);
     - `2.1` → `clawed_series_upgrade_2_1` (`3` удара по `10` + `Кровотечение 5`);
     - `2.2` → `clawed_series_upgrade_2_2` (`3` удара по `15`).
-- `needle_throw` / «Выстрел из мушкета»:
+- `needle_throw` / «Выстрел навскидку»:
   - base (`needle_throw`) — `1` любой куб, урон `floor(1.5 * значение_куба)`.
   - `1` → `needle_throw_upgrade_1` (урон `floor(2.25 * значение_куба)`);
     - `1.1` → `needle_throw_upgrade_1_1` (урон `3 * значение_куба`);
