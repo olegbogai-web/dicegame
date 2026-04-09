@@ -103,6 +103,33 @@ static func resolve_ability_effect_magnitude(
 			]
 		)
 
+	var status_stack_bonus_status_id := StringName(String(effect.parameters.get("status_stack_bonus_status_id", "")).strip_edges().to_lower())
+	if status_stack_bonus_status_id != &"":
+		var status_stack_bonus_scope := StringName(String(effect.parameters.get("status_stack_bonus_scope", "source")).strip_edges().to_lower())
+		var status_stack_bonus_numerator := int(effect.parameters.get("status_stack_bonus_numerator", 1))
+		var status_stack_bonus_denominator := maxi(int(effect.parameters.get("status_stack_bonus_denominator", 1)), 1)
+		var status_stack_bonus_flat := int(effect.parameters.get("status_stack_bonus_flat", 0))
+		var status_container_for_bonus: StatusContainer = source_container
+		if status_stack_bonus_scope == &"target":
+			status_container_for_bonus = target_container
+		var source_status_instance: StatusInstance = null
+		if status_container_for_bonus != null:
+			source_status_instance = status_container_for_bonus.get_status(status_stack_bonus_status_id)
+		var source_status_stacks := maxi(source_status_instance.stacks if source_status_instance != null else 0, 0)
+		var status_stack_bonus := int(source_status_stacks * status_stack_bonus_numerator / status_stack_bonus_denominator) + status_stack_bonus_flat
+		if status_stack_bonus != 0:
+			resolved_base_magnitude += status_stack_bonus
+			_log_debug(
+				"ability magnitude status-stack bonus: effect=%s status=%s scope=%s stacks=%d bonus=%d magnitude=%d" % [
+					String(effect.effect_id),
+					String(status_stack_bonus_status_id),
+					String(status_stack_bonus_scope),
+					source_status_stacks,
+					status_stack_bonus,
+					resolved_base_magnitude,
+				]
+			)
+
 	if effect.effect_type == &"damage":
 		var damage_result := resolve_passive_modifier_pipeline(
 			resolved_base_magnitude,

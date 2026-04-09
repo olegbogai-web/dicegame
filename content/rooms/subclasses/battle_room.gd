@@ -9,6 +9,7 @@ const TEST_MONSTER_DEFINITION := preload("res://content/monsters/definitions/tes
 const RAT_MONSTER_DEFINITION := preload("res://content/monsters/definitions/rat.tres")
 const GOBLIN_MONSTER_DEFINITION := preload("res://content/monsters/definitions/goblin.tres")
 const CHIMERA_MONSTER_DEFINITION := preload("res://content/monsters/definitions/chimera.tres")
+const TURTLE_MONSTER_DEFINITION := preload("res://content/monsters/definitions/turtle.tres")
 const CRUSHING_SHOT_UPGRADE_1_2_ABILITY := preload("res://content/abilities/definitions/crushing_shot_upgrade_1_2.tres")
 const PROTECTION_SPELL_UPGRADE_1_2_ABILITY := preload("res://content/abilities/definitions/protection_spell_upgrade_1_2.tres")
 const REROLL_UPGRADE_2_2_ABILITY := preload("res://content/abilities/definitions/reroll_upgrade_2_2.tres")
@@ -39,6 +40,7 @@ const DICE_PLACE_Z_POSITIONS := [-0.557, -0.007, 0.55]
 const NORMAL_RUNTIME_MONSTER_POOL: Array[MonsterDefinition] = [
 	RAT_MONSTER_DEFINITION,
 	GOBLIN_MONSTER_DEFINITION,
+	TURTLE_MONSTER_DEFINITION,
 ]
 const ELITE_RUNTIME_MONSTER_POOL: Array[MonsterDefinition] = [
 	CHIMERA_MONSTER_DEFINITION,

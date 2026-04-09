@@ -129,6 +129,19 @@
   - стоимость: ровно 2 куба со значением 4+;
   - эффект: наносит 2 урона и накладывает `poison` (2) на цель;
   - flavor: «Палка, смазанная говном. Просто и эффективно».
+- `turtle_durability` / «Черепашья стойкость» (`content/abilities/definitions/turtle_durability.tres`):
+  - owner scope: только монстр (`owner_scope = MONSTER`);
+  - стоимость: 1 куб номиналом `4` или `6`;
+  - эффект: накладывает на владельца `fortitude` (2).
+- `turtle_defense` / «Черепашья защита» (`content/abilities/definitions/turtle_defense.tres`):
+  - owner scope: только монстр (`owner_scope = MONSTER`);
+  - стоимость: 1 куб номиналом `3` или `5`;
+  - эффект: накладывает на владельца `armor` (5).
+- `turtle_bite` / «Укус черепахи» (`content/abilities/definitions/turtle_bite.tres`):
+  - owner scope: только монстр (`owner_scope = MONSTER`);
+  - стоимость: 1 куб номиналом `1` или `2`;
+  - эффект: наносит `1 + floor(armor(source)/2)` урона;
+  - runtime note: бонус от стаков состояния задается data-driven параметрами `status_stack_bonus_*` в `AbilityEffectDefinition.parameters`, без ветки под конкретный `ability_id`.
 
 ### 2.6. Краткий реестр utility-способностей игрока
 
