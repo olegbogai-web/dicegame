@@ -84,6 +84,10 @@ Monster AI может только:
 - `goblin_inflict_poison` (`content/abilities/definitions/goblin_inflict_poison.tres`) — setup-способность: сначала вешает на себя `poisoner` (1), чтобы усилить следующие наложения `poison`;
 - `goblin_poison_strike` (`content/abilities/definitions/goblin_poison_strike.tres`) — follow-up удар: 2 урона + `poison` (2) по врагу, с масштабированием стеков через `poisoner`;
 - рекомендуемый порядок в AI: сначала setup (`goblin_inflict_poison`), затем атакующий follow-up (`goblin_poison_strike`), если стоимость по кубам доступна.
+- `turtle_durability` (`content/abilities/definitions/turtle_durability.tres`) — defensive setup: накладывает `fortitude` (2) на себя за куб `4/6`;
+- `turtle_defense` (`content/abilities/definitions/turtle_defense.tres`) — defensive setup: накладывает `armor` (5) на себя за куб `3/5`;
+- `turtle_bite` (`content/abilities/definitions/turtle_bite.tres`) — атакующий fallback: урон `1 + floor(armor(source)/2)` за куб `1/2`;
+- рекомендуемый порядок в AI для turtle: сначала `turtle_durability` (пока возможно), затем `turtle_defense` (пока возможно), затем `turtle_bite` (пока возможно).
 
 Для отладки профилей обязательно сохранять reason/debug-сигналы на обе ветки решения (выбор setup, выбор follow-up, невозможность оплатить).
 
@@ -657,3 +661,24 @@ Monster AI может только:
 - `goblin_poison_strike_priority` — выбран приоритетный удар;
 - `goblin_inflict_poison_fallback` — fallback на self-buff после недоступности удара;
 - `no_priority_abilities` — завершение хода при отсутствии валидных оплат по кубам.
+
+## 17. Обновление: профиль ИИ `turtle` (апрель 2026)
+
+Добавлен monster-specific профиль `content/monster_ai/profiles/turtle_ai_profile.gd` для монстра `turtle` с приоритетами:
+- сначала `turtle_durability` ("Черепашья стойкость") по себе, пока способность доступна по кубам;
+- затем `turtle_defense` ("Черепашья защита") по себе, пока способность доступна по кубам;
+- затем `turtle_bite` ("Укус черепахи") по игроку, пока способность доступна по кубам;
+- когда ни одна из трех способностей больше не может быть оплачена, монстр завершает ход.
+
+Новые функции в profile-слое:
+- `decide_next_action(monster_index, battle_room, available_dice)` — реализует трехступенчатый приоритет turtle AI;
+- `_build_target_self(monster_index)` — собирает target-descriptor self-каста без хардкода в decision-ветках;
+- `_find_ability_by_id(abilities, ability_id)` — локальный резолвер способностей `turtle_durability`/`turtle_defense`/`turtle_bite`;
+- `_log_debug(message)` — единая debug-точка логирования решений `TurtleAiProfile`.
+
+Для debugging добавлены reason-коды решений:
+- `turtle_durability_priority` — выбран приоритетный self-buff стойкости;
+- `turtle_defense_fallback` — fallback на броню после недоступности стойкости;
+- `turtle_bite_fallback` — fallback на укус после недоступности self-buff способностей;
+- `no_priority_abilities` — завершение хода при отсутствии валидных оплат по кубам.
+

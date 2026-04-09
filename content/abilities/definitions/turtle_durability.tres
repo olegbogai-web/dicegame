@@ -1,0 +1,59 @@
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_effect_definition.gd" id="6_effect"]
+[ext_resource type="Texture2D" path="res://assets/ability/Turtle_durability.png" id="7_icon"]
+[ext_resource type="Resource" path="res://content/statuses/definitions/fortitude.tres" id="8_fortitude_status"]
+
+[sub_resource type="Resource" id="AbilityDiceCondition_pay_4_or_6"]
+script = ExtResource("3_dice_condition")
+required_count = 1
+requires_exact_count = true
+accepted_face_ids = PackedStringArray("4", "6")
+consume_order = PackedStringArray()
+
+[sub_resource type="Resource" id="AbilityCost_main"]
+script = ExtResource("2_cost")
+dice_conditions = Array[ExtResource("3_dice_condition")]([SubResource("AbilityDiceCondition_pay_4_or_6")])
+
+[sub_resource type="Resource" id="AbilityEffect_apply_fortitude"]
+script = ExtResource("6_effect")
+effect_id = "Turtle_durability"
+effect_type = &"apply_status"
+status_id = "fortitude"
+dice_query_tags = PackedStringArray()
+parameters = {
+"stacks": 2,
+"status_definition": ExtResource("8_fortitude_status")
+}
+
+[sub_resource type="Resource" id="AbilityTargetRule_self"]
+script = ExtResource("4_target_rule")
+side = 3
+selection = 0
+min_targets = 0
+max_targets = 0
+allow_self = true
+required_tags = PackedStringArray()
+forbidden_tags = PackedStringArray()
+
+[resource]
+script = ExtResource("1_ability")
+ability_id = "turtle_durability"
+display_name = "Черепашья стойкость"
+description = "Требует 1 куб номиналом 4 или 6. Накладывает на себя Стойкость +2."
+icon = ExtResource("7_icon")
+tags = PackedStringArray("buff", "fortitude", "turtle")
+owner_scope = 1
+rarity = 0
+cost = SubResource("AbilityCost_main")
+target_rule = SubResource("AbilityTargetRule_self")
+effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_apply_fortitude")])
+follow_up_ability_ids = PackedStringArray()
+ai_hints = {
+"priority": 30,
+"turtle_role": "durability"
+}

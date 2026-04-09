@@ -151,10 +151,18 @@
 Рекомендуемая точка интеграции — отдельный bootstrap-сервис презентационного слоя (`battle_scene_bootstrap`), который получает run-state и подготавливает `BattleRoom`/`BattleScreenContext` до загрузки визуала.
 
 Текущее правило runtime-spawn для `BattleRoom.create_runtime_battle_room(...)`:
-- обычный бой (`marker_type != elite`) выбирает случайного монстра из normal-pool (`rat`, `goblin`) через helper `_pick_random_runtime_monster_definition(...)`;
+- обычный бой (`marker_type != elite`) выбирает случайного монстра из normal-pool (`rat`, `goblin`, `turtle`) через helper `_pick_random_runtime_monster_definition(...)`;
 - элитный бой (`marker_type == elite`) выбирает монстра из elite-pool (текущий состав: `chimera`) тем же helper-механизмом;
 - если пул пустой/невалидный, включается fallback-монстр и пишется debug-лог;
 - тестовый монстр (`test_monster`) больше не используется в обычном runtime-бою и остается только fallback-заглушкой на случай, если encounter setup вернул пустой/невалидный список монстров.
+
+
+
+Параметры актуальных runtime-монстров (normal/elite pools):
+- `rat` — `HP 100`, `dice_loadout: 2x base_cube`, теги: `normal`, `beast`;
+- `goblin` — `HP 100`, `dice_loadout: 3x base_cube`, теги: `normal`, `goblin`;
+- `turtle` — `HP 50`, `dice_loadout: 3x base_cube`, теги: `normal`, `beast`, `defender`, способности: `turtle_durability`, `turtle_defense`, `turtle_bite`;
+- `chimera` (elite) — `HP 10`, `dice_loadout: 5x base_cube + 1x lucky_one`, тег: `elite`.
 
 Новые runtime helper-функции в `BattleRoom`:
 - `_pick_random_runtime_monster_definition(rng, monster_pool, fallback_monster)` — выбирает валидного монстра из пула без procedural hardcode в точке spawn;
