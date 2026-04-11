@@ -71,8 +71,8 @@
 
 Актуальный реестр:
 
-- Позитивные: `strength`, `holiness`, `regeneration`, `poisoner`, `fortitude`, `armor`;
-- Отрицательные: `poison`, `bleeding`, `disarmed`, `vulnerability`;
+- Позитивные: `strength`, `holiness`, `regeneration`, `poisoner`, `fortitude`, `armor`, `poisonous_miasma`;
+- Отрицательные: `poison`, `bleeding`, `disarmed`, `vulnerability`, `cursed`;
 - Абсолютные: пока не добавлены в контент.
 
 ---
@@ -206,6 +206,17 @@
   - эффект: наносит `1` урона за каждый стак за каждый использованный владельцем кубик при розыгрыше способности (`on_ability_after_resolve`);
   - затухание: в конце хода владельца снимается `1` стак (`on_turn_end`, `remove_status`);
   - стэкинг: суммирование (`stacking_policy = add`).
+- `Ядовитые миазмы` (`status_id = poisonous_miasma`):
+  - тип: событийный триггер;
+  - эффект: в конце хода владельца накладывает на всех врагов `Яд` в количестве стаков, равном стакам `Ядовитых миазмов` (`on_turn_end`, `apply_status`, `target_scope = all_enemies`);
+  - длительность: боевая (`duration_model = battle`), без авто-уменьшения;
+  - категория: позитивный (`status_category = positive`).
+- `Проклятый` (`status_id = cursed`):
+  - тип: пассивный модификатор значений кубиков;
+  - эффект: уменьшает расчетное значение выбранного/потребленных кубиков на `1` за каждый стак через `dice_face_value_outgoing`;
+  - ограничение: итоговое значение кубика в пайплайне не может быть ниже `0`;
+  - длительность: боевая (`duration_model = battle`), без авто-снятия;
+  - категория: отрицательный (`status_category = negative`).
 - `Отравитель` (`status_id = poisoner`):
   - тип: пассивный модификатор наложения состояний;
   - эффект: за каждый стак добавляет `+1` к количеству накладываемых на противника стаков `Яда` (`status_poison_stacks_outgoing`);
