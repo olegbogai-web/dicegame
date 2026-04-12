@@ -8,7 +8,7 @@ const TEST_PLAYER_TEXTURE := preload("res://assets/entity/monsters/test_player.p
 const TEST_MONSTER_DEFINITION := preload("res://content/monsters/definitions/test_monster.tres")
 const RAT_MONSTER_DEFINITION := preload("res://content/monsters/definitions/rat.tres")
 const GOBLIN_MONSTER_DEFINITION := preload("res://content/monsters/definitions/goblin.tres")
-const CHIMERA_MONSTER_DEFINITION := preload("res://content/monsters/definitions/chimera.tres")
+const GOBLIN_SHAMAN_MONSTER_DEFINITION := preload("res://content/monsters/definitions/goblin_shaman.tres")
 const TURTLE_MONSTER_DEFINITION := preload("res://content/monsters/definitions/turtle.tres")
 const CRUSHING_SHOT_UPGRADE_1_2_ABILITY := preload("res://content/abilities/definitions/crushing_shot_upgrade_1_2.tres")
 const PROTECTION_SPELL_UPGRADE_1_2_ABILITY := preload("res://content/abilities/definitions/protection_spell_upgrade_1_2.tres")
@@ -43,7 +43,7 @@ const NORMAL_RUNTIME_MONSTER_POOL: Array[MonsterDefinition] = [
 	TURTLE_MONSTER_DEFINITION,
 ]
 const ELITE_RUNTIME_MONSTER_POOL: Array[MonsterDefinition] = [
-	CHIMERA_MONSTER_DEFINITION,
+	GOBLIN_SHAMAN_MONSTER_DEFINITION,
 ]
 
 
@@ -794,7 +794,7 @@ static func create_runtime_battle_room(player: Player, marker_type: String = "",
 static func _build_runtime_encounter_setup(marker_type: String, rng: RandomNumberGenerator) -> Dictionary:
 	var normalized_marker_type := marker_type.strip_edges().to_lower()
 	if normalized_marker_type == GlobalMapDiceEvolutionService.ELITE_FACE_TAG:
-		var elite_monster := _pick_random_runtime_monster_definition(rng, ELITE_RUNTIME_MONSTER_POOL, CHIMERA_MONSTER_DEFINITION)
+		var elite_monster := _pick_random_runtime_monster_definition(rng, ELITE_RUNTIME_MONSTER_POOL, GOBLIN_SHAMAN_MONSTER_DEFINITION)
 		print("[Debug][BattleRoom] Elite encounter selected monster=%s." % _resolve_monster_debug_label(elite_monster))
 		return {
 			"floor_texture": _pick_runtime_floor_texture(rng, [DEFAULT_FLOOR_TEXTURE, DUNGEON_FLOOR_TEXTURE_1, DUNGEON_FLOOR_TEXTURE_2]),

@@ -143,6 +143,19 @@
   - эффект: наносит `1 + floor(armor(source)/2)` урона;
   - runtime note: бонус от стаков состояния задается data-driven параметрами `status_stack_bonus_*` в `AbilityEffectDefinition.parameters`, без ветки под конкретный `ability_id`.
 
+- `goblin_shaman_curse` / «Проклятье шамана» (`content/abilities/definitions/goblin_shaman_curse.tres`):
+  - owner scope: только монстр (`owner_scope = MONSTER`);
+  - стоимость: 1 куб номиналом `6`;
+  - эффект: накладывает на цель `cursed` (1).
+- `goblin_shaman_poisonous_miasma` / «Ядовитые миазмы» (`content/abilities/definitions/goblin_shaman_poisonous_miasma.tres`):
+  - owner scope: только монстр (`owner_scope = MONSTER`);
+  - стоимость: 1 куб со значением `3+`;
+  - эффект: накладывает на владельца `poisonous_miasma` (4).
+- `goblin_shaman_restoration_magic` / «Магия восстановления» (`content/abilities/definitions/goblin_shaman_restoration_magic.tres`):
+  - owner scope: только монстр (`owner_scope = MONSTER`);
+  - стоимость: ровно 2 одинаковых куба (`requires_same_value = true`);
+  - эффект: исцеляет владельца на `20` и снимает `5` стаков случайного отрицательного состояния (`cleanse_random_negative_status`, `target = source`).
+
 ### 2.6. Краткий реестр utility-способностей игрока
 
 - `reroll` / «Переброс кубика» (`content/abilities/definitions/reroll.tres`):

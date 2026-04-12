@@ -774,14 +774,14 @@ rooms/
 
 Именно этому правилу должна следовать будущая реализация.
 
-## 13. Обновление: элитная боевая комната `chimera` (март 2026)
+## 13. Обновление: элитная боевая комната `goblin_shaman` (апрель 2026)
 
 В runtime-конфигурации боевой комнаты добавлена специализация по типу маркера глобальной карты:
 - `BattleRoom.create_runtime_battle_room(player, marker_type, rng)`;
 - `BattleRoom._build_runtime_encounter_setup(marker_type, rng)`.
 
 Правило для `elite_mob`:
-- враг: `chimera`;
+- враг: `goblin_shaman`;
 - пол: равновероятно один из трех материалов — `дерево.png`, `dangeon_floor_1.png`, `dangeon_floor_2.png`.
 
 Для остальных боевых типов сохранен fallback-набор и существующее поведение.
