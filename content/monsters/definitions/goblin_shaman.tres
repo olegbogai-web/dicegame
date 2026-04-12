@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="MonsterDefinition" format=3]
+
+[ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" uid="uid://ba5hefomauwar" path="res://content/monsters/resources/monster_definition.gd" id="1_monster"]
+[ext_resource type="Script" uid="uid://dags37suujqm8" path="res://content/dice/resources/dice_definition.gd" id="2_dice"]
+[ext_resource type="Texture2D" uid="uid://6gco4l2mobsd" path="res://assets/entity/monsters/goblin.png" id="3_sprite"]
+[ext_resource type="Resource" path="res://content/abilities/definitions/goblin_shaman_curse.tres" id="4_curse"]
+[ext_resource type="Resource" path="res://content/abilities/definitions/goblin_shaman_poisonous_miasma.tres" id="5_miasma"]
+[ext_resource type="Resource" path="res://content/abilities/definitions/goblin_shaman_restoration_magic.tres" id="6_restoration"]
+[ext_resource type="Resource" path="res://content/monster_ai/profiles/goblin_shaman_ai_profile.tres" id="7_ai"]
+[ext_resource type="Resource" uid="uid://b0ye741pt16bi" path="res://content/resources/base_cube.tres" id="8_base_cube"]
+
+[resource]
+script = ExtResource("1_monster")
+monster_id = "goblin_shaman"
+display_name = "Гоблин-шаман"
+description = "Элитный противник для затяжного боя: раздает дебаффы, накладывает миазмы и восстанавливает здоровье."
+sprite = ExtResource("3_sprite")
+tags = PackedStringArray("elite", "goblin", "shaman")
+max_health = 80
+size_multiplier = 0.9
+dice_count = 4
+dice_loadout = Array[ExtResource("2_dice")]([ExtResource("8_base_cube"), ExtResource("8_base_cube"), ExtResource("8_base_cube"), ExtResource("8_base_cube")])
+ai_profile = ExtResource("7_ai")
+abilities = Array[ExtResource("1_ability")]([ExtResource("4_curse"), ExtResource("5_miasma"), ExtResource("6_restoration")])

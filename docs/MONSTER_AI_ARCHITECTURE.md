@@ -682,3 +682,29 @@ Monster AI может только:
 - `turtle_bite_fallback` — fallback на укус после недоступности self-buff способностей;
 - `no_priority_abilities` — завершение хода при отсутствии валидных оплат по кубам.
 
+
+## 18. Обновление: профиль ИИ `goblin_shaman` (апрель 2026)
+
+Добавлен monster-specific профиль `content/monster_ai/profiles/goblin_shaman_ai_profile.gd` для монстра `goblin_shaman` с пороговым приоритетом по HP:
+- при `current_hp > 60`: сначала `goblin_shaman_curse`, затем `goblin_shaman_poisonous_miasma`, затем `goblin_shaman_restoration_magic`;
+- при `current_hp <= 60`: сначала `goblin_shaman_restoration_magic`, затем `goblin_shaman_curse`, затем `goblin_shaman_poisonous_miasma`;
+- повторные вызовы decision-loop автоматически дают поведение «использует способность, пока она может быть оплачена кубами», без отдельного procedural hardcode в orchestrator.
+
+Новые функции в profile-слое:
+- `decide_next_action(monster_index, battle_room, available_dice)` — ветвление по порогу HP и выбор соответствующего приоритетного списка;
+- `_decide_high_hp_action(monster_index, abilities, available_dice)` — high-HP ветка приоритетов `curse -> miasma -> restoration`;
+- `_decide_low_hp_action(monster_index, abilities, available_dice)` — low-HP ветка приоритетов `restoration -> curse -> miasma`;
+- `_can_use_ability(ability, available_dice)` — единая проверка доступности оплаты способности;
+- `_build_target_self(monster_index)` — сбор target-descriptor self-каста;
+- `_find_ability_by_id(abilities, ability_id)` — локальный резолвер способностей шамана;
+- `_log_debug(message)` — единая debug-точка логирования решений `GoblinShamanAiProfile`.
+
+Для debugging добавлены reason-коды решений:
+- `goblin_shaman_high_hp_curse_priority`;
+- `goblin_shaman_high_hp_miasma_fallback`;
+- `goblin_shaman_high_hp_restoration_fallback`;
+- `goblin_shaman_low_hp_restoration_priority`;
+- `goblin_shaman_low_hp_curse_fallback`;
+- `goblin_shaman_low_hp_miasma_fallback`;
+- `no_priority_abilities`.
+
