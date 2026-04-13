@@ -24,7 +24,7 @@ func decide_next_action(monster_index: int, battle_room, available_dice: Array[D
 		_log_debug("goblin_shaman turn finished: monster_view_missing index=%d" % monster_index)
 		return MonsterAiDecision.end_turn(&"monster_view_missing")
 
-	var is_low_hp := monster_view.current_hp <= HEALING_PRIORITY_HP_THRESHOLD
+	var is_low_hp = monster_view.current_hp <= HEALING_PRIORITY_HP_THRESHOLD
 	if is_low_hp:
 		return _decide_low_hp_action(monster_index, monster_view.abilities, available_dice)
 	return _decide_high_hp_action(monster_index, monster_view.abilities, available_dice)

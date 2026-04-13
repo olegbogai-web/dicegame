@@ -1,12 +1,13 @@
-[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://cqd47142scn74"]
 
 [ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" uid="uid://lfpdg732cjt" path="res://content/abilities/resources/ability_condition.gd" id="1_ih6hs"]
 [ext_resource type="Script" uid="uid://cijja5c0f6ibw" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
 [ext_resource type="Script" uid="uid://vqakigfsnb18" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
 [ext_resource type="Script" uid="uid://c2t7x3op44t3s" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
 [ext_resource type="Script" uid="uid://drneiu6png0u3" path="res://content/abilities/resources/ability_effect_definition.gd" id="5_effect"]
-[ext_resource type="Texture2D" uid="uid://by8g2b2cf5f3v" path="res://assets/ability/curse_shaman.png" id="6_icon"]
-[ext_resource type="Resource" uid="uid://dqcbdrfmr8tad" path="res://content/statuses/definitions/cursed.tres" id="7_cursed_status"]
+[ext_resource type="Texture2D" uid="uid://ups4xhx3nt73" path="res://assets/ability/curse_shaman.png" id="6_icon"]
+[ext_resource type="Resource" uid="uid://bplpamr8gpymw" path="res://content/statuses/definitions/cursed.tres" id="7_cursed_status"]
 
 [sub_resource type="Resource" id="AbilityDiceCondition_pay_six"]
 script = ExtResource("3_dice_condition")

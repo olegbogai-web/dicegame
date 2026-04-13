@@ -1,18 +1,18 @@
-[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://c8kb5x1lp81s5"]
 
 [ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" uid="uid://lfpdg732cjt" path="res://content/abilities/resources/ability_condition.gd" id="1_fv8jg"]
 [ext_resource type="Script" uid="uid://cijja5c0f6ibw" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
 [ext_resource type="Script" uid="uid://vqakigfsnb18" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
 [ext_resource type="Script" uid="uid://c2t7x3op44t3s" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
 [ext_resource type="Script" uid="uid://drneiu6png0u3" path="res://content/abilities/resources/ability_effect_definition.gd" id="5_effect"]
-[ext_resource type="Texture2D" uid="uid://df6mfsuobjdql" path="res://assets/ability/Poison_injection.png" id="6_icon"]
+[ext_resource type="Texture2D" uid="uid://dvcgufy4qn68w" path="res://assets/ability/Poison_injection.png" id="6_icon"]
 [ext_resource type="Resource" uid="uid://cvve15ymis3ds" path="res://content/statuses/definitions/poison.tres" id="7_poison"]
 
 [sub_resource type="Resource" id="AbilityDiceCondition_pay_one"]
 script = ExtResource("3_dice_condition")
 min_value = 1
 max_value = 1
-required_count = 1
 min_selected_count = 1
 max_selected_count = 1
 slot_count_hint = 1
@@ -51,7 +51,6 @@ flavor_text = "Нужно попасть в вену с первого раза.
 icon = ExtResource("6_icon")
 tags = PackedStringArray("attack", "poison", "debuff")
 owner_scope = 0
-rarity = 0
 max_upgrade_level = 2
 cost = SubResource("AbilityCost_main")
 target_rule = SubResource("AbilityTargetRule_enemy")

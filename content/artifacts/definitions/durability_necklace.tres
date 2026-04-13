@@ -1,18 +1,14 @@
-[gd_resource type="Resource" script_class="ArtifactDefinition" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="ArtifactDefinition" format=3 uid="uid://c7ay4jl0h4nko"]
 
-[ext_resource type="Script" path="res://content/artifacts/resources/artifact_definition.gd" id="1_artifact"]
-[ext_resource type="Script" path="res://content/artifacts/resources/artifact_trigger_definition.gd" id="2_trigger"]
-[ext_resource type="Texture2D" path="res://assets/artefacts/necklace_durability.png" id="3_icon"]
-[ext_resource type="Resource" path="res://content/statuses/definitions/fortitude.tres" id="4_status"]
+[ext_resource type="Script" uid="uid://c73ki0djjabbv" path="res://content/artifacts/resources/artifact_definition.gd" id="1_artifact"]
+[ext_resource type="Script" uid="uid://desiurhox43nn" path="res://content/statuses/resources/status_effect_definition.gd" id="1_oa2kh"]
+[ext_resource type="Script" uid="uid://bjwofi8ayl0sj" path="res://content/artifacts/resources/artifact_trigger_definition.gd" id="2_trigger"]
+[ext_resource type="Texture2D" uid="uid://c0kjpa4jkgovk" path="res://assets/artefacts/necklace_durability.png" id="3_icon"]
+[ext_resource type="Resource" uid="uid://cf7wr4ifd4myu" path="res://content/statuses/definitions/fortitude.tres" id="4_status"]
 
 [sub_resource type="Resource" id="ArtifactTrigger_durability_on_battle_start"]
 script = ExtResource("2_trigger")
 trigger_id = "durability_necklace_on_battle_start"
-event_name = &"on_battle_start"
-effect_type = &"apply_status"
-target_scope = &"player"
-priority = 0
-phase_order = 0
 parameters = {
 "stacks": 5,
 "status_definition": ExtResource("4_status")
@@ -26,6 +22,4 @@ description = "В начале боя накладывает 5 стаков со
 rarity = &"uncommon"
 sprite = ExtResource("3_icon")
 tags = PackedStringArray("status", "battle_start")
-modifiers = []
 triggers = Array[ExtResource("2_trigger")]([SubResource("ArtifactTrigger_durability_on_battle_start")])
-metadata = {}

@@ -1,9 +1,9 @@
-[gd_resource type="Resource" script_class="StatusDefinition" format=3]
+[gd_resource type="Resource" script_class="StatusDefinition" format=3 uid="uid://da52etrbmn12w"]
 
-[ext_resource type="Script" path="res://content/statuses/resources/status_definition.gd" id="1_status"]
-[ext_resource type="Script" path="res://content/statuses/resources/status_effect_definition.gd" id="2_effect"]
-[ext_resource type="Texture2D" path="res://assets/states/poisonous_miasma.png" id="3_icon"]
-[ext_resource type="Resource" path="res://content/statuses/definitions/poison.tres" id="4_poison_status"]
+[ext_resource type="Script" uid="uid://cr3rgro5ggg2o" path="res://content/statuses/resources/status_definition.gd" id="1_status"]
+[ext_resource type="Script" uid="uid://desiurhox43nn" path="res://content/statuses/resources/status_effect_definition.gd" id="2_effect"]
+[ext_resource type="Texture2D" uid="uid://cchkwx2f6j8m8" path="res://assets/states/poisonous_miasma.png" id="3_icon"]
+[ext_resource type="Resource" uid="uid://cvve15ymis3ds" path="res://content/statuses/definitions/poison.tres" id="4_poison_status"]
 
 [sub_resource type="Resource" id="StatusEffect_poisonous_miasma_apply_poison_to_all_enemies"]
 script = ExtResource("2_effect")

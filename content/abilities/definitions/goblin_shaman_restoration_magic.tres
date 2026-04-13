@@ -1,11 +1,12 @@
-[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://i81s0nd2b5em"]
 
 [ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" uid="uid://lfpdg732cjt" path="res://content/abilities/resources/ability_condition.gd" id="1_eqm6j"]
 [ext_resource type="Script" uid="uid://cijja5c0f6ibw" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
 [ext_resource type="Script" uid="uid://vqakigfsnb18" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
 [ext_resource type="Script" uid="uid://c2t7x3op44t3s" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
 [ext_resource type="Script" uid="uid://drneiu6png0u3" path="res://content/abilities/resources/ability_effect_definition.gd" id="5_effect"]
-[ext_resource type="Texture2D" uid="uid://dalvw3ht12qvm" path="res://assets/ability/Goblin_heal_Magic.png" id="6_icon"]
+[ext_resource type="Texture2D" uid="uid://d2vs0pfw4wmsp" path="res://assets/ability/Goblin_heal_Magic.png" id="6_icon"]
 
 [sub_resource type="Resource" id="AbilityDiceCondition_pay_double"]
 script = ExtResource("3_dice_condition")

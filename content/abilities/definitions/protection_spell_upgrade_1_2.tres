@@ -1,18 +1,20 @@
-[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://c4th34ckxlfif"]
 
 [ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" uid="uid://lfpdg732cjt" path="res://content/abilities/resources/ability_condition.gd" id="1_jvoly"]
 [ext_resource type="Script" uid="uid://cijja5c0f6ibw" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
 [ext_resource type="Script" uid="uid://vqakigfsnb18" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
 [ext_resource type="Script" uid="uid://c2t7x3op44t3s" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
 [ext_resource type="Script" uid="uid://drneiu6png0u3" path="res://content/abilities/resources/ability_effect_definition.gd" id="6_effect"]
-[ext_resource type="Texture2D" uid="uid://dcpd0qhy5lr0w" path="res://assets/ability/Protection_spell.png" id="7_icon"]
+[ext_resource type="Texture2D" uid="uid://cqen1ohsjfc52" path="res://assets/ability/Protection_spell.png" id="7_icon"]
 [ext_resource type="Resource" path="res://content/statuses/definitions/armor.tres" id="8_armor_status"]
-[ext_resource type="Resource" path="res://content/statuses/definitions/fortitude.tres" id="9_fortitude_status"]
+[ext_resource type="Resource" uid="uid://cf7wr4ifd4myu" path="res://content/statuses/definitions/fortitude.tres" id="9_fortitude_status"]
 
 [sub_resource type="Resource" id="AbilityDiceCondition_pay_3_or_5"]
 script = ExtResource("3_dice_condition")
-required_count = 1
 requires_exact_count = true
+required_tags = PackedStringArray()
+forbidden_tags = PackedStringArray()
 accepted_face_ids = PackedStringArray("3", "5")
 consume_order = PackedStringArray()
 
@@ -60,7 +62,6 @@ description = "Требует 1 куб номиналом 3 или 5. Дает +
 icon = ExtResource("7_icon")
 tags = PackedStringArray("buff", "armor", "fortitude")
 owner_scope = 0
-rarity = 0
 upgrade_level = 2
 max_upgrade_level = 2
 cost = SubResource("AbilityCost_main")

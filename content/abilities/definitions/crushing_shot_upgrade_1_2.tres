@@ -1,19 +1,20 @@
-[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3 uid="uid://ctghahy1fb1qn"]
 
 [ext_resource type="Script" uid="uid://hkq3wkhbbh1u" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" uid="uid://lfpdg732cjt" path="res://content/abilities/resources/ability_condition.gd" id="1_ery31"]
 [ext_resource type="Script" uid="uid://cijja5c0f6ibw" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
 [ext_resource type="Script" uid="uid://vqakigfsnb18" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
 [ext_resource type="Script" uid="uid://c2t7x3op44t3s" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
 [ext_resource type="Script" uid="uid://drneiu6png0u3" path="res://content/abilities/resources/ability_effect_definition.gd" id="6_effect"]
-[ext_resource type="Texture2D" uid="uid://39n8g5uutdri" path="res://assets/ability/crushing_shot.png" id="7_icon"]
-[ext_resource type="Resource" path="res://content/statuses/definitions/vulnerability.tres" id="8_vulnerability_status"]
+[ext_resource type="Texture2D" uid="uid://bk3emrq3tr3n4" path="res://assets/ability/crushing_shot.png" id="7_icon"]
+[ext_resource type="Resource" uid="uid://b4lka0p7mq2ql" path="res://content/statuses/definitions/vulnerability.tres" id="8_vulnerability_status"]
 
 [sub_resource type="Resource" id="AbilityDiceCondition_pay_sum_7"]
 script = ExtResource("3_dice_condition")
 required_count = 2
-requires_exact_count = true
 min_total_value = 7
 max_total_value = 7
+requires_exact_count = true
 required_tags = PackedStringArray()
 forbidden_tags = PackedStringArray()
 accepted_face_ids = PackedStringArray()
@@ -52,7 +53,6 @@ display_name = "Сокрушающий выстрел++"
 description = "Требует ровно 2 куба с суммой 7. Сначала наносит 15 урона, затем накладывает на цель «Уязвимость» (1)."
 icon = ExtResource("7_icon")
 tags = PackedStringArray("attack", "status")
-rarity = 0
 upgrade_level = 2
 max_upgrade_level = 2
 cost = SubResource("AbilityCost_main")

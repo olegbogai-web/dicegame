@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="DiceDefinition" format=3]
+[gd_resource type="Resource" script_class="DiceDefinition" format=3 uid="uid://dajpvtug1d3c3"]
 
-[ext_resource type="Script" path="res://content/dice/resources/dice_definition.gd" id="1_dice"]
-[ext_resource type="Script" path="res://content/dice/resources/dice_face_definition.gd" id="2_face"]
+[ext_resource type="Script" uid="uid://dags37suujqm8" path="res://content/dice/resources/dice_definition.gd" id="1_dice"]
+[ext_resource type="Script" uid="uid://256xyqfvbr1n" path="res://content/dice/resources/dice_face_definition.gd" id="2_face"]
 
 [sub_resource type="Resource" id="Face_1"]
 script = ExtResource("2_face")
@@ -33,7 +33,6 @@ dice_name = "golden"
 display_name = "Золотой"
 description = "Настоящее золото дорого ценится"
 rarity = 2
-scope = 0
 size_multiplier = Vector3(2.52, 2.52, 2.52)
 base_color = Color(1, 0.74902, 0, 1)
 throw_coin_bonus = 1
