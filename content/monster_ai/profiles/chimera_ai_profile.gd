@@ -10,7 +10,7 @@ const TARGET_PLAYER := {"kind": &"player"}
 var _strengthening_used_turn_keys: Dictionary = {}
 
 
-func decide_next_action(monster_index: int, battle_room, available_dice: Array[Dice], dice_value_penalty: int = 0) -> MonsterAiDecision:
+func decide_next_action(monster_index: int, battle_room, available_dice: Array[Dice]) -> MonsterAiDecision:
 	if battle_room == null or not battle_room.can_target_monster(monster_index):
 		_log_debug("chimera turn finished: monster_missing index=%d" % monster_index)
 		return MonsterAiDecision.end_turn(&"monster_missing")
@@ -25,13 +25,13 @@ func decide_next_action(monster_index: int, battle_room, available_dice: Array[D
 
 	var strengthening_turn_key := _build_strengthening_turn_key(battle_room, monster_view.combatant_id)
 	var strengthening_ability := _find_ability_by_id(monster_view.abilities, ABILITY_STRENGTHENING)
-	if not _strengthening_used_turn_keys.has(strengthening_turn_key) and _can_use_strengthening_with_any_three_dice(strengthening_ability, available_dice, dice_value_penalty):
+	if not _strengthening_used_turn_keys.has(strengthening_turn_key) and _can_use_strengthening_with_any_three_dice(strengthening_ability, available_dice):
 		_log_debug("chimera chose strengthening (monster=%s, index=%d)" % [String(monster_view.combatant_id), monster_index])
 		_strengthening_used_turn_keys[strengthening_turn_key] = true
 		return MonsterAiDecision.use_ability(strengthening_ability, {"kind": &"monster", "index": monster_index}, &"strengthening_priority")
 
 	var clawed_series_ability := _find_ability_by_id(monster_view.abilities, ABILITY_CLAWED_SERIES)
-	if clawed_series_ability != null and BattleAbilityRuntime.can_use_ability_with_dice(clawed_series_ability, available_dice, true, dice_value_penalty):
+	if clawed_series_ability != null and BattleAbilityRuntime.can_use_ability_with_dice(clawed_series_ability, available_dice, true):
 		_log_debug("chimera chose clawed_series (monster=%s, index=%d)" % [String(monster_view.combatant_id), monster_index])
 		return MonsterAiDecision.use_ability(clawed_series_ability, TARGET_PLAYER, &"clawed_series_priority")
 
@@ -53,7 +53,7 @@ func _find_ability_by_id(abilities: Array[AbilityDefinition], ability_id: String
 	return null
 
 
-func _can_use_strengthening_with_any_three_dice(ability: AbilityDefinition, available_dice: Array[Dice], dice_value_penalty: int = 0) -> bool:
+func _can_use_strengthening_with_any_three_dice(ability: AbilityDefinition, available_dice: Array[Dice]) -> bool:
 	if ability == null:
 		return false
 	var ready_dice := BattleAbilityRuntime.filter_ready_dice(available_dice, true)
@@ -72,7 +72,7 @@ func _can_use_strengthening_with_any_three_dice(ability: AbilityDefinition, avai
 		while inner_left < inner_right:
 			var pair_sum := values[inner_left] + values[inner_right]
 			if pair_sum == pair_target:
-				return BattleAbilityRuntime.can_use_ability_with_dice(ability, ready_dice, true, dice_value_penalty)
+				return BattleAbilityRuntime.can_use_ability_with_dice(ability, ready_dice, true)
 			if pair_sum < pair_target:
 				inner_left += 1
 			else:

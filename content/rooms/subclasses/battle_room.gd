@@ -27,7 +27,6 @@ const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_abilit
 const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
 const BattleEffectRuntime = preload("res://content/combat/runtime/battle_effect_runtime.gd")
 const BattleCombatRuntimeState = preload("res://content/combat/runtime/battle_combat_runtime_state.gd")
-const CURSED_STATUS_ID := &"cursed"
 
 const PLAYER_SPRITE_POSITION := Vector3(-3.0, 0.01, -2.5)
 const PLAYER_SPRITE_SCALE := Vector3(2.0, 2.0, 2.0)
@@ -385,23 +384,6 @@ func get_status_container_for_turn_owner():
 	if combat_runtime_state == null:
 		return null
 	return combat_runtime_state.get_status_container_for_turn_owner(current_turn_owner, current_monster_turn_index)
-
-
-func get_current_turn_dice_activation_value_penalty() -> int:
-	var descriptor := _resolve_turn_owner_descriptor()
-	return get_dice_activation_value_penalty_for_descriptor(descriptor)
-
-
-func get_dice_activation_value_penalty_for_descriptor(descriptor: Dictionary) -> int:
-	if descriptor.is_empty():
-		return 0
-	var status_container = get_status_container_for_descriptor(descriptor)
-	if status_container == null:
-		return 0
-	var cursed_status = status_container.get_status(CURSED_STATUS_ID)
-	if cursed_status == null:
-		return 0
-	return maxi(cursed_status.stacks, 0)
 
 
 func clear_all_statuses() -> void:
