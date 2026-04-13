@@ -21,8 +21,7 @@ static func build_slot_conditions(ability: AbilityDefinition) -> Array[AbilityDi
 static func can_use_ability_with_dice(
 	ability: AbilityDefinition,
 	dice_list: Array[Dice],
-	require_stopped: bool = false,
-	dice_value_penalty: int = 0
+	require_stopped: bool = false
 ) -> bool:
 	if ability == null:
 		return false
@@ -30,17 +29,16 @@ static func can_use_ability_with_dice(
 		return true
 	if _has_joker_override_dice(dice_list, require_stopped):
 		return true
-	return collect_dice_for_ability(ability, dice_list, require_stopped, dice_value_penalty).size() >= get_required_dice_count(ability)
+	return collect_dice_for_ability(ability, dice_list, require_stopped).size() >= get_required_dice_count(ability)
 
 
 static func can_use_any_ability(
 	abilities: Array[AbilityDefinition],
 	dice_list: Array[Dice],
-	require_stopped: bool = false,
-	dice_value_penalty: int = 0
+	require_stopped: bool = false
 ) -> bool:
 	for ability in abilities:
-		if can_use_ability_with_dice(ability, dice_list, require_stopped, dice_value_penalty):
+		if can_use_ability_with_dice(ability, dice_list, require_stopped):
 			return true
 	return false
 
@@ -59,8 +57,7 @@ static func get_required_dice_count(ability: AbilityDefinition) -> int:
 static func collect_dice_for_ability(
 	ability: AbilityDefinition,
 	dice_list: Array[Dice],
-	require_stopped: bool = false,
-	dice_value_penalty: int = 0
+	require_stopped: bool = false
 ) -> Array[Dice]:
 	var selected: Array[Dice] = []
 	if ability == null:
@@ -72,7 +69,7 @@ static func collect_dice_for_ability(
 	for dice_condition in ability.cost.dice_conditions:
 		if dice_condition == null:
 			continue
-		var matched_dice := _collect_dice_for_condition(ability, dice_condition, available_dice, require_stopped, dice_value_penalty)
+		var matched_dice := _collect_dice_for_condition(ability, dice_condition, available_dice, require_stopped)
 		if matched_dice.size() < dice_condition.get_min_selected_count():
 			selected.clear()
 			return selected
@@ -90,8 +87,7 @@ static func is_die_usable_for_ability(
 	dice: Dice,
 	ability: AbilityDefinition,
 	dice_condition: AbilityDiceCondition,
-	require_stopped: bool = false,
-	dice_value_penalty: int = 0
+	require_stopped: bool = false
 ) -> bool:
 	if dice == null or not is_instance_valid(dice):
 		return false
@@ -99,7 +95,7 @@ static func is_die_usable_for_ability(
 		return false
 	if require_stopped and not is_die_fully_stopped(dice):
 		return false
-	var top_face_value := _resolve_effective_die_value(dice.get_top_face_value(), dice_value_penalty)
+	var top_face_value := dice.get_top_face_value()
 	if top_face_value < 0 or not dice_condition.matches_value(top_face_value):
 		return false
 	if dice_condition.requires_face_filter():
@@ -113,7 +109,7 @@ static func is_die_usable_for_ability(
 	for forbidden_tag in dice_condition.forbidden_tags:
 		if dice_tags.has(forbidden_tag):
 			return false
-	return _satisfies_ability_use_conditions(dice, ability, dice_value_penalty)
+	return _satisfies_ability_use_conditions(dice, ability)
 
 
 static func is_die_fully_stopped(dice: Dice) -> bool:
@@ -138,12 +134,11 @@ static func _collect_dice_for_condition(
 	ability: AbilityDefinition,
 	dice_condition: AbilityDiceCondition,
 	available_dice: Array[Dice],
-	require_stopped: bool,
-	dice_value_penalty: int
+	require_stopped: bool
 ) -> Array[Dice]:
 	var candidates: Array[Dice] = []
 	for dice in available_dice:
-		if is_die_usable_for_ability(dice, ability, dice_condition, require_stopped, dice_value_penalty):
+		if is_die_usable_for_ability(dice, ability, dice_condition, require_stopped):
 			candidates.append(dice)
 
 	var min_count := dice_condition.get_min_selected_count()
@@ -155,12 +150,12 @@ static func _collect_dice_for_condition(
 	for selected_count in range(min_count, max_count + 1):
 		var selected_for_count: Array[Dice] = []
 		if _has_total_value_constraint(dice_condition):
-			selected_for_count = _collect_dice_with_total_value(dice_condition, candidates, selected_count, dice_value_penalty)
+			selected_for_count = _collect_dice_with_total_value(dice_condition, candidates, selected_count)
 		else:
-			selected_for_count = _collect_dice_with_count(dice_condition, candidates, selected_count, dice_value_penalty)
+			selected_for_count = _collect_dice_with_count(dice_condition, candidates, selected_count)
 		if selected_for_count.is_empty():
 			continue
-		if dice_condition.matches_total_value(_sum_dice_values(selected_for_count, dice_value_penalty)):
+		if dice_condition.matches_total_value(_sum_dice_values(selected_for_count)):
 			return selected_for_count
 	return []
 
@@ -174,13 +169,12 @@ static func _has_total_value_constraint(dice_condition: AbilityDiceCondition) ->
 static func _collect_dice_with_total_value(
 	dice_condition: AbilityDiceCondition,
 	candidates: Array[Dice],
-	required_count: int,
-	dice_value_penalty: int
+	required_count: int
 ) -> Array[Dice]:
 	if required_count <= 0 or candidates.size() < required_count:
 		return []
 	var selected: Array[Dice] = []
-	if _collect_dice_with_total_value_backtrack(dice_condition, candidates, required_count, 0, selected, dice_value_penalty):
+	if _collect_dice_with_total_value_backtrack(dice_condition, candidates, required_count, 0, selected):
 		return selected
 	return []
 
@@ -190,11 +184,10 @@ static func _collect_dice_with_total_value_backtrack(
 	candidates: Array[Dice],
 	required_count: int,
 	start_index: int,
-	selected: Array[Dice],
-	dice_value_penalty: int
+	selected: Array[Dice]
 ) -> bool:
 	if selected.size() == required_count:
-		var total := _sum_dice_values(selected, dice_value_penalty)
+		var total := _sum_dice_values(selected)
 		return dice_condition.matches_total_value(total)
 
 	var remaining_slots := required_count - selected.size()
@@ -204,7 +197,7 @@ static func _collect_dice_with_total_value_backtrack(
 		if candidate == null:
 			continue
 		selected.append(candidate)
-		if _collect_dice_with_total_value_backtrack(dice_condition, candidates, required_count, candidate_index + 1, selected, dice_value_penalty):
+		if _collect_dice_with_total_value_backtrack(dice_condition, candidates, required_count, candidate_index + 1, selected):
 			return true
 		selected.pop_back()
 	return false
@@ -213,20 +206,19 @@ static func _collect_dice_with_total_value_backtrack(
 static func _collect_dice_with_count(
 	dice_condition: AbilityDiceCondition,
 	candidates: Array[Dice],
-	required_count: int,
-	dice_value_penalty: int
+	required_count: int
 ) -> Array[Dice]:
 	if dice_condition.requires_same_value:
-		return _collect_same_value_dice(candidates, required_count, dice_value_penalty)
+		return _collect_same_value_dice(candidates, required_count)
 	if dice_condition.requires_unique_values:
-		return _collect_unique_value_dice(candidates, required_count, dice_value_penalty)
+		return _collect_unique_value_dice(candidates, required_count)
 	return candidates.slice(0, required_count)
 
 
-static func _collect_same_value_dice(candidates: Array[Dice], required_count: int, dice_value_penalty: int) -> Array[Dice]:
+static func _collect_same_value_dice(candidates: Array[Dice], required_count: int) -> Array[Dice]:
 	var dice_by_value := {}
 	for dice in candidates:
-		var top_face_value := _resolve_effective_die_value(dice.get_top_face_value(), dice_value_penalty)
+		var top_face_value := dice.get_top_face_value()
 		if not dice_by_value.has(top_face_value):
 			dice_by_value[top_face_value] = []
 		var same_value_bucket: Array = dice_by_value[top_face_value]
@@ -246,11 +238,11 @@ static func _collect_same_value_dice(candidates: Array[Dice], required_count: in
 	return []
 
 
-static func _collect_unique_value_dice(candidates: Array[Dice], required_count: int, dice_value_penalty: int) -> Array[Dice]:
+static func _collect_unique_value_dice(candidates: Array[Dice], required_count: int) -> Array[Dice]:
 	var selected: Array[Dice] = []
 	var used_values := {}
 	for dice in candidates:
-		var top_face_value := _resolve_effective_die_value(dice.get_top_face_value(), dice_value_penalty)
+		var top_face_value := dice.get_top_face_value()
 		if used_values.has(top_face_value):
 			continue
 		used_values[top_face_value] = true
@@ -260,16 +252,16 @@ static func _collect_unique_value_dice(candidates: Array[Dice], required_count: 
 	return selected if selected.size() >= required_count else []
 
 
-static func _sum_dice_values(dice_list: Array[Dice], dice_value_penalty: int) -> int:
+static func _sum_dice_values(dice_list: Array[Dice]) -> int:
 	var total_value := 0
 	for dice in dice_list:
 		if dice == null or not is_instance_valid(dice):
 			continue
-		total_value += maxi(_resolve_effective_die_value(dice.get_top_face_value(), dice_value_penalty), 0)
+		total_value += maxi(dice.get_top_face_value(), 0)
 	return total_value
 
 
-static func _satisfies_ability_use_conditions(dice: Dice, ability: AbilityDefinition, dice_value_penalty: int) -> bool:
+static func _satisfies_ability_use_conditions(dice: Dice, ability: AbilityDefinition) -> bool:
 	if dice == null or ability == null:
 		return false
 	for condition in ability.use_conditions:
@@ -277,18 +269,12 @@ static func _satisfies_ability_use_conditions(dice: Dice, ability: AbilityDefini
 			continue
 		if condition.predicate == &"selected_die_top_face_parity":
 			var parity := String(condition.parameters.get("parity", ""))
-			var top_face_value := _resolve_effective_die_value(dice.get_top_face_value(), dice_value_penalty)
+			var top_face_value := dice.get_top_face_value()
 			if parity == "even" and top_face_value % 2 != 0:
 				return false
 			if parity == "odd" and top_face_value % 2 == 0:
 				return false
 	return true
-
-
-static func _resolve_effective_die_value(raw_value: int, dice_value_penalty: int) -> int:
-	if raw_value < 0:
-		return raw_value
-	return maxi(raw_value - maxi(dice_value_penalty, 0), 0)
 
 
 static func _has_joker_override_dice(dice_list: Array[Dice], require_stopped: bool) -> bool:

@@ -30,8 +30,6 @@ static func run_turn(host: Node, context: Dictionary) -> StringName:
 		_log_debug("turn warning: dice wait timeout before ai start (monster=%s index=%d)" % [String(monster_view.combatant_id), monster_index])
 
 	while battle_room != null and battle_room.is_monster_turn() and not battle_room.is_battle_over():
-		var owner_descriptor := {"side": &"enemy", "index": monster_index}
-		var dice_value_penalty := battle_room.get_dice_activation_value_penalty_for_descriptor(owner_descriptor)
 		var available_dice := await _resolve_ready_dice_for_decision(host, context)
 		if available_dice.is_empty():
 			_log_debug("turn finished: no_dice (monster=%s index=%d)" % [String(monster_view.combatant_id), monster_index])
@@ -40,7 +38,7 @@ static func run_turn(host: Node, context: Dictionary) -> StringName:
 		if activatable_abilities.is_empty():
 			_log_debug("turn finished: no_activatable_abilities (monster=%s index=%d)" % [String(monster_view.combatant_id), monster_index])
 			return &"no_activatable_abilities"
-		if not BattleAbilityRuntime.can_use_any_ability(activatable_abilities, available_dice, true, dice_value_penalty):
+		if not BattleAbilityRuntime.can_use_any_ability(activatable_abilities, available_dice, true):
 			_log_debug("turn finished: no_usable_abilities (monster=%s index=%d, ready_dice=%d)" % [String(monster_view.combatant_id), monster_index, available_dice.size()])
 			return &"no_usable_abilities"
 
@@ -48,7 +46,7 @@ static func run_turn(host: Node, context: Dictionary) -> StringName:
 		if ai_profile == null:
 			_log_debug("turn aborted: missing_ai_profile (monster=%s index=%d)" % [String(monster_view.combatant_id), monster_index])
 			return &"missing_ai_profile"
-		var decision := ai_profile.decide_next_action(monster_index, battle_room, available_dice, dice_value_penalty)
+		var decision := ai_profile.decide_next_action(monster_index, battle_room, available_dice)
 		if decision == null or decision.is_end_turn():
 			_log_debug("turn finished by ai signal: %s (monster=%s index=%d)" % [String(decision.reason if decision != null else &"ai_signal"), String(monster_view.combatant_id), monster_index])
 			return decision.reason if decision != null else &"ai_signal"
@@ -56,7 +54,7 @@ static func run_turn(host: Node, context: Dictionary) -> StringName:
 			_log_debug("turn aborted: invalid_ability (monster=%s index=%d)" % [String(monster_view.combatant_id), monster_index])
 			return &"invalid_ability"
 		_log_debug("ai selected ability: %s (monster=%s index=%d, reason=%s)" % [decision.ability.ability_id, String(monster_view.combatant_id), monster_index, String(decision.reason)])
-		var consumed_dice := BattleAbilityRuntime.collect_dice_for_ability(decision.ability, available_dice, true, dice_value_penalty)
+		var consumed_dice := BattleAbilityRuntime.collect_dice_for_ability(decision.ability, available_dice, true)
 		if consumed_dice.size() < BattleAbilityRuntime.get_required_dice_count(decision.ability):
 			_log_debug("turn finished: unpayable_decision ability=%s (monster=%s index=%d)" % [decision.ability.ability_id, String(monster_view.combatant_id), monster_index])
 			return &"unpayable_decision"
