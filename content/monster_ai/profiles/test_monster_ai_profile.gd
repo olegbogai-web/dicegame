@@ -4,7 +4,7 @@ class_name TestMonsterAiProfile
 const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_ability_runtime.gd")
 
 
-func decide_next_action(monster_index: int, battle_room, available_dice: Array[Dice]) -> MonsterAiDecision:
+func decide_next_action(monster_index: int, battle_room, available_dice: Array[Dice], dice_value_penalty: int = 0) -> MonsterAiDecision:
 	if battle_room == null or not battle_room.can_target_monster(monster_index):
 		return MonsterAiDecision.end_turn(&"monster_missing")
 	if not battle_room.can_target_player():
@@ -19,7 +19,7 @@ func decide_next_action(monster_index: int, battle_room, available_dice: Array[D
 			continue
 		if ability.ability_id != "common_attack":
 			continue
-		if BattleAbilityRuntime.can_use_ability_with_dice(ability, available_dice, true):
+		if BattleAbilityRuntime.can_use_ability_with_dice(ability, available_dice, true, dice_value_penalty):
 			return MonsterAiDecision.use_ability(ability, {"kind": &"player"}, &"common_attack")
 
 	return MonsterAiDecision.end_turn(&"common_attack_unavailable")

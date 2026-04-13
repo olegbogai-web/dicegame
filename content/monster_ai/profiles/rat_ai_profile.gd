@@ -7,7 +7,7 @@ const ABILITY_RAT_BITE := "rat_bite"
 const TARGET_PLAYER := {"kind": &"player"}
 
 
-func decide_next_action(monster_index: int, battle_room, available_dice: Array[Dice]) -> MonsterAiDecision:
+func decide_next_action(monster_index: int, battle_room, available_dice: Array[Dice], dice_value_penalty: int = 0) -> MonsterAiDecision:
 	if battle_room == null or not battle_room.can_target_monster(monster_index):
 		_log_debug("rat turn finished: monster_missing index=%d" % monster_index)
 		return MonsterAiDecision.end_turn(&"monster_missing")
@@ -21,7 +21,7 @@ func decide_next_action(monster_index: int, battle_room, available_dice: Array[D
 		return MonsterAiDecision.end_turn(&"monster_view_missing")
 
 	var rat_bite_ability := _find_ability_by_id(monster_view.abilities, ABILITY_RAT_BITE)
-	if rat_bite_ability != null and BattleAbilityRuntime.can_use_ability_with_dice(rat_bite_ability, available_dice, true):
+	if rat_bite_ability != null and BattleAbilityRuntime.can_use_ability_with_dice(rat_bite_ability, available_dice, true, dice_value_penalty):
 		_log_debug("rat chose rat_bite (monster=%s, index=%d, ready_dice=%d)" % [String(monster_view.combatant_id), monster_index, available_dice.size()])
 		return MonsterAiDecision.use_ability(rat_bite_ability, TARGET_PLAYER, &"rat_bite_priority")
 

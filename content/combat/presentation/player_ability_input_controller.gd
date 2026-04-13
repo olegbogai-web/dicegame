@@ -236,7 +236,8 @@ func _is_ability_state_ready(owner: Node, frame_state: Dictionary) -> bool:
 	var consumed_dice := _collect_ready_dice_for_frame(owner, frame)
 	if _has_joker_override_in_consumed_dice(consumed_dice):
 		return true
-	return BattleAbilityRuntime.can_use_ability_with_dice(ability, consumed_dice, true)
+	var dice_value_penalty := _get_current_turn_dice_activation_value_penalty(owner)
+	return BattleAbilityRuntime.can_use_ability_with_dice(ability, consumed_dice, true, dice_value_penalty)
 
 
 func _selected_ability_targets_dice(owner: Node) -> bool:
@@ -312,8 +313,12 @@ func _dice_matches_slot(_owner: Node, dice: Dice, slot_state: Dictionary) -> boo
 	if top_face != null and StringName(top_face.text_value) == JOKER_FACE_ID:
 		return true
 
-	var top_face_value := dice.get_top_face_value()
-	if top_face_value < 0 or not condition.matches_value(top_face_value):
+	var dice_value_penalty := _get_current_turn_dice_activation_value_penalty(_owner)
+	var raw_top_face_value := dice.get_top_face_value()
+	if raw_top_face_value < 0:
+		return false
+	var top_face_value := maxi(raw_top_face_value - dice_value_penalty, 0)
+	if not condition.matches_value(top_face_value):
 		return false
 
 	if condition.requires_face_filter():
@@ -328,7 +333,13 @@ func _dice_matches_slot(_owner: Node, dice: Dice, slot_state: Dictionary) -> boo
 		if dice_tags.has(forbidden_tag):
 			return false
 
-	return BattleAbilityRuntime.is_die_usable_for_ability(dice, slot_state.get("ability") as AbilityDefinition, condition)
+	return BattleAbilityRuntime.is_die_usable_for_ability(dice, slot_state.get("ability") as AbilityDefinition, condition, false, dice_value_penalty)
+
+
+func _get_current_turn_dice_activation_value_penalty(owner: Node) -> int:
+	if owner == null or owner.battle_room_data == null:
+		return 0
+	return maxi(owner.battle_room_data.get_current_turn_dice_activation_value_penalty(), 0)
 
 
 func _has_joker_override_in_consumed_dice(consumed_dice: Array[Dice]) -> bool:
