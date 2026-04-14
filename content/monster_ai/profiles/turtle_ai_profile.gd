@@ -22,20 +22,22 @@ func decide_next_action(monster_index: int, battle_room, available_dice: Array[D
 		_log_debug("turtle turn finished: monster_view_missing index=%d" % monster_index)
 		return MonsterAiDecision.end_turn(&"monster_view_missing")
 
+	var owner_status_container = battle_room.get_status_container_for_descriptor({"kind": &"monster", "index": monster_index})
+
 	var turtle_durability := _find_ability_by_id(monster_view.abilities, ABILITY_TURTLE_DURABILITY)
-	if turtle_durability != null and BattleAbilityRuntime.can_use_ability_with_dice(turtle_durability, available_dice, true):
+	if turtle_durability != null and BattleAbilityRuntime.can_use_ability_with_dice(turtle_durability, available_dice, true, owner_status_container):
 		var target_self_durability := _build_target_self(monster_index)
 		_log_debug("turtle chose turtle_durability (monster=%s, index=%d, ready_dice=%d)" % [String(monster_view.combatant_id), monster_index, available_dice.size()])
 		return MonsterAiDecision.use_ability(turtle_durability, target_self_durability, &"turtle_durability_priority")
 
 	var turtle_defense := _find_ability_by_id(monster_view.abilities, ABILITY_TURTLE_DEFENSE)
-	if turtle_defense != null and BattleAbilityRuntime.can_use_ability_with_dice(turtle_defense, available_dice, true):
+	if turtle_defense != null and BattleAbilityRuntime.can_use_ability_with_dice(turtle_defense, available_dice, true, owner_status_container):
 		var target_self_defense := _build_target_self(monster_index)
 		_log_debug("turtle chose turtle_defense (monster=%s, index=%d, ready_dice=%d)" % [String(monster_view.combatant_id), monster_index, available_dice.size()])
 		return MonsterAiDecision.use_ability(turtle_defense, target_self_defense, &"turtle_defense_fallback")
 
 	var turtle_bite := _find_ability_by_id(monster_view.abilities, ABILITY_TURTLE_BITE)
-	if turtle_bite != null and BattleAbilityRuntime.can_use_ability_with_dice(turtle_bite, available_dice, true):
+	if turtle_bite != null and BattleAbilityRuntime.can_use_ability_with_dice(turtle_bite, available_dice, true, owner_status_container):
 		_log_debug("turtle chose turtle_bite (monster=%s, index=%d, ready_dice=%d)" % [String(monster_view.combatant_id), monster_index, available_dice.size()])
 		return MonsterAiDecision.use_ability(turtle_bite, TARGET_PLAYER, &"turtle_bite_fallback")
 

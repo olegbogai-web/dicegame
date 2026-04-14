@@ -20,8 +20,10 @@ func decide_next_action(monster_index: int, battle_room, available_dice: Array[D
 		_log_debug("rat turn finished: monster_view_missing index=%d" % monster_index)
 		return MonsterAiDecision.end_turn(&"monster_view_missing")
 
+	var owner_status_container = battle_room.get_status_container_for_descriptor({"kind": &"monster", "index": monster_index})
+
 	var rat_bite_ability := _find_ability_by_id(monster_view.abilities, ABILITY_RAT_BITE)
-	if rat_bite_ability != null and BattleAbilityRuntime.can_use_ability_with_dice(rat_bite_ability, available_dice, true):
+	if rat_bite_ability != null and BattleAbilityRuntime.can_use_ability_with_dice(rat_bite_ability, available_dice, true, owner_status_container):
 		_log_debug("rat chose rat_bite (monster=%s, index=%d, ready_dice=%d)" % [String(monster_view.combatant_id), monster_index, available_dice.size()])
 		return MonsterAiDecision.use_ability(rat_bite_ability, TARGET_PLAYER, &"rat_bite_priority")
 

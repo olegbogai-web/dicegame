@@ -23,15 +23,17 @@ func decide_next_action(monster_index: int, battle_room, available_dice: Array[D
 		_log_debug("chimera turn finished: monster_view_missing index=%d" % monster_index)
 		return MonsterAiDecision.end_turn(&"monster_view_missing")
 
+	var owner_status_container = battle_room.get_status_container_for_descriptor({"kind": &"monster", "index": monster_index})
+
 	var strengthening_turn_key := _build_strengthening_turn_key(battle_room, monster_view.combatant_id)
 	var strengthening_ability := _find_ability_by_id(monster_view.abilities, ABILITY_STRENGTHENING)
-	if not _strengthening_used_turn_keys.has(strengthening_turn_key) and _can_use_strengthening_with_any_three_dice(strengthening_ability, available_dice):
+	if not _strengthening_used_turn_keys.has(strengthening_turn_key) and _can_use_strengthening_with_any_three_dice(strengthening_ability, available_dice, owner_status_container):
 		_log_debug("chimera chose strengthening (monster=%s, index=%d)" % [String(monster_view.combatant_id), monster_index])
 		_strengthening_used_turn_keys[strengthening_turn_key] = true
 		return MonsterAiDecision.use_ability(strengthening_ability, {"kind": &"monster", "index": monster_index}, &"strengthening_priority")
 
 	var clawed_series_ability := _find_ability_by_id(monster_view.abilities, ABILITY_CLAWED_SERIES)
-	if clawed_series_ability != null and BattleAbilityRuntime.can_use_ability_with_dice(clawed_series_ability, available_dice, true):
+	if clawed_series_ability != null and BattleAbilityRuntime.can_use_ability_with_dice(clawed_series_ability, available_dice, true, owner_status_container):
 		_log_debug("chimera chose clawed_series (monster=%s, index=%d)" % [String(monster_view.combatant_id), monster_index])
 		return MonsterAiDecision.use_ability(clawed_series_ability, TARGET_PLAYER, &"clawed_series_priority")
 
@@ -53,7 +55,7 @@ func _find_ability_by_id(abilities: Array[AbilityDefinition], ability_id: String
 	return null
 
 
-func _can_use_strengthening_with_any_three_dice(ability: AbilityDefinition, available_dice: Array[Dice]) -> bool:
+func _can_use_strengthening_with_any_three_dice(ability: AbilityDefinition, available_dice: Array[Dice], source_status_container = null) -> bool:
 	if ability == null:
 		return false
 	var ready_dice := BattleAbilityRuntime.filter_ready_dice(available_dice, true)
@@ -61,7 +63,7 @@ func _can_use_strengthening_with_any_three_dice(ability: AbilityDefinition, avai
 		return false
 	var values: Array[int] = []
 	for dice in ready_dice:
-		values.append(maxi(dice.get_top_face_value(), 0))
+		values.append(maxi(BattleAbilityRuntime.get_die_face_value_for_ability_checks(dice, source_status_container), 0))
 	values.sort()
 	var left := 0
 	var right := values.size() - 1
@@ -72,7 +74,7 @@ func _can_use_strengthening_with_any_three_dice(ability: AbilityDefinition, avai
 		while inner_left < inner_right:
 			var pair_sum := values[inner_left] + values[inner_right]
 			if pair_sum == pair_target:
-				return BattleAbilityRuntime.can_use_ability_with_dice(ability, ready_dice, true)
+				return BattleAbilityRuntime.can_use_ability_with_dice(ability, ready_dice, true, source_status_container)
 			if pair_sum < pair_target:
 				inner_left += 1
 			else:
