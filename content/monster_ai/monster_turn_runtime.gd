@@ -21,6 +21,7 @@ static func run_turn(host: Node, context: Dictionary) -> StringName:
 		_log_debug("turn aborted: monster_view_missing (index=%d)" % monster_index)
 		return &"monster_view_missing"
 	_log_debug("turn started: monster=%s index=%d" % [String(monster_view.combatant_id), monster_index])
+	var owner_status_container = battle_room.get_status_container_for_descriptor({"kind": &"monster", "index": monster_index})
 
 	var initial_wait_result := await _wait_until_turn_dice_stop(host, context)
 	if initial_wait_result == &"no_dice_left":
@@ -38,7 +39,7 @@ static func run_turn(host: Node, context: Dictionary) -> StringName:
 		if activatable_abilities.is_empty():
 			_log_debug("turn finished: no_activatable_abilities (monster=%s index=%d)" % [String(monster_view.combatant_id), monster_index])
 			return &"no_activatable_abilities"
-		if not BattleAbilityRuntime.can_use_any_ability(activatable_abilities, available_dice, true):
+		if not BattleAbilityRuntime.can_use_any_ability(activatable_abilities, available_dice, true, owner_status_container):
 			_log_debug("turn finished: no_usable_abilities (monster=%s index=%d, ready_dice=%d)" % [String(monster_view.combatant_id), monster_index, available_dice.size()])
 			return &"no_usable_abilities"
 
@@ -54,7 +55,7 @@ static func run_turn(host: Node, context: Dictionary) -> StringName:
 			_log_debug("turn aborted: invalid_ability (monster=%s index=%d)" % [String(monster_view.combatant_id), monster_index])
 			return &"invalid_ability"
 		_log_debug("ai selected ability: %s (monster=%s index=%d, reason=%s)" % [decision.ability.ability_id, String(monster_view.combatant_id), monster_index, String(decision.reason)])
-		var consumed_dice := BattleAbilityRuntime.collect_dice_for_ability(decision.ability, available_dice, true)
+		var consumed_dice := BattleAbilityRuntime.collect_dice_for_ability(decision.ability, available_dice, true, owner_status_container)
 		if consumed_dice.size() < BattleAbilityRuntime.get_required_dice_count(decision.ability):
 			_log_debug("turn finished: unpayable_decision ability=%s (monster=%s index=%d)" % [decision.ability.ability_id, String(monster_view.combatant_id), monster_index])
 			return &"unpayable_decision"

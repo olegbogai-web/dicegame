@@ -236,7 +236,7 @@ func _is_ability_state_ready(owner: Node, frame_state: Dictionary) -> bool:
 	var consumed_dice := _collect_ready_dice_for_frame(owner, frame)
 	if _has_joker_override_in_consumed_dice(consumed_dice):
 		return true
-	return BattleAbilityRuntime.can_use_ability_with_dice(ability, consumed_dice, true)
+	return BattleAbilityRuntime.can_use_ability_with_dice(ability, consumed_dice, true, _get_turn_owner_status_container(owner))
 
 
 func _selected_ability_targets_dice(owner: Node) -> bool:
@@ -312,7 +312,7 @@ func _dice_matches_slot(_owner: Node, dice: Dice, slot_state: Dictionary) -> boo
 	if top_face != null and StringName(top_face.text_value) == JOKER_FACE_ID:
 		return true
 
-	var top_face_value := dice.get_top_face_value()
+	var top_face_value := BattleAbilityRuntime.get_die_face_value_for_ability_checks(dice, _get_turn_owner_status_container(_owner))
 	if top_face_value < 0 or not condition.matches_value(top_face_value):
 		return false
 
@@ -328,7 +328,19 @@ func _dice_matches_slot(_owner: Node, dice: Dice, slot_state: Dictionary) -> boo
 		if dice_tags.has(forbidden_tag):
 			return false
 
-	return BattleAbilityRuntime.is_die_usable_for_ability(dice, slot_state.get("ability") as AbilityDefinition, condition)
+	return BattleAbilityRuntime.is_die_usable_for_ability(
+		dice,
+		slot_state.get("ability") as AbilityDefinition,
+		condition,
+		false,
+		_get_turn_owner_status_container(_owner)
+	)
+
+
+func _get_turn_owner_status_container(owner: Node):
+	if owner == null or owner.battle_room_data == null:
+		return null
+	return owner.battle_room_data.get_status_container_for_turn_owner()
 
 
 func _has_joker_override_in_consumed_dice(consumed_dice: Array[Dice]) -> bool:

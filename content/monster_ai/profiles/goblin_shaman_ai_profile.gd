@@ -24,26 +24,28 @@ func decide_next_action(monster_index: int, battle_room, available_dice: Array[D
 		_log_debug("goblin_shaman turn finished: monster_view_missing index=%d" % monster_index)
 		return MonsterAiDecision.end_turn(&"monster_view_missing")
 
+	var owner_status_container = battle_room.get_status_container_for_descriptor({"kind": &"monster", "index": monster_index})
+
 	var is_low_hp = monster_view.current_hp <= HEALING_PRIORITY_HP_THRESHOLD
 	if is_low_hp:
-		return _decide_low_hp_action(monster_index, monster_view.abilities, available_dice)
-	return _decide_high_hp_action(monster_index, monster_view.abilities, available_dice)
+		return _decide_low_hp_action(monster_index, monster_view.abilities, available_dice, owner_status_container)
+	return _decide_high_hp_action(monster_index, monster_view.abilities, available_dice, owner_status_container)
 
 
-func _decide_high_hp_action(monster_index: int, abilities: Array[AbilityDefinition], available_dice: Array[Dice]) -> MonsterAiDecision:
+func _decide_high_hp_action(monster_index: int, abilities: Array[AbilityDefinition], available_dice: Array[Dice], source_status_container = null) -> MonsterAiDecision:
 	var curse_ability := _find_ability_by_id(abilities, ABILITY_SHAMAN_CURSE)
-	if _can_use_ability(curse_ability, available_dice):
+	if _can_use_ability(curse_ability, available_dice, source_status_container):
 		_log_debug("goblin_shaman chose curse (hp>60, index=%d, ready_dice=%d)" % [monster_index, available_dice.size()])
 		return MonsterAiDecision.use_ability(curse_ability, TARGET_PLAYER, &"goblin_shaman_high_hp_curse_priority")
 
 	var miasma_ability := _find_ability_by_id(abilities, ABILITY_POISONOUS_MIASMA)
-	if _can_use_ability(miasma_ability, available_dice):
+	if _can_use_ability(miasma_ability, available_dice, source_status_container):
 		var target_self := _build_target_self(monster_index)
 		_log_debug("goblin_shaman chose miasma (hp>60, index=%d, ready_dice=%d)" % [monster_index, available_dice.size()])
 		return MonsterAiDecision.use_ability(miasma_ability, target_self, &"goblin_shaman_high_hp_miasma_fallback")
 
 	var restoration_ability := _find_ability_by_id(abilities, ABILITY_RESTORATION_MAGIC)
-	if _can_use_ability(restoration_ability, available_dice):
+	if _can_use_ability(restoration_ability, available_dice, source_status_container):
 		var target_self := _build_target_self(monster_index)
 		_log_debug("goblin_shaman chose restoration (hp>60, index=%d, ready_dice=%d)" % [monster_index, available_dice.size()])
 		return MonsterAiDecision.use_ability(restoration_ability, target_self, &"goblin_shaman_high_hp_restoration_fallback")
@@ -52,20 +54,20 @@ func _decide_high_hp_action(monster_index: int, abilities: Array[AbilityDefiniti
 	return MonsterAiDecision.end_turn(&"no_priority_abilities")
 
 
-func _decide_low_hp_action(monster_index: int, abilities: Array[AbilityDefinition], available_dice: Array[Dice]) -> MonsterAiDecision:
+func _decide_low_hp_action(monster_index: int, abilities: Array[AbilityDefinition], available_dice: Array[Dice], source_status_container = null) -> MonsterAiDecision:
 	var restoration_ability := _find_ability_by_id(abilities, ABILITY_RESTORATION_MAGIC)
-	if _can_use_ability(restoration_ability, available_dice):
+	if _can_use_ability(restoration_ability, available_dice, source_status_container):
 		var target_self := _build_target_self(monster_index)
 		_log_debug("goblin_shaman chose restoration (hp<=60, index=%d, ready_dice=%d)" % [monster_index, available_dice.size()])
 		return MonsterAiDecision.use_ability(restoration_ability, target_self, &"goblin_shaman_low_hp_restoration_priority")
 
 	var curse_ability := _find_ability_by_id(abilities, ABILITY_SHAMAN_CURSE)
-	if _can_use_ability(curse_ability, available_dice):
+	if _can_use_ability(curse_ability, available_dice, source_status_container):
 		_log_debug("goblin_shaman chose curse (hp<=60, index=%d, ready_dice=%d)" % [monster_index, available_dice.size()])
 		return MonsterAiDecision.use_ability(curse_ability, TARGET_PLAYER, &"goblin_shaman_low_hp_curse_fallback")
 
 	var miasma_ability := _find_ability_by_id(abilities, ABILITY_POISONOUS_MIASMA)
-	if _can_use_ability(miasma_ability, available_dice):
+	if _can_use_ability(miasma_ability, available_dice, source_status_container):
 		var target_self := _build_target_self(monster_index)
 		_log_debug("goblin_shaman chose miasma (hp<=60, index=%d, ready_dice=%d)" % [monster_index, available_dice.size()])
 		return MonsterAiDecision.use_ability(miasma_ability, target_self, &"goblin_shaman_low_hp_miasma_fallback")
@@ -74,10 +76,10 @@ func _decide_low_hp_action(monster_index: int, abilities: Array[AbilityDefinitio
 	return MonsterAiDecision.end_turn(&"no_priority_abilities")
 
 
-func _can_use_ability(ability: AbilityDefinition, available_dice: Array[Dice]) -> bool:
+func _can_use_ability(ability: AbilityDefinition, available_dice: Array[Dice], source_status_container = null) -> bool:
 	if ability == null:
 		return false
-	return BattleAbilityRuntime.can_use_ability_with_dice(ability, available_dice, true)
+	return BattleAbilityRuntime.can_use_ability_with_dice(ability, available_dice, true, source_status_container)
 
 
 func _build_target_self(monster_index: int) -> Dictionary:
