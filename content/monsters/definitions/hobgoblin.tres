@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="MonsterDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" path="res://content/monsters/resources/monster_definition.gd" id="1_monster"]
+[ext_resource type="Script" path="res://content/dice/resources/dice_definition.gd" id="2_dice"]
+[ext_resource type="Texture2D" path="res://assets/entity/monsters/goblin.png" id="3_sprite"]
+[ext_resource type="Resource" path="res://content/abilities/definitions/hobgoblin_club_strike.tres" id="4_hobgoblin_club_strike"]
+[ext_resource type="Resource" path="res://content/abilities/definitions/hobgoblin_rage.tres" id="5_hobgoblin_rage"]
+[ext_resource type="Resource" path="res://content/monster_ai/profiles/hobgoblin_ai_profile.tres" id="6_ai"]
+[ext_resource type="Resource" path="res://content/resources/base_cube.tres" id="7_base_cube"]
+
+[resource]
+script = ExtResource("1_monster")
+monster_id = "hobgoblin"
+display_name = "Хобгоблин"
+description = "Силовой боец: сначала бьет дубиной по игроку, затем уходит в ярость, если больше не может атаковать."
+sprite = ExtResource("3_sprite")
+tags = PackedStringArray("normal", "goblin", "brute")
+max_health = 50
+size_multiplier = 0.8
+dice_count = 2
+dice_loadout = Array[ExtResource("2_dice")]([ExtResource("7_base_cube"), ExtResource("7_base_cube")])
+ai_profile = ExtResource("6_ai")
+abilities = Array[ExtResource("1_ability")]([ExtResource("4_hobgoblin_club_strike"), ExtResource("5_hobgoblin_rage")])

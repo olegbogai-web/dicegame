@@ -88,6 +88,9 @@ Monster AI может только:
 - `turtle_defense` (`content/abilities/definitions/turtle_defense.tres`) — defensive setup: накладывает `armor` (5) на себя за куб `3/5`;
 - `turtle_bite` (`content/abilities/definitions/turtle_bite.tres`) — атакующий fallback: урон `1 + floor(armor(source)/2)` за куб `1/2`;
 - рекомендуемый порядок в AI для turtle: сначала `turtle_durability` (пока возможно), затем `turtle_defense` (пока возможно), затем `turtle_bite` (пока возможно).
+- `hobgoblin_club_strike` (`content/abilities/definitions/hobgoblin_club_strike.tres`) — приоритетный силовой удар: наносит 10 урона за куб `5/6`;
+- `hobgoblin_rage` (`content/abilities/definitions/hobgoblin_rage.tres`) — self-buff fallback: накладывает `strength` (3) за любой куб;
+- рекомендуемый порядок в AI для hobgoblin: сначала `hobgoblin_club_strike` (пока возможно), затем `hobgoblin_rage` (пока возможно).
 
 Для отладки профилей обязательно сохранять reason/debug-сигналы на обе ветки решения (выбор setup, выбор follow-up, невозможность оплатить).
 
@@ -708,3 +711,22 @@ Monster AI может только:
 - `goblin_shaman_low_hp_miasma_fallback`;
 - `no_priority_abilities`.
 
+
+
+## 19. Обновление: профиль ИИ `hobgoblin` (апрель 2026)
+
+Добавлен monster-specific профиль `content/monster_ai/profiles/hobgoblin_ai_profile.gd` для монстра `hobgoblin` с силовым приоритетом:
+- сначала `hobgoblin_club_strike` («Удар дубиной») по игроку, пока способность доступна по кубам (`5/6`);
+- затем `hobgoblin_rage` («Ярость хобгоблина») по себе, пока способность доступна по кубам (любой куб);
+- когда обе способности недоступны по оплате, монстр завершает ход.
+
+Новые функции в profile-слое:
+- `decide_next_action(monster_index, battle_room, available_dice)` — реализует двухступенчатый приоритет `club_strike -> rage`;
+- `_build_target_self(monster_index)` — собирает target-descriptor self-каста для `hobgoblin_rage`;
+- `_find_ability_by_id(abilities, ability_id)` — локальный резолвер `hobgoblin_club_strike`/`hobgoblin_rage`;
+- `_log_debug(message)` — единая debug-точка логирования решений `HobgoblinAiProfile`.
+
+Для debugging добавлены reason-коды решений:
+- `hobgoblin_club_strike_priority`;
+- `hobgoblin_rage_fallback`;
+- `no_priority_abilities`.
