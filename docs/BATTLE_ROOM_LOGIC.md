@@ -151,7 +151,7 @@
 Рекомендуемая точка интеграции — отдельный bootstrap-сервис презентационного слоя (`battle_scene_bootstrap`), который получает run-state и подготавливает `BattleRoom`/`BattleScreenContext` до загрузки визуала.
 
 Текущее правило runtime-spawn для `BattleRoom.create_runtime_battle_room(...)`:
-- обычный бой (`marker_type != elite`) выбирает случайного монстра из normal-pool (`rat`, `goblin`, `turtle`) через helper `_pick_random_runtime_monster_definition(...)`;
+- обычный бой (`marker_type != elite`) выбирает случайного монстра из normal-pool (`rat`, `goblin`, `turtle`, `hobgoblin`) через helper `_pick_random_runtime_monster_definition(...)`;
 - элитный бой (`marker_type == elite`) выбирает монстра из elite-pool (текущий состав: `goblin_shaman`) тем же helper-механизмом;
 - если пул пустой/невалидный, включается fallback-монстр и пишется debug-лог;
 - тестовый монстр (`test_monster`) больше не используется в обычном runtime-бою и остается только fallback-заглушкой на случай, если encounter setup вернул пустой/невалидный список монстров.
@@ -162,6 +162,7 @@
 - `rat` — `HP 100`, `dice_loadout: 2x base_cube`, теги: `normal`, `beast`;
 - `goblin` — `HP 100`, `dice_loadout: 3x base_cube`, теги: `normal`, `goblin`;
 - `turtle` — `HP 50`, `dice_loadout: 3x base_cube`, теги: `normal`, `beast`, `defender`, способности: `turtle_durability`, `turtle_defense`, `turtle_bite`;
+- `hobgoblin` — `HP 50`, `dice_loadout: 2x base_cube`, теги: `normal`, `goblin`, `brute`, способности: `hobgoblin_club_strike`, `hobgoblin_rage`;
 - `goblin_shaman` (elite) — `HP 80`, `dice_loadout: 4x base_cube`, теги: `elite`, `goblin`, `shaman`, способности: `goblin_shaman_curse`, `goblin_shaman_poisonous_miasma`, `goblin_shaman_restoration_magic`.
 
 Новые runtime helper-функции в `BattleRoom`:

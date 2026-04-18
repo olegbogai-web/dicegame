@@ -1,0 +1,49 @@
+[gd_resource type="Resource" script_class="AbilityDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/abilities/resources/ability_definition.gd" id="1_ability"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_condition.gd" id="1_condition"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_cost.gd" id="2_cost"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_dice_condition.gd" id="3_dice_condition"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_target_rule.gd" id="4_target_rule"]
+[ext_resource type="Script" path="res://content/abilities/resources/ability_effect_definition.gd" id="6_effect"]
+[ext_resource type="Texture2D" path="res://assets/ability/common_attack.png" id="7_icon"]
+
+[sub_resource type="Resource" id="AbilityDiceCondition_pay_5_or_6"]
+script = ExtResource("3_dice_condition")
+requires_exact_count = true
+required_tags = PackedStringArray()
+forbidden_tags = PackedStringArray()
+accepted_face_ids = PackedStringArray("5", "6")
+consume_order = PackedStringArray()
+
+[sub_resource type="Resource" id="AbilityCost_main"]
+script = ExtResource("2_cost")
+dice_conditions = Array[ExtResource("3_dice_condition")]([SubResource("AbilityDiceCondition_pay_5_or_6")])
+
+[sub_resource type="Resource" id="AbilityEffect_damage"]
+script = ExtResource("6_effect")
+effect_id = "hobgoblin_club_strike_damage"
+magnitude = 10
+dice_query_tags = PackedStringArray()
+
+[sub_resource type="Resource" id="AbilityTargetRule_enemy"]
+script = ExtResource("4_target_rule")
+required_tags = PackedStringArray()
+forbidden_tags = PackedStringArray()
+
+[resource]
+script = ExtResource("1_ability")
+ability_id = "hobgoblin_club_strike"
+display_name = "Удар дубиной"
+description = "Требует 1 куб номиналом 5 или 6. Наносит 10 урона."
+icon = ExtResource("7_icon")
+tags = PackedStringArray("attack", "melee", "hobgoblin")
+owner_scope = 1
+cost = SubResource("AbilityCost_main")
+target_rule = SubResource("AbilityTargetRule_enemy")
+effects = Array[ExtResource("6_effect")]([SubResource("AbilityEffect_damage")])
+follow_up_ability_ids = PackedStringArray()
+ai_hints = {
+"hobgoblin_role": "club_strike",
+"priority": 40
+}

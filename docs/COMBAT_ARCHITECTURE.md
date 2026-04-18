@@ -143,6 +143,15 @@
   - эффект: наносит `1 + floor(armor(source)/2)` урона;
   - runtime note: бонус от стаков состояния задается data-driven параметрами `status_stack_bonus_*` в `AbilityEffectDefinition.parameters`, без ветки под конкретный `ability_id`.
 
+- `hobgoblin_club_strike` / «Удар дубиной» (`content/abilities/definitions/hobgoblin_club_strike.tres`):
+  - owner scope: только монстр (`owner_scope = MONSTER`);
+  - стоимость: 1 куб номиналом `5` или `6`;
+  - эффект: наносит `10` урона по цели.
+- `hobgoblin_rage` / «Ярость хобгоблина» (`content/abilities/definitions/hobgoblin_rage.tres`):
+  - owner scope: только монстр (`owner_scope = MONSTER`);
+  - стоимость: 1 любой куб;
+  - эффект: накладывает на владельца `strength` (3).
+
 - `goblin_shaman_curse` / «Проклятье шамана» (`content/abilities/definitions/goblin_shaman_curse.tres`):
   - owner scope: только монстр (`owner_scope = MONSTER`);
   - стоимость: 1 куб номиналом `6`;
