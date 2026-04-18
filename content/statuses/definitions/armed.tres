@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="StatusDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/statuses/resources/status_definition.gd" id="1_status"]
+[ext_resource type="Script" path="res://content/statuses/resources/status_effect_definition.gd" id="2_effect"]
+[ext_resource type="Texture2D" path="res://assets/states/strength.png" id="3_icon"]
+
+[sub_resource type="Resource" id="StatusEffect_armed_turn_start_dice_bonus"]
+script = ExtResource("2_effect")
+effect_id = "armed_turn_start_dice_bonus"
+effect_type = &"disarm_dice_on_turn_start"
+trigger = &"on_turn_start"
+value = -1.0
+
+[sub_resource type="Resource" id="StatusEffect_armed_clear_stacks"]
+script = ExtResource("2_effect")
+effect_id = "armed_clear_stacks"
+effect_type = &"remove_status"
+trigger = &"on_turn_end"
+status_id = "armed"
+parameters = {
+"stacks": -1
+}
+
+[resource]
+script = ExtResource("1_status")
+status_id = "armed"
+opposite_status_id = "disarmed"
+display_name = "Вооружен"
+description = "В начале хода владелец бросает 1 дополнительный случайный куб за каждый стак (из доступных кубов на этот ход). В конце хода все стаки снимаются."
+asset = ExtResource("3_icon")
+effects = Array[ExtResource("2_effect")]([SubResource("StatusEffect_armed_turn_start_dice_bonus"), SubResource("StatusEffect_armed_clear_stacks")])
+metadata = {
+"status_category": &"positive"
+}
