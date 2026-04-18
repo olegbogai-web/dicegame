@@ -13,6 +13,8 @@ const STATUS_TEMPLATE_PATH := ^"state"
 const STATUS_RUNTIME_NODE_PREFIX := "state_runtime_"
 const STATUS_ICON_SPACING_X := 0.26
 const MONSTER_STACK_SPACING_Z := BattleRoomScript.STACK_SPACING_Z + 0.6
+const STATUS_PLACEHOLDER_TEXTURE := preload("res://assets/ability/заглушка.jpg")
+const MONSTER_PLACEHOLDER_TEXTURE := preload("res://assets/entity/monsters/test_monster.png")
 
 
 func _apply_room_data(owner: Node) -> void:
@@ -76,11 +78,11 @@ func _apply_monster_sprites(owner: Node) -> void:
 		var target_sprite = owner._monster_sprite_template if index == 0 else _duplicate_sprite_template(owner, owner._monster_sprite_template, owner._generated_monster_sprites)
 		var monster_view = monster_views[index]
 		var is_alive = owner.battle_room_data.can_target_monster(index)
-		target_sprite.visible = is_alive and monster_view != null and monster_view.sprite != null
+		target_sprite.visible = is_alive and monster_view != null
 		if not target_sprite.visible:
 			_clear_runtime_status_visuals(owner, target_sprite)
 			continue
-		_apply_texture_to_mesh(owner, target_sprite, monster_view.sprite)
+		_apply_texture_to_mesh(owner, target_sprite, _resolve_monster_texture(monster_view))
 		target_sprite.transform = Transform3D(
 			Basis.from_scale(monster_view.base_scale),
 			BattleRoomScript.MONSTER_SPRITE_POSITION + Vector3(0.0, 0.0, offsets[index])
@@ -469,11 +471,22 @@ func _apply_statuses_to_sprite(owner: Node, combatant_sprite: MeshInstance3D, de
 		var icon_origin := base_origin + Vector3(status_spacing_x * index, 0.0, 0.0)
 		status_node.transform = Transform3D(base_basis, icon_origin)
 		combatant_sprite.add_child(status_node)
-		if status_instance.definition.asset != null:
-			_apply_texture_to_mesh(owner, status_node, status_instance.definition.asset)
+		_apply_texture_to_mesh(owner, status_node, _resolve_status_texture(status_instance))
 		var stacks_label := status_node.get_node_or_null(^"state_stacks") as Label3D
 		if stacks_label != null:
 			stacks_label.text = str(maxi(status_instance.stacks, 0))
+
+
+func _resolve_status_texture(status_instance) -> Texture2D:
+	if status_instance != null and status_instance.definition != null and status_instance.definition.asset != null:
+		return status_instance.definition.asset
+	return STATUS_PLACEHOLDER_TEXTURE
+
+
+func _resolve_monster_texture(monster_view) -> Texture2D:
+	if monster_view != null and monster_view.sprite != null:
+		return monster_view.sprite
+	return MONSTER_PLACEHOLDER_TEXTURE
 
 
 func _resolve_status_size_multiplier(owner: Node, descriptor: Dictionary) -> float:
