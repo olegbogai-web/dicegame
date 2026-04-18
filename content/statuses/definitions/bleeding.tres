@@ -24,6 +24,7 @@ parameters = {
 [resource]
 script = ExtResource("1_status")
 status_id = "bleeding"
+opposite_status_id = "regeneration"
 display_name = "Кровотечение"
 description = "В начале хода наносит 1 урона за каждый стак. В конце хода владельца снимается 1 стак."
 asset = ExtResource("3_icon")
