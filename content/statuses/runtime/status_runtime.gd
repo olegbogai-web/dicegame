@@ -370,6 +370,30 @@ static func apply_status(
 		status_definition,
 		stacks
 	)
+	var opposite_status_id := _resolve_opposite_status_id(container, status_definition)
+	if opposite_status_id != &"" and resolved_stacks > 0:
+		var opposite_stacks := _get_status_stacks(container, opposite_status_id)
+		if opposite_stacks > 0:
+			var consumed_by_opposite := mini(resolved_stacks, opposite_stacks)
+			if consumed_by_opposite > 0:
+				remove_status(
+					battle_room,
+					target_descriptor,
+					opposite_status_id,
+					consumed_by_opposite,
+					EVENT_STATUS_REMOVED
+				)
+				resolved_stacks -= consumed_by_opposite
+				_log_debug("apply_status opposition resolved: incoming=%s opposite=%s consumed=%d remaining=%d target=%s source=%s" % [
+					status_definition.status_id,
+					String(opposite_status_id),
+					consumed_by_opposite,
+					resolved_stacks,
+					_format_descriptor(target_descriptor),
+					_format_descriptor(source_descriptor),
+				])
+				if resolved_stacks <= 0:
+					return true
 	var previous_stacks := _get_status_stacks(container, StringName(status_definition.status_id))
 	var instance := container.add_status(status_definition, resolved_stacks)
 	if instance == null:
@@ -405,6 +429,27 @@ static func apply_status(
 		}
 	)
 	return true
+
+
+static func _resolve_opposite_status_id(container: StatusContainer, definition: StatusDefinition) -> StringName:
+	if definition == null:
+		return &""
+	var incoming_status_id := StringName(String(definition.status_id).strip_edges().to_lower())
+	if incoming_status_id == &"":
+		return &""
+	var direct_opposite := StringName(String(definition.opposite_status_id).strip_edges().to_lower())
+	if direct_opposite != &"" and direct_opposite != incoming_status_id and container.has_status(direct_opposite):
+		return direct_opposite
+	for status_instance in container.get_active_statuses():
+		if status_instance == null or status_instance.definition == null:
+			continue
+		var candidate_id := status_instance.get_status_id()
+		if candidate_id == incoming_status_id:
+			continue
+		var candidate_opposite := StringName(String(status_instance.definition.opposite_status_id).strip_edges().to_lower())
+		if candidate_opposite == incoming_status_id:
+			return candidate_id
+	return &""
 
 
 static func remove_status(

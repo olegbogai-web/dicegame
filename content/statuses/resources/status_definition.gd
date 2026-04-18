@@ -5,6 +5,7 @@ class_name StatusDefinition
 const DEFAULT_MAX_STACKS := 99
 
 @export var status_id := ""
+@export var opposite_status_id := ""
 @export var display_name := "New Status"
 @export_multiline var description := ""
 @export var asset: Texture2D
@@ -17,6 +18,8 @@ const DEFAULT_MAX_STACKS := 99
 
 func is_valid_definition() -> bool:
 	if status_id.is_empty() or display_name.is_empty() or max_stacks <= 0:
+		return false
+	if not opposite_status_id.is_empty() and opposite_status_id == status_id:
 		return false
 	for effect in effects:
 		if effect == null or not effect.is_valid_definition():
