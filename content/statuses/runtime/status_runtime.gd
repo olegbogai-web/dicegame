@@ -847,13 +847,13 @@ static func _apply_turn_start_dice_penalty(
 		return
 	var owner_descriptor := context.get("owner_descriptor", {}) as Dictionary
 	var owner_side := StringName(owner_descriptor.get("side", &""))
-	var resolved_penalty := maxi(int(round(float(entry.get("scaled_value", effect.value)))), 0)
-	if resolved_penalty <= 0:
+	var resolved_delta := int(round(float(entry.get("scaled_value", effect.value))))
+	if resolved_delta == 0:
 		_log_debug(
-			"turn_start_dice_penalty skipped: status=%s effect=%s penalty=%d owner=%s" % [
+			"turn_start_dice_adjustment skipped: status=%s effect=%s delta=%d owner=%s" % [
 				String(entry.get("status_id", &"")),
 				String(entry.get("effect_id", &"")),
-				resolved_penalty,
+				resolved_delta,
 				_format_descriptor(owner_descriptor),
 			]
 		)
@@ -862,12 +862,12 @@ static func _apply_turn_start_dice_penalty(
 	if targets.is_empty():
 		return
 	for target in targets:
-		var accumulated_penalty = battle_room.add_turn_start_dice_penalty(target, resolved_penalty)
+		var accumulated_penalty = battle_room.add_turn_start_dice_penalty(target, resolved_delta)
 		_log_debug(
-			"turn_start_dice_penalty queued: status=%s effect=%s add=%d total=%d target=%s" % [
+			"turn_start_dice_adjustment queued: status=%s effect=%s add=%d total=%d target=%s" % [
 				String(entry.get("status_id", &"")),
 				String(entry.get("effect_id", &"")),
-				resolved_penalty,
+				resolved_delta,
 				accumulated_penalty,
 				_format_descriptor(target),
 			]

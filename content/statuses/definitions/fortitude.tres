@@ -24,6 +24,7 @@ parameters = {
 [resource]
 script = ExtResource("1_status")
 status_id = "fortitude"
+opposite_status_id = "fragility"
 display_name = "Стойкость"
 description = "Пассивно уменьшает входящий урон от атак на 1 за каждый стак. При получении урона от атаки снимается 1 стак."
 asset = ExtResource("3_icon")
