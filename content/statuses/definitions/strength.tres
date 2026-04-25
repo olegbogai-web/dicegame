@@ -13,7 +13,6 @@ value = 1.0
 [resource]
 script = ExtResource("1_status")
 status_id = "strength"
-opposite_status_id = "weakness"
 display_name = "Сила"
 description = "Пассивно увеличивает урон способностей на 1 за каждый стак."
 asset = ExtResource("3_icon")

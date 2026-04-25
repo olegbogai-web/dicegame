@@ -24,7 +24,6 @@ parameters = {
 [resource]
 script = ExtResource("1_status")
 status_id = "regeneration"
-opposite_status_id = "bleeding"
 display_name = "Регенерация"
 description = "В начале хода восстанавливает 1 HP за каждый стак. В конце хода владельца снимается 1 стак."
 asset = ExtResource("3_icon")

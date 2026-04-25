@@ -202,21 +202,11 @@ func _apply_turn_start_dice_penalty(battle_room_data: BattleRoom, requests: Arra
 		}
 	if owner_descriptor.is_empty():
 		return
-	var dice_delta := battle_room_data.consume_turn_start_dice_penalty(owner_descriptor)
-	if dice_delta == 0:
-		return
-	if dice_delta < 0:
-		_apply_turn_start_dice_bonus(requests, -dice_delta)
-		_log_debug(
-			"Применен бонус на кубы в начале хода: owner=%s bonus=%d total=%d." % [
-				_format_turn_owner(owner_descriptor),
-				-dice_delta,
-				requests.size(),
-			]
-		)
+	var penalty := battle_room_data.consume_turn_start_dice_penalty(owner_descriptor)
+	if penalty <= 0:
 		return
 	var available_count := requests.size()
-	var resolved_penalty := mini(maxi(dice_delta, 0), available_count)
+	var resolved_penalty := mini(maxi(penalty, 0), available_count)
 	if resolved_penalty <= 0:
 		return
 	var removable_indexes: Array[int] = []
@@ -235,29 +225,11 @@ func _apply_turn_start_dice_penalty(battle_room_data: BattleRoom, requests: Arra
 	_log_debug(
 		"Применен штраф на кубы в начале хода: owner=%s penalty=%d removed=%d remaining=%d." % [
 			_format_turn_owner(owner_descriptor),
-			dice_delta,
+			penalty,
 			resolved_penalty,
 			requests.size(),
 		]
 	)
-
-
-func _apply_turn_start_dice_bonus(requests: Array[DiceThrowRequest], bonus: int) -> void:
-	var resolved_bonus := maxi(bonus, 0)
-	if resolved_bonus <= 0 or requests.is_empty():
-		return
-	for _step in resolved_bonus:
-		var random_slot := _dice_selection_rng.randi_range(0, requests.size() - 1)
-		var template_request := requests[random_slot]
-		if template_request == null:
-			continue
-		requests.append(DiceThrowRequestScript.create(
-			template_request.dice_scene,
-			template_request.size,
-			template_request.mass,
-			template_request.extra_size_multiplier,
-			template_request.metadata
-		))
 
 
 func _log_debug(message: String) -> void:

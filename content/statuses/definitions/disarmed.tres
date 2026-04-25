@@ -24,7 +24,6 @@ parameters = {
 [resource]
 script = ExtResource("1_status")
 status_id = "disarmed"
-opposite_status_id = "armed"
 display_name = "Обезоружен"
 description = "В начале хода владелец бросает на 1 куб меньше за каждый стак (случайный куб из доступных). В конце хода все стаки снимаются."
 asset = ExtResource("3_icon")
