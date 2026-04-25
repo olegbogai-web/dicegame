@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="StatusDefinition" format=3]
+
+[ext_resource type="Script" uid="uid://cr3rgro5ggg2o" path="res://content/statuses/resources/status_definition.gd" id="1_status"]
+[ext_resource type="Script" uid="uid://desiurhox43nn" path="res://content/statuses/resources/status_effect_definition.gd" id="2_effect"]
+[ext_resource type="Texture2D" uid="uid://d3fngx7viisjs" path="res://assets/states/weakness.png" id="3_icon"]
+
+[sub_resource type="Resource" id="StatusEffect_weakness_damage_penalty"]
+script = ExtResource("2_effect")
+effect_id = "weakness_damage_penalty"
+stat_key = &"ability_damage_outgoing"
+value = -1.0
+
+[resource]
+script = ExtResource("1_status")
+status_id = "weakness"
+opposite_status_id = "strength"
+display_name = "Слабость"
+description = "Пассивно уменьшает урон способностей на 1 за каждый стак. Не сбрасывается в конце хода."
+asset = ExtResource("3_icon")
+effects = Array[ExtResource("2_effect")]([SubResource("StatusEffect_weakness_damage_penalty")])
+metadata = {
+"status_category": &"negative"
+}

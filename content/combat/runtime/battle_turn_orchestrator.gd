@@ -203,33 +203,97 @@ func _apply_turn_start_dice_penalty(battle_room_data: BattleRoom, requests: Arra
 	if owner_descriptor.is_empty():
 		return
 	var penalty := battle_room_data.consume_turn_start_dice_penalty(owner_descriptor)
-	if penalty <= 0:
+	if penalty == 0:
 		return
-	var available_count := requests.size()
-	var resolved_penalty := mini(maxi(penalty, 0), available_count)
-	if resolved_penalty <= 0:
+	if penalty > 0:
+		var available_count := requests.size()
+		var resolved_penalty := mini(penalty, available_count)
+		if resolved_penalty <= 0:
+			return
+		var removable_indexes: Array[int] = []
+		for index in available_count:
+			removable_indexes.append(index)
+		for _step in resolved_penalty:
+			if removable_indexes.is_empty():
+				break
+			var random_slot := _dice_selection_rng.randi_range(0, removable_indexes.size() - 1)
+			var remove_index := removable_indexes[random_slot]
+			removable_indexes.remove_at(random_slot)
+			requests.remove_at(remove_index)
+			for item_index in removable_indexes.size():
+				if removable_indexes[item_index] > remove_index:
+					removable_indexes[item_index] -= 1
+		_log_debug(
+			"Применен штраф на кубы в начале хода: owner=%s penalty=%d removed=%d remaining=%d." % [
+				_format_turn_owner(owner_descriptor),
+				penalty,
+				resolved_penalty,
+				requests.size(),
+			]
+		)
 		return
-	var removable_indexes: Array[int] = []
-	for index in available_count:
-		removable_indexes.append(index)
-	for _step in resolved_penalty:
-		if removable_indexes.is_empty():
-			break
-		var random_slot := _dice_selection_rng.randi_range(0, removable_indexes.size() - 1)
-		var remove_index := removable_indexes[random_slot]
-		removable_indexes.remove_at(random_slot)
-		requests.remove_at(remove_index)
-		for item_index in removable_indexes.size():
-			if removable_indexes[item_index] > remove_index:
-				removable_indexes[item_index] -= 1
+	var resolved_bonus := maxi(-penalty, 0)
+	if resolved_bonus <= 0:
+		return
+	var added_count := _append_random_turn_start_dice_bonus(battle_room_data, owner_descriptor, requests, resolved_bonus)
 	_log_debug(
-		"Применен штраф на кубы в начале хода: owner=%s penalty=%d removed=%d remaining=%d." % [
+		"Применен бонус на кубы в начале хода: owner=%s bonus=%d added=%d total=%d." % [
 			_format_turn_owner(owner_descriptor),
-			penalty,
-			resolved_penalty,
+			resolved_bonus,
+			added_count,
 			requests.size(),
 		]
 	)
+
+
+func _append_random_turn_start_dice_bonus(
+	battle_room_data: BattleRoom,
+	owner_descriptor: Dictionary,
+	requests: Array[DiceThrowRequest],
+	bonus_count: int
+) -> int:
+	if battle_room_data == null or bonus_count <= 0:
+		return 0
+	var side := StringName(owner_descriptor.get("side", &""))
+	if side == &"player":
+		var player := battle_room_data.player_instance
+		if player == null:
+			return 0
+		var combat_dice_definitions: Array[DiceDefinition] = []
+		for dice_definition in player.dice_loadout:
+			if dice_definition == null:
+				continue
+			if dice_definition.scope != DiceDefinition.Scope.COMBAT:
+				continue
+			combat_dice_definitions.append(dice_definition)
+		if combat_dice_definitions.is_empty():
+			return 0
+		for _step in bonus_count:
+			var random_index := _dice_selection_rng.randi_range(0, combat_dice_definitions.size() - 1)
+			requests.append(build_dice_throw_request(combat_dice_definitions[random_index], {"owner": &"player"}))
+		return bonus_count
+	if side != &"enemy":
+		return 0
+	var monster_index := int(owner_descriptor.get("index", -1))
+	if not battle_room_data.can_target_monster(monster_index):
+		return 0
+	var monster_view = battle_room_data.monster_views[monster_index]
+	var added_count := 0
+	for _step in bonus_count:
+		if monster_view.dice_loadout.is_empty():
+			requests.append(build_dice_throw_request(null, {
+				"owner": &"monster",
+				"monster_index": monster_index,
+			}))
+			added_count += 1
+			continue
+		var random_index := _dice_selection_rng.randi_range(0, monster_view.dice_loadout.size() - 1)
+		requests.append(build_dice_throw_request(monster_view.dice_loadout[random_index], {
+			"owner": &"monster",
+			"monster_index": monster_index,
+		}))
+		added_count += 1
+	return added_count
 
 
 func _log_debug(message: String) -> void:

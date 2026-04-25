@@ -94,14 +94,17 @@ func clear_status_event_log() -> void:
 
 
 func add_turn_start_dice_penalty(descriptor: Dictionary, penalty: int) -> int:
-	var resolved_penalty := maxi(penalty, 0)
-	if resolved_penalty <= 0:
+	var resolved_delta := penalty
+	if resolved_delta == 0:
 		return 0
 	var owner_key := _build_owner_key(descriptor)
 	if owner_key == &"":
 		return 0
 	var current_penalty := int(_turn_start_dice_penalty_by_owner.get(owner_key, 0))
-	var next_penalty := current_penalty + resolved_penalty
+	var next_penalty := current_penalty + resolved_delta
+	if next_penalty == 0:
+		_turn_start_dice_penalty_by_owner.erase(owner_key)
+		return 0
 	_turn_start_dice_penalty_by_owner[owner_key] = next_penalty
 	return next_penalty
 
@@ -110,7 +113,7 @@ func consume_turn_start_dice_penalty(descriptor: Dictionary) -> int:
 	var owner_key := _build_owner_key(descriptor)
 	if owner_key == &"":
 		return 0
-	var penalty := maxi(int(_turn_start_dice_penalty_by_owner.get(owner_key, 0)), 0)
+	var penalty := int(_turn_start_dice_penalty_by_owner.get(owner_key, 0))
 	_turn_start_dice_penalty_by_owner.erase(owner_key)
 	return penalty
 
