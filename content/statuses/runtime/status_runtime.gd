@@ -847,8 +847,8 @@ static func _apply_turn_start_dice_penalty(
 		return
 	var owner_descriptor := context.get("owner_descriptor", {}) as Dictionary
 	var owner_side := StringName(owner_descriptor.get("side", &""))
-	var resolved_penalty := int(round(float(entry.get("scaled_value", effect.value))))
-	if resolved_penalty == 0:
+	var resolved_penalty := maxi(int(round(float(entry.get("scaled_value", effect.value)))), 0)
+	if resolved_penalty <= 0:
 		_log_debug(
 			"turn_start_dice_penalty skipped: status=%s effect=%s penalty=%d owner=%s" % [
 				String(entry.get("status_id", &"")),

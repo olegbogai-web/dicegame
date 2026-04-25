@@ -13,7 +13,6 @@ value = 1.0
 [resource]
 script = ExtResource("1_status")
 status_id = "holiness"
-opposite_status_id = "godlessness"
 display_name = "Святость"
 description = "Пассивно увеличивает получаемое исцеление на 1 за каждый стак. Не сбрасывается в конце хода."
 asset = ExtResource("3_icon")
