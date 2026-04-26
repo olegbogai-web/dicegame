@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="StatusDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/statuses/resources/status_definition.gd" id="1_status"]
+[ext_resource type="Texture2D" path="res://assets/ability/заглушка.jpg" id="2_icon"]
+
+[resource]
+script = ExtResource("1_status")
+status_id = "evasion"
+opposite_status_id = "mark"
+display_name = "Уклонение"
+description = "За каждый стак полностью уклоняется от одной вражеской атаки (игнорирует урон и негативные эффекты способности), затем снимает 1 стак."
+asset = ExtResource("2_icon")
+metadata = {
+"evades_hostile_ability": true,
+"evades_hostile_ability_priority": 0,
+"status_category": &"positive"
+}

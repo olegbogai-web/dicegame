@@ -29,6 +29,7 @@ static func activate_current_turn_ability(battle_room, ability: AbilityDefinitio
 
 	var affected_targets: Array[Dictionary] = []
 	var applied_any_effect := false
+	var evaded_target_keys: Dictionary = {}
 	var consumed_dice: Array[Dice] = []
 	for raw_dice in target_descriptor.get("consumed_dice", []):
 		if is_instance_valid(raw_dice) and raw_dice is Dice:
@@ -62,7 +63,15 @@ static func activate_current_turn_ability(battle_room, ability: AbilityDefinitio
 			continue
 		var effect_targets := _resolve_effect_targets(battle_room, target_descriptor)
 		for effect_target in effect_targets:
-			if _apply_effect_to_target(battle_room, ability, effect, effect_target, consumed_dice, source_descriptor):
+			if _apply_effect_to_target(
+				battle_room,
+				ability,
+				effect,
+				effect_target,
+				consumed_dice,
+				source_descriptor,
+				evaded_target_keys
+			):
 				affected_targets.append(effect_target)
 				applied_any_effect = true
 
@@ -131,7 +140,8 @@ static func _apply_effect_to_target(
 	effect: AbilityEffectDefinition,
 	target_descriptor: Dictionary,
 	consumed_dice: Array[Dice],
-	source_descriptor: Dictionary
+	source_descriptor: Dictionary,
+	evaded_target_keys: Dictionary
 ) -> bool:
 	var target_kind := StringName(target_descriptor.get("kind", &""))
 	var source_container = _resolve_source_status_container(battle_room)
@@ -144,6 +154,8 @@ static func _apply_effect_to_target(
 	)
 	match effect.effect_type:
 		&"damage":
+			if _is_hostile_effect_evaded(battle_room, effect, target_descriptor, source_descriptor, evaded_target_keys):
+				return true
 			if target_kind == &"monster":
 				var monster_index := int(target_descriptor.get("index", -1))
 				if not battle_room.can_target_monster(monster_index):
@@ -240,6 +252,9 @@ static func _apply_effect_to_target(
 			if status_definition == null:
 				_log_debug("apply_status skipped: no status definition for effect=%s" % String(effect.effect_id))
 				return false
+			if _is_negative_status_definition(status_definition):
+				if _is_hostile_effect_evaded(battle_room, effect, target_descriptor, source_descriptor, evaded_target_keys):
+					return true
 			var status_stacks := maxi(int(effect.parameters.get("stacks", 1)), 1)
 			var status_target := _resolve_apply_status_target_descriptor(effect, target_descriptor, source_descriptor)
 			if status_target.is_empty():
@@ -386,6 +401,54 @@ static func _apply_effect_to_target(
 			var cleanse_stacks := maxi(int(effect.parameters.get("stacks", 1)), 1)
 			return _cleanse_random_negative_status_stacks(battle_room, cleanse_target, cleanse_stacks, ability, effect)
 	return false
+
+
+static func _is_hostile_effect_evaded(
+	battle_room,
+	effect: AbilityEffectDefinition,
+	target_descriptor: Dictionary,
+	source_descriptor: Dictionary,
+	evaded_target_keys: Dictionary
+) -> bool:
+	if battle_room == null or effect == null or target_descriptor.is_empty() or source_descriptor.is_empty():
+		return false
+	var target_side := StringName(target_descriptor.get("side", &""))
+	var source_side := StringName(source_descriptor.get("side", &""))
+	if target_side == &"" or source_side == &"" or target_side == source_side:
+		return false
+	var target_key := _build_combatant_key(target_descriptor)
+	if target_key.is_empty():
+		return false
+	if evaded_target_keys.get(target_key, false):
+		return true
+	var evade_result := StatusRuntime.consume_hostile_ability_evade_stack(battle_room, target_descriptor, source_descriptor)
+	if bool(evade_result.get("evaded", false)):
+		evaded_target_keys[target_key] = true
+		_log_debug(
+			"hostile effect evaded: ability_effect=%s target=%s source=%s status=%s" % [
+				String(effect.effect_id),
+				JSON.stringify(target_descriptor),
+				JSON.stringify(source_descriptor),
+				String(evade_result.get("status_id", &"")),
+			]
+		)
+		return true
+	return false
+
+
+static func _build_combatant_key(descriptor: Dictionary) -> String:
+	var side := StringName(descriptor.get("side", &""))
+	if side == &"player":
+		return "player"
+	if side == &"enemy":
+		return "enemy_%d" % int(descriptor.get("index", -1))
+	return ""
+
+
+static func _is_negative_status_definition(status_definition: StatusDefinition) -> bool:
+	if status_definition == null:
+		return false
+	return StringName(status_definition.metadata.get("status_category", &"")) == &"negative"
 
 
 static func _has_consumed_dice_with_name(consumed_dice: Array[Dice], expected_dice_name: StringName) -> bool:
