@@ -15,13 +15,9 @@ const REWARD_MONEY_ICON := preload("res://assets/dice_edges/money.png")
 const MONEY_DICE_SKIN := preload("res://assets/dice_edges/money_dice_skin.png")
 const DiceDefinitionScript = preload("res://content/dice/resources/dice_definition.gd")
 const DiceFaceDefinitionScript = preload("res://content/dice/resources/dice_face_definition.gd")
-const DEFAULT_BASE_ARTIFACT_STRENGTH_NECKLACE := preload("res://content/artifacts/definitions/strength_necklace.tres")
-const DEFAULT_BASE_ARTIFACT_HOLINESS_NECKLACE := preload("res://content/artifacts/definitions/holiness_necklace.tres")
-const DEFAULT_BASE_ARTIFACT_REGENERATION_NECKLACE := preload("res://content/artifacts/definitions/regeneration_necklace.tres")
-const DEFAULT_BASE_ARTIFACT_DURABILITY_NECKLACE := preload("res://content/artifacts/definitions/durability_necklace.tres")
-const DEFAULT_BASE_ARTIFACT_BROKEN_SWORD_AMULET := preload("res://content/artifacts/definitions/broken_sword_amulet.tres")
-const DEFAULT_BASE_ARTIFACT_VULNERABILITY_AMULET := preload("res://content/artifacts/definitions/vulnerability_amulet.tres")
-const DEFAULT_BASE_ARTIFACT_BELT_OF_PROTECTION := preload("res://content/artifacts/definitions/belt_of_protection.tres")
+const DEFAULT_BASE_ARTIFACT_THORNS_NECKLACE := preload("res://content/artifacts/definitions/thorns_necklace.tres")
+const DEFAULT_BASE_ARTIFACT_SMITH_HAMMER := preload("res://content/artifacts/definitions/smith_hammer.tres")
+const DEFAULT_BASE_ARTIFACT_STRANGE_NEEDLE := preload("res://content/artifacts/definitions/strange_needle.tres")
 
 @export_category("Identity")
 @export var player_id := ""
@@ -156,13 +152,9 @@ func _build_default_money_faces() -> Array[DiceFaceDefinition]:
 
 func _build_default_artifacts_base() -> Array[ArtifactDefinition]:
 	return [
-		DEFAULT_BASE_ARTIFACT_STRENGTH_NECKLACE,
-		DEFAULT_BASE_ARTIFACT_HOLINESS_NECKLACE,
-		DEFAULT_BASE_ARTIFACT_REGENERATION_NECKLACE,
-		DEFAULT_BASE_ARTIFACT_DURABILITY_NECKLACE,
-		DEFAULT_BASE_ARTIFACT_BROKEN_SWORD_AMULET,
-		DEFAULT_BASE_ARTIFACT_VULNERABILITY_AMULET,
-		DEFAULT_BASE_ARTIFACT_BELT_OF_PROTECTION,
+		DEFAULT_BASE_ARTIFACT_THORNS_NECKLACE,
+		DEFAULT_BASE_ARTIFACT_SMITH_HAMMER,
+		DEFAULT_BASE_ARTIFACT_STRANGE_NEEDLE,
 	]
 
 
