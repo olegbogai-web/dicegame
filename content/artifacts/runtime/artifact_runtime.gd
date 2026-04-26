@@ -5,6 +5,7 @@ const StatusRuntime = preload("res://content/statuses/runtime/status_runtime.gd"
 const EVENT_BATTLE_START := &"on_battle_start"
 const EVENT_TURN_START := &"on_turn_start"
 const EVENT_TURN_END := &"on_turn_end"
+const EVENT_DAMAGE_TAKEN := &"on_damage_taken"
 const TURN_OWNER_PLAYER := &"player"
 const TURN_OWNER_MONSTER := &"monster"
 const TURN_OWNER_ANY := &"any"
@@ -65,6 +66,21 @@ static func _execute_trigger(battle_room, owner_descriptor: Dictionary, trigger:
 			if target_descriptor.is_empty():
 				continue
 			StatusRuntime.apply_status(battle_room, target_descriptor, status_definition, stacks, owner_descriptor)
+		return
+
+	if trigger.effect_type == &"apply_status_if_missing":
+		var conditional_status_definition := trigger.parameters.get("status_definition") as StatusDefinition
+		var required_missing_status_definition := trigger.parameters.get("required_missing_status_definition") as StatusDefinition
+		if conditional_status_definition == null or required_missing_status_definition == null:
+			return
+		var conditional_stacks := maxi(int(trigger.parameters.get("stacks", 1)), 1)
+		var conditional_target_descriptors := _resolve_target_descriptors(battle_room, owner_descriptor, trigger.target_scope)
+		for target_descriptor in conditional_target_descriptors:
+			if target_descriptor.is_empty():
+				continue
+			if _get_status_stacks(battle_room, target_descriptor, StringName(required_missing_status_definition.status_id)) > 0:
+				continue
+			StatusRuntime.apply_status(battle_room, target_descriptor, conditional_status_definition, conditional_stacks, owner_descriptor)
 		return
 
 	if trigger.effect_type == &"convert_status_on_remove":

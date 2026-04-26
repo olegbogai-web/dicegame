@@ -28,6 +28,7 @@ const BattleAbilityRuntime = preload("res://content/combat/runtime/battle_abilit
 const BattleTurnRuntime = preload("res://content/combat/runtime/battle_turn_runtime.gd")
 const BattleEffectRuntime = preload("res://content/combat/runtime/battle_effect_runtime.gd")
 const BattleCombatRuntimeState = preload("res://content/combat/runtime/battle_combat_runtime_state.gd")
+const ArtifactRuntime = preload("res://content/artifacts/runtime/artifact_runtime.gd")
 
 const PLAYER_SPRITE_POSITION := Vector3(-3.0, 0.01, -2.5)
 const PLAYER_SPRITE_SCALE := Vector3(2.0, 2.0, 2.0)
@@ -442,6 +443,17 @@ func apply_damage_to_descriptor(descriptor: Dictionary, amount: int) -> bool:
 			current_hp,
 			player_view.max_hp,
 		])
+		if player_instance != null:
+			ArtifactRuntime.trigger_event(
+				ArtifactRuntime.EVENT_DAMAGE_TAKEN,
+				self,
+				{"side": &"player"},
+				player_instance.get_active_artifact_definitions(),
+				{
+					"turn_owner": current_turn_owner,
+					"damage": resolved_damage,
+				}
+			)
 		if not player_view.is_alive():
 			_on_combatant_died({"side": &"player"})
 		return true
