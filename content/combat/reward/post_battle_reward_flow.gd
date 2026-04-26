@@ -42,6 +42,7 @@ const CUBE_REWARD_VISUAL_POSITION_OFFSET := Vector3(0.0, 0.3, 0.0)
 const CUBE_REWARD_VISUAL_SCALE_MULTIPLIER := Vector3(1.5, 1.5, 1.5)
 const BASE_CUBE_SCENE_PATH := "res://content/resources/base_cube.tscn"
 const GLOBAL_MAP_SCENE_PATH := "res://scenes/global_map_room.tscn"
+const ARTIFACT_PLACEHOLDER_TEXTURE := preload("res://assets/ability/заглушка.jpg")
 
 
 func _handle_post_battle_reward_dice(owner: Node) -> void:
@@ -903,8 +904,9 @@ func _apply_artifact_reward_visual(owner: Node, card_root: Node3D, artifact: Art
 	if icon_frame == null:
 		return
 	var icon_mesh := icon_frame.get_node_or_null(^"artefact_icon_reward") as MeshInstance3D
-	if icon_mesh != null and artifact != null and artifact.sprite != null:
-		owner._apply_texture_to_mesh(icon_mesh, artifact.sprite)
+	if icon_mesh != null:
+		var icon_texture := artifact.sprite if artifact != null and artifact.sprite != null else ARTIFACT_PLACEHOLDER_TEXTURE
+		owner._apply_texture_to_mesh(icon_mesh, icon_texture)
 
 
 func _apply_cube_reward_visual(owner: Node, card_root: Node3D, cube_definition: DiceDefinition) -> void:

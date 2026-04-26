@@ -1,8 +1,7 @@
-[gd_resource type="Resource" script_class="ArtifactDefinition" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="ArtifactDefinition" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://content/artifacts/resources/artifact_definition.gd" id="1_artifact"]
 [ext_resource type="Script" path="res://content/artifacts/resources/artifact_trigger_definition.gd" id="2_trigger"]
-[ext_resource type="Texture2D" path="res://assets/artefacts/snake_tooth.png" id="3_icon"]
 [ext_resource type="Resource" path="res://content/statuses/definitions/bleeding.tres" id="4_status"]
 
 [sub_resource type="Resource" id="ArtifactTrigger_strange_needle_on_damage_taken"]
@@ -24,7 +23,7 @@ artifact_id = "strange_needle"
 display_name = "Странная игла"
 description = "Когда владелец получает урон, накладывает на всех противников состояние «Кровотечение» 1."
 rarity = &"unique"
-sprite = ExtResource("3_icon")
+sprite = null
 tags = PackedStringArray("status", "damage_taken", "bleeding", "all_enemies")
 modifiers = []
 triggers = Array[ExtResource("2_trigger")]([SubResource("ArtifactTrigger_strange_needle_on_damage_taken")])

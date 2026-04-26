@@ -15,6 +15,7 @@ const STATUS_ICON_SPACING_X := 0.26
 const MONSTER_STACK_SPACING_Z := BattleRoomScript.STACK_SPACING_Z + 0.6
 const STATUS_PLACEHOLDER_TEXTURE := preload("res://assets/ability/заглушка.jpg")
 const MONSTER_PLACEHOLDER_TEXTURE := preload("res://assets/entity/monsters/test_monster.png")
+const ARTIFACT_PLACEHOLDER_TEXTURE := preload("res://assets/ability/заглушка.jpg")
 
 
 func _apply_room_data(owner: Node) -> void:
@@ -211,7 +212,7 @@ func _apply_player_artifacts(owner: Node) -> void:
 		var column := artifact_index / rows_per_column
 		var row := artifact_index % rows_per_column
 		icon.position = template_position + Vector2(icon_step.x * float(column), icon_step.y * float(row))
-		icon.texture = artifact.sprite if artifact != null and artifact.sprite != null else owner._artifact_template.texture
+		icon.texture = artifact.sprite if artifact != null and artifact.sprite != null else ARTIFACT_PLACEHOLDER_TEXTURE
 		icon.visible = true
 		icon.tooltip_text = artifact.display_name if artifact != null else ""
 
