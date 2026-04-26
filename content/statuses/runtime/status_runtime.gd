@@ -250,6 +250,61 @@ static func absorb_damage_with_statuses(
 	}
 
 
+static func consume_hostile_ability_evade_stack(
+	battle_room,
+	target_descriptor: Dictionary,
+	source_descriptor: Dictionary
+) -> Dictionary:
+	if battle_room == null or target_descriptor.is_empty() or source_descriptor.is_empty():
+		return {"evaded": false, "status_id": &""}
+	var target_side := StringName(target_descriptor.get("side", &""))
+	var source_side := StringName(source_descriptor.get("side", &""))
+	if target_side == &"" or source_side == &"" or target_side == source_side:
+		return {"evaded": false, "status_id": &""}
+	var container := _get_container_for_descriptor(battle_room, target_descriptor)
+	if container == null:
+		return {"evaded": false, "status_id": &""}
+
+	var evade_entries: Array[Dictionary] = []
+	for status_instance in _get_sorted_active_statuses(container):
+		if status_instance == null or status_instance.definition == null:
+			continue
+		var metadata := status_instance.definition.metadata
+		if not bool(metadata.get("evades_hostile_ability", false)):
+			continue
+		evade_entries.append({
+			"status_id": status_instance.get_status_id(),
+			"stacks": maxi(status_instance.stacks, 0),
+			"priority": int(metadata.get("evades_hostile_ability_priority", 0)),
+		})
+
+	if evade_entries.is_empty():
+		return {"evaded": false, "status_id": &""}
+
+	evade_entries.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
+		return int(left.get("priority", 0)) > int(right.get("priority", 0))
+	)
+
+	for entry in evade_entries:
+		var status_id := StringName(entry.get("status_id", &""))
+		var available_stacks := maxi(int(entry.get("stacks", 0)), 0)
+		if status_id == &"" or available_stacks <= 0:
+			continue
+		if remove_status(battle_room, target_descriptor, status_id, 1, EVENT_STATUS_EXPIRED):
+			_log_debug(
+				"hostile ability evaded by status: status=%s target=%s source=%s" % [
+					String(status_id),
+					_format_descriptor(target_descriptor),
+					_format_descriptor(source_descriptor),
+				]
+			)
+			return {
+				"evaded": true,
+				"status_id": status_id,
+			}
+	return {"evaded": false, "status_id": &""}
+
+
 static func resolve_passive_modifier_pipeline(base_value: int, modifier_queries: Array[Dictionary]) -> Dictionary:
 	var resolved_entries := _collect_effect_entries(modifier_queries, TRIGGER_PASSIVE, &"modifier")
 	if resolved_entries.is_empty():
@@ -977,18 +1032,30 @@ static func _resolve_outgoing_status_stacks(
 	if source_side == &"" or target_side == &"" or source_side == target_side:
 		return resolved_base_stacks
 	var outgoing_stacks_stat_key := StringName(status_definition.metadata.get("outgoing_stacks_stat_key", &""))
-	if outgoing_stacks_stat_key == &"":
-		return resolved_base_stacks
-	var source_container := _get_container_for_descriptor(battle_room, source_descriptor)
-	if source_container == null:
-		return resolved_base_stacks
-	var result := resolve_passive_modifier_pipeline(
-		resolved_base_stacks,
-		[
-			{"container": source_container, "stat_key": outgoing_stacks_stat_key, "scope": &"source"},
-		]
-	)
-	var resolved_stacks := maxi(int(result.get("value", resolved_base_stacks)), 1)
+	var resolved_stacks := resolved_base_stacks
+	if outgoing_stacks_stat_key != &"":
+		var source_container := _get_container_for_descriptor(battle_room, source_descriptor)
+		if source_container != null:
+			var result := resolve_passive_modifier_pipeline(
+				resolved_base_stacks,
+				[
+					{"container": source_container, "stat_key": outgoing_stacks_stat_key, "scope": &"source"},
+				]
+			)
+			resolved_stacks = maxi(int(result.get("value", resolved_base_stacks)), 1)
+	var incoming_stacks_stat_key: StringName = &""
+	if StringName(status_definition.metadata.get("status_category", &"")) == &"negative":
+		incoming_stacks_stat_key = &"status_negative_stacks_incoming"
+	if incoming_stacks_stat_key != &"":
+		var target_container := _get_container_for_descriptor(battle_room, target_descriptor)
+		if target_container != null:
+			var incoming_result := resolve_passive_modifier_pipeline(
+				resolved_stacks,
+				[
+					{"container": target_container, "stat_key": incoming_stacks_stat_key, "scope": &"target"},
+				]
+			)
+			resolved_stacks = maxi(int(incoming_result.get("value", resolved_stacks)), 1)
 	_log_debug(
 		"apply_status outgoing modifier: status=%s base=%d resolved=%d source=%s target=%s stat=%s" % [
 			status_definition.status_id,

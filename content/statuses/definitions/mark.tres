@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="StatusDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/statuses/resources/status_definition.gd" id="1_status"]
+[ext_resource type="Script" path="res://content/statuses/resources/status_effect_definition.gd" id="2_effect"]
+[ext_resource type="Texture2D" path="res://assets/ability/заглушка.jpg" id="3_icon"]
+
+[sub_resource type="Resource" id="StatusEffect_mark_incoming_damage_multiplier"]
+script = ExtResource("2_effect")
+effect_id = "mark_incoming_damage_multiplier"
+stat_key = &"ability_damage_incoming"
+operation = &"multiply"
+value = 2.0
+
+[sub_resource type="Resource" id="StatusEffect_mark_incoming_negative_status_multiplier"]
+script = ExtResource("2_effect")
+effect_id = "mark_incoming_negative_status_multiplier"
+stat_key = &"status_negative_stacks_incoming"
+operation = &"multiply"
+value = 2.0
+
+[sub_resource type="Resource" id="StatusEffect_mark_decay_on_damage_taken"]
+script = ExtResource("2_effect")
+effect_id = "mark_decay_on_damage_taken"
+effect_type = &"remove_status"
+trigger = &"on_damage_taken"
+status_id = "mark"
+parameters = {
+"only_origin": &"ability",
+"stacks": 1
+}
+
+[resource]
+script = ExtResource("1_status")
+status_id = "mark"
+opposite_status_id = "evasion"
+display_name = "Метка"
+description = "За каждый стак удваивает эффект одной вражеской атаки (урон и негативные эффекты), затем снимает 1 стак при получении усиленной атаки."
+asset = ExtResource("3_icon")
+effects = Array[ExtResource("2_effect")]([SubResource("StatusEffect_mark_incoming_damage_multiplier"), SubResource("StatusEffect_mark_incoming_negative_status_multiplier"), SubResource("StatusEffect_mark_decay_on_damage_taken")])
+metadata = {
+"status_category": &"negative"
+}

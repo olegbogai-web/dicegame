@@ -72,11 +72,11 @@
 
 Актуальный реестр:
 
-- Позитивные: `strength`, `holiness`, `regeneration`, `poisoner`, `bloodletter`, `fortitude`, `armor`, `armorer`, `spikes`, `poisonous_miasma`, `armed`, `blessing`;
-- Отрицательные: `poison`, `bleeding`, `disarmed`, `vulnerability`, `cursed`, `weakness`, `godlessness`, `fragility`;
+- Позитивные: `strength`, `holiness`, `regeneration`, `poisoner`, `bloodletter`, `fortitude`, `armor`, `armorer`, `spikes`, `poisonous_miasma`, `armed`, `blessing`, `evasion`;
+- Отрицательные: `poison`, `bleeding`, `disarmed`, `vulnerability`, `cursed`, `weakness`, `godlessness`, `fragility`, `mark`;
 - Абсолютные: пока не добавлены в контент.
 
-Актуальные пары противоположностей: `strength` ↔ `weakness`, `holiness` ↔ `godlessness`, `fortitude` ↔ `fragility`, `bleeding` ↔ `regeneration`, `disarmed` ↔ `armed`, `cursed` ↔ `blessing`.
+Актуальные пары противоположностей: `strength` ↔ `weakness`, `holiness` ↔ `godlessness`, `fortitude` ↔ `fragility`, `bleeding` ↔ `regeneration`, `disarmed` ↔ `armed`, `cursed` ↔ `blessing`, `evasion` ↔ `mark`.
 
 ---
 
@@ -336,3 +336,15 @@
   - затухание: в конце хода владельца снимает все стаки (`on_turn_end`, `remove_status` со `stacks = -1`);
   - стэкинг: суммирование (`stacking_policy = add`);
   - визуал: `asset = vulnerability`.
+- `Уклонение` (`status_id = evasion`):
+  - тип: событийный поглотитель вражеской способности;
+  - эффект: за каждый стак полностью игнорирует одну вражескую атаку по владельцу (урон и негативные эффекты от способности);
+  - затухание: при уклонении снимается `1` стак;
+  - стэкинг: суммирование (`stacking_policy = add`);
+  - визуал: временная заглушка (`asset = заглушка`).
+- `Метка` (`status_id = mark`):
+  - тип: пассивный модификатор входящих атак + триггерное затухание;
+  - эффект: за каждый стак удваивает эффект одной вражеской атаки по владельцу (урон через `ability_damage_incoming`, а также стаки входящих негативных состояний через `status_negative_stacks_incoming`);
+  - затухание: после получения усиленной атаки снимается `1` стак (`on_damage_taken`, `metadata.origin = ability`);
+  - стэкинг: суммирование (`stacking_policy = add`);
+  - визуал: временная заглушка (`asset = заглушка`).
