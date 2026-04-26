@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="StatusDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/statuses/resources/status_definition.gd" id="1_status"]
+[ext_resource type="Script" path="res://content/statuses/resources/status_effect_definition.gd" id="2_effect"]
+[ext_resource type="Texture2D" path="res://assets/ability/заглушка.jpg" id="3_icon"]
+
+[sub_resource type="Resource" id="StatusEffect_bloodletter_outgoing_bleeding_stacks"]
+script = ExtResource("2_effect")
+effect_id = "bloodletter_outgoing_bleeding_stacks"
+stat_key = &"status_bleeding_stacks_outgoing"
+value = 1.0
+
+[resource]
+script = ExtResource("1_status")
+status_id = "bloodletter"
+display_name = "Кровопускатель"
+description = "За каждый стак увеличивает количество накладываемых на противника стаков состояния «Кровотечение» на 1. Не уменьшается."
+asset = ExtResource("3_icon")
+effects = Array[ExtResource("2_effect")]([SubResource("StatusEffect_bloodletter_outgoing_bleeding_stacks")])
+metadata = {
+"status_category": &"positive"
+}

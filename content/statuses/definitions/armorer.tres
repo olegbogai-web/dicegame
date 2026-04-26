@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="StatusDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/statuses/resources/status_definition.gd" id="1_status"]
+[ext_resource type="Script" path="res://content/statuses/resources/status_effect_definition.gd" id="2_effect"]
+[ext_resource type="Texture2D" path="res://assets/ability/заглушка.jpg" id="3_icon"]
+[ext_resource type="Resource" path="res://content/statuses/definitions/armor.tres" id="4_armor_status"]
+
+[sub_resource type="Resource" id="StatusEffect_armorer_apply_armor_on_turn_end"]
+script = ExtResource("2_effect")
+effect_id = "armorer_apply_armor_on_turn_end"
+effect_type = &"apply_status"
+trigger = &"on_turn_end"
+target_scope = &"self"
+status_id = "armor"
+parameters = {
+"stacks": 1,
+"status_definition": ExtResource("4_armor_status")
+}
+
+[resource]
+script = ExtResource("1_status")
+status_id = "armorer"
+display_name = "Бронник"
+description = "В конце своего хода накладывает на владельца «Броня» 1 за каждый стак. Не уменьшается."
+asset = ExtResource("3_icon")
+effects = Array[ExtResource("2_effect")]([SubResource("StatusEffect_armorer_apply_armor_on_turn_end")])
+metadata = {
+"status_category": &"positive"
+}

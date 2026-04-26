@@ -72,7 +72,7 @@
 
 Актуальный реестр:
 
-- Позитивные: `strength`, `holiness`, `regeneration`, `poisoner`, `fortitude`, `armor`, `poisonous_miasma`, `armed`, `blessing`;
+- Позитивные: `strength`, `holiness`, `regeneration`, `poisoner`, `bloodletter`, `fortitude`, `armor`, `armorer`, `spikes`, `poisonous_miasma`, `armed`, `blessing`;
 - Отрицательные: `poison`, `bleeding`, `disarmed`, `vulnerability`, `cursed`, `weakness`, `godlessness`, `fragility`;
 - Абсолютные: пока не добавлены в контент.
 
@@ -261,6 +261,11 @@
   - эффект: за каждый стак добавляет `+1` к количеству накладываемых на противника стаков `Яда` (`status_poison_stacks_outgoing`);
   - длительность: боевая (`duration_model = battle`), без авто-уменьшения;
   - стэкинг: суммирование (`stacking_policy = add`).
+- `Кровопускатель` (`status_id = bloodletter`):
+  - тип: пассивный модификатор наложения состояний;
+  - эффект: за каждый стак добавляет `+1` к количеству накладываемых на противника стаков `Кровотечения` (`status_bleeding_stacks_outgoing`);
+  - длительность: боевая (`duration_model = battle`), без авто-уменьшения;
+  - категория: позитивный (`status_category = positive`).
 - `Святость` (`status_id = holiness`):
   - тип: пассивный модификатор входящего исцеления;
   - эффект: `+1` к `ability_healing_incoming` за каждый стак;
@@ -297,6 +302,17 @@
   - затухание: при блоке снимается количество стаков, равное фактически заблокированному урону;
   - стэкинг: суммирование (`stacking_policy = add`);
   - визуал: `asset = armor`.
+- `Бронник` (`status_id = armorer`):
+  - тип: событийный триггер;
+  - эффект: в конце хода владельца накладывает на владельца `Броня` в количестве `1` за каждый стак `Бронника` (`on_turn_end`, `apply_status` с `status_id = armor`);
+  - длительность: боевая (`duration_model = battle`), без авто-уменьшения;
+  - категория: позитивный (`status_category = positive`).
+- `Шипы` (`status_id = spikes`):
+  - тип: событийный триггер;
+  - эффект: при каждой полученной атаке наносит атакующему `1` урона за каждый стак (`on_damage_taken`, `target_scope = event_source`, только `metadata.origin = ability`);
+  - модификаторы: урон не проходит через `ability_damage_outgoing`, поэтому не усиливается `Силой`;
+  - длительность: боевая (`duration_model = battle`), без авто-уменьшения;
+  - категория: позитивный (`status_category = positive`).
 - `Обезоружен` (`status_id = disarmed`):
   - тип: событийный триггер;
   - эффект: в начале хода владельца уменьшает количество бросаемых кубов на `1` за каждый стак (`on_turn_start`, `disarm_dice_on_turn_start`), кубы убираются случайно из доступного набора на ход;

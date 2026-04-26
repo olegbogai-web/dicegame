@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="StatusDefinition" format=3]
+
+[ext_resource type="Script" path="res://content/statuses/resources/status_definition.gd" id="1_status"]
+[ext_resource type="Script" path="res://content/statuses/resources/status_effect_definition.gd" id="2_effect"]
+[ext_resource type="Texture2D" path="res://assets/ability/заглушка.jpg" id="3_icon"]
+
+[sub_resource type="Resource" id="StatusEffect_spikes_retaliate_on_damage_taken"]
+script = ExtResource("2_effect")
+effect_id = "spikes_retaliate_on_damage_taken"
+effect_type = &"damage"
+trigger = &"on_damage_taken"
+target_scope = &"event_source"
+value = 1.0
+parameters = {
+"only_origin": &"ability"
+}
+
+[resource]
+script = ExtResource("1_status")
+status_id = "spikes"
+display_name = "Шипы"
+description = "При каждой полученной атаке наносит атакующему 1 урона за каждый стак. Урон не усиливается силой. Не уменьшается."
+asset = ExtResource("3_icon")
+effects = Array[ExtResource("2_effect")]([SubResource("StatusEffect_spikes_retaliate_on_damage_taken")])
+metadata = {
+"status_category": &"positive"
+}
