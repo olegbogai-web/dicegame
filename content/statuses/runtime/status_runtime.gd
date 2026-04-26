@@ -632,6 +632,20 @@ static func _apply_direct_magnitude(
 	entry: Dictionary,
 	is_damage: bool
 ) -> void:
+	var metadata := context.get("metadata", {}) as Dictionary
+	var expected_origin := StringName(String(effect.parameters.get("only_origin", "")).strip_edges().to_lower())
+	if expected_origin != &"":
+		var actual_origin := StringName(String(metadata.get("origin", "")).strip_edges().to_lower())
+		if actual_origin != expected_origin:
+			_log_debug(
+				"direct trigger skipped by origin filter: status=%s effect=%s expected=%s actual=%s" % [
+					String(entry.get("status_id", &"")),
+					String(entry.get("effect_id", &"")),
+					String(expected_origin),
+					String(actual_origin),
+				]
+			)
+			return
 	var magnitude := maxi(int(round(float(entry.get("scaled_value", effect.value)))), 0)
 	if magnitude <= 0:
 		_log_debug(
@@ -658,7 +672,13 @@ static func _apply_direct_magnitude(
 			String(effect.target_scope),
 		]
 	)
-	var targets := _resolve_targets(battle_room, owner_descriptor, owner_side, effect.target_scope)
+	var targets: Array[Dictionary] = []
+	if effect.target_scope == &"event_source":
+		var source_descriptor := context.get("source_descriptor", {}) as Dictionary
+		if not source_descriptor.is_empty():
+			targets = [source_descriptor]
+	else:
+		targets = _resolve_targets(battle_room, owner_descriptor, owner_side, effect.target_scope)
 	for target in targets:
 		if StringName(target.get("side", &"")) == &"player":
 			if is_damage:
